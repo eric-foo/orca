@@ -1,0 +1,17 @@
+﻿# OS and editor noise
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Local machine state
+.env
+.env.*
+!.env.example
+
+# Keep docs-first workspace clean until implementation is authorized
+node_modules/
+__pycache__/
+.pytest_cache/
+dist/
+build/
