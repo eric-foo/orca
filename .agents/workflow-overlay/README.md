@@ -7,6 +7,9 @@ This overlay is the project authority for Orca. Reusable workflow methods may pr
 - `project-authority.md`: project identity, boundary, and unknown facts.
 - `source-of-truth.md`: Orca source hierarchy and conflict rules.
 - `artifact-folders.md`: accepted docs-first artifact locations.
+- `artifact-roles.md`: role bindings, permissions, freshness markers, and paired artifacts.
+- `prompt-orchestration.md`: lightweight Orca prompt artifact, wrapper, preflight, output mode, and rerun rules.
+- `communication-style.md`: Orca response style for Chief Architect sequencing, review closeouts, and prompt handoffs.
 - `validation-gates.md`: checks required before claiming completion.
 - `review-lanes.md`: read-only and executor lane rules.
 - `safety-rules.md`: project-specific safety and forbidden drift.
