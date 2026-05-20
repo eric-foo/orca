@@ -11,6 +11,9 @@
 ## Rules
 
 - Reviewer threads are source-read-only unless explicitly assigned patch execution.
+- Review prompts must explicitly trigger `workflow-deep-thinking` before the
+  relevant review skill so the reviewer frames failure modes before listing
+  findings. This does not expand review scope or authorize patching.
 - Executor threads must not report success without file and validation evidence.
 - Installed global `review`, implementation/code review, and artifact review remain separate lanes until Orca accepts more specific routing.
 - Model lanes: UNKNOWN - requires owner input.

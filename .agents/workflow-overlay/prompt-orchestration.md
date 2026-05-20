@@ -52,6 +52,21 @@ A thin wrapper is a short invocation of a full prompt. It must include:
 
 Thin wrappers must not restate or fork project policy. If policy changes are needed, update the full prompt or overlay first.
 
+## Review Prompt Defaults
+
+All Orca review prompts must explicitly trigger `workflow-deep-thinking`
+before the relevant review skill, such as `workflow-adversarial-artifact-review`
+or `workflow-code-review`.
+
+The deep-thinking step should frame the boundary problem, failure modes, and
+decision criteria before findings are listed. It does not widen the review
+scope, authorize patching, or turn a narrow review into product planning.
+
+Review prompts should still return the requested review output shape. Deep
+thinking improves the reviewer’s risk framing; the final answer remains a
+review report with findings, non-findings, not-proven boundaries, and next
+authorized step.
+
 ## Required Preflight Fields
 
 Every repo-aware Orca prompt must state:
