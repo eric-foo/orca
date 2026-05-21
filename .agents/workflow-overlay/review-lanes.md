@@ -14,6 +14,9 @@
 - Review prompts must explicitly trigger `workflow-deep-thinking` before the
   relevant review skill so the reviewer frames failure modes before listing
   findings. This does not expand review scope or authorize patching.
+- Adversarial artifact review prompts should request the compact
+  `review_summary` YAML shape from
+  `.agents/workflow-overlay/communication-style.md` before detailed findings.
 - Executor threads must not report success without file and validation evidence.
 - Installed global `review`, implementation/code review, and artifact review remain separate lanes until Orca accepts more specific routing.
 - Model lanes: UNKNOWN - requires owner input.
