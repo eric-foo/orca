@@ -31,6 +31,22 @@ Validation must be able to fail. Missing evidence is not a pass.
 - Source-resolution gate: `agent-workflow` may provide generic mechanics only; installed skills are deployment copies; `jb` project policy must not be imported.
 - Worktree preflight gate: repository-aware prompts must state workspace, revision or hash when needed, dirty-state allowance, target scope, and edit permission.
 - Output-mode gate: prompts must name exactly one output mode from `.agents/workflow-overlay/prompt-orchestration.md`.
+- Chat-output topology gate: prompt-policy patches, workflow patches, and
+  reusable prompt templates touching chat output shape must check for
+  contradictions between the general human-summary / agent-detail /
+  courier-YAML rule in `.agents/workflow-overlay/communication-style.md` and
+  output-mode exceptions in `.agents/workflow-overlay/prompt-orchestration.md`.
+  This is a collision gate, not a required-key checklist: decision-bearing chat
+  should start with human-readable prose; agent detail should stay separate;
+  courier YAML should stay compact and last unless a stage-native exception
+  applies; `review-report` YAML-only chat remains tied to successful durable
+  report writes; `file-write` receipts remain valid only when the durable
+  artifact carries the human value; `paste-ready-chat` must be classified
+  before template propagation; task-native structured outputs such as evidence
+  tables must not be naively rewritten into verbose closeouts; already-correct
+  active `review-report` prompts and stale one-offs must not be broad-synced;
+  and extra courier keys or ritual non-claim fields must not be added merely to
+  satisfy process metrics.
 - Review-report topology gate: prompts and prompt-policy patches touching
   `review-report` must check that the saved-report exception is adjacent to the
   owning output-mode rule; the durable report remains the review artifact; chat

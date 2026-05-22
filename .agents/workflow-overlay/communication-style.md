@@ -3,7 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Orca overlay authority
-scope: Orca response style, courier YAML shape, and adversarial review summary pattern.
+scope: Orca response style, chat-output topology, courier YAML shape, and adversarial review summary pattern.
 use_when:
   - Checking Orca review closeout and courier YAML shape.
   - Preparing or reviewing Orca prompt handoffs and Chief Architect sequencing.
@@ -24,6 +24,35 @@ explanation. Do not bold the bullet lead by default.
 
 Lead with the decision, then the scope, then the next action. Keep status and
 file-state language secondary unless exact repository state is the point.
+
+## Chat Output Topology
+
+For decision-bearing Orca chat, use this order:
+
+1. Human summary.
+2. Agent-readable detail.
+3. Compact courier YAML, only when useful or required.
+
+The human summary states the decision, scope, accepted or deferred items,
+blocker if any, and next authorized step. Agent-readable detail may include
+source-read notes, file lists, dirty-state classification, validation-not-run
+notes, report paths, exact handoff constraints, and blockers.
+
+Courier YAML is routable state, not the decision or report itself. It should
+stay compact and appear last unless an output-mode exception explicitly
+requires YAML-first or YAML-only chat.
+
+This file owns the general chat shape and exact courier YAML shapes it defines.
+Output-mode exceptions, including when `review-report` may use YAML-only chat,
+when `file-write` may return compact artifact receipts, and how
+`paste-ready-chat` behaves, are owned by
+`.agents/workflow-overlay/prompt-orchestration.md`.
+
+Do not apply the human-summary-first rule mechanically to artifact-native
+tables, paste-ready prompt bodies, or compact post-artifact receipts when the
+durable artifact or pasted prompt carries the human-readable value. Do apply it
+to Chief Architect sequencing, planning, implementation scoping, phase gates,
+completion reports, chat-only decisions, and failure/blocker routing.
 
 ## Readability Rules
 

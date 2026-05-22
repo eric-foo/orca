@@ -72,6 +72,11 @@ name the failed path and include enough human-readable failure detail in
 If no write authority or report destination is bound before review work starts,
 use `paste-ready-chat` instead of `review-report`.
 
+For `paste-ready-chat` reviews, use human-readable findings first and put any
+compact courier YAML last unless the launch instruction binds a different
+chat-only shape. Do not use `paste-ready-chat` to replace a required
+`review-report` durable destination after review work starts.
+
 Review checks:
 - Source hierarchy and authority boundary.
 - Internal consistency.

@@ -55,6 +55,10 @@ prompt-orchestrator templates.
 
 Typed child folders under `docs/prompts/` may be created when the first prompt of that family is authored. Until implementation is explicitly authorized, source-changing handoff prompts must target documentation or overlay work only.
 
+Prompt templates may also use `paste-ready-chat` when the intended output is a
+single prompt, wrapper, or handoff body meant to be pasted into another model,
+agent, thread, or worktree.
+
 ## Full Prompt Versus Thin Wrapper
 
 A full prompt is the durable artifact. It must include:
@@ -126,7 +130,8 @@ Every repo-aware Orca prompt must state:
 - target files or directories;
 - source hierarchy for the task;
 - edit permission: `read-only`, `patch-only`, or `docs-write`;
-- output mode: `chat-only`, `file-write`, `review-report`, or `patch-queue`;
+- output mode: `chat-only`, `file-write`, `review-report`,
+  `paste-ready-chat`, or `patch-queue`;
 - required validation gates and where evidence is recorded;
 - external source boundary, including the rule that `agent-workflow` is read-only reusable source and `jb` is not Orca authority.
 
@@ -169,7 +174,31 @@ live thread. Prefer artifact-local detail plus compact chat receipts.
 - `chat-only`: return analysis, options, recommendations, and blocked assumptions without writing files.
 - `file-write`: write only authorized Orca documentation or overlay files; report changed files and validation evidence.
 - `review-report`: perform read-only review unless a patch-execution lane is explicitly assigned; write reports under `docs/review-outputs/` or a typed child folder, then return the compact YAML review summary in chat only after the report write succeeds. If the required report write fails, return `status: failed`, `review_location: chat_only_current_thread`, and `recommendation: blocked` in chat without `report_path`, name the failed path, and include enough human-readable failure detail to route.
+- `paste-ready-chat`: return one prompt, wrapper, handoff, or review request
+  body in chat for copying into another model, agent, thread, or worktree. The
+  pasted body may be the artifact, but any surrounding Chief Architect,
+  planning, phase-gate, or routing decision should still use the human-readable
+  chat shape from `.agents/workflow-overlay/communication-style.md`.
 - `patch-queue`: produce stable patch units, target files, authority basis, and validation gates. Applying patches requires separate execution authority.
+
+The general human-summary / agent-detail / courier-YAML chat shape is owned by
+`.agents/workflow-overlay/communication-style.md`. This file owns output-mode
+exceptions to that shape:
+
+- `review-report` may use YAML-only chat only after the required durable report
+  has been successfully written. Failed durable writes must not use
+  `report_path`; they must use `review_location: chat_only_current_thread`,
+  `status: failed`, `recommendation: blocked`, name the failed path, and give
+  enough human-readable routing detail in the allowed summary fields.
+- `file-write` may return a compact path/hash/status receipt after the durable
+  artifact is written when that artifact carries the human-readable value. If
+  the write fails or the chat itself carries a decision, return readable
+  blocker detail instead of treating a receipt as a substitute artifact.
+- `paste-ready-chat` may prioritize the paste-ready body when that body is the
+  deliverable. Do not use this mode to hide a Chief Architect, planning,
+  scoping, phase-gate, or completion decision inside machine-only structure.
+- `patch-queue` may use stable structured units, but applying patches still
+  requires separate execution authority and readable routing of blockers.
 
 ## Prompt Validation Gates
 
