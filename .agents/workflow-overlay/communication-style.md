@@ -1,5 +1,15 @@
 # Communication Style
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Orca overlay authority
+scope: Orca response style, courier YAML shape, and adversarial review summary pattern.
+use_when:
+  - Checking Orca review closeout and courier YAML shape.
+  - Preparing or reviewing Orca prompt handoffs and Chief Architect sequencing.
+authority_boundary: retrieval_only
+```
+
 This file records Orca-specific response style for Chief Architect sequencing,
 review closeouts, and prompt handoffs. It applies to user-facing chat and
 Orca-authored prompts unless a later user instruction asks for a different
@@ -48,28 +58,55 @@ Use this order for sequencing decisions:
 
 ## Adversarial Review Summary Pattern
 
-For adversarial artifact reviews, prefer a compact copy-pasteable YAML summary
-before any detailed findings. This lets later threads recover the review state
-without reading a long chat block.
+For adversarial artifact reviews, start with a compact copy-pasteable YAML
+summary before any detailed findings. This lets later threads recover the
+review state without reading a long chat block.
 
-Use this shape when the review writes or references a durable report:
+This file owns the courier YAML shape and allowed fields. The validity rules
+for `review-report` output mode, including when YAML-only chat is allowed and
+what to do when a required durable write fails, are owned by
+`.agents/workflow-overlay/prompt-orchestration.md`.
+
+Use this shape when the review writes a durable report:
 
 ```yaml
 review_summary:
   status: completed
   report_path: docs/review-outputs/example_adversarial_review_v0.md
   recommendation: accept | accept_with_friction | patch_before_acceptance | reject | blocked
+  summary: "One sentence describing the review result."
   findings_count: 0
   blocking_findings: []
   advisory_findings:
     - FF-01: Short finding title
   prior_findings_remediated: []
-  next_recommended_action: "One concrete next step"
+  next_action: "One concrete next step"
 ```
 
-If no durable report exists because the review is chat-only, replace
-`report_path` with `review_location: chat_only_current_thread` and keep the
-same remaining fields.
+For Orca review prompts using `review-report` output mode, `report_path` is
+valid only when the durable report was actually written. If no durable report
+exists because the review is explicitly chat-only or blocked before writing,
+replace `report_path` with `review_location: chat_only_current_thread` and keep
+the same remaining fields.
+
+If a required `review-report` durable write fails, use the same shape with
+`status: failed`, `review_location: chat_only_current_thread`, and
+`recommendation: blocked`. Do not use `report_path` for an unwritten or failed
+report. The `summary` and `next_action` fields should make the write failure
+and routing need clear without adding extra process keys.
+
+```yaml
+review_summary:
+  status: failed
+  review_location: chat_only_current_thread
+  recommendation: blocked
+  summary: "Failed to write required report to docs/review-outputs/example_adversarial_review_v0.md."
+  findings_count: 0
+  blocking_findings: []
+  advisory_findings: []
+  prior_findings_remediated: []
+  next_action: "Resolve the report write failure, then rerun the review-report prompt."
+```
 
 Do not include these fields in Orca adversarial review summaries:
 
@@ -80,6 +117,9 @@ Do not include these fields in Orca adversarial review summaries:
 - `fixture_expansion_performed`
 - `harness_or_compiler_or_path_b_run`
 
-Detailed review prose may follow when useful, but the YAML summary should be
-sufficient for another thread to know the review status, where to read it, the
-blocking/advisory finding IDs, and the next action.
+When a durable report is written, detailed review prose belongs in the report,
+not in chat. The chat response should normally contain only the YAML summary
+unless the user explicitly asks for inline detail. For chat-only reviews, brief
+detail may follow when useful, but the YAML summary should still be sufficient
+for another thread to know the review status, where to read it, the short
+summary, blocking/advisory finding IDs, and the next action.
