@@ -6,7 +6,7 @@ artifact_role: Orca overlay authority
 scope: Validation gates required before Orca completion claims.
 use_when:
   - Checking whether an Orca completion, prompt, or artifact claim has required evidence.
-  - Defining validation expectations for docs-first work.
+  - Defining validation expectations for non-implementation architecture, proof, prompt, and artifact work.
 authority_boundary: retrieval_only
 ```
 
@@ -20,6 +20,12 @@ Validation must be able to fail. Missing evidence is not a pass.
 - New or materially touched durable human-authored workflow artifacts follow
   `.agents/workflow-overlay/retrieval-metadata.md` or are clearly outside that
   contract.
+- Report-only retrievability checks may use
+  `docs/workflows/artifact_retrievability_guide.md` for artifact body-opening
+  shape, stale/recheck clarity, repo-map/index treatment, and hygiene anti-rot.
+  Findings are routing or hygiene defects only; they do not prove validation
+  failure, validation success, approval, readiness, lifecycle completion,
+  implementation authorization, or edit permission.
 - Source hashes for migration-governance inputs are recorded in `docs/workflows/orca_bootstrap_record.md`.
 - Resolver-visible skill-name snapshots are recorded before any skill adoption or promotion work.
 - Git status is reported when this workspace is a Git repo.
@@ -34,14 +40,19 @@ Validation must be able to fail. Missing evidence is not a pass.
 - Chat-output topology gate: prompt-policy patches, workflow patches, and
   reusable prompt templates touching chat output shape must check for
   contradictions between the general human-summary / agent-detail /
-  courier-YAML rule in `.agents/workflow-overlay/communication-style.md` and
-  output-mode exceptions in `.agents/workflow-overlay/prompt-orchestration.md`.
+  optional courier-state rule in
+  `.agents/workflow-overlay/communication-style.md` and output-mode exceptions
+  in `.agents/workflow-overlay/prompt-orchestration.md`.
   This is a collision gate, not a required-key checklist: decision-bearing chat
   should start with human-readable prose; agent detail should stay separate;
-  courier YAML should stay compact and last unless a stage-native exception
-  applies; `review-report` YAML-only chat remains tied to successful durable
-  report writes; `file-write` receipts remain valid only when the durable
-  artifact carries the human value; `paste-ready-chat` must be classified
+  courier state should stay compact and last when used; YAML should not be
+  defaulted unless the user asks, an output mode requires it, an explicit
+  output contract needs machine-shaped fields, or lane switching / handoff
+  routing would materially benefit from compact courier YAML;
+  `review-report` YAML-only chat remains tied to successful durable report
+  writes; `file-write` receipts remain valid only when the durable artifact
+  carries the human value and no material decision must be understood from chat;
+  `paste-ready-chat` must be classified
   before template propagation; task-native structured outputs such as evidence
   tables must not be naively rewritten into verbose closeouts; already-correct
   active `review-report` prompts and stale one-offs must not be broad-synced;
