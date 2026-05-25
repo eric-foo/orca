@@ -14,14 +14,14 @@ open_next:
   - .agents/workflow-overlay/source-of-truth.md
 stale_if:
   - New top-level docs folders are added.
-  - Core Spine, Data Spine, Cleaning Spine, Judgment Spine, offer, proof, or prompt families are materially reorganized.
+  - Core Spine, Data Capture Spine, Cleaning Spine, Judgment Spine, offer, proof, or prompt families are materially reorganized.
   - A later repo-map artifact supersedes this file.
 ```
 
 - Status: PROPOSED_MAP
 - Artifact type: Workflow navigation artifact
 - Scope: Repo navigation and source-pack selection
-- Refreshed: 2026-05-23
+- Refreshed: 2026-05-25
 - Implementation authorized: no
 
 ## How To Use This Map
@@ -96,7 +96,18 @@ Use these before broad product architecture or CA setup:
 | --- | --- |
 | `docs/product/core_spine_v0_product_contract.md` | Core Spine product contract and eight primitives. |
 | `docs/product/core_spine_v0_information_production_foundation_v0.md` | Manual information-production foundation and Evidence Unit standard. |
-| `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md` | Data/Cleaning/Judgment boundary and Evidence Candidate Record setup context. |
+| `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md` | Data Capture/Cleaning/Judgment boundary and Evidence Candidate Record setup context. |
+| `docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md` | Data Capture Spine architecture blueprint for commissioned capture, core/satellite boundary, and rejected patterns. |
+| `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md` | Draft Data Capture Spine v0 obligation contract for setup and pressure testing. |
+| `docs/product/core_spine_v0_data_capture_spine_remaining_fixture_plan_v0.md` | Planning-only fixture architecture for remaining Data Capture pressure tests and stop condition. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_synthesis_usage_note_v0.md` | Navigation and status-use note for the Data Capture pressure-test synthesis after optional adversarial clarifications. |
+| `docs/product/core_spine_v0_data_capture_spine_full_fixture_synthesis_v0.md` | Full Data Capture pressure-test synthesis across planned fixtures; advisory baseline candidate, not acceptance or completion. |
+| `docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md` | Context-preservation note for threaded, review, docs/changelog, domain-language, human-assisted, and archive/history capture. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_threaded_forum_reddit_api_pricing_v0.md` | Data Capture pressure fixture for threaded forum and package/segmentation capture using Reddit API/data pricing. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_public_sector_package_milwaukee_fiscal_crossroads_v0.md` | Data Capture pressure fixture for public-sector package/bundle capture using Milwaukee fiscal-crossroads material. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_review_surface_v0.md` | Data Capture pressure fixture for review-surface capture using ClickUp Trustpilot/G2 material. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_docs_changelog_versioned_page_v0.md` | Data Capture pressure fixture for docs/changelog/versioned-page capture using Kubernetes v1.32 docs. |
+| `docs/product/core_spine_v0_data_capture_spine_pressure_test_archive_history_recapture_v0.md` | Data Capture pressure fixture for archive/history and recapture using Unity Runtime Fee material. |
 | `docs/product/engagement_logic_registry_v0.md` | Signal-use and engagement interpretation registry. |
 | `docs/product/core_spine_v0_proof_protocol_v0.md` | Core proof protocol. |
 | `docs/product/core_spine_v0_proof_input_selection_v0.md` | Proof input-selection rules. |
@@ -106,7 +117,7 @@ Use these before broad product architecture or CA setup:
 ## Method Validation And Replay Files
 
 Use only when method-validation history, replay evidence, or case-frame locks
-are directly relevant. Do not include by default in Data Spine CA prompts.
+are directly relevant. Do not include by default in Data Capture Spine CA prompts.
 
 Key files:
 
@@ -168,6 +179,7 @@ Unity runtime-fee specimen:
 | Path | Use for |
 | --- | --- |
 | `docs/research/consulting-judgment-corpus/` | Consulting-judgment corpus, prompts, lane outputs, synthesis, candidate screens, backtestability, and reject patterns. |
+| `docs/research/judgment-spine/` | Judgment Spine parent contract, manifest, case indexes, and case-learning artifacts for consultant-grade decision judgment. |
 | `docs/review-outputs/adversarial-artifact-reviews/` | Adversarial artifact review reports. |
 | `docs/review-outputs/method-validation/` | Method-validation review outputs. |
 | `docs/review-outputs/proof/` | Proof review outputs. |
@@ -181,25 +193,17 @@ recovery, hygiene, or comparison against canonical promoted files.
 
 ## Recommended Read Packs
 
-### Data Spine Setup CA
+### Data Capture Spine Setup CA
 
-Start with:
+Use the canonical read-pack rule in
+`.agents/workflow-overlay/source-loading.md#data-capture-spine-ca-read-pack`.
+This map is only a navigation aid and must not fork the Data Capture Spine
+source-loading rule.
 
-- `docs/decisions/turn_08_product_thesis_v0.md`: thesis, value proposition,
-  strategic center, and current theory sections.
-- `docs/product/orca_offer_hypothesis_v0.md`: core offer hypothesis,
-  mechanism, fit diagnostic, and non-claims sections.
-- `docs/product/orca_buyer_proof_packet_v0.md`: proof standard, target buyer,
-  signal surface, disqualifiers, and not-build boundaries.
-- `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`:
-  purpose, decision, layer rules, and future ECR/Evidence Unit boundaries.
-- `docs/product/core_spine_v0_product_contract.md`: product bet, core rule,
-  frozen primitives, and explicit non-goals only.
-- `docs/product/core_spine_v0_information_production_foundation_v0.md`:
-  Evidence Unit standard and boundary rules only.
-
-Do not read these files in full by default. Use targeted sections and expand
-only when a concrete source gap could change the Data Spine CA prompt.
+Navigation pointers for that pack live in the Product Anchor Files and Core
+Spine Files sections above. Do not read the target files in full by default.
+Use the targeted sections named by `source-loading.md`, then expand only when a
+concrete source gap could change the Data Capture Spine CA prompt.
 
 Exclude by default:
 
@@ -208,6 +212,46 @@ Exclude by default:
 - review outputs;
 - research corpus;
 - `docs/_inbox/`.
+
+### Data Capture Setup / Pressure-Test Packet
+
+Use this packet when continuing Data Capture Spine setup, obligation-contract
+pressure testing, or source-family fixture checks. This is a navigation pointer
+only; it does not claim that Data Capture Spine is closed, source-of-truth
+promoted, accepted, formally validated, ready for ECR/Cleaning handoff,
+implementation-ready, runtime-ready, or Cleaning-complete.
+
+Start with:
+
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_synthesis_usage_note_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_full_fixture_synthesis_v0.md`
+- `docs/review-outputs/adversarial-artifact-reviews/core_spine_v0_data_capture_spine_full_fixture_synthesis_adversarial_review_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_remaining_fixture_plan_v0.md`
+- `docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_threaded_forum_reddit_api_pricing_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_public_sector_package_milwaukee_fiscal_crossroads_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_review_surface_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_docs_changelog_versioned_page_v0.md`
+- `docs/product/core_spine_v0_data_capture_spine_pressure_test_archive_history_recapture_v0.md`
+
+Current pressure-test or setup handoffs should pin a freshly computed hash of
+the obligation contract. The last reported working hash for the contract was
+`A9B4D61226571ADCADD96504D361A7EBEB00775C315708AE53495E2F60EEE1DF`, but
+receiving lanes should recompute it before strict source-pinning claims.
+
+Current post-clarification synthesis hash was last reported as
+`46103142927A7EA7A4B61F10E0EF029614814F36438F4359C4B69B838E6C6126`. The
+pressure-test synthesis usage note hash was last reported as
+`7A5C5B26AA6F95C99428D7C7EB5014FD172E47DF57BFC2D92C68A1994DECAE29`. Recompute
+before strict claims.
+
+Note: older fixture headers and the adversarial review may reference earlier
+synthesis or contract hashes. Treat those as historical provenance unless the
+receiving lane is explicitly reviewing that older state. The adversarial review
+is useful for rationale and optional clarification findings, but it reviewed
+the pre-clarification synthesis hash recorded inside that report.
 
 ### Offer Or Buyer Proof Work
 

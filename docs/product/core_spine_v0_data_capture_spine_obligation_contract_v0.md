@@ -1,0 +1,601 @@
+# Core Spine v0 Data Capture Spine Obligation Contract
+
+```yaml
+retrieval_header_version: 1
+artifact_role: Product-method contract
+scope: V0 obligation contract for commissioned Data Capture Spine captures before Evidence Candidate Record, Cleaning Spine, and Judgment Spine.
+use_when:
+  - Running or reviewing commissioned Data Capture Spine work.
+  - Checking whether a captured public/external signal is ready to hand categorically to Evidence Candidate Record.
+  - Pressure-testing Data Capture obligations against real commissioned captures.
+authority_boundary: retrieval_only
+open_next:
+  - docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md
+  - docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md
+  - docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md
+stale_if:
+  - Orca authorizes standing/opportunistic corpus capture as part of Data Capture Spine.
+  - Evidence Candidate Record architecture changes the handoff boundary.
+  - A pressure-test revision supersedes these v0 obligations.
+```
+
+- Status: CONTRACT_DRAFT_V0
+- Artifact type: Product-method contract
+- Scope: Commissioned Data Capture Spine obligations, discharge states, mode rules, re-capture rules, and pressure-test checks
+- Source basis: `docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md`, `docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md`, `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`
+- Implementation authorized: no
+- Feature planning authorized: no
+- Runtime/source-system design authorized: no
+
+## Purpose
+
+This contract defines what Data Capture Spine must satisfy for a
+decision-framed public/external signal to be treated as captured well enough
+for categorical handoff to Evidence Candidate Record.
+
+It answers one question:
+
+```text
+Was this commissioned signal captured well enough that downstream layers can
+inspect it, understand its limits, and proceed without recollecting source
+history?
+```
+
+This is a product-method contract. It is not an Evidence Candidate Record
+schema, Cleaning Spine design, Judgment Spine ruleset, source inventory,
+runtime source-system plan, scraper/API plan, storage design, dashboard, test
+plan, or implementation authorization.
+
+## Scope
+
+This contract applies only to **commissioned capture**.
+
+Commissioned capture means the capture is performed for an existing Decision
+Frame. The decision question, owner or owner-context, consequence, allowed
+decision verbs, cutoff posture, and intended downstream use must be known
+enough for capture obligations to be evaluated.
+
+Standing or opportunistic corpus capture is out of scope for Data Capture
+Spine v0. If Orca later collects public signals before a Decision Frame exists,
+that should be handled by a separate Candidate Signal Intake or Corpus Intake
+contract. Those items are not ECR-ready evidence until rebound or recaptured
+under a Decision Frame.
+
+## Contract Rule
+
+Every commissioned capture must make each core obligation explicit as one of:
+
+- `met`: the obligation is satisfied enough for categorical handoff.
+- `partial`: the obligation is partly satisfied, and the limitation is visible.
+- `blocked`: the obligation is required, but capture cannot satisfy it under
+  the allowed boundary.
+- `unavailable_by_source`: the source does not expose the needed fact or state.
+- `not_applicable`: the obligation does not apply to this signal or source.
+- `not_attempted`: the obligation was not attempted and must carry a reason.
+
+Silent omission is not allowed. Unknowns are acceptable only when the unknown
+state and reason are visible.
+
+## Core Obligations
+
+### 1. Commissioning Gate
+
+The capture must be tied to a Decision Frame.
+
+Minimum obligation:
+
+- the capture is connected to a specific decision question;
+- the decision consequence or owner-context is known enough to keep capture
+  from becoming free-floating source collection;
+- the cutoff posture is known or explicitly marked unknown;
+- standing or opportunistic capture is rejected or routed outside this contract.
+
+Failure mode: if there is no Decision Frame, Data Capture Spine has not started.
+
+### 2. Boundary Compliance
+
+Capture must stay public, market-level, non-deceptive, and non-intrusive.
+
+Capture must not use private access, deceptive collection, ordinary-person
+dossiers, or source acquisition that violates the current Orca boundary.
+
+Failure mode: boundary-violating material is not a Data Capture blocker to be
+worked around. It is out of bounds for this contract.
+
+### 3. Capture-Event Provenance
+
+Capture must make the capture event auditable at the product-method level.
+
+Minimum obligation:
+
+- who or what performed the capture is knowable at the operator/category level;
+- the capture session is distinguishable from other sessions;
+- the capture mode is disclosed;
+- the obligation-contract version or equivalent rule surface is knowable;
+- material mode changes inside the session are visible.
+
+Why: downstream review must be able to audit capture-quality drift across
+operators, agents, modes, and contract versions.
+
+### 4. Capture Mode Disclosure
+
+Capture must disclose how the signal was captured.
+
+Allowed capture-mode categories:
+
+- human-led;
+- agent-assisted;
+- structured access;
+- archive/history;
+- automated extraction;
+- multimodal;
+- mixed.
+
+The mode category does not decide quality. It only exposes the capture path so
+downstream layers can inspect limits and repeatability.
+
+### 5. Mode-Change Rule
+
+If a capture changes mode inside a session, the change must be visible.
+
+Examples:
+
+- human-led capture uses an agent to enumerate source candidates;
+- agent-assisted capture escalates to human review for related-chain context;
+- structured access fails and capture switches to archive/history;
+- text capture escalates to multimodal capture because layout carries signal.
+
+Mode changes do not invalidate capture. Hidden mode changes do.
+
+### 6. Raw Observable Preservation
+
+Capture must preserve the raw observable enough for downstream inspection.
+
+Minimum obligation:
+
+- preserve what the source showed or said, not only Orca's summary;
+- keep source claim separate from Orca interpretation;
+- preserve domain-native language when it carries signal;
+- preserve modality when text-only capture would lose signal meaning.
+
+Capture may add short context notes, but it must not replace the observable
+with interpretation.
+
+Source-read ledgers, summaries, and title/date/claim rows are provenance aids.
+They do not by themselves preserve the raw observable when source meaning
+depends on thread context, modality, layout, edits, related replies, or visible
+source structure.
+
+### 7. Source Identity And Actor Context
+
+Capture must preserve source identity and source-actor context where knowable.
+
+Minimum obligation:
+
+- identify the source surface or source family categorically;
+- preserve actor or audience category where knowable;
+- mark when actor specificity is unavailable, ambiguous, or source-limited;
+- separate source carrier from source actor when they differ.
+
+Capture records what is visible. It does not decide whether the actor is
+credible, representative, independent, or decision-useful.
+
+### 8. Decomposed Timing
+
+Capture must preserve timing as separate visible categories where available.
+
+Timing categories:
+
+- source publication or event timing;
+- source last-edit or version timing;
+- capture timing;
+- re-capture timing, if any;
+- cutoff posture for the commissioned decision.
+
+For live or mutable threaded pages, distinguish thread creation timing from
+relevant comment, reply, update, edit, capture, and cutoff timing where visible.
+If the related chain may include post-cutoff accretion or edits, mark the chain
+as mixed or unknown unless item-level timing makes the boundary clear.
+
+Do not collapse these into one generic timestamp. Divergence between them is
+often the point.
+
+### 9. Cutoff Posture
+
+Capture must record cutoff posture as a first-class capture fact.
+
+Minimum obligation:
+
+- whether the signal appears pre-cutoff, post-cutoff, mixed, or unknown for the
+  commissioned decision;
+- whether the capture itself occurred before or after the cutoff;
+- whether the capture includes any post-window material that downstream packet
+  builders must exclude.
+
+Capture does not decide whether the signal is admissible for a backtest or
+decision. It makes cutoff posture visible enough for downstream exclusion and
+Judgment rules to operate.
+
+### 10. Archive / Historical Posture
+
+Every capture must record archive/history posture. When a capture has only one
+relevant source slice or the archive/history state is uniform, the posture may
+be recorded at capture level as one of:
+
+- `archived`;
+- `attempt_failed`;
+- `not_attempted`;
+- `not_applicable`.
+
+When cutoff, deletion, edit, cache, prior-window, archive-only, migration,
+fallback, or visibility-shift risk is load-bearing, capture-level posture is
+not enough if multiple states coexist. Capture must preserve archive/history
+posture per relevant source slice, source locator, archive/cache attempt, or
+fallback access path when those states differ.
+
+Relevant source slices and locators include the original live locator,
+historical or archive locator, cache locator, current locator, migrated
+locator, mirror or fallback locator, and failed access attempt when any of
+them changes visibility, cutoff posture, raw observable, source-state history,
+or recapture relationship.
+
+A rollup archive posture is allowed only when it does not hide a failed,
+degraded, unavailable, not-attempted, fallback, migrated, or conflicting
+source state. A successful archive or fallback does not erase a failed exact
+access attempt, failed cache attempt, or non-attempted archive route.
+
+Archive success is not required for every source. Visible archive posture is
+required. Sufficiency belongs downstream.
+
+When cutoff, deletion, edit, cache, or version risk is load-bearing, a missing
+archive attempt should be treated as a visible limitation, not silently ignored.
+
+### 11. Source Visibility And Access Limits
+
+Capture must expose source visibility and access limits.
+
+Minimum obligation:
+
+- whether the source was publicly visible under the allowed Orca boundary;
+- whether visibility was gated, ephemeral, archive-only, deleted, edited,
+  cached, dynamic, vendor-moderated, or otherwise constrained where visible;
+- whether exact access failed, degraded, or required a fallback mode;
+- when source visibility shifts, preserve the relationship among the original
+  locator, current locator, migrated locator, archive/cache locator, fallback
+  locator, and failed access attempt where visible.
+
+Capture does not convert visibility limits into credibility effects.
+
+### 12. Related Context Preservation
+
+Capture must preserve the smallest source context that keeps the signal
+inspectable and fairly represented.
+
+Two tests:
+
+- ECR reconstruction floor: could Evidence Candidate Record reconstruct what
+  the source was claiming from this slice without re-fetching?
+- fairness ceiling: would a reasonable observer agree the slice represents
+  what was said?
+
+For threaded sources, preserve the related chain, not the entire forum. A
+related-chain capture is not satisfied by a title/date/claim ledger row alone
+when thread context carries meaning. Preserve the original post or parent claim,
+the signal-bearing comment or reply path, direct corrections, rebuttals,
+confirmations, official or moderator responses where visible, resolution, lock,
+edit, or deletion posture where visible, and the boundary reason for excluding
+unrelated thread branches or forum material.
+
+For review surfaces, preserve rating, text, recency posture, visible
+experience timing, moderation/incentive/sorting posture where available, and
+long-context positive or negative detail when it carries signal.
+
+For docs, changelogs, pricing pages, API docs, policies, and versioned pages,
+preserve version, edit, deprecation, future/current, cache, archive, and
+backfill posture where visible.
+
+### 13. Bundled-Offer Structure Observables
+
+When source material presents a counterparty offer, package, settlement,
+public-sector deal, regulatory bargain, or similar multi-term proposal, Capture
+must preserve the source-visible bundle structure instead of flattening it into
+an unordered list of terms.
+
+Minimum obligation:
+
+- preserve which terms appear together in the same offer, package, draft, vote,
+  memo, or negotiation artifact;
+- preserve source-visible framing such as concession, requirement, restriction,
+  safeguard, sweetener, penalty, condition, optionality, sunset, or fallback;
+- preserve source-visible dependencies, including what must be accepted
+  together, what appears severable, what is conditional, and what expires;
+- preserve the source's own language for why a term is included when that
+  language is visible;
+- preserve visible packaging cues where they carry meaning, including headings,
+  labels, bullet order, nesting, emphasis, table placement, grouping, and
+  proximity;
+- preserve sequence where visible: when a term entered, changed, moved, or
+  disappeared across drafts, votes, memos, or negotiations.
+
+The atomic unit is the bundle as presented, not the extracted term. A term may
+still be captured separately for downstream inspection, but separate term
+capture must not erase the source-visible package it came from.
+
+Capture records observed structure and framing. It must not infer counterparty
+motive, price concessions, recommend negotiation moves, or decide whether the
+bundle is good, bad, credible, acceptable, or decision-useful.
+
+### 14. Capture Failure And Blocker Visibility
+
+Capture must make failure visible.
+
+Examples:
+
+- source inaccessible under allowed boundary;
+- source disappeared or changed;
+- archive attempt failed;
+- exact source access failed but an archive, cache, mirror, migrated page, or
+  other fallback succeeded;
+- source actor could not be identified;
+- publication timing could not be established;
+- source context could not be fairly bounded;
+- bundle membership, source-visible framing, or term dependency could not be
+  established for a multi-term proposal;
+- visible packaging cues could not be preserved where they carry meaning;
+- modality could not be captured enough to preserve meaning.
+
+Failure is allowed. Silent failure is not.
+
+### 15. Re-Capture Semantics
+
+Re-capture is required or should be considered when source state, archive
+state, Decision Frame, cutoff posture, or capture-mode confidence materially
+changes.
+
+A re-capture must preserve its relationship to the earlier capture:
+
+- why re-capture happened;
+- what source state changed, if known;
+- whether the new capture supersedes, supplements, or conflicts with the prior
+  capture;
+- whether cutoff posture changed or became clearer.
+
+When re-capture involves changed, migrated, archived, cached, fallback, or
+failed-access source states, that relationship must be preserved per material
+source slice or locator. The relationship must distinguish the original
+locator, archive or historical locator, current or migrated locator, failed
+access attempt, and changed source state where those are visible.
+
+A later capture may supersede the earlier capture for current-state posture
+while supplementing or conflicting with it for a prior-window or cutoff
+question. Capture must preserve that mixed relationship instead of forcing one
+global supersede, supplement, or conflict label. Later successful access does
+not overwrite earlier failed access, archive attempt failure, fallback use, or
+prior-window uncertainty.
+
+Re-capture does not erase prior capture history.
+
+### 16. Categorical Handoff Sufficiency
+
+Capture must hand off enough categorical context for ECR, Cleaning, and
+Judgment to proceed without recollecting source history.
+
+Minimum handoff accomplishments:
+
+- the captured signal is inspectable;
+- raw observable and related context are preserved;
+- source claim is separate from Orca interpretation;
+- source identity, actor category, timing, modality, visibility, and
+  cutoff/archive posture are visible where knowable;
+- when archive/history or recapture states differ, the original locator,
+  historical/archive/cache locator, current or migrated locator, fallback path,
+  failed access attempt, changed source state, and supersede/supplement/conflict
+  relationship remain visible at the relevant source-slice level;
+- bundled-offer structure, source-visible framing, and visible packaging cues
+  are preserved when the source is a multi-term proposal;
+- capture obligations and limitations are visible;
+- Cleaning can proceed without reconstructing collection history;
+- Judgment can inspect capture limits without Capture making judgment calls.
+
+This contract does not define ECR fields, keys, IDs, tables, data types,
+receipt structures, storage, schema, or file formats.
+
+## Capture Modes
+
+### Human-Led
+
+Human-led capture is allowed and expected for v0 bootstrap, training,
+governance, quality control, and high-ambiguity capture.
+
+Human-led capture still must disclose capture-event provenance, timing, mode,
+context, cutoff, archive posture, and limitations. "A human looked at it" is
+not a substitute for obligation discharge.
+
+### Agent-Assisted
+
+Agents may:
+
+- enumerate;
+- fetch;
+- archive;
+- transcribe;
+- link;
+- mechanically group exact URLs or identical locators.
+
+Agents must not:
+
+- rank relevance;
+- filter candidates before presentation;
+- summarize for admissibility;
+- decide missing context;
+- classify credibility;
+- exclude signals;
+- decide downstream use.
+
+Agent-assisted sessions should preserve query/session context, result batches,
+fetched candidates, discarded candidates, and discard reason categories.
+
+### Structured Access
+
+Structured access may be used when official, clean, or orderly source surfaces
+exist.
+
+Structured access must not define what counts as evidence. It is one capture
+path. Availability does not equal validity.
+
+### Archive / Historical
+
+Archive/history capture is required as a conceptual posture and used when
+cutoff, deletion, edit, cache, version, or prior-window visibility matters.
+
+Runtime archive tooling is not authorized by this contract.
+
+### Automated Extraction
+
+Automated extraction is allowed only as a future bounded mode after obligations
+are testable and the current turn or accepted handoff authorizes runtime work.
+
+Until then, automated extraction is a conceptual mode, not a build plan.
+
+### Multimodal
+
+Multimodal capture is required when text alone loses the signal.
+
+Examples include layout-dependent pages, screenshots where visual state carries
+meaning, audio/video statements, dynamic rendering, and interaction-dependent
+signals.
+
+## Captured But Unusable
+
+A signal can satisfy Data Capture obligations and still be unusable downstream.
+
+Capture success does not imply:
+
+- credibility;
+- independence;
+- audience fit;
+- costly behavior;
+- demand evidence;
+- valid signal use;
+- inclusion;
+- Decision Strength;
+- Action Ceiling.
+
+If Capture discharged obligations and exposed limits, downstream unusability is
+not a Data Capture failure. It is a downstream judgment, receipt, cleaning, or
+decision-use result.
+
+## Forbidden Outputs From Capture
+
+Data Capture must not emit:
+
+- credibility labels;
+- integrity classifications;
+- discounting decisions;
+- exclusion decisions;
+- Signal Use Classification;
+- Decision Strength;
+- Action Ceiling;
+- semantic dedupe or clustering effects;
+- Cleaning transformations;
+- final ECR field architecture;
+- source-quality scores;
+- source maps as core architecture;
+- runtime implementation plans.
+
+Capture may record visible facts that downstream layers later use. It must not
+decide downstream effects.
+
+## Source-Family Promotion
+
+Source-family heuristics begin as satellite rules unless they are obvious core
+invariants or are explicitly accepted by the owner as core.
+
+Promotion to core requires one of:
+
+- comparison across at least two non-overlapping source families; or
+- owner sign-off for one specific invariant claim.
+
+Owner override must attach to the specific invariant claim, not a broad
+category such as "forums" or "review surfaces."
+
+## Pressure-Test Requirement
+
+This v0 contract should not be treated as hardened until tested against 3-5
+real commissioned captures.
+
+Pressure-test each capture against:
+
+- whether the Decision Frame was sufficient to start capture;
+- which obligations were met, partial, blocked, unavailable, not applicable, or
+  not attempted;
+- whether related context was too thin, too broad, or fair;
+- whether cutoff and archive posture were clear enough;
+- whether agent/human mode boundaries held;
+- whether Capture stayed out of ECR, Cleaning, and Judgment;
+- whether the signal was captured but later unusable, and why that was not a
+  Capture failure;
+- which obligation should be tightened, relaxed, split, or moved to satellite.
+
+Recommended pressure-test source mix:
+
+- one threaded forum or community chain;
+- one review surface with recency and long-context tension;
+- one bundled or multi-term offer, settlement, public-sector deal, regulatory
+  bargain, or counterparty package with source-visible framing;
+- one changelog, docs, pricing, API, or policy page with version/timing risk;
+- one archive/history case with deleted, edited, cached, or prior-window risk;
+- one multimodal or dynamic-page case if available.
+
+Before locking or tightening core obligations, review accumulated tactical
+primitives from cases for upstream capture requirements they imply. If a
+downstream primitive cannot be recovered after capture flattening, that is
+capture-obligation evidence, not only Judgment training material.
+
+The pressure test should update the contract only after failures are compared.
+Do not harden this contract from abstract reasoning alone.
+
+## Open Design Knobs
+
+Carry these forward explicitly:
+
+- which source families require an archive attempt rather than recorded
+  per-slice archive/history posture only;
+- which source families require human-led capture by default until the engine
+  is trained and checked;
+- what minimum agent-assisted logging is feasible without creating source-log
+  bloat;
+- where ECR draws the line between related-chain context and irrelevant source
+  exhaust;
+- whether Snapshot Integrity Class belongs in Data Capture, ECR, or later
+  Judgment/ECR consolidation;
+- what recapture threshold is high enough to avoid churn but low enough to
+  preserve meaningful source changes.
+
+## Rejected Patterns
+
+Reject:
+
+- standing/opportunistic corpus capture inside this v0 contract;
+- generic "hybrid" mode mixing without obligation discharge;
+- source volume as evidence validity;
+- source maps or inventories as Data Capture core;
+- capture-time credibility scoring;
+- ECR-by-stealth;
+- Cleaning-by-stealth;
+- Judgment-by-stealth;
+- paper contract hardening before real signal pressure tests;
+- capture as adversarial defense rather than downstream judgment enablement;
+- runtime design as this contract.
+
+## Non-Claims
+
+This contract does not prove buyer validation, willingness to pay, repeatable
+demand, product readiness, feature readiness, implementation readiness,
+commercial readiness, source-system feasibility, data rights, runtime
+feasibility, Core Spine validation, Judgment Spine validation, Evidence
+Candidate Record completion, or Evidence Unit design completion.
+
+It does not authorize implementation, runtime design, source maps, schemas,
+scrapers, APIs, storage, dashboards, automation, tests, deployment, proof runs,
+feature planning, commits, pushes, PRs, or readiness claims.

@@ -1,0 +1,315 @@
+# Core Spine v0 Data Capture And Cleaning Spine Boundary
+
+```yaml
+retrieval_header_version: 1
+artifact_role: Product architecture boundary note
+scope: Canonical boundary for Data Capture Spine, Evidence Candidate Record, Cleaning Spine, Judgment Spine, Decision Artifact, and Outcome Memory in Core Spine v0.
+use_when:
+  - Deciding whether Data Capture Spine, Evidence Candidate Record, or Cleaning Spine work belongs in core, satellite, Judgment Spine, artifact, outcome, or a deferred runtime lane.
+  - Preparing the later Evidence Candidate Record / Evidence Unit architecture consolidation prompt.
+  - Checking whether a proposed source, capture, cleaning, memo, deck, or outcome-memory change exceeds this artifact's planning-only authority or requires separate bounded implementation authorization.
+authority_boundary: retrieval_only
+open_next:
+  - docs/product/core_spine_v0_product_contract.md
+  - docs/product/core_spine_v0_information_production_foundation_v0.md
+  - docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md
+  - docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md
+```
+
+- Status: PROPOSED_FREEZE
+- Artifact type: Product architecture boundary note
+- Scope: Product-method architecture for Core Spine v0 Data Capture/Cleaning boundaries
+- Source basis: current owner direction, `docs/product/core_spine_v0_product_contract.md`, `docs/product/core_spine_v0_information_production_foundation_v0.md`
+- Implementation authorized: no
+- Feature planning authorized: no
+- Proof run authorized: no
+
+## Purpose
+
+This note fixes the product-method boundary between Data Capture Spine, Evidence
+Candidate Record, Cleaning Spine, Judgment Spine, Decision Artifact, and Outcome
+Memory.
+
+It supersedes the older working alias where "Data Spine" meant Evidence Object
+Model / Evidence Unit content contract. In this note, the canonical name is Data
+Capture Spine: evidence-grade signal acquisition and preservation. Evidence
+Candidate Record owns the pre-cleaning captured-signal receipt.
+
+This is not a runtime design. It may define conceptual capture and preservation
+responsibilities, but it does not itself authorize schemas, storage, source
+APIs, scrapers, adapters, dashboards, automation, scoring engines, clustering
+pipelines, memo generators, deck generators, tests, deployment, proof runs, or
+feature planning.
+
+## How To Use This Note
+
+Use this note as a boundary check before creating or patching Core Spine, Data
+Capture Spine, Evidence Candidate Record, Judgment Spine, Evidence Unit,
+source-family, memo, deck, or outcome-memory artifacts.
+
+Ask three questions:
+
+1. Does this proposed work belong to Data Capture Spine, Evidence Candidate Record,
+   Cleaning / Provenance & Normalization, Judgment, Artifact, Outcome Memory,
+   Satellite, or a deferred runtime lane?
+2. Is the work preserving the Data Capture / Evidence Candidate Record / Cleaning
+   split, or is it letting capture, receipt, cleaning, and judgment blur
+   together?
+3. Is the work non-implementation product architecture, or is it smuggling
+   runtime source-system design, implementation, source maps, or proof-run
+   execution?
+
+For the next Evidence Candidate Record / Evidence Unit prompt, use this note as
+a boundary input. Do not treat it as the completed ECR or Evidence Unit design.
+
+## Decision
+
+Data Capture and Cleaning should be split, with Evidence Candidate Record
+between them.
+
+The split is product-method, not runtime:
+
+| Layer | Canonical term | Owns | Must not own |
+| --- | --- | --- | --- |
+| Data Capture Spine | Evidence-grade signal acquisition and preservation | Source-surface discovery, access-path evaluation, capture obligations, raw-signal preservation, capture fidelity, source visibility, source identity, event/capture timing, cutoff/archive posture, and handoff requirements for public/external signals. | Final ECR field schema, storage, IDs, adapters, scraper/API implementation, source truth, cleaning transformations, credibility labels, discounting, Decision Strength, Action Ceiling. |
+| Evidence Candidate Record | Pre-cleaning captured-signal receipt | The content/receipt contract for a captured signal entering Cleaning: raw observation, provenance/timing/capture-context obligations, inspectability reference, preservation posture, and handoff state at a categorical level. | Source discovery, source collection operations, runtime storage, cleaning transformations, integrity labels, signal-use classification, decision-use claims. |
+| Cleaning Spine | Provenance & Normalization | Non-destructive transformation ledger, normalization, translation, summarization, dedupe mechanics, clustering mechanics, and raw-to-cleaned traceability. | Source acquisition, credibility, discounting effects, integrity labels, exclusion due to judgment, Decision Strength, Action Ceiling. |
+| Judgment Spine | Judgment Spine | Signal Integrity, Signal Use Classification, uncertainty, counterevidence, discounting, exclusion, Decision Strength, Action Ceiling. | Capture, source storage, raw transformation history, deck production. |
+| Decision Artifact | Reasoning + Communication Artifact | Memo and evidence appendix as reasoning substrate; executive deck as derived communication. | New unsupported claims or claims above Action Ceiling. |
+| Outcome Memory | Backtest + Live Outcome Memory | Cutoff-disciplined replay and attribution-tagged live learning. | Calibration or moat claims without leakage and attribution controls. |
+
+The canonical architecture is:
+
+```text
+Decision Frame
+-> Data Capture Spine: signal discovery, access, capture, preservation, handoff
+-> Evidence Candidate Record
+-> Cleaning Spine: Provenance & Normalization ledger
+-> Judgment Spine overlays
+-> Reasoning Artifact: memo + evidence appendix
+-> Communication Artifact: derived executive deck
+-> Outcome Memory: Backtest Memory + Live Outcome Memory
+```
+
+The wrong moves are:
+
+- collapsing Data Capture, Evidence Candidate Record, and Cleaning into one blurry
+  contract;
+- using Data Capture Spine as an Evidence Object Model alias;
+- giving Data Capture Spine runtime meaning too early;
+- treating source availability or collection volume as evidence validity;
+- letting Cleaning absorb Judgment;
+- letting decks drive evidence structure.
+
+## Layer Rules
+
+Decision Frame remains the required starting point. No Data, Evidence Candidate
+Record, Cleaning, Judgment, Artifact, or Outcome layer should create
+free-floating evidence inventories outside a decision frame.
+
+Data Capture Spine owns evidence-grade acquisition and preservation requirements. It
+may say what kinds of source surfaces, capture fidelity, visibility, timing,
+archive posture, and preservation obligations Orca must support conceptually.
+It must not become a runtime source-system plan, scraper plan, source inventory,
+source map, or generic listening platform.
+
+Evidence Candidate Record owns the pre-cleaning captured-signal receipt. This
+artifact does not freeze a field architecture; the current IPF Evidence Unit
+standard remains the source to cite until the later Evidence Candidate Record /
+Evidence Unit consolidation.
+
+Cleaning Spine may record dedupe and clustering mechanics. Once dedupe or
+clustering affects independence, credibility, uncertainty, exclusion, Decision
+Strength, or Action Ceiling, the effect belongs to Judgment Spine.
+
+Judgment Spine owns inference and decision-use effects. The consultant-loop CA
+lane may train inference, build a case backlog, compare solved cases, and
+sharpen judgment rubrics. This note reserves the layer boundary; it does not
+claim Judgment Spine is trained, validated, accepted, or ready.
+
+Decision Artifact splits into Reasoning Artifact and Communication Artifact.
+The memo plus evidence appendix are the reasoning substrate. The executive deck
+is derived communication; every material deck claim should trace back to the
+memo or appendix and must not exceed the Action Ceiling.
+
+Outcome Memory splits into Backtest Memory and Live Outcome Memory. Backtest
+Memory may support internal calibration only when leakage controls hold. Live
+Outcome Memory is attribution-degraded by default until an accepted attribution
+discharge protocol exists.
+
+## Inclusion State Rule
+
+The Evidence Candidate Record or later Evidence Unit may carry an inclusion or
+handoff state, but the reason for that state must be layer-owned.
+
+| State reason type | Owning layer | Examples |
+| --- | --- | --- |
+| Capture or preservation blocker | Data Capture Spine | Source inaccessible under allowed boundary, capture fidelity insufficient, archive posture missing, source visibility cannot be established. |
+| Receipt/content blocker | Evidence Candidate Record | Raw observation missing, source identity unresolved, event/capture timestamp obligation unmet, inspectability reference absent. |
+| Cleaning blocker | Cleaning Spine | Normalization conflict, duplicate cluster unresolved, translation/summarization trace missing. |
+| Boundary blocker | Core Boundary Rules / Judgment Spine | Private material, deceptive collection, ordinary-person dossier risk. |
+| Integrity exclusion | Judgment Spine | Artificial-amplification risk prevents use, copied/coordinated signal cannot support demand. |
+| Decision-use downgrade | Judgment Spine | Signal is useful for attention but weak for demand. |
+| Satellite interpretation blocker | Satellite | Costly behavior undefined for the decision family. |
+
+Data Capture Spine and Evidence Candidate Record may record that a source cannot be
+inspected or a timestamp is missing. Cleaning may preserve and propagate that
+fact. None of those layers may decide that the signal is credible enough,
+strong enough, or action-supporting enough; that belongs to Judgment Spine.
+
+## Core Vs Satellite
+
+Core owns market-agnostic evidence accountability:
+
+- Decision Frame requirement;
+- Data Capture Spine capture and preservation obligations;
+- Evidence Candidate Record / Evidence Unit invariants;
+- provenance, timing, visibility, and cutoff discipline;
+- transformation ledger semantics;
+- Signal Integrity vocabulary and Integrity Effect Rule;
+- Signal Use Classification registry shape;
+- Decision Strength and Action Ceiling rules;
+- memo plus evidence appendix as reasoning substrate;
+- executive deck derivation invariant;
+- backtest leakage controls;
+- public, market-level, non-deceptive boundary rules;
+- non-claims.
+
+Satellites own bounded adaptation:
+
+- buyer context, industry constraints, decision owner, and consequence;
+- decision-family language, competitor set, source-family relevance, and source
+  blind spots;
+- source-family access notes and capture feasibility constraints;
+- source-family-adapted normalization heuristics;
+- costly-behavior examples;
+- allowed verb subset within core Action Ceiling rules;
+- success criteria, kill criteria, and satellite-specific Signal Use rows;
+- communication artifact template and tone.
+
+Satellites adapt context and interpretation. They must not redefine capture
+provenance, admissibility, cutoff discipline, preservation discipline,
+integrity effects, cleaning traceability, Action Ceilings, memo/appendix
+discipline, or non-claims.
+
+## Source-Family Promotion Rule
+
+Source-family rules may exist in satellites before they become core.
+
+Any proposed capture, cleaning, normalization, or interpretation rule must
+declare itself as source-invariant core, source-family-adapted satellite, or
+unresolved candidate rule.
+
+Empirical source-family heuristics should not be promoted into core until they
+survive comparison across at least two non-overlapping source families or an
+owner explicitly accepts the exception. This applies to capture-fidelity
+heuristics, copied-language thresholds, review-site normalization, forum
+thread/comment hierarchy, vendor-managed forum discounts, AI-rewritten-content
+suspicion, and similar source-shaped heuristics.
+
+This rule does not require obvious core invariants, such as raw-signal
+preservation, raw-claim separation, or non-destructive transformations, to
+re-prove themselves across source families.
+
+## Rejected Or Deferred
+
+Rejected:
+
+- unified Data + Cleaning Spine core;
+- Data Capture Spine as Evidence Object Model / content-only alias;
+- Data Capture Spine as runtime/source-system architecture;
+- Cleaning Spine owning credibility, discounting, exclusion, Decision Strength,
+  or Action Ceiling;
+- source-family-first core;
+- decision-family-first top layer;
+- deck-driven spine;
+- source maps as inventories or collection plans;
+- Outcome Memory as moat claim before leakage and attribution controls exist.
+
+Deferred:
+
+- schemas, storage shape, source IDs, source APIs, scrapers, adapters,
+  dashboards, automation, scoring engines, clustering pipelines, source-map
+  inventories, memo generators, deck generators, software tests,
+  implementation planning, and deployment;
+- source taxonomy and numeric source-quality rubric;
+- final Evidence Candidate Record / Evidence Unit field architecture;
+- final memo format and deck back-reference syntax;
+- confidence vocabulary beyond Action Ceiling;
+- Snapshot Integrity Class enforcement mechanics;
+- Live Outcome Memory attribution-discharge protocol.
+
+## Future Work Boundaries
+
+Data Capture Spine setup CA should answer:
+
+- what source surfaces and acquisition modes Orca must be able to reason about;
+- what capture fidelity and preservation obligations are core;
+- how cutoff, archive posture, source visibility, and capture context should be
+  handled conceptually;
+- what Data Capture Spine must hand to Evidence Candidate Record categorically, without
+  defining ECR fields or schemas;
+- what capture capabilities are core, satellite, rejected, or deferred.
+
+Judgment Spine lane:
+
+- may produce inference-training cases, case backlog, solved-case comparisons,
+  judgment rubric refinements, and examples of discounting, exclusion, and
+  Action Ceiling decisions;
+- should patch accepted judgment rules into the appropriate Judgment Spine or
+  Core Spine artifact;
+- must not move judgment ownership into Cleaning.
+
+Future Evidence Candidate Record / Evidence Unit consolidation should answer:
+
+- whether Evidence Candidate Record is the final canonical object name or a
+  working owner-selected name;
+- which Evidence Unit fields are frozen core invariants;
+- how capture handoff obligations become receipt fields without turning Data
+  Spine into an ECR schema;
+- how transformation ledger references should be represented conceptually;
+- how inclusion state, state reason, and layer ownership should be recorded;
+- how snapshot/archive status relates to pre-cutoff visibility;
+- how Judgment overlays attach without becoming raw transformation history;
+- what must remain satellite-specific.
+
+## Owner Decisions Remaining
+
+- Whether Evidence Candidate Record is the final canonical object name or a
+  working name for the next consolidation.
+- Whether Snapshot Integrity Class becomes a core field, optional field, or
+  later extension.
+- Whether Reasoning Artifact / Communication Artifact split is accepted.
+- Whether Backtest Memory / Live Outcome Memory split is accepted.
+- Whether Live Outcome Memory can ever carry moat or calibration weight, and
+  under what attribution-discharge protocol.
+- Whether the two-source-family promotion bar is accepted for empirical
+  source-family heuristics.
+- Final source taxonomy and source-quality rubric.
+- Final Evidence Candidate Record / Evidence Unit field architecture.
+- Final memo format and deck back-reference syntax.
+- Confidence vocabulary beyond Action Ceiling.
+- Backtest case-selection policy.
+- Satellite costly-behavior catalog policy.
+- Engagement Logic Registry extension model for satellites.
+- When, if ever, runtime/source-system Data Capture Spine planning becomes
+  authorized.
+
+## Non-Claims
+
+This artifact does not claim buyer validation, willingness-to-pay, repeatability
+proof, product readiness, feature readiness, implementation readiness,
+commercial readiness, Core Spine validation, Judgment Spine validation,
+Evidence Candidate Record completion, or Evidence Unit design completion.
+
+It does not authorize implementation, runtime design, source maps, schemas,
+scrapers, automation, tests, deployment, commits, pushes, PRs, proof runs, or
+feature planning.
+
+## Current Verdict
+
+Current verdict: `NEEDS_FOUNDATION_ACCEPTANCE`.
+
+This artifact is a proposed product architecture boundary note. It supports
+later Data Capture Spine setup, Judgment Spine, and Evidence Candidate Record /
+Evidence Unit work while preserving the non-implementation Core Spine boundary.

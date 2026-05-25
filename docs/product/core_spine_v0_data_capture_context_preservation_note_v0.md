@@ -61,6 +61,34 @@ related chain, surrounding state, source-visible constraints, and timing context
 needed for a later reviewer to understand what the signal actually showed at
 capture time.
 
+## Bundled Offers And Multi-Term Proposals
+
+Bundled offers need structure context because the source-visible packaging can
+change what a later reviewer can inspect. A term inside a package, settlement,
+public-sector deal, regulatory bargain, counteroffer, or similar multi-term
+proposal is not only a standalone term when the source frames it as part of a
+trade, condition, restriction, safeguard, concession, sweetener, penalty, or
+fallback.
+
+Capture should preserve, categorically:
+
+- which terms appeared together in the same source-visible bundle;
+- how the source framed each term's role in the bundle;
+- visible dependencies, severability, conditionality, sunsets, fallback states,
+  and acceptance constraints;
+- the source's own language for why a term was included when visible;
+- visible packaging cues where they carry meaning, including headings, labels,
+  bullet order, nesting, emphasis, table placement, grouping, and proximity;
+- sequence across drafts, votes, memos, public statements, or negotiation
+  artifacts when visible.
+
+The atomic unit is the bundle as presented, not only the term as extracted.
+
+Downstream reduction rule: future Evidence Candidate Record and Cleaning work
+should preserve the bundle structure needed to inspect the source-visible trade
+or dependency. They should not infer motive, price concessions, or negotiation
+strategy from the packaging.
+
 ## Threaded Forums And Communities
 
 Threaded sources need chain context because a single post or comment may change
@@ -190,6 +218,8 @@ Core owns the invariant obligations:
 - keep source claim separate from Orca interpretation;
 - preserve event/capture/cutoff timing where visible;
 - expose visibility, deletion, edit, archive, and moderation constraints;
+- preserve source-visible bundle membership, framing, dependencies, and
+  packaging cues when a source presents a multi-term proposal;
 - preserve modality when modality carries the signal;
 - keep capture public, market-level, and non-deceptive;
 - hand off enough categorical context for later Evidence Candidate Record,
@@ -199,6 +229,8 @@ Satellites own source-family adaptation:
 
 - which thread context is load-bearing for a specific community;
 - how review-platform constraints appear in a market or industry;
+- which offer, settlement, regulatory, or public-sector deal conventions require
+  source-family-specific capture guidance;
 - which docs/version conventions matter in a product category;
 - what domain-native language requires a traceability gloss;
 - when human escalation is required for a source family;
@@ -210,8 +242,8 @@ explicitly accepts an exception.
 
 ## Open Owner Decisions
 
-- Which capture-context categories become mandatory in the Data Capture Spine
-  obligation contract.
+- Which additional capture-context categories become mandatory in the Data
+  Capture Spine obligation contract.
 - Whether archive/history capture imposes a mandatory archive attempt, a
   recorded-attempt obligation, or only a categorical posture mark.
 - Where the future Evidence Candidate Record should draw the line between
