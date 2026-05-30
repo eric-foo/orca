@@ -704,6 +704,7 @@ feature planning, commits, pushes, PRs, or readiness claims.
 direction_change_propagation:
   doctrine_changed: "The Data Capture obligation contract now operationalizes the accepted PCP-01 through PCP-08 package: expanded discharge vocabulary, narrowed blocked/access_failed distinction, raw-observable fidelity dimensions, Capture-owned handoff readiness, and checker vocabulary/comparability limits."
   trigger: product_doctrine
+  trigger_chain_note: "Earlier proposal and owner-gate artifacts used lifecycle_boundary because they sequenced authority for a later amendment; this operative contract amendment uses product_doctrine because it changes the durable Data Capture obligation contract."
   controlling_sources_updated:
     - docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md
     - .agents/workflow-overlay/source-loading.md

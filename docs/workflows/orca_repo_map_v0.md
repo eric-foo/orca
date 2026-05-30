@@ -264,7 +264,7 @@ Start with:
 
 Current pressure-test or setup handoffs should pin a freshly computed hash of
 the obligation contract. The last reported working hash for the contract was
-`576363014895CCB58E3A89757CAA313171A944F3A1EA16E4753765918EE463C0`, but
+`B06BD6722F76D223E7A122B7F97B967431BDEEE5D4E41AD6DCCEF81903DAC8C5`, but
 receiving lanes should recompute it before strict source-pinning claims.
 
 Current post-clarification synthesis hash was last reported as
