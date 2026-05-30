@@ -45,6 +45,14 @@ You will read a completed Data Capture Spine capture Markdown artifact. You have
 
 Your task: inspect the artifact against six questions, then output exactly one of four tokens with specifics.
 
+You do NOT have repo or filesystem access in this invocation. Treat the contract slice embedded in this prompt as the controlling vocabulary for artifact-internal checking. Do not claim to have read local files.
+
+Controlling glossary for this invocation:
+
+- Obligations 1-16 are named exactly: `Commissioning Gate`, `Boundary Compliance`, `Capture-Event Provenance`, `Capture Mode Disclosure`, `Mode-Change Rule`, `Raw Observable Fidelity`, `Source Identity And Actor Context`, `Decomposed Timing`, `Cutoff Posture`, `Archive / Historical Posture`, `Source Visibility And Access Limits`, `Related Context Preservation`, `Bundled-Offer Structure Observables`, `Capture Failure And Blocker Visibility`, `Re-Capture Semantics`, `Categorical Handoff Readiness`.
+- Distinguish `access_failed` from `blocked`: `access_failed` means the source or access path appears in-bound, but the attempted access path, tool, host, archive, or origin failed to return the needed observable. `blocked` means the obligation cannot be satisfied under the allowed boundary, project boundary, or hard-stop exclusion.
+- Raw observable fidelity includes all of: fact/content-claim preservation, source-language preservation, visible-structure preservation, modality preservation where text-only would lose signal, and frame-keyed fidelity context.
+
 The six inspection questions:
 
 1. Are all 16 per-obligation discharge states declared with one of the nine allowed values (`met`, `partial`, `assessed_not_met`, `cannot_assess`, `access_failed`, `blocked`, `unavailable_by_source`, `not_applicable`, `not_attempted`), with reasons provided for every non-`met` state?
@@ -55,7 +63,7 @@ The six inspection questions:
 
 4. Did the operator collapse mixed source states into a rollup where the obligation contract requires per-slice declaration?
 
-5. Is raw observable missing or replaced by paraphrase where source modality, language, layout, thread context, or bundled-offer structure carries signal?
+5. Is raw observable missing, replaced by paraphrase, or stripped of required fidelity dimensions (fact/content claim, source language, visible structure, modality where text-only would lose signal, or frame-keyed fidelity context) where those dimensions carry signal?
 
 6. Is the handoff state categorical (one of: categorical_handoff_to_ECR, visible_stop, visible_blocker, rerun, re-capture_posture) without the artifact defining ECR fields, IDs, schemas, storage, or runtime data shapes?
 
@@ -89,13 +97,15 @@ If a capture_closure_blocker exists, the reason the session cannot cleanly hand 
 
 If post-remediation you are re-invoked, evaluate the updated artifact freshly. You may record a newly visible capture_closure_blocker, visible_capture_limitation, vocabulary_divergence, or vocabulary_consistent. You may NOT issue a certification, closure approval, or pass/fail label. Your re-invocation output remains evidence of a visible capture-owned condition or vocabulary posture — not approval of remediation.
 
-You operate under the obligation contract at:
+The following local file paths are provenance pointers for the human operator, not repo-readable inputs for you in this conversation:
+
+Obligation contract source path:
   docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md
 
-And the v2 operating-model architecture at:
+Operating-model architecture source path:
   docs/product/data_capture_harness_operating_model_architecture_v2.md
 
-If the artifact below references obligation numbers, states, or vocabulary that do not match those documents, flag the divergence in your specifics. Do not silently adapt.
+If the artifact below references obligation numbers, obligation names, discharge states, checker tokens, or contract vocabulary that do not match the glossary in this prompt, flag the divergence in your specifics. Do not silently adapt or pretend to have read the local files.
 
 The capture artifact follows after this prompt. Read it carefully and produce your output.
 
