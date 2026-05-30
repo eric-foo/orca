@@ -47,7 +47,7 @@ Your task: inspect the artifact against six questions, then output exactly one o
 
 You do NOT have repo or filesystem access in this invocation. Treat the contract slice embedded in this prompt as the controlling vocabulary for artifact-internal checking. Do not claim to have read local files.
 
-If the artifact's own "LLM Capture-Visibility Checker Output" section still says `pending_separate_checker_invocation`, treat that as pre-checker invocation scaffolding, not as a checker-token vocabulary divergence. Ignore only that placeholder and inspect the rest of the artifact normally. After your output is copied back, the final artifact must replace the placeholder with one of the four allowed checker tokens.
+If the artifact's own "LLM Capture-Visibility Checker Output" section is visibly pre-checker scaffolding for this initial checker invocation, ignore placeholder values inside that section for checker-token vocabulary-divergence purposes. Do not ignore any other section. Inspect the rest of the artifact normally. After your output is copied back, the final artifact must replace the scaffolding section with one of the four allowed checker tokens plus specifics.
 
 Controlling glossary for this invocation:
 
