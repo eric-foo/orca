@@ -3,11 +3,11 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product artifact
-scope: Docs-only method plan comparing candidate source-access methods against the loosened boundary standard and recommending approaches per blocked source. No build authorization.
+scope: Docs-only method plan comparing candidate source-access methods against the loosened discoverable-or-entitled + disclosable boundary standard and recommending approaches per blocked source. No build authorization.
 use_when:
   - Evaluating or selecting source-access methods for Orca Data Capture.
   - Scoping a build of source-access tooling after receiving explicit owner authorization to exit the non-implementation phase.
-  - Checking which methods are in-bounds under the public-data + disclosable standard.
+  - Checking which methods are in-bounds under the discoverable-or-entitled + disclosable standard.
 authority_boundary: retrieval_only
 open_next:
   - docs/product/data_capture_source_access_boundary_decision_v0.md
@@ -24,10 +24,10 @@ stale_if:
 
 ## Status
 
-`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-28 to reflect full loosening (all methods in-bounds under public-data + disclosable standard).
+`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-30 to reflect the discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup.
 
 Artifact type: Product artifact — docs-only method plan.
-Produced: 2026-05-28. Patched: 2026-05-28.
+Produced: 2026-05-28. Patched: 2026-05-28 and 2026-05-30.
 Phase: Orca non-implementation phase. No build, no install, no runtime authorized.
 Edit permission: docs-write (this file only).
 Controlling standard: `docs/product/data_capture_source_access_boundary_decision_v0.md`.
@@ -59,18 +59,22 @@ orca_start_preflight:
 
 ## The Controlling Standard
 
-From `docs/product/data_capture_source_access_boundary_decision_v0.md` (patched 2026-05-28 to `LOOSEN_SOURCE_ACCESS_TO_PUBLIC_DATA_DISCLOSABLE`):
+From `docs/product/data_capture_source_access_boundary_decision_v0.md` (patched 2026-05-30 to `LOOSEN_SOURCE_ACCESS_TO_DISCOVERABLE_OR_ENTITLED_DISCLOSABLE`):
 
-A method is **in-bounds** when **both** hold:
+A method is **in-bounds** when **all** hold:
 
-1. It accesses **public / market-level data only** — no authentication bypass, no paywall circumvention, no private or non-public data.
-2. Orca would **fully disclose exactly how the data was obtained** if asked — no method Orca would need to conceal. "We scraped their public site" is a complete and acceptable answer.
+1. The material is discoverable through non-exploit source paths, visible through free / account-created access, or visible through entitled paid, client, or consenting-coworker access.
+2. Obvious cross-account, private, or admin spillover is not used once noticed.
+3. Orca would fully disclose exactly how the data was obtained if asked — no method Orca would need to conceal.
+4. The method avoids the hard stops: stolen credentials/cookies, nonconsensual sessions, exploits, malware, credential stuffing, no-entitlement gate bypass, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally.
 
-**This permits:** scraping of public pages; JS-rendering headless browsers; rate-limited or aggressive fetching; official or sanctioned APIs; archive/cache access; **and anti-blocking techniques — anti-detect / "cloaked" browsers, user-agent and fingerprint configuration, residential or rotating proxies, and CAPTCHA / JS-challenge handling — used to reach public data a site attempts to block.**
+**This permits:** scraping of public or discoverable pages; free or account-created login access; entitled paid, client, or consenting-coworker access; JS-rendering headless browsers; rate-limited or aggressive fetching; official or sanctioned APIs; archive/cache/mirror access; logged-in capture or browser automation; convenience shortcuts for discovery; **and anti-blocking techniques — anti-detect / "cloaked" browsers, user-agent and fingerprint configuration, residential or rotating proxies, and CAPTCHA / JS-challenge handling — used to reach source material inside this boundary.**
 
-**This still excludes (hard line, not risk-tolerance):** authentication bypass, paywall circumvention, and access to private / non-public data. These are out regardless of disclosure — accessing non-public data is not made defensible by admitting it.
+**This still excludes (hard line, not risk-tolerance):** no-entitlement gate bypass, stolen credentials or cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, and private/confidential account areas without consent.
 
 **Owner-accepted risk posture:** anti-blocking techniques carry real Terms-of-Service, reputational, and (for actively-enforcing sources) litigation risk. The owner has accepted this as a deliberate, disclosable posture. Accepted risk is not a boundary question — it is recorded as an explicit owner decision and must be visible in Orca's provenance. Real legal counsel is advisable before commercializing.
+
+**Materiality gate:** fast discovery output becomes evidence-grade only when Judgment relies on it by citing it, changing confidence, changing Action Ceiling or Decision Strength, using it in a decision claim, or including it in a client-facing or durable corpus output. If that happens, Orca must reacquire or verify through a normal disclosable path or an entitlement-clean path before final evidence use. Mere capture, storage, routing inspection, or queueing is not material use.
 
 ---
 
@@ -84,7 +88,7 @@ Identified in `docs/_inbox/data_capture_pressure_test_subagent_outputs_2026_05_2
 | reddit.com / www.reddit.com / old.reddit.com | Host-level block in WebFetch | Claude Code's WebFetch tool blocks Reddit hosts entirely (tool constraint, not internet restriction) |
 | wallstreetoasis.com | HTTP 403 on WebFetch | Active bot-blocking by WSO |
 | web.archive.org (content) | Tool-layer block in WebFetch | Claude Code's WebFetch blocks archive.org content fetches; the availability JSON API still works |
-| mergersandinquisitions.com | Not blocked; fetches OK | WebFetch returns paraphrase, not verbatim content — violates Obligation 6 (Raw Observable Preservation) |
+| mergersandinquisitions.com | Not blocked; fetches OK | WebFetch returns paraphrase, not verbatim content — violates Obligation 6 (Raw Observable Fidelity) |
 
 Note on the archive.org block: the Wayback Machine availability API (`archive.org/wayback/available`) is not blocked and successfully returns snapshot metadata. Only the snapshot content URLs are blocked at the WebFetch tool layer. This is a Claude Code tooling constraint, not an archive.org access restriction. The archive is publicly accessible via any standard HTTP client or browser.
 
@@ -97,7 +101,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Using a source's own publicly documented API with registered credentials. For this source pack, Reddit has an official public API; Teal and WSO do not.
 
 **Boundary test:**
-1. Public data only: YES — the Reddit API provides read access to public subreddit content.
+1. Source material inside boundary: YES — the Reddit API provides read access to public subreddit content.
 2. Full disclosure: YES — "We accessed this source via its official API with registered app credentials" is fully defensible and disclosable.
 
 **Boundary verdict: IN-BOUNDS**
@@ -115,7 +119,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Automated browser (Playwright, Puppeteer, Selenium) configured with an honest user-agent that identifies as a bot, respects robots.txt, and applies crawl delays. Does not spoof fingerprints.
 
 **Boundary test:**
-1. Public data only: YES — rendering public pages.
+1. Source material inside boundary: YES — rendering public pages inside the current source-access boundary.
 2. Full disclosure: YES — "We used an automated browser with honest identification to fetch public pages."
 
 **Boundary verdict: IN-BOUNDS**
@@ -133,7 +137,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Browser automation that actively spoofs fingerprints — user-agent, canvas, WebGL, automation flags (`window.webdriver`), timing signatures — to make a bot look like a human browsing session. Tools include Playwright-Stealth, undetected-chromedriver, Browserless stealth mode.
 
 **Boundary test:**
-1. Public data only: YES — accesses public pages.
+1. Source material inside boundary: YES — accesses public pages inside the current source-access boundary.
 2. Full disclosure: YES under the updated standard — "We used a browser configured to bypass bot detection to scrape your public site" is a complete and disclosable answer. Orca's accepted posture is that obtaining *public* data is defensible including with anti-blocking techniques.
 
 **Boundary verdict: IN-BOUNDS**
@@ -149,7 +153,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Routing HTTP requests through a pool of residential IP addresses (Bright Data, Oxylabs, Smartproxy, similar) so that traffic appears to originate from residential connections rather than a datacenter or identified bot operator.
 
 **Boundary test:**
-1. Public data only: YES — if used only for public pages.
+1. Source material inside boundary: YES — if used only for source material inside the current boundary.
 2. Full disclosure: YES under the updated standard — "We routed requests through residential proxies to reach your public site" is a disclosable method. Orca's accepted posture covers this explicitly.
 
 **Boundary verdict: IN-BOUNDS**
@@ -167,7 +171,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Direct HTTP GET requests with an honest user-agent string (identifying Orca or "OrcaDataBot"), crawl delay, and robots.txt compliance. No browser rendering.
 
 **Boundary test:**
-1. Public data only: YES.
+1. Source material inside boundary: YES.
 2. Full disclosure: YES — trivially defensible.
 
 **Boundary verdict: IN-BOUNDS**
@@ -189,7 +193,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 - Bing Cache (`cache:` operator): Occasionally available, unreliable; Google Cache largely eliminated as of 2024
 
 **Boundary test:**
-1. Public data only: YES — accessing publicly available archival copies.
+1. Source material inside boundary: YES — accessing publicly available archival copies.
 2. Full disclosure: YES — "We accessed historical snapshots via the Wayback Machine / archive.ph" is fully disclosable.
 
 **Boundary verdict: IN-BOUNDS**
@@ -215,8 +219,8 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 - **ScrapingBee, Bright Data Web Unlocker, Zyte Smart Proxy**: Services that bundle browser rendering, proxy rotation, and anti-detect into managed APIs
 
 **Boundary test:**
-1. Public data only: YES if configured for public pages.
-2. Full disclosure: YES — "We used [service] to fetch this public page" is disclosable. Under the updated standard, services that include anti-detect or proxy features are in-bounds because the underlying technique (anti-detect / proxy for public data) is itself in-bounds.
+1. Source material inside boundary: YES if configured for source material inside the current boundary.
+2. Full disclosure: YES — "We used [service] to fetch this source page" is disclosable. Under the updated standard, services that include anti-detect or proxy features are in-bounds when the underlying technique stays inside the current boundary.
 
 **Boundary verdict: IN-BOUNDS**
 
@@ -233,7 +237,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** A human operator opens URLs in a standard web browser, reads the content, and copies verbatim text into the capture artifact. No automation.
 
 **Boundary test:**
-1. Public data only: YES — viewing publicly visible pages.
+1. Source material inside boundary: YES — viewing source material inside the current boundary.
 2. Full disclosure: YES — trivially and completely defensible. "A person read and copied the publicly visible content."
 
 **Boundary verdict: IN-BOUNDS** — the most defensible method available.
@@ -251,12 +255,12 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** Services (SerpAPI, Serper.dev, etc.) providing programmatic access to search engine results. Returns snippets, titles, and URLs — not full page content.
 
 **Boundary test:**
-1. Public data only: YES — search results are public.
+1. Source material inside boundary: YES — search results are discoverable source material.
 2. Full disclosure: YES.
 
 **Boundary verdict: IN-BOUNDS** for URL enumeration and snippet access.
 
-**Works for which sources:** Partial. Useful for enumerating target URLs across all source families. Already used functionally in the pressure-test via WebSearch. Not suitable as a primary capture method — search snippets cannot satisfy Obligation 6 (Raw Observable Preservation).
+**Works for which sources:** Partial. Useful for enumerating target URLs across all source families. Already used functionally in the pressure-test via WebSearch. Not suitable as a primary capture method — search snippets cannot satisfy Obligation 6 (Raw Observable Fidelity).
 
 **Risk:** Low. Cost is per-search for most SERP API providers.
 
@@ -267,7 +271,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **What it is:** An MCP tool driving a real Chrome browser instance to navigate pages, render JavaScript, and extract content. Uses a full real Chrome instance rather than a headless rendering engine.
 
 **Boundary test:**
-1. Public data only: YES if accessing public pages.
+1. Source material inside boundary: YES if accessing source material inside the current boundary.
 2. Full disclosure: YES — "We used automated Chrome to access this public page" is disclosable and defensible under the updated standard.
 
 **Boundary verdict: IN-BOUNDS**
@@ -277,6 +281,26 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **Practical notes:** Whether the `window.webdriver` flag is suppressed depends on the specific MCP implementation. If it is suppressed, this is substantively equivalent to anti-detect browser automation (Method 3) and inherits the same risk profile. If it is not suppressed, it behaves like an honest headless browser (Method 2). Orca should note which behavior the specific implementation exhibits in the capture provenance.
 
 **Risk:** Low-Medium depending on implementation. Automation flag suppression moves this toward the anti-detect risk profile.
+
+---
+
+### Method 11: Free / Account-Created And Entitled Gated Access
+
+**What it is:** Using a free account, normal login, subscription, client/coworker entitlement, account export, browser session, headless browser, API, cached copy, mirror, or faster endpoint for source material.
+
+**Boundary test:**
+1. Discoverable, free/account-created, or entitlement-visible material: YES.
+2. Obvious spillover handling: YES, if cross-account/private/admin spillover is not used once noticed.
+3. Full disclosure: YES, if Orca can say "we accessed this through an entitled account / consenting collaborator / client-provided access path" and describe any automation or convenience path used.
+4. Hard stops avoided: YES, if no stolen credentials/cookies, nonconsensual session, exploit, malware, credential stuffing, no-entitlement gate bypass, or use of obvious cross-account/private/admin spillover once noticed occurs.
+
+**Boundary verdict: IN-BOUNDS for free/account-created access and for paid/client/coworker entitlement; OUT-OF-BOUNDS for no-entitlement gate bypass and obvious spillover once noticed**
+
+**Works for which sources:** Any source where access is free/account-created, or where the client, Orca, or a consenting collaborator has legitimate access. For WSO-style email/social unlocks or paid/community-gated pages, this permits a later owner-authorized capture path if the access holder consents.
+
+**Practical notes:** Convenience paths are discovery tools, not final provenance by themselves. If we do not know access is spilling into cross-account/private/admin material, proceed. If obvious spillover appears, do not use that spillover once noticed. If Judgment relies on the material, reacquire or verify through the normal or entitled path before final client-facing or durable evidence use. If clean reacquisition is impossible, carry the limitation visibly downstream.
+
+**Risk:** Medium. Access entitlement reduces the boundary problem, but ToS, account-sharing, privacy, and commercial-use constraints may still matter. This is not legal sufficiency.
 
 ---
 
@@ -294,6 +318,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 | Manual Human-Browser Capture | **IN-BOUNDS** | Yes (all sources) | Yes (operator copies) | Very Low |
 | SERP API | **IN-BOUNDS** (enumeration only) | Partial (snippets) | No (snippets only) | Low |
 | Chrome MCP Automation | **IN-BOUNDS** | Likely | Yes | Low-Medium |
+| Free / Account-Created And Entitled Gated Access | **IN-BOUNDS for free/account-created access and entitlement** | Yes (free or entitled gated sources) | Yes | Medium |
 
 ---
 
@@ -580,8 +605,8 @@ Step 4 (separately authorized): Build tooling for the recommended methods above.
 ## Validation Gates
 
 - [x] Preflight complete: AGENTS.md read, overlay read, safety-rules read, source pack loaded, edit permission is docs-write for this file only, target scope named, dirty state acknowledged.
-- [x] Boundary standard (public-data + disclosable) applied to all 10 candidate methods.
-- [x] All 10 candidate methods in-bounds under the updated standard. No method rejected except the hard-line exclusions (auth bypass, paywall, private data access) — none of the enumerated methods cross that hard line.
+- [x] Boundary standard (discoverable-or-entitled + disclosable) applied to all 11 candidate methods.
+- [x] All 11 candidate methods are in-bounds when they avoid the hard stops; free/account-created access is allowed, paid/client/coworker entitlement is allowed, and obvious cross-account/private/admin spillover is not used once noticed.
 - [x] Owner-accepted risk posture for anti-blocking techniques recorded explicitly and not treated as a boundary question.
 - [x] No build, install, runtime, or tooling action taken or authorized in this document.
 - [x] Non-claims stated explicitly below.
@@ -595,7 +620,7 @@ This artifact does not claim:
 - Implementation authorization. This plan does not authorize building, installing, running, testing, or deploying any source-access tooling.
 - Exit from the non-implementation phase. Orca remains in its non-implementation / proof-setup phase per `safety-rules.md`. This plan does not change that.
 - Legal sufficiency. The legal/ToS flags above are not legal opinions. Orca should obtain real legal counsel before commercializing any capability that relies on automated web access.
-- Data-rights sufficiency. Access to public content does not resolve questions about rights to process, store, or commercially use that content.
+- Data-rights sufficiency. Access to source material does not resolve questions about rights to process, store, or commercially use that content.
 - Authorization of any specific source access. Each method/source pair must still pass the standard; this plan names recommendations but does not execute or authorize them.
 - Source-access method validation or hardening. These recommendations are based on pre-build analysis. Testing may surface access realities that change the recommendations.
 - Pressure-test discharge. This plan informs how source access should work for the pressure tests; it does not discharge or validate the pressure-test batch.
@@ -621,13 +646,13 @@ Building source-access tooling requires a separate, explicit owner authorization
 
 **What changed in this patch:**
 
-The boundary decision was already updated to `LOOSEN_SOURCE_ACCESS_TO_PUBLIC_DATA_DISCLOSABLE`. This plan has been patched to match. The standard is now two conditions — public data, full disclosure — rather than the previous three-part "confidently defensible" test. Anti-detect browsers, residential proxy rotation, and Chrome automation with fingerprint handling are all in-bounds. The previous OUT-OF-BOUNDS and BORDERLINE verdicts for Methods 3, 4, and 10 are corrected to IN-BOUNDS.
+The boundary decision is now updated to `LOOSEN_SOURCE_ACCESS_TO_DISCOVERABLE_OR_ENTITLED_DISCLOSABLE`. This plan has been patched to match. The standard is now discoverable source material, free/account-created access, entitled paid/client/coworker access, disclosability, obvious spillover avoidance once noticed, and hard-stop avoidance. Anti-detect browsers, residential proxy rotation, Chrome automation with fingerprint handling, and free or entitled authenticated/paywalled access are in-bounds when they stay inside that standard.
 
 **What this means for the pressure tests:** nothing changes. Human-led capture remains the right mode for v0 bootstrap — it is the most obligation-compliant path regardless of boundary width.
 
-**What changes for production:** the full toolkit is available. If honest headless browsers fail against Teal or WSO, Orca can proceed to anti-detect and residential proxies without a boundary question. The question is now purely risk management (ToS, litigation, cost) — owner-accepted and disclosed — not an in/out-of-bounds gate.
+**What changes for production:** the full toolkit is available. If honest headless browsers fail against Teal or WSO, Orca can proceed to anti-detect and residential proxies without a boundary question. Free/account-created access is okay. If authenticated or paywalled access is legitimately available through Orca, the client, or a consenting collaborator, headless/browser/API/convenience access can be used. The remaining question is risk management and provenance, not a blanket in/out gate.
 
-**The hard line that stays:** authentication bypass, paywall circumvention, and private/non-public data access. These are out regardless of any risk-tolerance setting.
+**The hard line that stays:** no-entitlement gate bypass, stolen credentials/cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally. Free logins, account-created access, authentication, and paywalls are not automatic stop signs.
 
 ---
 
@@ -636,12 +661,12 @@ The boundary decision was already updated to `LOOSEN_SOURCE_ACCESS_TO_PUBLIC_DAT
 ```text
 artifact_written_to: docs/product/data_capture_source_access_method_plan_v0.md
 status: ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0
-patch_date: 2026-05-28
-patch_reason: Boundary decision updated to public-data + disclosable standard; all methods now in-bounds
+patch_date: 2026-05-30
+patch_reason: Boundary decision updated to discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup
 phase: Orca non-implementation — no build authorized
-boundary_standard_applied: yes, to all 10 candidate methods
-methods_out_of_bounds: none (all access public data and are disclosable)
-hard_line_exclusions: auth bypass / paywall / private data — unchanged
+boundary_standard_applied: yes, to all 11 candidate methods
+methods_out_of_bounds: no-entitlement gate bypass, stolen credentials/cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally
+hard_line_exclusions: narrowed from blanket auth/paywall/private labels to no-entitlement, nonconsensual, exploit-style, obvious-spillover-once-noticed, confidential, internally non-disclosable, or clearly illegal / morally compromising methods
 recommended_for_pressure_tests: human-led browser capture (all slots); Reddit official API (parallel admin step, owner decision)
 build_authorization: NOT GRANTED — requires separate owner decision to exit non-implementation phase
 commits_pushes_prs: NOT authorized — docs-write only

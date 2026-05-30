@@ -98,13 +98,13 @@ Classification, Decision Strength, or Action Ceiling.
 Core owns invariant obligations that must hold across commissioned captures:
 
 - decision-frame gating;
-- public, market-level, non-deceptive boundary compliance;
+- current Orca source-access boundary compliance;
 - capture-event provenance: who captured, with what tool or mode, in what
   session, and under which obligation version;
 - capture-mode disclosure: human-led, agent-assisted, structured access,
   archive/history, automated extraction, multimodal, or mixed;
 - mode-change disclosure when the capture mode changes within a session;
-- raw observable preservation;
+- raw observable fidelity;
 - source claim separated from Orca interpretation;
 - source identity and source-actor preservation where knowable;
 - decomposed timing where visible: source publication, source last edit,
@@ -122,7 +122,7 @@ Core owns invariant obligations that must hold across commissioned captures:
 - capture failure and blocker visibility;
 - re-capture semantics when source state, archive state, or decision frame
   materially changes;
-- categorical handoff sufficiency for Evidence Candidate Record;
+- categorical handoff readiness for Evidence Candidate Record;
 - explicit non-claims.
 
 Core must stay market-agnostic. It states what must be true for a captured
@@ -300,8 +300,9 @@ categorically:
 - preserve source identity, actor category, visibility, timing, modality, and
   cutoff/archive posture where knowable;
 - expose capture limits and blockers;
-- show whether capture obligations were met, partially met, blocked,
-  unavailable, or not applicable;
+- show whether capture obligations were `met`, `partial`,
+  `assessed_not_met`, `cannot_assess`, `access_failed`, `blocked`,
+  `unavailable_by_source`, `not_applicable`, or `not_attempted`;
 - allow Cleaning to proceed without recollecting source history;
 - avoid making credibility, discounting, exclusion, or decision-use claims.
 

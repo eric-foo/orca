@@ -13,10 +13,14 @@ open_next:
   - docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md
   - docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md
   - docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md
+  - docs/product/data_capture_source_access_boundary_decision_v0.md
+  - docs/product/data_capture_source_access_method_plan_v0.md
 stale_if:
   - Orca authorizes standing/opportunistic corpus capture as part of Data Capture Spine.
   - Evidence Candidate Record architecture changes the handoff boundary.
   - A pressure-test revision supersedes these v0 obligations.
+  - `docs/product/data_capture_source_access_boundary_decision_v0.md` materially amends or supersedes the source-access boundary for Obligation 2.
+  - `docs/product/data_capture_source_access_method_plan_v0.md` materially changes method planning for the current source-access boundary.
 ```
 
 - Status: CONTRACT_DRAFT_V0_AMENDED_2026_05_31
@@ -106,7 +110,11 @@ Failure mode: if there is no Decision Frame, Data Capture Spine has not started.
 
 ### 2. Boundary Compliance
 
-Capture must stay inside the current Orca source-access boundary.
+Capture must stay inside the current Orca source-access boundary. The
+controlling interpretation of that boundary for Obligation 2 is
+`docs/product/data_capture_source_access_boundary_decision_v0.md`; if this
+section and that boundary decision differ, the boundary decision controls until
+amended or superseded.
 
 The current boundary is discoverable-or-entitled source material plus
 disclosable access method, with hard stops for explicitly illegal,
@@ -183,8 +191,8 @@ Mode changes do not invalidate capture. Hidden mode changes do.
 Capture must preserve the raw observable enough for downstream inspection.
 Capture should make visible which fidelity dimensions were preserved, limited,
 not applicable, not attempted, access-failed, or unable to be assessed when
-those dimensions are relevant to the Decision Frame or were visibly encountered
-during capture.
+the Decision Frame caused Capture to seek those dimensions or those dimensions
+were visibly encountered during capture.
 
 Minimum obligation:
 
@@ -700,6 +708,10 @@ direction_change_propagation:
     - docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md
     - .agents/workflow-overlay/source-loading.md
     - docs/workflows/orca_repo_map_v0.md
+    - docs/product/data_capture_source_access_boundary_decision_v0.md
+    - docs/product/data_capture_source_access_method_plan_v0.md
+    - docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md
+    - docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md
   downstream_surfaces_checked:
     - AGENTS.md
     - CLAUDE.md
@@ -710,6 +722,8 @@ direction_change_propagation:
     - docs/decisions/data_capture_spine_obligation_contract_patch_proposal_owner_decision_v0.md
     - docs/product/data_capture_source_access_boundary_decision_v0.md
     - docs/product/data_capture_source_access_method_plan_v0.md
+    - docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md
+    - docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md
   intentionally_not_updated:
     - path: AGENTS.md
       reason: "Top-level Orca project instructions already permit bounded docs/decision work and require separate explicit authorization for implementation/runtime work."
@@ -721,11 +735,7 @@ direction_change_propagation:
       reason: "The proposal remains historical candidate-language input; the controlling contract now consumes the accepted package."
     - path: docs/decisions/data_capture_spine_obligation_contract_patch_proposal_owner_decision_v0.md
       reason: "The owner decision remains the amendment authority and is now consumed by this contract amendment."
-    - path: docs/product/data_capture_source_access_boundary_decision_v0.md
-      reason: "The source-access boundary remains controlling for Obligation 2; this amendment cross-references it without changing the boundary."
-    - path: docs/product/data_capture_source_access_method_plan_v0.md
-      reason: "PCP-03 is made consistent with the existing source-access boundary without amending method planning."
-  stale_language_search: "rg -n \"which obligations were met, partial, blocked, unavailable|Categorical Handoff Sufficiency|Raw Observable Preservation|blocked, unavailable, not applicable|later bounded Data Capture obligation-contract amendment drafting|later docs-only obligation-contract amendment drafting|still does not amend the controlling contract|Draft Data Capture Spine v0 obligation contract for setup and pressure testing|checker output as validation|checker agreement as validation|validation-ready|ready for implementation|ECR schema now authorized|Cleaning implementation now authorized|Judgment rules now authorized|runtime/source-system implementation now authorized\" docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
+  stale_language_search: "rg -n \"which obligations were met, partial, blocked, unavailable|Categorical Handoff Sufficiency|Raw Observable Preservation|blocked, unavailable, not applicable|public, market-level, non-deceptive boundary compliance|public, market-level, and non-deceptive|Public data only:|LOOSEN_SOURCE_ACCESS_TO_PUBLIC_DATA_DISCLOSABLE|later bounded Data Capture obligation-contract amendment drafting|later docs-only obligation-contract amendment drafting|still does not amend the controlling contract|Draft Data Capture Spine v0 obligation contract for setup and pressure testing|checker output as validation|checker agreement as validation|validation-ready|ready for implementation|ECR schema now authorized|Cleaning implementation now authorized|Judgment rules now authorized|runtime/source-system implementation now authorized\" docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md docs/product/core_spine_v0_data_capture_spine_architecture_blueprint_v0.md docs/product/core_spine_v0_data_capture_context_preservation_note_v0.md docs/product/data_capture_source_access_method_plan_v0.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
   non_claims:
     - "not validation"
     - "not readiness"

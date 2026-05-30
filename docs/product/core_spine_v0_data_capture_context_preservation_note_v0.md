@@ -221,7 +221,7 @@ Core owns the invariant obligations:
 - preserve source-visible bundle membership, framing, dependencies, and
   packaging cues when a source presents a multi-term proposal;
 - preserve modality when modality carries the signal;
-- keep capture public, market-level, and non-deceptive;
+- keep capture inside the current Orca source-access boundary;
 - hand off enough categorical context for later Evidence Candidate Record,
   Cleaning, and Judgment work without designing those layers here.
 

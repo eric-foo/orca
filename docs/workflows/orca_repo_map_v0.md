@@ -22,7 +22,7 @@ stale_if:
 - Status: PROPOSED_MAP
 - Artifact type: Workflow navigation artifact
 - Scope: Repo navigation and source-pack selection
-- Refreshed: 2026-05-25
+- Refreshed: 2026-05-31
 - Implementation authorized: no
 
 ## How To Use This Map
@@ -264,7 +264,7 @@ Start with:
 
 Current pressure-test or setup handoffs should pin a freshly computed hash of
 the obligation contract. The last reported working hash for the contract was
-`A9B4D61226571ADCADD96504D361A7EBEB00775C315708AE53495E2F60EEE1DF`, but
+`576363014895CCB58E3A89757CAA313171A944F3A1EA16E4753765918EE463C0`, but
 receiving lanes should recompute it before strict source-pinning claims.
 
 Current post-clarification synthesis hash was last reported as
