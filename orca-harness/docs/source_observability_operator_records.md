@@ -28,6 +28,11 @@ included, excluded, discounted, or decision-material.
 The runner accepts local YAML or JSON containing either a list of records or a
 mapping with `records`.
 
+A runnable local template is available at
+`orca-harness/docs/source_observability_operator_records_template.yaml`. It uses
+generic example records and is intended as an operator-facing starting shape,
+not as a canonical schema, required handoff packet, or source-family rule.
+
 ```yaml
 records:
   - record_id: EXAMPLE-FORUM-ANCHORS

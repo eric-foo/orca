@@ -1,0 +1,59 @@
+# Source-observability operator-record template.
+# These records are human-authored capture posture notes, not extracted source
+# truth, capture validation, archive retrieval, source acquisition, or
+# downstream ECR/Cleaning/Judgment output.
+
+records:
+  - record_id: EXAMPLE-FORUM-TEXT
+    source_ref: docs/product/example_capture.md#raw-observable-pointers
+    source_family: forum_discourse
+    source_language_posture: preserved
+    source_structure_posture: paraphrased
+    archive_body_posture: not_attempted
+    media_posture: not_applicable
+    access_posture: preserved
+    locator_visible: true
+    cutoff_visible: true
+    source_language_anchor_count: 3
+    source_language_anchor_required: true
+    source_structure_required: true
+    media_required: false
+    archive_body_expected: true
+    limitation_notes:
+      - "Representative source-language anchors are visible, but complete thread structure and archive body content were not preserved."
+
+  - record_id: EXAMPLE-MEDIA-POINTER
+    source_ref: docs/product/example_capture.md#media-pointers
+    source_family: media_bearing_forum_slice
+    source_language_posture: pointer_only
+    source_structure_posture: pointer_only
+    archive_body_posture: not_applicable
+    media_posture: pointer_only
+    access_posture: preserved
+    locator_visible: true
+    cutoff_visible: true
+    source_language_anchor_count: 0
+    source_language_anchor_required: false
+    source_structure_required: true
+    media_required: true
+    archive_body_expected: false
+    limitation_notes:
+      - "The capture preserves source and media pointers, but not the underlying source-language body, visible structure, or local media file."
+
+  - record_id: EXAMPLE-ACCESS-FAILURE
+    source_ref: docs/product/example_capture.md#access-failure
+    source_family: public_host_page
+    source_language_posture: inaccessible
+    source_structure_posture: inaccessible
+    archive_body_posture: failed
+    media_posture: not_applicable
+    access_posture: failed
+    locator_visible: true
+    cutoff_visible: true
+    source_language_anchor_count: 0
+    source_language_anchor_required: false
+    source_structure_required: true
+    media_required: false
+    archive_body_expected: true
+    limitation_notes:
+      - "The in-bound source attempt failed with locator and cutoff visible; no source body or archive body is inspectable."
