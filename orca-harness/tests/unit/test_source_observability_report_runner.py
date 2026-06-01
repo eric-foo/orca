@@ -98,6 +98,26 @@ def test_build_report_exposes_counts_limitations_and_non_claims() -> None:
     assert report["record_count"] == 1
     assert report["limitation_count"] == 1
     assert report["has_visible_limitations"] is True
+    assert report["record_summaries"] == [
+        {
+            "record_id": "R01",
+            "source_ref": "slot3://reddit/R01",
+            "source_family": "forum_thread",
+            "source_language_posture": "pointer_only",
+            "source_structure_posture": "preserved",
+            "archive_body_posture": "not_applicable",
+            "media_posture": "not_applicable",
+            "access_posture": "preserved",
+            "locator_visible": True,
+            "cutoff_visible": True,
+            "source_language_anchor_count": 0,
+            "source_language_anchor_required": True,
+            "source_structure_required": False,
+            "media_required": False,
+            "archive_body_expected": False,
+            "limitation_notes": [],
+        }
+    ]
     assert report["limitations"] == [
         {
             "record_id": "R01",
@@ -161,4 +181,6 @@ def test_script_style_runner_entrypoint_writes_report(scratch_dir: Path) -> None
     persisted = json.loads(output_path.read_text(encoding="utf-8"))
     assert persisted["record_count"] == 1
     assert persisted["limitation_count"] == 1
+    assert persisted["record_summaries"][0]["source_language_posture"] == "pointer_only"
+    assert persisted["record_summaries"][0]["limitation_notes"] == []
     assert persisted["limitations"][0]["limitation_type"] == "source_language_anchor_missing"

@@ -44,6 +44,7 @@ def build_source_observability_report(
         "record_count": result.record_count,
         "limitation_count": len(result.limitations),
         "has_visible_limitations": result.has_visible_limitations,
+        "record_summaries": [_record_summary(record) for record in records],
         "limitations": [
             limitation.model_dump(mode="json") for limitation in result.limitations
         ],
@@ -68,6 +69,10 @@ def _extract_records(payload: object) -> list[object]:
     if isinstance(payload, dict) and isinstance(payload.get("records"), list):
         return payload["records"]
     raise ValueError("input must be a YAML/JSON list or a mapping with a records list")
+
+
+def _record_summary(record: SourceObservabilityRecord) -> dict[str, Any]:
+    return record.model_dump(mode="json")
 
 
 def _build_parser() -> argparse.ArgumentParser:

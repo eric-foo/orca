@@ -134,3 +134,7 @@ The runner reports structured visible limitations from these records. It cannot
 prove the capture is complete, faithful, clean, or ready. If a report looks
 clean, that only means the supplied operator records did not expose limitations
 the helper knows how to flag.
+
+The JSON report also includes `record_summaries`, which echo the operator
+posture records so limitation notes and posture choices remain inspectable next
+to the emitted limitation types.
