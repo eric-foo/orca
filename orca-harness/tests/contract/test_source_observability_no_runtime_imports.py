@@ -19,7 +19,9 @@ FORBIDDEN_IMPORT_ROOTS = {
 
 def test_source_observability_helper_has_no_runtime_acquisition_imports() -> None:
     project_root = Path(__file__).resolve().parents[2]
-    target_paths = sorted((project_root / "source_observability").glob("*.py"))
+    target_paths = sorted((project_root / "source_observability").glob("*.py")) + [
+        project_root / "runners" / "run_source_observability_report.py"
+    ]
 
     assert target_paths, "source_observability helper package must exist"
 
