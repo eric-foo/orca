@@ -24,7 +24,7 @@ stale_if:
 
 ## Status
 
-`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-30 to reflect the discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup.
+`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-30 to reflect the discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup; patched 2026-06-01 to add API cost/sequence preference without changing boundary permission.
 
 Artifact type: Product artifact — docs-only method plan.
 Produced: 2026-05-28. Patched: 2026-05-28 and 2026-05-30.
@@ -76,6 +76,16 @@ A method is **in-bounds** when **all** hold:
 
 **Materiality gate:** fast discovery output becomes evidence-grade only when Judgment relies on it by citing it, changing confidence, changing Action Ceiling or Decision Strength, using it in a decision claim, or including it in a client-facing or durable corpus output. If that happens, Orca must reacquire or verify through a normal disclosable path or an entitlement-clean path before final evidence use. Mere capture, storage, routing inspection, or queueing is not material use.
 
+## Operating Preference / Cost Discipline
+
+The boundary above permits APIs when they stay inside the discoverable-or-entitled + disclosable standard. Permission is not default sequence.
+
+Before sale, before repeated operational pressure, or before a source-specific need is proven, Orca's default Data Capture posture is manual / subscription / local-first: human-led capture, existing subscriptions or legitimate account access, browser-visible source inspection, local files, local deterministic helpers, and explicit limitation reporting.
+
+API use, API registration, commercial fetch services, or source-access tooling must earn its way in through an explicit owner decision, a concrete post-sale operating need, repeated scale pressure, or a source-specific reason that makes API access cleaner, cheaper, or more faithful than manual/local capture. This preference does not prohibit APIs; it prevents "API is allowed" from becoming default API sequencing or "go build/use API now."
+
+This preference does not authorize any build, runtime, API call, app registration, credential setup, scraper, crawler, fetch service, or source-access system.
+
 ---
 
 ## Blocked Sources and Root Problems
@@ -108,7 +118,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 
 **Works for which sources:** Reddit (r/FinancialCareers, r/CFA, and any public subreddit). No known sanctioned API for Teal or WSO.
 
-**Practical notes:** Reddit's API provides a free tier (approximately 100 requests/minute, 1,000/day). This tier is sufficient for pressure-test-scale capture. Bulk commercial use at scale may require Reddit's data licensing program. The official API is the best available method for Reddit specifically.
+**Practical notes:** Reddit's API provides a free tier (approximately 100 requests/minute, 1,000/day). This tier may be sufficient for pressure-test-scale capture if API access is separately owner-authorized. Bulk commercial use at scale may require Reddit's data licensing program. The official API remains the cleanest Reddit method when API access is justified by owner decision, post-sale need, repeated scale pressure, or source-specific fidelity need; it is not Orca's pre-sale default.
 
 **Risk:** Low for pressure-test use. Medium for commercialization — Reddit's data licensing terms should be reviewed before any product that surfaces Reddit content at scale.
 
@@ -214,7 +224,7 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 ### Method 7: Commercial Fetch / Scraping Services
 
 **What it is:** Third-party API services that fetch and parse web content on the operator's behalf. Includes:
-- **Firecrawl**: API-first scraper, honest operation, raw content or structured data
+- **Firecrawl**: API-based scraper, honest operation, raw content or structured data
 - **Diffbot**: Structured web data extraction, self-identified crawler
 - **ScrapingBee, Bright Data Web Unlocker, Zyte Smart Proxy**: Services that bundle browser rendering, proxy rotation, and anti-detect into managed APIs
 
@@ -360,14 +370,15 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 **Root problem:** Claude Code's WebFetch tool blocks Reddit hosts entirely. This is a tool constraint, not a network restriction. Reddit is accessible via any standard HTTP client, browser, or the Reddit API.
 
 **Recommended method for pressure-test:**
-1. **Reddit official API** (primary) — the sanctioned route. Public subreddit content (posts, comments, threads) is accessible via the API at the free tier (100 req/min). Returns verbatim text, not paraphrases.
-2. **Human-led browser capture** (alternative / complement) — operator opens thread URLs in a real browser; copies verbatim OP, signal-bearing comments, related chain context per Obligation 12.
+1. **Human-led browser capture** (primary default) — operator opens thread URLs in a real browser; copies verbatim OP, signal-bearing comments, related chain context per Obligation 12.
+2. **Reddit official API** (owner-authorized complement) — clean and in-bounds when separately chosen. Public subreddit content (posts, comments, threads) is accessible via the API at the free tier (100 req/min) and returns verbatim text, not paraphrases, but API access is not the default pre-sale route.
 
 **Recommended method for production:**
-- Reddit official API with registered credentials. This is the cleanest, most defensible, and most scalable method for Reddit. Anti-detect or proxy methods are unnecessary here since the Reddit API is the sanctioned path.
+- Reddit official API with registered credentials is the cleanest, most defensible, and most scalable method for Reddit when post-sale need, repeated scale pressure, source-specific fidelity need, or explicit owner decision justifies API use. Anti-detect or proxy methods are unnecessary for Reddit when the API is the chosen route.
+- Before that threshold, use human-led/browser-visible capture and local preserved files; record limitations rather than defaulting to API setup.
 - If data licensing for commercial use is required at scale, review before productizing Reddit content.
 
-Note: Reddit API app registration (admin step, not a code build) can proceed in parallel with slot-1 discipline testing at the owner's discretion.
+Note: Reddit API app registration is an administrative step, not a code build, but it is still deferred by default unless separately owner-authorized for post-sale, scale, or source-specific need.
 
 ---
 
@@ -536,8 +547,8 @@ These are risk flags, not legal opinions. Real legal counsel is advisable before
 
 - **API ToS:** Reddit's Developer Terms prohibit large-scale automated access except via the API. The free API tier permits public data access at rate limits appropriate for research. Bulk commercial redistribution likely requires a data license.
 - **Direct scraping:** Reddit's `robots.txt` restricts scrapers. Anti-detect and proxy methods bypass this; under the updated standard this is in-bounds, but litigation risk (Reddit has shown willingness to enforce) is real.
-- **Reputational:** Disclosing "official API with registered credentials" is a stronger provenance claim than scraping. For Reddit specifically, the API is clearly the right method — anti-detect scraping is unnecessary.
-- **Recommendation:** Use the official API. Review Reddit Developer Terms before productizing. Legal counsel before commercializing content sourced from Reddit at scale.
+- **Reputational:** Disclosing "official API with registered credentials" is a stronger provenance claim than scraping. For Reddit specifically, the API is the cleanest route when API access is justified; anti-detect scraping is unnecessary when the sanctioned route is used.
+- **Recommendation:** Do not treat API permission as default API sequencing. Use human-led/browser-visible capture by default pre-sale; use the official API after explicit owner decision, post-sale need, repeated scale pressure, or source-specific fidelity need. Review Reddit Developer Terms before productizing. Legal counsel before commercializing content sourced from Reddit at scale.
 
 ### Teal
 
@@ -569,9 +580,9 @@ These are risk flags, not legal opinions. Real legal counsel is advisable before
 
 ## Sequencing Recommendation
 
-**Recommendation: Defer tooling builds; complete the pressure-test batch via human capture.**
+**Recommendation: Defer API/admin/tooling by default; complete pre-sale pressure-test capture via human-led/local methods unless the owner separately authorizes API use.**
 
-The commissioning plan prohibits runtime tooling during the pressure-test phase. Human capture is both the authorized mode and the most obligation-compliant path for v0 bootstrap.
+The commissioning plan prohibits runtime tooling during the pressure-test phase. Human capture is both the authorized mode and the most obligation-compliant path for v0 bootstrap. API use may be in-bounds, but it is not the default sequence before owner authorization, post-sale need, repeated scale pressure, or source-specific necessity.
 
 **Reasons to defer:**
 
@@ -579,7 +590,7 @@ The commissioning plan prohibits runtime tooling during the pressure-test phase.
 
 2. **Human capture is viable for the 3-batch test.** All five blocked source targets are accessible in a standard browser. The pressure-test batch can complete with human capture for all three slots.
 
-3. **The Reddit API registration is the one exception.** Creating a Reddit account and registering an app is an administrative step that does not cross the implementation-phase boundary. If the owner chooses to do this in parallel with slot-1 capture, it is legitimate. The decision is the owner's.
+3. **API registration is deferred by default.** Creating a Reddit account and registering an app is an administrative step rather than a code build, but it still changes operating sequence. It should proceed only after an explicit owner decision, post-sale need, repeated scale pressure, or source-specific fidelity need.
 
 4. **Tooling scope will be informed by the pressure tests.** If the 3-slot batch surfaces obligation failures or access patterns this plan did not anticipate, the build requirements may change.
 
@@ -596,7 +607,8 @@ Step 3 (after 3-slot batch): Evaluate whether patchable or architecture-threaten
               findings exist. Decide whether to harden or rebuild.
 
 Step 4 (separately authorized): Build tooling for the recommended methods above.
-              Reddit API is the highest-priority build. Honest headless second.
+              Reddit API may become a high-priority build only after owner/post-sale/scale
+              or source-specific justification. Honest headless remains a separate decision.
               Anti-detect and residential proxy if honest headless fails against Teal/WSO.
 ```
 
@@ -608,6 +620,7 @@ Step 4 (separately authorized): Build tooling for the recommended methods above.
 - [x] Boundary standard (discoverable-or-entitled + disclosable) applied to all 11 candidate methods.
 - [x] All 11 candidate methods are in-bounds when they avoid the hard stops; free/account-created access is allowed, paid/client/coworker entitlement is allowed, and obvious cross-account/private/admin spillover is not used once noticed.
 - [x] Owner-accepted risk posture for anti-blocking techniques recorded explicitly and not treated as a boundary question.
+- [x] API cost/sequence preference recorded explicitly without prohibiting APIs and without authorizing API registration, calls, builds, or runtime tooling.
 - [x] No build, install, runtime, or tooling action taken or authorized in this document.
 - [x] Non-claims stated explicitly below.
 
@@ -618,6 +631,7 @@ Step 4 (separately authorized): Build tooling for the recommended methods above.
 This artifact does not claim:
 
 - Implementation authorization. This plan does not authorize building, installing, running, testing, or deploying any source-access tooling.
+- API execution authorization. This plan does not authorize API calls, API app registration, credential setup, commercial fetch service use, scraper execution, crawler execution, or source-access runtime setup.
 - Exit from the non-implementation phase. Orca remains in its non-implementation / proof-setup phase per `safety-rules.md`. This plan does not change that.
 - Legal sufficiency. The legal/ToS flags above are not legal opinions. Orca should obtain real legal counsel before commercializing any capability that relies on automated web access.
 - Data-rights sufficiency. Access to source material does not resolve questions about rights to process, store, or commercially use that content.
@@ -631,14 +645,14 @@ This artifact does not claim:
 
 ## Next Authorized Step
 
-Proceed to the 3-slot pressure-test batch using human-led capture:
+Proceed to the 3-slot pressure-test batch using human-led capture and local/source-visible preservation:
 
 1. Open slot-1 M&I capture. Use the enumerated URL list from `docs/_inbox/data_capture_pressure_test_subagent_outputs_2026_05_28/slot1_mi_subagent_output.md`. Navigate pages in a real browser; copy verbatim content. Navigate Wayback Machine snapshots for historical state. Produce a capture Markdown artifact using the commissioning plan template.
-2. For Reddit: evaluate whether Reddit API app registration (admin step, no code) should proceed in parallel or after slot-1. Owner decision.
+2. For Reddit: default to human-led/browser-visible capture. Consider Reddit API registration only if separately owner-authorized for post-sale need, repeated scale pressure, or source-specific fidelity need.
 3. For Teal and WSO: human capture via browser.
 4. After the 3-slot batch: evaluate findings. If the architecture is patchable, request a separate owner authorization to exit the non-implementation phase for bounded tooling builds per the named builds above.
 
-Building source-access tooling requires a separate, explicit owner authorization to exit the non-implementation phase. That authorization is not granted here.
+Building source-access tooling, registering API apps, running API calls, or setting up source-access runtime requires a separate, explicit owner authorization. That authorization is not granted here.
 
 ---
 
@@ -648,9 +662,9 @@ Building source-access tooling requires a separate, explicit owner authorization
 
 The boundary decision is now updated to `LOOSEN_SOURCE_ACCESS_TO_DISCOVERABLE_OR_ENTITLED_DISCLOSABLE`. This plan has been patched to match. The standard is now discoverable source material, free/account-created access, entitled paid/client/coworker access, disclosability, obvious spillover avoidance once noticed, and hard-stop avoidance. Anti-detect browsers, residential proxy rotation, Chrome automation with fingerprint handling, and free or entitled authenticated/paywalled access are in-bounds when they stay inside that standard.
 
-**What this means for the pressure tests:** nothing changes. Human-led capture remains the right mode for v0 bootstrap — it is the most obligation-compliant path regardless of boundary width.
+**What this means for the pressure tests:** nothing changes for default execution. Human-led capture remains the right mode for v0 bootstrap — it is the most obligation-compliant path regardless of boundary width. API/admin/tooling steps are deferred unless separately owner-authorized.
 
-**What changes for production:** the full toolkit is available. If honest headless browsers fail against Teal or WSO, Orca can proceed to anti-detect and residential proxies without a boundary question. Free/account-created access is okay. If authenticated or paywalled access is legitimately available through Orca, the client, or a consenting collaborator, headless/browser/API/convenience access can be used. The remaining question is risk management and provenance, not a blanket in/out gate.
+**What changes for production:** the full toolkit remains available inside the boundary. If honest headless browsers fail against Teal or WSO, Orca can proceed to anti-detect and residential proxies without a boundary question. Free/account-created access is okay. If authenticated or paywalled access is legitimately available through Orca, the client, or a consenting collaborator, headless/browser/API/convenience access can be used. The remaining question is risk management, cost discipline, provenance, and owner/post-sale/scale justification — not a blanket in/out gate.
 
 **The hard line that stays:** no-entitlement gate bypass, stolen credentials/cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally. Free logins, account-created access, authentication, and paywalls are not automatic stop signs.
 
@@ -661,15 +675,39 @@ The boundary decision is now updated to `LOOSEN_SOURCE_ACCESS_TO_DISCOVERABLE_OR
 ```text
 artifact_written_to: docs/product/data_capture_source_access_method_plan_v0.md
 status: ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0
-patch_date: 2026-05-30
-patch_reason: Boundary decision updated to discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup
+patch_date: 2026-06-01
+patch_reason: API cost/sequence preference added; boundary permission unchanged from discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup
 phase: Orca non-implementation — no build authorized
 boundary_standard_applied: yes, to all 11 candidate methods
 methods_out_of_bounds: no-entitlement gate bypass, stolen credentials/cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally
 hard_line_exclusions: narrowed from blanket auth/paywall/private labels to no-entitlement, nonconsensual, exploit-style, obvious-spillover-once-noticed, confidential, internally non-disclosable, or clearly illegal / morally compromising methods
-recommended_for_pressure_tests: human-led browser capture (all slots); Reddit official API (parallel admin step, owner decision)
+recommended_for_pressure_tests: human-led browser capture (all slots); Reddit official API only as separately owner-authorized complement
+api_preference: APIs remain in-bounds, but manual/subscription/local-first is the pre-sale default; API/admin/tooling requires owner/post-sale/scale/source-specific justification
 build_authorization: NOT GRANTED — requires separate owner decision to exit non-implementation phase
 commits_pushes_prs: NOT authorized — docs-write only
 legal_counsel_advisory: recommended before commercializing any automated web-access capability
-produced_by: Claude Sonnet 4.6 under source-access method planning prompt v0
+original_patch_produced_by: Claude Sonnet 4.6 under source-access method planning prompt v0
+patch_2026_06_01_produced_by: Codex under user-authorized source-access API preference patch route
+```
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "Source-access method planning now records API cost/sequence discipline: APIs remain in-bounds, but manual/subscription/local-first capture is the pre-sale default and API/admin/tooling requires explicit owner/post-sale/scale/source-specific justification."
+  trigger: product_doctrine
+  controlling_sources_updated:
+    - "docs/product/data_capture_source_access_method_plan_v0.md"
+  downstream_surfaces_checked:
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
+  intentionally_not_updated:
+    - path: "docs/product/data_capture_source_access_boundary_decision_v0.md"
+      reason: "Boundary permission is unchanged; APIs and other in-bound methods remain permitted under the discoverable-or-entitled + disclosable standard."
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "The canonical source-loading surface already identifies this as a source-access method plan and does not route agents by API-default sequencing."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "The repo map entry already describes the artifact as a docs-only source-access method plan with no build/runtime authorization; no discoverability/status change was needed."
+  stale_language_search: "rg -n \"never API|API.*disallowed|APIs.*out-of-bounds|API-first|Reddit API registration.*parallel|highest-priority build|API registration.*can proceed|official API.*primary|API.*authorized now|build.*authorized|runtime.*authorized|tooling.*authorized\" docs/product/data_capture_source_access_method_plan_v0.md"
 ```
