@@ -1,0 +1,4 @@
+models:
+  fixed_fixture:
+    model_id: fixture_only
+    model_family: fixture_only

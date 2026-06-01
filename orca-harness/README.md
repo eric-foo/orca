@@ -105,13 +105,13 @@ No-case provider smoke tests are also non-gate-clearing. Before passing
 and capture the required out-of-band execution provenance. A smoke receipt must
 not be cited as a clean memorization-probe pass for any real model/case pair.
 
-## Canonical TR/Casetext Scores
+## Generated TR/Casetext Scores
 
-The canonical fixture keeps one active score file under
-`cases/plumbing/tr_casetext_2023_v0_14/scores/`. Extra score files created
-during Step A debugging and review are archived under that directory so the
-case report stays compact while the audit trail remains available.
+The runner writes score files under
+`cases/plumbing/tr_casetext_2023_v0_14/scores/` and failure-event logs under
+`memory/logs/`. Those paths are local generated outputs and are ignored by git.
 
-Archived scores are not active report inputs and do not block a new run. If an
-archived score matches the same `(case_id, run_id, contestant_id)` tuple, the
-runner emits a warning so the operator can see that prior audit history exists.
+If a generated score already exists for the same `(case_id, run_id,
+contestant_id)` tuple, the runner refuses to write another score unless
+`--allow-duplicate-score` is passed. Commit generated scores only under a
+separate fixture-admission decision.
