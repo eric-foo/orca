@@ -77,7 +77,8 @@ Before running anything, the agent must have:
   - local file path for local-file packets;
   - ordinary HTTP URL for Direct HTTP;
   - explicit media/asset URL list for Media / Asset;
-  - original URL plus optional cutoff timestamp for Archive.org;
+  - original URL plus optional 14-digit `YYYYMMDDhhmmss` cutoff timestamp for
+    Archive.org;
   - ordinary URL for Browser Snapshot;
   - ordinary URL, storage-state label, and allowed session mode for
     Authenticated Browser Snapshot;
@@ -95,6 +96,12 @@ For the local-file packet runner only, the agent must also have:
 Direct HTTP, Media / Asset, Archive.org, Browser Snapshot, and Authenticated
 Browser Snapshot runners have default source-family labels and URL-derived
 locators; do not ask for local-file-only fields when those runners are used.
+
+For Archive.org, preflight the cutoff timestamp before running. If supplied, it
+must be exactly 14 digits in `YYYYMMDDhhmmss` form. If the operator supplies a
+conflicting, too-short, too-long, or malformed timestamp, stop and ask for a
+corrected value. Do not silently repair the timestamp by guessing the intended
+date.
 
 For Authenticated Browser Snapshot, `session_mode` must be exactly one of:
 
@@ -221,7 +228,9 @@ python runners/run_source_capture_archive_packet.py `
 The Archive.org runner derives cutoff posture from `--cutoff-timestamp` when
 the operator does not pass an explicit cutoff-posture flag. If latest snapshot
 selection is intended, omit `--cutoff-timestamp` and report that no cutoff bound
-was supplied.
+was supplied. If a cutoff timestamp is supplied, check that it is exactly 14
+digits in `YYYYMMDDhhmmss` form before executing; malformed timestamps are
+operator-input defects, not archive-access failures.
 
 Browser Snapshot:
 
@@ -315,7 +324,7 @@ The agent report must include:
 - preserved file list from `raw/`;
 - source slice ids from `manifest.json`;
 - access, archive/history, media/modality, cutoff, and re-capture posture from
-  `manifest.json` when present;
+  `manifest.json` when present, even when `limitations` is empty;
 - warnings and limitations from `manifest.json`;
 - any visible access, archive, media, or cutoff limitations;
 - receipt non-claims from `receipt.md` or manifest receipt metadata when
@@ -403,6 +412,10 @@ source_capture_agent_report:
     - <receipt non-claim or none>
 ```
 
+Do not collapse an exit-code-0 packet with empty limitations into "clean
+capture." Packet postures may still carry current-capture, cutoff, archive,
+media, browser, or access caveats that matter downstream.
+
 ## Testing Before Agent Reuse
 
 Before treating a changed runner as reusable by agents, run the relevant focused
@@ -415,3 +428,37 @@ python -m pytest -p no:cacheprovider tests/unit/test_source_capture_packet.py te
 For a new adapter, add focused unit tests, contract tests, one manual dry-run,
 and adversarial implementation review before committing it as an agent-facing
 primitive.
+
+## Direction Change Propagation - Archive Timestamp And Posture Reporting
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The Source Capture Agent Runbook now requires agents to preflight Archive.org cutoff timestamps as exact 14-digit YYYYMMDDhhmmss values and to report manifest postures even when limitations are empty."
+  trigger: lifecycle_boundary
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - "orca-harness/docs/source_capture_agent_runbook.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/README.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - "docs/product/source_capture_toolbox/README.md"
+    - "orca-harness/README.md"
+  intentionally_not_updated:
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "Toolbox component status, adapter boundaries, and deferred gaps did not change."
+    - path: "orca-harness/README.md"
+      reason: "It already points agents to this runbook; no new entrypoint or component status changed."
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Source-loading routes were not changed; this is runner-use guidance inside the existing runbook."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Repo map already indexes the toolbox/runbook path through the harness and product docs; no new durable source family was added."
+  stale_language_search: "rg -n \"cutoff-timestamp|YYYYMMDDhhmmss|empty limitations|clean capture|postures\" orca-harness/docs/source_capture_agent_runbook.md docs/product/source_capture_toolbox/README.md orca-harness/README.md"
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not source completeness"
+    - "not source-access boundary amendment"
+    - "not adapter implementation"
+```
