@@ -13,6 +13,19 @@ browser = [
   "playwright>=1.44,<2",
 ]
 
+[tool.setuptools]
+py-modules = ["harness_utils"]
+
+[tool.setuptools.packages.find]
+include = [
+  "runners",
+  "schemas",
+  "scoring",
+  "source_capture",
+  "source_capture.*",
+  "source_observability",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
