@@ -227,6 +227,13 @@ metadata. It does not use stored sessions, browser profiles, cookies,
 credentials, storage-state files, anti-detect behavior, proxy behavior, CAPTCHA
 solving, crawling, OCR, or source-meaningfulness classification.
 
+On Windows, a failure containing `WinError 5` or `Access is denied` during
+Playwright startup usually means the environment blocked Playwright's browser
+driver subprocess launch. Treat this as visible capture failure: exit `3`, no
+normal packet, and rerun only in an environment with subprocess-launch
+permission. Do not switch methods or claim the adapter is broken from this error
+alone.
+
 ## Post-Run Inspection
 
 After a runner returns exit code `0`, inspect:
