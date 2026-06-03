@@ -32,7 +32,7 @@ input_hashes:
   .agents/workflow-overlay/product-proof.md: AD1724202841D616F74494B22E3659D7987CC875BD36BF0F23B12C210E4B19C4
   .agents/workflow-overlay/validation-gates.md: FD7AE96F481733ED7FA5F1DDE252B7CF6A7C5A9053DAC7317795353F003F520F
   docs/product/judgment_spine_evidence_ladder_architecture_v0.md: 79F6696DD50BE3FDCB574FD6AED4FE0761C6335029BFDBE39B51F104F4AD16CF
-  docs/product/judgment_spine_gate_ownership_map_v0.md: A74CD639FBB564916736599F14999E817C40CC5B9E949D4E89933B7075C0F473
+  docs/product/judgment_spine_gate_ownership_map_v0.md: 83463329DC42816B5701E7692E5EFD484359AF9504CA3E36E3450C4C6122D5E3
   docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md: ED146BEB5767EFDDA3E979AA798CA5CB044A896421872B02FBDF03615E4E6E07
   docs/research/judgment-spine/harness/v0_14/contestant_no_tools_execution_contract_v0.md: 3301224649991811D91B8B5932F0DFF18D3E356CB51979619BDBE3494BC9193C
   docs/research/judgment-spine/harness/v0_14/memorization_probe_protocol.md: 7862F03D0DA8DB6D845DF47FAA7940D89C2B27C8A27204C41744ECD3AC7B4C61
@@ -202,14 +202,14 @@ Invariant B intact.
 
 | Gate | Routed semantics owner | Receipt | Mechanical clear-predicate | If owner field/schema absent |
 | --- | --- | --- | --- | --- |
-| JSG-01 | data-capture obligation contract + core-spine boundary own the source-identity obligation; packing interface owns `pre_decision_status`; no ECR field-schema owner yet | packing final status + ECR source-identity receipt | `pre_decision_status` present and set to an allowed pre-decision value. Source-identity subpredicate is `indeterminate_until_authored`: the obligation contract explicitly does not define ECR fields/keys/schema, and no ECR field schema exists yet, so there is no checkable owner field to bind | `indeterminate_until_authored` until an ECR field schema names the exact source-identity fields and allowed values |
-| JSG-02 | evidence ladder + packing interface | frozen participant packet | `participant_packet_hash` present and non-empty | `indeterminate_until_authored` |
-| JSG-03 | band-input labeling rubric + packing interface | frozen FacilitatorLedger | `ledger_freeze_hash` present and non-empty | `indeterminate_until_authored` |
+| JSG-01 | data-capture obligation contract + core-spine boundary own the source-identity obligation; packing interface owns `pre_decision_status`; no ECR field-schema owner yet | packing final status + ECR source-identity receipt | `pre_decision_status` present and set to an allowed *cleared* pre-decision value (not `excluded` or an uncertain/placeholder value). The finalization-provenance subpredicate — that the final `pre_decision_status` was finalized by the Judgment authority (AR-01), which the owner names as a block-state when unmet and leaves an open, unstaffed owner decision — is `indeterminate_until_authored`: no owner field yet records Judgment-authority finalization, so bare presence does **not** clear. The source-identity, inspectability, and timing/cutoff subpredicates are likewise `indeterminate_until_authored`: the obligation contract explicitly does not define ECR fields/keys/schema, and no ECR field schema exists yet, so there is no checkable owner field to bind for the source-side obligations | `indeterminate_until_authored` until an ECR field schema names the exact source-identity, inspectability, and timing/cutoff fields and allowed values |
+| JSG-02 | evidence ladder + packing interface | frozen participant packet | `participant_packet_hash` present and non-empty **and** the packing admission carries no leakage/spoiler block-class failure for the zero-spoiler participant-visible boundary (no `outcome_leakage_class` in participant-facing content, no source identifiers/provenance in the contestant-visible manifest, leakage/spoiler receipt present — owner hard-marker checks; "structure is not admission"). A bare present hash does **not** clear on its own. A recorded leakage/spoiler block-class failure routes to contaminated/blocked (Leakage) | semantic-leakage subpredicate is `indeterminate_until_authored` (owner leaves it to operator/review) until its admission fields are authored |
+| JSG-03 | band-input labeling rubric + packing interface | frozen FacilitatorLedger | `ledger_freeze_hash` and `committed_at` present and valid **and** the owner-required ledger contents present (authors, version pins, enum-valid band inputs, and the `second_label_diffs` disagreement trail). A bare present `ledger_freeze_hash` with any required ledger field missing/invalid does **not** clear; a met rubric-quarantine trigger routes to not-cleared/quarantine | `indeterminate_until_authored` for any required ledger field whose schema is not yet authored |
 | JSG-04 | contestant no-tools execution contract | `contestant_execution_isolation` + authorized live-execution provenance | `isolation_result == "proven"` **and** the contract's auditable live-execution provenance is bound (separate owner authorization; production by the live runner; accepted endpoint; out-of-band operator record binding provider, endpoint, UTC timestamp, exit status, console output, `prompt_hash`, `raw_response_hash`). A bare computed `proven` does **not** clear (receipt-provenance sub-rule) | not cleared; with no live runner, by-hand receipts cannot bind provenance, so `indeterminate_until_authored` / capped per Seam 3 |
-| JSG-05 | memorization probe protocol + no-tools contract provenance boundary | probe artifact | gate-interpretation `== pass_valid`, **read from the JSG-05 artifact, not the scorer**, **and** bound by the same auditable live-execution provenance as JSG-04. A bare computed `pass_valid` does **not** clear (receipt-provenance sub-rule) | not cleared / `indeterminate_until_authored` until authorized live provenance is bound |
-| JSG-06 | no-tools contract blind-judgment section + ladder | sealed blind judgment | `sealed_blind_judgment_hash` present **and** `sealed_before_reveal == yes` **and** JSG-04 cleared (so it inherits JSG-04's auditable provenance requirement) | not cleared |
-| JSG-07 | phase-1 infrastructure + packing interface | scoring result | version/hash fields present (`scorer_version`, `mapping_table_version`, `labeling_rubric_version`, required frozen-input hashes) **and** authenticity bound to the deterministic scorer's owner-produced provenance. Because scoring is deterministic, that binding is a **re-derivation match**: the recorded `scoring_result_hash` equals re-running the scorer over the frozen JSG-02/JSG-03 inputs. A hand-authored result carrying the version fields does **not** clear (receipt-provenance sub-rule) | authenticity subpredicate is `indeterminate_until_authored` until a scorer-owned provenance/status field or the re-derivation check is authorized |
-| JSG-08 | reveal/calibration owner contract | `jsg_08_reveal_calibration_receipt` | `receipt_status == score_linked_outcome_calibration` for judgment-quality strength; weaker statuses cap lower per the contract | not cleared at judgment-quality strength |
+| JSG-05 | memorization probe protocol + no-tools contract provenance boundary | probe artifact | gate-interpretation `== pass_valid`, **read from the JSG-05 artifact, not the scorer**, **and** bound by the same auditable live-execution provenance as JSG-04. A bare computed `pass_valid` does **not** clear (receipt-provenance sub-rule) | not cleared / `indeterminate_until_authored` until authorized live provenance is bound; a `probe_result == fail` (confirmed recognition) routes to contaminated/blocked via the Seam 2 contamination branch, while `ambiguous` quarantines as not-cleared |
+| JSG-06 | no-tools contract blind-judgment section (isolation) + ladder; sealed-output field currently unowned | sealed blind judgment | `isolation_result == "proven"` for the blind-judgment run **and** JSG-04 cleared (so it inherits JSG-04's auditable live-execution provenance). The sealed-output subpredicate is `indeterminate_until_authored`: no JSG-06 owner (the BlindJudgement schema or the no-tools contract) names a checkable `sealed_blind_judgment_hash` field, so there is nothing to bind. `sealed_before_reveal` is a **JSG-08** receipt field, not a JSG-06 clear-condition; the seal-before-reveal property is enforced at JSG-08, where `sealed_before_reveal == no` routes to `blocked_or_contaminated` | not cleared / `indeterminate_until_authored` until a JSG-06 sealed-output field schema names the field and allowed value |
+| JSG-07 | phase-1 infrastructure + packing interface | scoring result | version/hash fields present (`scorer_version`, `mapping_table_version`, `labeling_rubric_version`, required frozen-input hashes) **and** authenticity bound to the deterministic scorer's owner-produced provenance. Because scoring is deterministic, that authenticity binding is an owner-authorized **re-derivation match** (owner-authorized verification, not a conductor-computed score): the recorded `scoring_result_hash` equals re-running the scorer over the frozen inputs. A hand-authored result carrying the version fields does **not** clear (receipt-provenance sub-rule). The scoring-integrity-**contamination** subpredicate is `indeterminate_until_authored`: the owner's `score_blocked` is a mixed admission state firing mostly on absences (missing run-metadata/hash/version, `decision_shape` not frozen), with no field that cleanly discriminates an affirmative integrity failure from an absence, so a bare `score_blocked`, a re-derivation mismatch, or an absent result routes to **not-cleared** (Seam 3), not to contamination, until the scorer authors a discriminating integrity-failure signal | authenticity subpredicate is `indeterminate_until_authored` until a scorer-owned provenance/status field or the owner-authorized re-derivation check is authorized; scoring-integrity contamination is likewise `indeterminate_until_authored` |
+| JSG-08 | reveal/calibration owner contract | `jsg_08_reveal_calibration_receipt` | `receipt_status == score_linked_outcome_calibration` **and** `sealed_blind_output.sealed_before_reveal == yes` (both JSG-08-owned receipt fields; the seal-ordering read lives here, where the field lives) for judgment-quality strength. `sealed_before_reveal == no` is an affirmative seal-ordering breach — the auditable signal of the owner contract's "relied on unsealed output" condition — and routes to contaminated/blocked; `unknown`, or a weaker `receipt_status`, caps lower / not cleared per the contract | not cleared at judgment-quality strength |
 | JSG-09 | evidence ladder `judgment_spine_claim_classification` + validation gate | classification record | record present with `source_quality_state`, `execution_quality_state`, `closeout_state`, `claim_cap`, `weakest_missing_or_failed_gate`, `receipt_artifact_or_gap`, `non_claims` | terminal route (Seam 5) |
 | JSG-10 | evidence ladder closeout vocabulary + validation gate | named closeout | `closeout_state` present, drawn from the ladder vocabulary, consistent with the weakest cleared gate | terminal route (Seam 5) |
 
@@ -221,24 +221,55 @@ scorer output. A present scoring result does not imply a cleared probe.
 ## Transition Function
 
 **Seam 2 — total fail/blocked transitions.** The conductor evaluates gates in
-order. The transition function is total: every gate, including the closeout
-gates, has defined behavior on failure.
+order. The transition function is total over the full outcome alphabet: every
+gate, including the closeout gates, has exactly one defined behavior for each
+outcome — cleared, contaminated-or-blocked, held (JSG-08 pending-outcome only),
+or not-cleared/indeterminate — evaluated in that precedence order.
 
 ```yaml
 transition_function:
   evaluate_in_order: [JSG-01, JSG-02, JSG-03, JSG-04, JSG-05, JSG-06, JSG-07, JSG-08, JSG-09, JSG-10]
-  on_gate_G:
+  outcome_precedence: [cleared, contaminated_or_blocked, held, not_cleared_or_indeterminate]
+  on_gate_G:  # classify the gate outcome into exactly one branch, in the precedence order above
     if_cleared: advance to the next gate
-    if_not_cleared_or_indeterminate:
+    elif_contaminated_or_blocked:
+      trigger: a gate's owner receipt reports an AFFIRMATIVE invalidity or breach value — JSG-08 `receipt_status == contaminated_or_invalid` (reveal/calibration/scoring entered the wrong lane, relied on unsealed output, used an undeclared biased frame, or cannot identify the revealed material) or `sealed_before_reveal == no` (seal-ordering breach); `isolation_result == violated` (tool-use breach or runtime context leakage); a JSG-02/JSG-03 packing leakage/spoiler block-class failure (an `outcome_leakage_class` in participant-facing content, or source identifiers/provenance in the contestant-visible manifest); or JSG-05 `probe_result == fail` (gate-interpretation `fail_gate_closing` / `fail_gate_closing_with_caveat` — the model affirmatively recognized the case, i.e. post-cutoff contamination, `severity: blocking` per the probe protocol). It fires only on a positive owner-reported invalidity value
+      note: this must be an affirmative owner-reported invalidity value, so the routing decision stays a mechanical field read (Invariant A). Absence, not-yet-authored provenance, or unresolved status — `isolation_result == not_proven`, an `indeterminate_until_authored` subpredicate, a by-hand gate with no auditable runner, `sealed_before_reveal == unknown`, or a JSG-05 `probe_result == ambiguous` (quarantine pending operator review or clean rerun, `severity: material`, not a confirmed recognition) — is NOT contamination; it routes to else_not_cleared_or_indeterminate and caps per Seam 3 / the weakest-cleared-gate rule, NOT at "often none". Contamination can poison gates that already mechanically cleared, so it must NOT use the weakest-cleared-gate cap
+      action:
+        - halt at G; do not advance
+        - resolve the closeout to the ladder closeout_state blocked_or_contaminated; cap = weakest UNAFFECTED gate, often none (ladder blocked_or_contaminated rule, not the weakest-cleared-gate rule)
+        - name the affected or contaminated gate(s)
+        - record via JSG-09 then JSG-10 at that cap, or the terminal route below if G is itself JSG-09 or JSG-10
+    elif_held:
+      trigger: G is JSG-08 AND the case is a live post-cutoff case whose real-world outcome has not occurred, so JSG-08 cannot yet clear
+      action: enter run state sealed_awaiting_outcome (see Run Lifecycle States); this is a hold, not a failure and not a closeout
+    else_not_cleared_or_indeterminate:
       - halt at G; do not advance
       - cap the claim at the weakest cleared gate (evidence ladder weakest-cleared-gate rule and sub-floor rule)
       - name the failed, missing, or indeterminate gate G
       - record the closeout via JSG-09 then JSG-10 at that cap
       - EXCEPTION: if G is itself JSG-09 or JSG-10, use the closeout self-dependency terminal route below
-  hold_case:
-    when: a live post-cutoff case is sealed (and possibly scored) but its real-world outcome has not occurred, so JSG-08 cannot clear
-    action: enter run state sealed_awaiting_outcome (see Run Lifecycle States); this is a hold, not a failure
 ```
+
+**Ladder reconciliation (Route, Don't Restate).** The evidence ladder's
+`blocked_or_contaminated` use_when names six defects; this conductor maps each to
+an affirmative owner value, never to a mere absence: **leakage** → a JSG-02/JSG-03
+packing leakage/spoiler block-class failure; **post-cutoff contamination** →
+JSG-05 `probe_result == fail`; **tool-use breach** → `isolation_result ==
+violated`; **unreconciled scoring failure** → `indeterminate_until_authored` (the owner's
+`score_blocked` is a mixed absence/defect admission state with no clean
+integrity-vs-absence discriminator, so bare `score_blocked` is treated as absence
+→ not-cleared until the scorer authors a discriminating signal); **missing isolation / missing source
+identity** → read as an **affirmative defect that breaks an evaluated gate**
+(`isolation_result == violated`, or an owner-set `receipt_status ==
+contaminated_or_invalid`), consistent with the ladder's own "...breaks the
+evaluated gate" framing. Not-yet-authored absence — `not_proven`, a by-hand gate
+with no runner, an `indeterminate_until_authored` subpredicate — is an evidence
+gap, not a broken gate, so it routes to not-cleared and the by-hand
+product-learning cap (Seam 3), not to `blocked_or_contaminated`. This is a
+reading the ladder permits, not an override; if the ladder later distinguishes
+these explicitly, this conductor tracks it and is stale for that point until
+updated.
 
 **Seam 5 — closeout self-dependency terminal route.** When the halting gate is
 `JSG-09` or `JSG-10` — the closeout machinery itself is the missing or invalid
@@ -305,17 +336,22 @@ cap. The conductor mints no new claim vocabulary.
 | --- | --- | --- |
 | `not_started` | no gate evaluated | none |
 | `in_progress_at_<gate>` | gates before `<gate>` cleared; evaluating `<gate>` | cap = weakest cleared gate |
-| `sealed` | JSG-06 cleared (sealed blind judgment present, isolation per mode) | cap = weakest cleared gate |
+| `sealed` | JSG-06 cleared per its full gate-table predicate — note its sealed-output subpredicate is currently `indeterminate_until_authored`, so this state is not yet reachable; a by-hand run also cannot reach it, because by-hand JSG-04 does not clear and the run halts there | cap = weakest cleared gate |
 | `scored` | JSG-07 cleared | cap = weakest cleared gate |
 | `sealed_awaiting_outcome` | a post-cutoff live case is cleanly sealed and possibly scored, but the real-world outcome has not occurred, so JSG-08 cannot clear; the run is **held, not failed** | JSG-08 `receipt_status = absent`; reveal/calibration claim = `no_durable_evidence`; overall cap = weakest cleared gate; caps **below** `completed_judgment_quality_evidence` |
 | `calibrated` | JSG-08 cleared at the required status | cap per the JSG-08 contract status |
 | `closed` | JSG-09 classification and JSG-10 closeout recorded | the recorded `closeout_state` |
-| `halted_at_<gate>` | a non-closeout gate failed or is indeterminate | cap = weakest cleared gate; closeout via JSG-09/10 |
+| `halted_at_<gate>` | a non-closeout gate failed or is indeterminate (ordinary not-cleared, no contamination) | cap = weakest cleared gate; closeout via JSG-09/10 |
+| `blocked_or_contaminated` | a gate's owner receipt reports an affirmative invalidity/breach value (JSG-08 `contaminated_or_invalid` or `sealed_before_reveal == no`; `isolation_result == violated`; a JSG-02/JSG-03 packing leakage/spoiler block-class failure; or JSG-05 `probe_result == fail`, a confirmed recognition) — NOT mere absence, a by-hand/indeterminate gate, or a JSG-05 `ambiguous` quarantine, which are `halted_at_<gate>` | closeout_state = `blocked_or_contaminated`; cap = weakest UNAFFECTED gate, often none; name the affected gate |
 | `halted_no_completed_closeout` | JSG-09 or JSG-10 itself failed (Seam 5) | closeout claim = `no_durable_evidence` |
 
 `sealed_awaiting_outcome` exit rule: when the real-world outcome arrives, route
-to a **JSG-08 attempt**, which then clears or fails under the JSG-08 owner
-contract. It never mints a new tier.
+to a **JSG-08 attempt**, which resolves to one of the JSG-08 owner-contract
+satisfaction states (`absent`, `reveal_readout_only`,
+`qualitative_outcome_calibration`, `score_linked_outcome_calibration`, or
+`contaminated_or_invalid`). Only `score_linked_outcome_calibration` clears at
+judgment-quality strength; weaker statuses cap lower, and `contaminated_or_invalid`
+routes through the contaminated/blocked branch. It never mints a new tier.
 
 ## Case-Selection Posture
 
@@ -419,7 +455,80 @@ direction_change_propagation:
     closeout self-dependency terminal route, an explicit by-hand isolation cap,
     and named run lifecycle states including sealed_awaiting_outcome. All of
     these are routing and lifecycle constructs that resolve to existing ladder
-    vocabulary; no new claim tier or closeout_state is minted.
+    vocabulary; no new claim tier or closeout_state is minted. Round-3 review
+    patch (2026-06-03): the transition function is made total over a four-value
+    outcome alphabet — cleared, contaminated_or_blocked, held, and
+    not_cleared/indeterminate — with explicit precedence; a contaminated/blocked
+    outcome now routes to the existing ladder closeout_state blocked_or_contaminated
+    (cap = weakest unaffected gate, often none) instead of being mis-routed to the
+    weakest-cleared-gate cap; the JSG-08 pending-outcome hold is folded in as a
+    precedence-ordered branch so it is no longer doubly-defined against the
+    not-cleared branch; JSG-06's predicate is re-bound to its own owner field
+    (isolation_result proven) with the sealed-output subpredicate marked
+    indeterminate_until_authored and the JSG-08-owned sealed_before_reveal field
+    removed from it; and JSG-06's inherited-provenance dependency on JSG-04 is
+    stated explicitly. blocked_or_contaminated already exists in the evidence
+    ladder, so still no new claim tier or closeout_state is minted. The same
+    pass also made the sealed lifecycle row's predicate explicit (with a
+    by-hand-cannot-reach note), enumerated the five JSG-08 satisfaction states in
+    the sealed_awaiting_outcome exit rule, and added a JSG-06->JSG-04 dependency
+    line to the gate ownership map to make explicit a dependency the conductor
+    already encoded — a co-pass alignment, not a superseding gate-dependency
+    change, so it does not by itself make this conductor stale. Round-5 review
+    patch (2026-06-03): the contaminated/blocked branch is narrowed to fire only
+    on an affirmative owner-reported invalidity value (JSG-08
+    contaminated_or_invalid, isolation_result == violated, or sealed_before_reveal
+    == no), never on absence or a by-hand/indeterminate gate — those route to
+    not-cleared and cap per Seam 3, which preserves the by-hand product-learning
+    cap and keeps the branch a mechanical field read (Invariant A); and the
+    seal-before-reveal ordering check is relocated into the JSG-08 predicate as a
+    read of its own sealed_before_reveal field (it had been removed from JSG-06
+    but not yet landed at JSG-08). Round-7 review patch (2026-06-03): the
+    contaminated/blocked enumeration is completed against the owner sources — a
+    confirmed JSG-05 memorization recognition (`probe_result == fail`,
+    gate-interpretation fail_gate_closing / fail_gate_closing_with_caveat,
+    severity blocking) now routes to blocked_or_contaminated, while a JSG-05
+    ambiguous quarantine and all not-yet-authored absences route to not-cleared;
+    a Route-Don't-Restate reconciliation note records that the ladder's
+    blocked_or_contaminated use_when phrase "missing isolation, missing source
+    identity" is read as an affirmative gate-breaking defect (not a
+    not-yet-authored absence, which is an evidence gap capped per Seam 3), a
+    reading the ladder's "breaks the evaluated gate" framing permits; and the
+    JSG-06 forward-reference and the JSG-08 sealed_before_reveal == no mapping are
+    reworded to name the field-level mechanism and its owner grounding. A robust
+    later option is to add sealed_before_reveal == no to the JSG-08 owner
+    contract's contaminated_or_invalid use_when so the conductor reads a literal
+    owner mapping. Still no new claim tier or closeout_state minted. Round-9
+    review patch (2026-06-03): a systematic predicate-completeness pass binds each
+    gate predicate to its owner's full required-receipt rather than a bare
+    structural field — JSG-02 now also requires the zero-spoiler participant-visible
+    boundary (no packing leakage/spoiler block-class failure; semantic-leakage
+    portion indeterminate_until_authored), JSG-03 now also requires the
+    owner-required ledger contents (authors, version pins, enum-valid band inputs,
+    second_label_diffs disagreement trail), and JSG-01's indeterminate subpredicate
+    is broadened to source-identity, inspectability, and timing/cutoff; and the
+    contamination enumeration is completed against all six ladder
+    blocked_or_contaminated use_when items by adding the JSG-02/JSG-03 packing
+    leakage/spoiler block-class failure and the JSG-07 unreconciled scoring
+    failure-event as affirmative owner-reported invalidity values (the JSG-07
+    value is withdrawn in the Round-11 entry below). Absence still routes to
+    not-cleared (Seam 3); still no new claim tier or closeout_state minted. Round-11 review patch (2026-06-03): two predicate-binding corrections
+    from the final review — (1) JSG-01's bound pre_decision_status subpredicate no
+    longer clears on bare presence; Judgment-authority finalization is marked
+    indeterminate_until_authored (the finalizing authority is an unstaffed open
+    owner decision and an operator-set status is an owner block-state) and the
+    clearing value is constrained to a cleared pre-decision value (not excluded);
+    (2) the JSG-07 score_blocked value added in round 9 is WITHDRAWN from the
+    contamination set — score_blocked is a mixed admission state firing mostly on
+    absences, so the scoring-integrity-contamination subpredicate is now
+    indeterminate_until_authored and a bare score_blocked / re-derivation mismatch
+    / absent result routes to not-cleared (Seam 3), pending an owner field that
+    discriminates an affirmative integrity failure from an absence. Two low nits
+    also tidied (the sealed lifecycle row now points to the full JSG-06 predicate;
+    JSG-07 re-derivation is framed as owner-authorized verification, not a
+    conductor-computed score). The contamination set is therefore five affirmative
+    owner values plus the two reconciled missing-isolation/source-identity
+    readings; still no new claim tier or closeout_state minted.
   trigger: architecture_doctrine
   related_triggers:
     - lifecycle_boundary
