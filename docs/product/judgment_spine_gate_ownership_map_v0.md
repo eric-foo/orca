@@ -122,16 +122,16 @@ owner_status_values:
 
 | Gate ID | Gate | Owner status | Owner surface | Required receipt or artifact | Claim blocked if missing | Handoff boundary | Open owner decision |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| JSG-01 | Source identity and pre-decision status | owned | `core_spine_v0_data_and_cleaning_spine_boundary_v0.md` and `core_spine_v0_data_capture_spine_obligation_contract_v0.md` for Data Capture/ECR source identity, raw-observable/inspectability, timing, actor, cutoff/archive, and categorical handoff obligations; `packing_to_harness_foundation_interface_architecture_v3.md` for final Judgment-owned `pre_decision_status` | Source identity, inspectable reference or source bytes when required, timing/cutoff posture, and final pre-decision status | Judgment-quality evidence, fixture admission, scoring, clean blind-use readiness | Data Capture/ECR preserve source identity and categorical handoff posture; Judgment/Harness consumes and blocks if missing | none for ownership; case-specific source gaps remain possible |
-| JSG-02 | Participant packet freeze | owned | Evidence ladder receipt; product-proof zero-spoiler participant-packet boundary; `packing_to_harness_foundation_interface_architecture_v3.md` | Frozen `participant_packet_hash` with zero-spoiler participant-visible boundary | Clean blind judgment, scoring, fixture admission, judgment-quality evidence | Packing/case artifact authors packet; Harness consumes frozen hash and blocks rather than repairs | none for ownership |
-| JSG-03 | Facilitator ledger freeze | owned | Evidence ladder receipt; `band_input_labeling_rubric.md`; `packing_to_harness_foundation_interface_architecture_v3.md` | Frozen `FacilitatorLedger` with `ledger_freeze_hash`, authors, version pins, band inputs, and disagreement trail | Scoring, fixture admission, judgment-quality evidence | Facilitator ledger owns labels and freeze; Harness consumes and verifies | none for ownership |
-| JSG-04 | No-tools isolation | owned | `contestant_no_tools_execution_contract_v0.md` | `contestant_execution_isolation` with `isolation_result: proven` and auditable execution provenance | Clean blind-use readiness, scoring, validation, fixture admission, judgment-quality evidence | Execution surface or runner receipt proves isolation; prompt text alone is insufficient | none for ownership |
-| JSG-05 | Memorization probe | owned | `memorization_probe_protocol.md` paired with no-tools execution contract | Memorization probe artifact with raw `probe_result`, isolation evidence, and gate interpretation such as `pass_valid` | Contestant-case pair cannot clear model-family gate; clean blind-use readiness remains blocked | Probe protocol owns recognition semantics; no-tools contract owns isolation layer | none for ownership |
-| JSG-06 | Sealed blind judgment output | owned | Evidence ladder receipt; product-proof blind-judgment lane; no-tools execution contract blind judgment section | Sealed blind judgment hash plus a clean isolation result before reveal exposure; depends on JSG-04 clearing (JSG-06 inherits the same no-tools auditable live-execution and isolation provenance) | Scoring, calibration, fixture admission, judgment-quality evidence | Execution receipt proves clean run; case record preserves seal before reveal | none for ownership |
-| JSG-07 | Scoring result | owned | Evidence ladder receipt; `phase_1_infrastructure_architecture.md`; `packing_to_harness_foundation_interface_architecture_v3.md` | Scoring result with scorer/mapping/version hashes and required frozen inputs | Fixture admission, judgment-quality evidence, score-based calibration claims | Harness owns deterministic scoring; it must not author labels or repair missing inputs | none for ownership |
-| JSG-08 | Reveal or calibration record | owned | `judgment_spine_reveal_calibration_owner_contract_v0.md`, with product-proof zero-spoiler/outcome-calibration lane boundaries and case-specific reveal/calibration artifacts | `jsg_08_reveal_calibration_receipt` with receipt status, sealed output reference, reveal event, calibration frame, comparison inputs, scoring relationship, missing evidence, claim cap, and non-claims | Completed judgment-quality evidence, calibration-based scoring claims, fixture-readiness claims when the case-specific receipt is absent, reveal-only, qualitative-only, or contaminated | Owner contract defines receipt shape; case artifacts own case-specific reveal facts and calibration; JSG-07 still owns scoring results | none for ownership; case-specific receipt gaps remain possible |
-| JSG-09 | Claim classification | owned | Evidence ladder `judgment_spine_claim_classification`; validation gate; product-proof boundary | Inline classification or durable co-referenced classification record with source-quality state, execution-quality state, `closeout_state`, claim cap, missing gate, and receipt artifact or gap | Proof, readiness, validation, fixture admission, scoring, blind-use, or judgment-quality claims above the weakest cleared gate | Classified artifact must embed or co-reference the classification | none for ownership |
-| JSG-10 | Closeout state | owned | Evidence ladder closeout-state vocabulary; validation gate | Named `closeout_state` from the ladder vocabulary, capped by weakest-cleared gate | Any stronger claim than the named closeout state permits | Evidence ladder owns vocabulary; classified artifact records state | none for ownership |
+| JSG-01 | Source identity and pre-decision status | owned | `core_spine_v0_data_and_cleaning_spine_boundary_v0.md` and `core_spine_v0_data_capture_spine_obligation_contract_v0.md` for Data Capture/ECR source identity, raw-observable/inspectability, timing, actor, cutoff/archive, and categorical handoff obligations; `packing_to_harness_foundation_interface_architecture_v3.md` for final Judgment-owned `pre_decision_status` | Source-identity and final pre-decision receipt complete per the owning Data Capture/Core Spine contracts and the packing interface; this map must not enumerate the owner fields locally | Judgment-quality evidence, fixture admission, scoring, clean blind-use readiness | Data Capture/ECR preserve source identity and categorical handoff posture; Judgment/Harness consumes and blocks if missing | none for ownership; case-specific source gaps remain possible |
+| JSG-02 | Participant packet freeze | owned | Evidence ladder receipt; product-proof zero-spoiler boundary for participant-facing surfaces; `packing_to_harness_foundation_interface_architecture_v3.md` | Participant-packet freeze receipt complete per the evidence ladder, product-proof zero-spoiler boundary for participant-facing surfaces, and packing interface participant-visible boundary; this map must not enumerate the owner-owned spoiler list locally | Clean blind judgment, scoring, fixture admission, judgment-quality evidence | Packing/case artifact authors packet; Harness consumes frozen hash and blocks rather than repairs | none for ownership |
+| JSG-03 | Facilitator ledger freeze | owned | Evidence ladder receipt; `band_input_labeling_rubric.md`; `packing_to_harness_foundation_interface_architecture_v3.md` | Frozen `FacilitatorLedger` receipt complete per the packing interface's frozen-ledger requirements and the band-input labeling rubric, including any rubric quarantine handling; this map must not enumerate ledger fields locally | Scoring, fixture admission, judgment-quality evidence | Facilitator ledger owns labels and freeze; Harness consumes and verifies | none for ownership |
+| JSG-04 | No-tools isolation | owned | `contestant_no_tools_execution_contract_v0.md` | No-tools execution receipt complete per the contestant no-tools execution contract, including its owner-required isolation result and auditable execution-provenance boundary | Clean blind-use readiness, scoring, validation, fixture admission, judgment-quality evidence | Execution surface or runner receipt proves isolation; prompt text alone is insufficient | none for ownership |
+| JSG-05 | Memorization probe | owned | `memorization_probe_protocol.md` paired with no-tools execution contract | Memorization probe artifact complete per the memorization probe protocol and the no-tools execution contract, including the owner-defined gate interpretation and execution-provenance boundary | Contestant-case pair cannot clear model-family gate; clean blind-use readiness remains blocked | Probe protocol owns recognition semantics; no-tools contract owns isolation layer | none for ownership |
+| JSG-06 | Sealed blind judgment output | owned | Evidence ladder receipt; product-proof blind-judgment lane; no-tools execution contract blind judgment section | Sealed blind-judgment receipt complete per the evidence ladder, product-proof blind-judgment lane, and no-tools blind-judgment contract, with the JSG-04 dependency satisfied; seal-before-reveal ordering remains checked through JSG-08's owner receipt | Scoring, calibration, fixture admission, judgment-quality evidence | Execution receipt proves clean run; case record preserves seal before reveal | none for ownership |
+| JSG-07 | Scoring result | owned | Evidence ladder receipt; `phase_1_infrastructure_architecture.md`; `packing_to_harness_foundation_interface_architecture_v3.md`; scorer-produced `ScoringResult` / `FailureEvent` outputs | Scoring receipt complete per the evidence ladder, phase-1 infrastructure architecture, packing interface, and scorer-produced output contracts, including the owner-required deterministic scoring, version/hash, frozen-input, and failure-event requirements; this map must not define its own re-derivation check locally | Fixture admission, judgment-quality evidence, score-based calibration claims | Harness owns deterministic scoring; it must not author labels, repair missing inputs, or let blocking owner-produced failure events clear as a clean score | none for ownership |
+| JSG-08 | Reveal or calibration record | owned | `judgment_spine_reveal_calibration_owner_contract_v0.md`, with product-proof zero-spoiler/outcome-calibration lane boundaries and case-specific reveal/calibration artifacts | Case-specific `jsg_08_reveal_calibration_receipt` complete per the reveal/calibration owner contract's Required Receipt Fields and satisfaction states; this map must not enumerate receipt fields locally | Completed judgment-quality evidence, calibration-based scoring claims, fixture-readiness claims when the case-specific receipt is absent, reveal-only, qualitative-only, or contaminated | Owner contract defines receipt shape; case artifacts own case-specific reveal facts and calibration; JSG-07 still owns scoring results | none for ownership; case-specific receipt gaps remain possible |
+| JSG-09 | Claim classification | owned | Evidence ladder `judgment_spine_claim_classification`; validation gate; product-proof boundary | Inline classification or durable co-referenced classification record complete per the evidence ladder's `judgment_spine_claim_classification` schema; this map must not enumerate classification fields locally | Proof, readiness, validation, fixture admission, scoring, blind-use, or judgment-quality claims above the ladder-owned cap for the classified state | Classified artifact must embed or co-reference the classification | none for ownership |
+| JSG-10 | Closeout state | owned | Evidence ladder closeout-state vocabulary; validation gate | Named `closeout_state` and `claim_cap` recorded per the ladder closeout vocabulary, the ladder's per-`closeout_state` cap rule, and the weakest-cleared-gate rule where applicable; this map must not collapse every state to weakest-cleared | Any stronger claim than the named closeout state permits | Evidence ladder owns vocabulary; classified artifact records state | none for ownership |
 
 ## JSG-08 Owner Detail
 
@@ -248,4 +248,91 @@ direction_change_propagation:
     - not scoring authorization
     - not judgment-quality proof
     - not implementation authorization
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The gate ownership map's required-receipt cells now route to each gate's
+    owning receipt contract, schema, or cap rule instead of locally enumerating
+    owner-owned receipt fields or collapsing closeout caps to weakest-cleared.
+  trigger: architecture_doctrine
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - docs/product/judgment_spine_gate_ownership_map_v0.md
+  downstream_surfaces_checked:
+    - docs/product/judgment_quality_promotion_operating_model_v0.md
+    - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
+    - docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md
+    - docs/research/judgment-spine/harness/v0_14/packing_to_harness_foundation_interface_architecture_v3.md
+    - docs/research/judgment-spine/harness/v0_14/band_input_labeling_rubric.md
+    - docs/research/judgment-spine/harness/v0_14/contestant_no_tools_execution_contract_v0.md
+    - docs/research/judgment-spine/harness/v0_14/memorization_probe_protocol.md
+    - docs/research/judgment-spine/harness/v0_14/phase_1_infrastructure_architecture.md
+    - .agents/workflow-overlay/product-proof.md
+    - .agents/workflow-overlay/validation-gates.md
+  intentionally_not_updated:
+    - path: docs/product/judgment_quality_promotion_operating_model_v0.md
+      reason: >
+        The conductor already references the owner contracts for JSG-03,
+        JSG-08, JSG-09, and JSG-10 and records that the map needed a separate
+        pass; no conductor predicate changed in this pass.
+    - path: Owner sources named in downstream_surfaces_checked
+      reason: >
+        The owner contracts already define the receipt fields, schemas, and cap
+        rules. This patch changes the map's references to those owners, not the
+        owner rules themselves.
+  stale_language_search: >
+    rg -n "ledger_freeze_hash|authors, version pins|receipt status, sealed output reference|capped by weakest-cleared gate|source-quality state, execution-quality state|Required Receipt Fields|judgment_spine_claim_classification"
+    docs/product/judgment_spine_gate_ownership_map_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-04 after the gate-map reference-not-restate patch.
+    No remaining gate-map hit restates the old partial JSG-03 ledger list, the
+    old partial JSG-08 receipt list, the old partial JSG-09 classification list,
+    or the old JSG-10 weakest-cleared cap collapse. Remaining hits are owner
+    references or this receipt.
+  non_claims:
+    - not validation
+    - not readiness
+    - not buyer proof
+    - not fixture admission
+    - not scoring authorization
+    - not model execution
+    - not judgment-quality evidence
+    - not implementation authorization
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Round-16 patch (2026-06-04): the JSG-02 required-receipt cell now references
+    product-proof's zero-spoiler boundary for participant-facing surfaces without
+    enumerating the owner-owned spoiler list locally. The JSG-07 required-receipt
+    cell now routes to scorer-produced ScoringResult/FailureEvent outputs and the
+    owner scoring contracts for failure-event handling, and explicitly forbids
+    the map from defining its own re-derivation check. This aligns the map with
+    the conductor's patched JSG-02/JSG-07 predicates so a participant-visible
+    spoiler leak or versioned/hash-bearing score with blocking owner-produced
+    failure events cannot be treated as a clean gate receipt. No new claim tier
+    or closeout_state is minted.
+  trigger: architecture_doctrine
+  related_triggers:
+    - validation_philosophy
+  controlling_sources_updated:
+    - docs/product/judgment_spine_gate_ownership_map_v0.md
+  downstream_surfaces_checked:
+    - docs/product/judgment_quality_promotion_operating_model_v0.md
+    - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
+    - docs/research/judgment-spine/harness/v0_14/phase_1_infrastructure_architecture.md
+    - docs/research/judgment-spine/harness/v0_14/packing_to_harness_foundation_interface_architecture_v3.md
+    - docs/research/judgment-spine/harness/v0_14/band_input_labeling_rubric.md
+    - .agents/workflow-overlay/product-proof.md
+    - orca-harness/scoring/band_scorer.py
+    - orca-harness/schemas/scoring_models.py
+  non_claims:
+    - not validation
+    - not readiness
+    - not scoring authorization
+    - not judgment-quality evidence
 ```

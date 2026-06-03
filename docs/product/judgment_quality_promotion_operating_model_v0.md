@@ -32,7 +32,7 @@ input_hashes:
   .agents/workflow-overlay/product-proof.md: AD1724202841D616F74494B22E3659D7987CC875BD36BF0F23B12C210E4B19C4
   .agents/workflow-overlay/validation-gates.md: FD7AE96F481733ED7FA5F1DDE252B7CF6A7C5A9053DAC7317795353F003F520F
   docs/product/judgment_spine_evidence_ladder_architecture_v0.md: 79F6696DD50BE3FDCB574FD6AED4FE0761C6335029BFDBE39B51F104F4AD16CF
-  docs/product/judgment_spine_gate_ownership_map_v0.md: 83463329DC42816B5701E7692E5EFD484359AF9504CA3E36E3450C4C6122D5E3
+  docs/product/judgment_spine_gate_ownership_map_v0.md: 9A07DE8D61249D26DF1DB4E66FE918893D74FFF4970D2B9BABD1C0F97878CE9F
   docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md: ED146BEB5767EFDDA3E979AA798CA5CB044A896421872B02FBDF03615E4E6E07
   docs/research/judgment-spine/harness/v0_14/contestant_no_tools_execution_contract_v0.md: 3301224649991811D91B8B5932F0DFF18D3E356CB51979619BDBE3494BC9193C
   docs/research/judgment-spine/harness/v0_14/memorization_probe_protocol.md: 7862F03D0DA8DB6D845DF47FAA7940D89C2B27C8A27204C41744ECD3AC7B4C61
@@ -203,15 +203,15 @@ Invariant B intact.
 | Gate | Routed semantics owner | Receipt | Mechanical clear-predicate | If owner field/schema absent |
 | --- | --- | --- | --- | --- |
 | JSG-01 | data-capture obligation contract + core-spine boundary own the source-identity obligation; packing interface owns `pre_decision_status`; no ECR field-schema owner yet | packing final status + ECR source-identity receipt | `pre_decision_status` present and set to an allowed *cleared* pre-decision value (not `excluded` or an uncertain/placeholder value). The finalization-provenance subpredicate — that the final `pre_decision_status` was finalized by the Judgment authority (AR-01), which the owner names as a block-state when unmet and leaves an open, unstaffed owner decision — is `indeterminate_until_authored`: no owner field yet records Judgment-authority finalization, so bare presence does **not** clear. The source-identity, inspectability, and timing/cutoff subpredicates are likewise `indeterminate_until_authored`: the obligation contract explicitly does not define ECR fields/keys/schema, and no ECR field schema exists yet, so there is no checkable owner field to bind for the source-side obligations | `indeterminate_until_authored` until an ECR field schema names the exact source-identity, inspectability, and timing/cutoff fields and allowed values |
-| JSG-02 | evidence ladder + packing interface | frozen participant packet | `participant_packet_hash` present and non-empty **and** the packing admission carries no leakage/spoiler block-class failure for the zero-spoiler participant-visible boundary (no `outcome_leakage_class` in participant-facing content, no source identifiers/provenance in the contestant-visible manifest, leakage/spoiler receipt present — owner hard-marker checks; "structure is not admission"). A bare present hash does **not** clear on its own. A recorded leakage/spoiler block-class failure routes to contaminated/blocked (Leakage) | semantic-leakage subpredicate is `indeterminate_until_authored` (owner leaves it to operator/review) until its admission fields are authored |
-| JSG-03 | band-input labeling rubric + packing interface | frozen FacilitatorLedger | `ledger_freeze_hash` and `committed_at` present and valid **and** the owner-required ledger contents present (authors, version pins, enum-valid band inputs, and the `second_label_diffs` disagreement trail). A bare present `ledger_freeze_hash` with any required ledger field missing/invalid does **not** clear; a met rubric-quarantine trigger routes to not-cleared/quarantine | `indeterminate_until_authored` for any required ledger field whose schema is not yet authored |
+| JSG-02 | evidence ladder + product-proof zero-spoiler boundary + packing interface | frozen participant packet | the participant-packet freeze receipt is complete per the routed owner sources, including the product-proof zero-spoiler boundary for participant-facing surfaces and the packing interface's participant-visible boundary / leakage-spoiler admission checks. The conductor must not enumerate the owner-owned spoiler list locally. A bare present `participant_packet_hash`, or a hard-marker-only packing pass that leaves a product-proof-covered participant-facing leakage/spoiler issue unresolved, does **not** clear. A recorded leakage/spoiler block-class failure routes to contaminated/blocked (Leakage) | semantic-leakage subpredicate is `indeterminate_until_authored` (owner leaves it to operator/review) until its admission fields are authored |
+| JSG-03 | band-input labeling rubric + packing interface | frozen FacilitatorLedger | the frozen FacilitatorLedger receipt is complete per the routed owner sources, including the packing interface's frozen-ledger requirements and any rubric quarantine handling; the conductor must not enumerate ledger-content fields locally. A bare present `ledger_freeze_hash` does **not** clear when the owner-required frozen-ledger receipt is incomplete or invalid | `indeterminate_until_authored` for any required ledger field whose owner schema is not yet authored |
 | JSG-04 | contestant no-tools execution contract | `contestant_execution_isolation` + authorized live-execution provenance | `isolation_result == "proven"` **and** the contract's auditable live-execution provenance is bound (separate owner authorization; production by the live runner; accepted endpoint; out-of-band operator record binding provider, endpoint, UTC timestamp, exit status, console output, `prompt_hash`, `raw_response_hash`). A bare computed `proven` does **not** clear (receipt-provenance sub-rule) | not cleared; with no live runner, by-hand receipts cannot bind provenance, so `indeterminate_until_authored` / capped per Seam 3 |
-| JSG-05 | memorization probe protocol + no-tools contract provenance boundary | probe artifact | gate-interpretation `== pass_valid`, **read from the JSG-05 artifact, not the scorer**, **and** bound by the same auditable live-execution provenance as JSG-04. A bare computed `pass_valid` does **not** clear (receipt-provenance sub-rule) | not cleared / `indeterminate_until_authored` until authorized live provenance is bound; a `probe_result == fail` (confirmed recognition) routes to contaminated/blocked via the Seam 2 contamination branch, while `ambiguous` quarantines as not-cleared |
-| JSG-06 | no-tools contract blind-judgment section (isolation) + ladder; sealed-output field currently unowned | sealed blind judgment | `isolation_result == "proven"` for the blind-judgment run **and** JSG-04 cleared (so it inherits JSG-04's auditable live-execution provenance). The sealed-output subpredicate is `indeterminate_until_authored`: no JSG-06 owner (the BlindJudgement schema or the no-tools contract) names a checkable `sealed_blind_judgment_hash` field, so there is nothing to bind. `sealed_before_reveal` is a **JSG-08** receipt field, not a JSG-06 clear-condition; the seal-before-reveal property is enforced at JSG-08, where `sealed_before_reveal == no` routes to `blocked_or_contaminated` | not cleared / `indeterminate_until_authored` until a JSG-06 sealed-output field schema names the field and allowed value |
-| JSG-07 | phase-1 infrastructure + packing interface | scoring result | version/hash fields present (`scorer_version`, `mapping_table_version`, `labeling_rubric_version`, required frozen-input hashes) **and** authenticity bound to the deterministic scorer's owner-produced provenance. Because scoring is deterministic, that authenticity binding is an owner-authorized **re-derivation match** (owner-authorized verification, not a conductor-computed score): the recorded `scoring_result_hash` equals re-running the scorer over the frozen inputs. A hand-authored result carrying the version fields does **not** clear (receipt-provenance sub-rule). The scoring-integrity-**contamination** subpredicate is `indeterminate_until_authored`: the owner's `score_blocked` is a mixed admission state firing mostly on absences (missing run-metadata/hash/version, `decision_shape` not frozen), with no field that cleanly discriminates an affirmative integrity failure from an absence, so a bare `score_blocked`, a re-derivation mismatch, or an absent result routes to **not-cleared** (Seam 3), not to contamination, until the scorer authors a discriminating integrity-failure signal | authenticity subpredicate is `indeterminate_until_authored` until a scorer-owned provenance/status field or the owner-authorized re-derivation check is authorized; scoring-integrity contamination is likewise `indeterminate_until_authored` |
-| JSG-08 | reveal/calibration owner contract | `jsg_08_reveal_calibration_receipt` | `receipt_status == score_linked_outcome_calibration` **and** `sealed_blind_output.sealed_before_reveal == yes` (both JSG-08-owned receipt fields; the seal-ordering read lives here, where the field lives) for judgment-quality strength. `sealed_before_reveal == no` is an affirmative seal-ordering breach — the auditable signal of the owner contract's "relied on unsealed output" condition — and routes to contaminated/blocked; `unknown`, or a weaker `receipt_status`, caps lower / not cleared per the contract | not cleared at judgment-quality strength |
-| JSG-09 | evidence ladder `judgment_spine_claim_classification` + validation gate | classification record | record present with `source_quality_state`, `execution_quality_state`, `closeout_state`, `claim_cap`, `weakest_missing_or_failed_gate`, `receipt_artifact_or_gap`, `non_claims` | terminal route (Seam 5) |
-| JSG-10 | evidence ladder closeout vocabulary + validation gate | named closeout | `closeout_state` present, drawn from the ladder vocabulary, consistent with the weakest cleared gate | terminal route (Seam 5) |
+| JSG-05 | memorization probe protocol + no-tools contract provenance boundary | probe artifact | gate-interpretation `== pass_valid`, **read from the JSG-05 artifact, not the scorer**, **and** bound by the same auditable live-execution provenance as JSG-04. A bare computed `pass_valid` does **not** clear (receipt-provenance sub-rule) | not cleared / `indeterminate_until_authored` until authorized live provenance is bound; only the owner-defined confirmed recognition state with proven isolation routes to contaminated/blocked via Seam 2, while caveated or ambiguous probe outcomes route as not-cleared/quarantine under the owner protocol |
+| JSG-06 | no-tools contract blind-judgment section (isolation) + evidence ladder / gate map sealed-output receipt | sealed blind judgment | JSG-04 cleared **and** the blind-judgment run has `isolation_result == "proven"` with inherited auditable live-execution provenance **and** the owner-required sealed blind judgment hash is present per the gate map and evidence ladder. `sealed_before_reveal` remains a **JSG-08** receipt field, not a JSG-06 clear-condition; the seal-before-reveal property is enforced at JSG-08 | not cleared / `indeterminate_until_authored` until the owner-required sealed-output receipt and inherited no-tools provenance are present |
+| JSG-07 | phase-1 infrastructure + packing interface | scoring result | the scoring receipt is complete per the routed owner sources, including the phase-1 infrastructure version/hash guardrails, the packing interface's frozen-input and deterministic-checking boundary, and the scorer-produced `ScoringResult` / `FailureEvent` outputs. Authenticity may clear only through an owner-produced or independently verifiable scoring provenance/hash check; the conductor must not define its own re-derivation discriminator or treat a hand-authored result as clearing. Because the current scorer output includes run-generated identifiers, timestamps, and failure-event IDs, a naive rerun equality check over `scoring_result_hash` is **not** an owner-supported gate predicate. Owner-produced blocking failure events, scoring-integrity failures, or admission failures prevent clearing and route by the transition function; absence, missing run metadata/hash/version, or a bare `score_blocked` for a missing input routes to **not-cleared** (Seam 3) | not cleared until the owner-required scoring receipt, scoring provenance/hash check, and failure-event handling are complete per the owner sources; only an owner-reported affirmative scoring-integrity/admission failure routes to contaminated/blocked, while missing/absent scoring evidence routes to not-cleared |
+| JSG-08 | reveal/calibration owner contract | `jsg_08_reveal_calibration_receipt` | the owner contract's Required Receipt Fields are complete for the case-specific durable receipt, `receipt_status == score_linked_outcome_calibration`, and `sealed_blind_output.sealed_before_reveal == yes`, for judgment-quality strength. The conductor checks completeness by reference to the owner contract and must not enumerate the receipt fields locally. A bare `receipt_status` value without the owner-required supporting receipt does **not** clear (receipt-provenance sub-rule: `receipt_status` is self-asserted). `sealed_before_reveal == no` is an affirmative seal-ordering breach and routes to contaminated/blocked; `unknown`, a weaker `receipt_status`, or any owner-required field named-missing caps lower / not cleared per the contract | not cleared at judgment-quality strength |
+| JSG-09 | evidence ladder `judgment_spine_claim_classification` + validation gate | classification record | classification record present and complete per the ladder's `judgment_spine_claim_classification` schema, and `claim_cap` is owner-consistent by reference to the ladder-owned cap rules for the recorded `closeout_state` plus the ladder weakest-cleared-gate rule where applicable. The conductor must not enumerate classification fields or cap values locally | terminal route (Seam 5) |
+| JSG-10 | evidence ladder closeout vocabulary + validation gate | named closeout | `closeout_state` present, drawn from the ladder vocabulary, and `claim_cap` owner-consistent by reference to the ladder-owned cap rule for that recorded `closeout_state` plus the ladder weakest-cleared-gate rule where applicable. The conductor must not enumerate cap values locally and must not default every state to weakest-cleared | terminal route (Seam 5) |
 
 Note on JSG-05 versus JSG-07: the deterministic scorer emits
 `memorization_probe_result="not_run"` as a fixed field; the conductor must read
@@ -233,11 +233,11 @@ transition_function:
   on_gate_G:  # classify the gate outcome into exactly one branch, in the precedence order above
     if_cleared: advance to the next gate
     elif_contaminated_or_blocked:
-      trigger: a gate's owner receipt reports an AFFIRMATIVE invalidity or breach value — JSG-08 `receipt_status == contaminated_or_invalid` (reveal/calibration/scoring entered the wrong lane, relied on unsealed output, used an undeclared biased frame, or cannot identify the revealed material) or `sealed_before_reveal == no` (seal-ordering breach); `isolation_result == violated` (tool-use breach or runtime context leakage); a JSG-02/JSG-03 packing leakage/spoiler block-class failure (an `outcome_leakage_class` in participant-facing content, or source identifiers/provenance in the contestant-visible manifest); or JSG-05 `probe_result == fail` (gate-interpretation `fail_gate_closing` / `fail_gate_closing_with_caveat` — the model affirmatively recognized the case, i.e. post-cutoff contamination, `severity: blocking` per the probe protocol). It fires only on a positive owner-reported invalidity value
-      note: this must be an affirmative owner-reported invalidity value, so the routing decision stays a mechanical field read (Invariant A). Absence, not-yet-authored provenance, or unresolved status — `isolation_result == not_proven`, an `indeterminate_until_authored` subpredicate, a by-hand gate with no auditable runner, `sealed_before_reveal == unknown`, or a JSG-05 `probe_result == ambiguous` (quarantine pending operator review or clean rerun, `severity: material`, not a confirmed recognition) — is NOT contamination; it routes to else_not_cleared_or_indeterminate and caps per Seam 3 / the weakest-cleared-gate rule, NOT at "often none". Contamination can poison gates that already mechanically cleared, so it must NOT use the weakest-cleared-gate cap
+      trigger: a gate's owner receipt reports an AFFIRMATIVE invalidity or breach value — JSG-08 `receipt_status == contaminated_or_invalid` or `sealed_before_reveal == no`; `isolation_result == violated`; a JSG-02/JSG-03 packing or product-proof leakage/spoiler block-class failure; a JSG-07 affirmative scoring-integrity failure; or the JSG-05 owner-defined confirmed recognition state with proven isolation. It fires only on a positive owner-reported invalidity value, read from the routed owner source rather than locally re-derived
+      note: this must be an affirmative owner-reported invalidity value, so the routing decision stays a mechanical field read (Invariant A). Absence, not-yet-authored provenance, unresolved status, by-hand execution with no auditable runner, `sealed_before_reveal == unknown`, JSG-05 ambiguity, or JSG-05 fail-with-unproven-isolation caveat is NOT contamination; it routes to else_not_cleared_or_indeterminate and caps via the ladder-owned closeout/cap rules. Contamination can poison gates that already mechanically cleared, so it must NOT use the ordinary weakest-cleared-gate cap
       action:
         - halt at G; do not advance
-        - resolve the closeout to the ladder closeout_state blocked_or_contaminated; cap = weakest UNAFFECTED gate, often none (ladder blocked_or_contaminated rule, not the weakest-cleared-gate rule)
+        - resolve the closeout through JSG-09/JSG-10 using the ladder-owned `blocked_or_contaminated` closeout_state and its owner cap rule
         - name the affected or contaminated gate(s)
         - record via JSG-09 then JSG-10 at that cap, or the terminal route below if G is itself JSG-09 or JSG-10
     elif_held:
@@ -245,21 +245,22 @@ transition_function:
       action: enter run state sealed_awaiting_outcome (see Run Lifecycle States); this is a hold, not a failure and not a closeout
     else_not_cleared_or_indeterminate:
       - halt at G; do not advance
-      - cap the claim at the weakest cleared gate (evidence ladder weakest-cleared-gate rule and sub-floor rule)
+      - record the weakest cleared gate as context, then route the final claim cap through JSG-09/JSG-10 using the ladder-owned cap rule for the selected `closeout_state` plus the ladder weakest-cleared-gate rule where applicable; missing evidence is not a pass
       - name the failed, missing, or indeterminate gate G
-      - record the closeout via JSG-09 then JSG-10 at that cap
+      - record the closeout via JSG-09 then JSG-10 at that owner-derived cap
       - EXCEPTION: if G is itself JSG-09 or JSG-10, use the closeout self-dependency terminal route below
 ```
 
 **Ladder reconciliation (Route, Don't Restate).** The evidence ladder's
 `blocked_or_contaminated` use_when names six defects; this conductor maps each to
 an affirmative owner value, never to a mere absence: **leakage** → a JSG-02/JSG-03
-packing leakage/spoiler block-class failure; **post-cutoff contamination** →
+packing or product-proof leakage/spoiler block-class failure; **post-cutoff contamination** →
 JSG-05 `probe_result == fail`; **tool-use breach** → `isolation_result ==
-violated`; **unreconciled scoring failure** → `indeterminate_until_authored` (the owner's
-`score_blocked` is a mixed absence/defect admission state with no clean
-integrity-vs-absence discriminator, so bare `score_blocked` is treated as absence
-→ not-cleared until the scorer authors a discriminating signal); **missing isolation / missing source
+violated`; **unreconciled scoring failure** → a JSG-07 owner-reported
+scoring-integrity/admission failure, such as an owner-reported frozen-input
+mismatch, routes to `blocked_or_contaminated`; a conductor-invented rerun hash
+comparison is not a valid discriminator, and a bare `score_blocked` for a
+*missing* input is absence → not-cleared; **missing isolation / missing source
 identity** → read as an **affirmative defect that breaks an evaluated gate**
 (`isolation_result == violated`, or an owner-set `receipt_status ==
 contaminated_or_invalid`), consistent with the ladder's own "...breaks the
@@ -334,15 +335,15 @@ cap. The conductor mints no new claim vocabulary.
 
 | Run state | Meaning | Ladder resolution |
 | --- | --- | --- |
-| `not_started` | no gate evaluated | none |
-| `in_progress_at_<gate>` | gates before `<gate>` cleared; evaluating `<gate>` | cap = weakest cleared gate |
-| `sealed` | JSG-06 cleared per its full gate-table predicate — note its sealed-output subpredicate is currently `indeterminate_until_authored`, so this state is not yet reachable; a by-hand run also cannot reach it, because by-hand JSG-04 does not clear and the run halts there | cap = weakest cleared gate |
-| `scored` | JSG-07 cleared | cap = weakest cleared gate |
-| `sealed_awaiting_outcome` | a post-cutoff live case is cleanly sealed and possibly scored, but the real-world outcome has not occurred, so JSG-08 cannot clear; the run is **held, not failed** | JSG-08 `receipt_status = absent`; reveal/calibration claim = `no_durable_evidence`; overall cap = weakest cleared gate; caps **below** `completed_judgment_quality_evidence` |
-| `calibrated` | JSG-08 cleared at the required status | cap per the JSG-08 contract status |
-| `closed` | JSG-09 classification and JSG-10 closeout recorded | the recorded `closeout_state` |
-| `halted_at_<gate>` | a non-closeout gate failed or is indeterminate (ordinary not-cleared, no contamination) | cap = weakest cleared gate; closeout via JSG-09/10 |
-| `blocked_or_contaminated` | a gate's owner receipt reports an affirmative invalidity/breach value (JSG-08 `contaminated_or_invalid` or `sealed_before_reveal == no`; `isolation_result == violated`; a JSG-02/JSG-03 packing leakage/spoiler block-class failure; or JSG-05 `probe_result == fail`, a confirmed recognition) — NOT mere absence, a by-hand/indeterminate gate, or a JSG-05 `ambiguous` quarantine, which are `halted_at_<gate>` | closeout_state = `blocked_or_contaminated`; cap = weakest UNAFFECTED gate, often none; name the affected gate |
+| `not_started` | no gate evaluated | no completed closeout; any claim cap must come from the ladder once classified |
+| `in_progress_at_<gate>` | gates before `<gate>` cleared; evaluating `<gate>` | provisional weakest-cleared context only; no completed-closeout claim |
+| `sealed` | JSG-06 cleared per its full gate-table predicate; a by-hand run still cannot reach it, because by-hand JSG-04 does not clear and the run halts there | provisional weakest-cleared context only; final claim cap still requires JSG-09/JSG-10 classification under the ladder |
+| `scored` | JSG-07 cleared | provisional weakest-cleared context only; final claim cap still requires JSG-09/JSG-10 classification under the ladder |
+| `sealed_awaiting_outcome` | a post-cutoff live case is cleanly sealed and possibly scored, but the real-world outcome has not occurred, so JSG-08 cannot clear; the run is **held, not failed** | JSG-08 `receipt_status = absent`; reveal/calibration claim follows the JSG-08 owner contract and ladder classification; no completed judgment-quality claim until JSG-08, JSG-09, and JSG-10 clear |
+| `calibrated` | JSG-08 cleared at the required status | JSG-08 status is read from the owner contract; final claim cap still requires JSG-09/JSG-10 classification under the ladder |
+| `closed` | JSG-09 classification and JSG-10 closeout recorded | the recorded `closeout_state` and `claim_cap` per the ladder-owned classification |
+| `halted_at_<gate>` | a non-closeout gate failed or is indeterminate (ordinary not-cleared, no contamination) | closeout via JSG-09/JSG-10; final claim cap is owner-derived from the selected ladder `closeout_state` and weakest-cleared context where applicable |
+| `blocked_or_contaminated` | a gate's owner receipt reports an affirmative invalidity/breach value — not mere absence, by-hand/indeterminate execution, JSG-05 ambiguity, or a JSG-05 fail-with-unproven-isolation caveat | closeout_state = `blocked_or_contaminated`; claim cap per the ladder-owned cap rule for that state; name the affected gate |
 | `halted_no_completed_closeout` | JSG-09 or JSG-10 itself failed (Seam 5) | closeout claim = `no_durable_evidence` |
 
 `sealed_awaiting_outcome` exit rule: when the real-world outcome arrives, route
@@ -528,7 +529,40 @@ direction_change_propagation:
     JSG-07 re-derivation is framed as owner-authorized verification, not a
     conductor-computed score). The contamination set is therefore five affirmative
     owner values plus the two reconciled missing-isolation/source-identity
-    readings; still no new claim tier or closeout_state minted.
+    readings; still no new claim tier or closeout_state minted. Round-13 patch
+    (2026-06-03), from an INDEPENDENT out-of-thread adversarial review (the
+    in-thread rounds 3-12 shared the author's blind spot and wrongly passed these):
+    (AR-01, high) JSG-08 no longer clears on a bare self-asserted `receipt_status`
+    — it now requires the full owner-required receipt present and non-missing, per
+    the owner's "clears only when its own durable receipt satisfies the fields";
+    (AR-02, med) a JSG-07 affirmative re-derivation / frozen-input mismatch (an
+    unreconciled scoring failure) now routes to blocked_or_contaminated rather than
+    being lumped with absence at not-cleared — correcting a round-11 over-correction,
+    the owner-authorized re-derivation being the discriminator (so the contamination
+    set gains this affirmative value); (AR-03, med) JSG-10 and JSG-09 now check
+    `claim_cap` consistency by reference to the ladder-owned cap rules for the
+    recorded `closeout_state`, rather than restating cap values in the conductor.
+    Round-14 patch (2026-06-04), from a SECOND independent out-of-thread review that
+    both reviewed AND patched in one pass (rounds 3-12 were self-review and shared the
+    author's blind spot; this pass was verified field-by-field against the owner sources
+    before applying): five confirmed seams fixed in reference-not-restate style —
+    (AR-P1, high) JSG-08 stops enumerating the receipt (it had omitted owner-required
+    `case_id`, `receipt_artifact`, `failure_events`) and now references the reveal
+    contract's Required Receipt Fields; (AR-P2, high) JSG-09/JSG-10, the not-cleared cap
+    action, and the run-lifecycle resolutions stop restating cap values and now reference
+    the ladder's per-`closeout_state` cap rule plus the weakest-cleared-gate rule;
+    (AR-P3, high) JSG-03 stops enumerating frozen-FacilitatorLedger contents and references
+    the packing interface's frozen-ledger requirements; (AR-P4, med) JSG-06 binds the sealed
+    blind judgment hash named by the gate map and evidence ladder instead of falsely treating
+    it as unowned, so `sealed` is reachable for a clean isolated run while still gated behind
+    JSG-04 provenance (by-hand still cannot reach it); (AR-P5, med) the JSG-05
+    fail-with-unproven-isolation caveat no longer routes to affirmative contamination — only
+    the proven-isolation confirmed recognition does — resolving a contradiction with the
+    conductor's own absence-is-not-contamination note and with the probe/no-tools owners. A
+    parallel lossy restatement in the gate ownership map (its JSG-08 receipt list and JSG-10
+    weakest-cleared cap) is logged for a separate owner-map pass and is NOT changed here.
+    This is one pass and does not claim completeness. Still no new claim tier or
+    closeout_state minted.
   trigger: architecture_doctrine
   related_triggers:
     - lifecycle_boundary
@@ -608,4 +642,43 @@ direction_change_propagation:
     - not model execution
     - not judgment-quality evidence
     - not implementation authorization
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Round-16 patch (2026-06-04): JSG-02 now names product-proof as a routed
+    zero-spoiler owner for participant-facing surfaces instead of relying only
+    on packing hard-marker checks. JSG-07 no longer treats a conductor-defined
+    rerun equality check over `scoring_result_hash` as an owner-authorized gate
+    predicate — this reverses the round-13 AR-02 entry above, which wrongly
+    treated that re-derivation as the scoring-integrity discriminator. The
+    predicate now routes to the phase-1 infrastructure, packing
+    deterministic-checking boundary, and scorer-produced ScoringResult/FailureEvent
+    outputs for scoring receipt completeness, provenance/hash checking,
+    failure-event handling, and affirmative scoring-integrity/admission failures.
+    This prevents a participant-visible spoiler leak, scored-by-hand run, or
+    under-receipted score with owner-produced blocking failure events from reaching
+    the `scored` lifecycle state or a stronger claim merely because local hard
+    markers or version/hash fields exist. No new claim tier or closeout_state is
+    minted.
+  trigger: architecture_doctrine
+  related_triggers:
+    - validation_philosophy
+  controlling_sources_updated:
+    - docs/product/judgment_quality_promotion_operating_model_v0.md
+  downstream_surfaces_checked:
+    - docs/product/judgment_spine_gate_ownership_map_v0.md
+    - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
+    - docs/research/judgment-spine/harness/v0_14/phase_1_infrastructure_architecture.md
+    - docs/research/judgment-spine/harness/v0_14/packing_to_harness_foundation_interface_architecture_v3.md
+    - docs/research/judgment-spine/harness/v0_14/band_input_labeling_rubric.md
+    - .agents/workflow-overlay/product-proof.md
+    - orca-harness/scoring/band_scorer.py
+    - orca-harness/schemas/scoring_models.py
+  non_claims:
+    - not validation
+    - not readiness
+    - not scoring authorization
+    - not judgment-quality evidence
 ```
