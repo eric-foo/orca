@@ -403,6 +403,12 @@ contain machine-specific provenance paths and raw copied source artifacts. Do
 not treat them as canonical fixtures, buyer proof, validation evidence, or a
 required capture gate merely because they exist in the reports tree.
 
+For generated packet lifecycle, retention, durable citation, and sensitivity
+handling, use
+`docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md`.
+Generated packets remain scratch by default; a durable closeout may cite
+recorded packet facts without admitting the raw packet directory as a fixture.
+
 ## Non-Claims
 
 This packet core and local CLI are not source acquisition, direct HTTP fetch,

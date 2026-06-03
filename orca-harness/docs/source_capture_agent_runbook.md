@@ -182,6 +182,12 @@ follow the source-access boundary decision and perform clean
 reacquisition/verification through the normal disclosed path before relying on
 it materially.
 
+For packet lifecycle, retention, durable citation, and sensitivity handling,
+open
+`docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md`.
+That decision keeps generated packets scratch by default and distinguishes
+durable closeout summaries from fixture admission.
+
 Recommended naming:
 
 ```text

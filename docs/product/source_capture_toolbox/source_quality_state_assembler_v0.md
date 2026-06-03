@@ -11,6 +11,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md
+  - docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md
   - docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
 stale_if:

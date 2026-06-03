@@ -57,6 +57,7 @@ packet without redefining Capture obligations.
 | `docs/product/data_capture_source_access_method_plan_v0.md` | Candidate methods, sequence discipline, source-family method notes, and risk posture. |
 | `docs/product/data_capture_source_access_boundary_decision_v0.md` | Source-access boundary, entitlement/disclosability standard, and hard stops. |
 | `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md` | Capture obligations, forbidden Capture outputs, and handoff discipline. |
+| `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` | Source Capture Packet lifecycle, durable citation, retention, and sensitivity handling before any fixture admission. |
 | `docs/product/data_capture_spine_pressure_test_closeout_synthesis_v0.md` | Why pressure-test findings support moving from all-tools-deferred to bounded first-tranche tooling. |
 | `docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md` | Reusable operating profile for the smallest complete source-quality target per bounded source unit; not fixture admission, validation, source discovery, or Judgment authority. |
 | `docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md` | Blank queue template for planning mini god-tier source-quality passes over already-bounded source units; not source selection, source discovery, or fixture admission. |
@@ -65,6 +66,7 @@ packet without redefining Capture obligations.
 | `docs/product/source_capture_toolbox/source_quality_cw_p6_end_to_end_pass_closeout_v0.md` | One-source CW-P6 Mini God-Tier limitation-path pass evidence; read as operational closeout context only, not fixture admission, validation, or doctrine authority. |
 | `docs/product/source_capture_toolbox/source_quality_cw_p1_end_to_end_pass_closeout_v0.md` | One-source CW-P1 Mini God-Tier metadata-only negative-path pass evidence; read as operational closeout context only, not fixture admission, validation, or doctrine authority. |
 | `docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md` | Architecture boundary for a read-only Source Quality State Assembler over already-bounded rows and existing packets; state census only, not source discovery, runner dispatch, scoring, fixture admission, or Judgment authority. |
+| `docs/product/source_capture_toolbox/source_quality_slot3_post_recapture_closeout_v0.md` | Slot 3 post-recapture Mini God-Tier source-quality closeout across Reddit batch 1, Reddit batch 2, and WSO; read as operational closeout context only, not fixture admission, validation, source completeness, or Judgment authority. |
 
 ## Toolbox Components
 
@@ -125,6 +127,24 @@ Packet core concern mapping:
 It must not own ECR fields, Cleaning transforms, Judgment scoring, credibility,
 inclusion, exclusion, discounting, Signal Use, Decision Strength, Action
 Ceiling, buyer proof, or commercial meaning.
+
+### Packet Fixture / Retention / Sensitivity Decision
+
+Purpose: define how generated Source Capture Packets move, or do not move,
+from scratch output into durable operational context, retained candidate
+evidence, fixture-admission recommendation, or separately admitted fixture
+status.
+
+The decision is at
+`docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md`.
+It keeps generated packets scratch by default, allows durable closeout artifacts
+to cite recorded packet facts without admitting fixtures, and requires visible
+retention and sensitivity handling before raw packet directories or packet
+contents are retained beyond scratch.
+
+It is not validation, source completeness proof, fixture admission for any
+existing packet, legal sufficiency, rights clearance, production storage
+authorization, or Judgment evidence.
 
 ### Source Capture CLI
 
@@ -249,6 +269,23 @@ It is operational source-quality evidence only. It is not fixture admission,
 validation, source completeness proof, Judgment scoring, source discovery, or
 authorization for new adapters.
 
+### Slot 3 Post-Recapture Source Quality Closeout
+
+Purpose: preserve the post-recapture Slot 3 Mini God-Tier source-quality pass
+across Reddit batch 1, Reddit batch 2, and WSO after the state assembler and
+report-skeleton helper were available.
+
+The closeout is at
+`docs/product/source_capture_toolbox/source_quality_slot3_post_recapture_closeout_v0.md`.
+It records how all three already-bounded source units reached `reported` row
+status with `mini_god_tier_with_visible_limitations`, while retaining scratch
+lifecycle, local cutoff, WSO hidden/full-comment, archive-body, and
+source-completeness non-claims.
+
+It is operational source-quality evidence only. It is not fixture admission,
+validation, source completeness proof, Judgment scoring, source discovery, or
+authorization for new adapters.
+
 ### Source-Quality Example Ladder
 
 Purpose: give future agents a compact retrieval pattern for reading packet
@@ -259,6 +296,7 @@ success separately from source-quality status.
 | `CW-P4` | Archive.org snapshot body preserved. | `mini_god_tier_met` | A cutoff-compatible archive body can satisfy the clean preserved-body path, while still carrying scratch lifecycle and archive-completeness non-claims. |
 | `CW-P6` | Current official SEC Archives body preserved by Direct HTTP. | `mini_god_tier_with_visible_limitations` | A real preserved body can still carry limitations when archive/history, media, and source-envelope posture are incomplete. |
 | `CW-P1` | Archive availability metadata exists, but no eligible archive body was selected or preserved. | `archive_body_not_preserved` | Packet or metadata success must not be upgraded into source-body possession. |
+| `Slot 3 post-recapture` | Local Reddit JSON and WSO visible-envelope HTML/text/screenshot bodies or body-equivalents preserved in scratch packets. | `mini_god_tier_with_visible_limitations` | Multi-venue recapture can improve body/body-equivalent posture while local cutoff, archive-body, WSO hidden/full-comment, and scratch-lifecycle limits still travel forward. |
 
 Use the ladder as an operating example only. It is not source-quality scoring,
 fixture admission, validation, source selection, Judgment evidence, or a
@@ -413,6 +451,7 @@ Implemented first-tranche pieces:
 - Source Quality report-skeleton helper for existing Source Capture Packets;
 - Source Quality State Assembler for read-only state census over existing
   source-quality rows and packets;
+- Source Capture Packet fixture / retention / sensitivity decision;
 - agent-facing runbook for bounded runner selection, stops, inspection, and
   reporting.
 
@@ -423,9 +462,7 @@ Recorded architecture boundaries that are not implemented tooling:
 Remaining current gaps:
 
 - no Source Observability integration point;
-- no accepted fixture policy for generated packets;
-- no rights, retention, or sensitivity rule for durably preserved raw source
-  files, screenshots, media, entitled content, or paid-access artifacts.
+- no named packet has been separately admitted as a fixture.
 
 Deferred gaps that are intentionally outside the first tranche:
 

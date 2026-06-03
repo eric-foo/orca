@@ -336,6 +336,7 @@ also open:
 - `docs/decisions/data_capture_spine_source_observability_support_closeout_decision_v0.md`
 - `docs/product/data_capture_spine_pressure_test_closeout_synthesis_v0.md`
 - `docs/product/source_capture_toolbox/README.md`
+- `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` when deciding whether generated Source Capture Packets remain scratch, may be cited by durable closeouts, require retention/sensitivity handling, or require a cited separate admission decision before `separately_admitted` can be used.
 - `docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md` when checking whether already-bounded source-quality rows and existing Source Capture Packets may be assembled into a state census without runner dispatch, source discovery, scoring, fixture admission, or Judgment authority.
 - `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md`
 - `docs/product/data_capture_spine_pressure_test_all_slot_synthesis_v0.md`
@@ -401,10 +402,15 @@ and gaps. The Source Quality State Assembler architecture is a read-only
 multi-row state-census boundary over already-bounded source-quality rows and
 existing Source Capture Packets; it does not authorize source discovery, runner
 dispatch, source-quality scoring, fixture admission, or Judgment behavior. A
-later owner decision now authorizes one bounded first-tranche
-source-access tooling build surface: Source Capture Packet core/CLI, direct HTTP
-fetch, media/asset preservation, Archive.org availability/body retrieval, and
-honest browser snapshot support. That authorization does not cover Reddit API
+Source Capture Packet fixture/retention/sensitivity decision controls how
+generated packets move from scratch output to durable operational context,
+candidate evidence, fixture-admission recommendation, or separate fixture
+admission; it does not admit any current packet, prove source completeness,
+clear rights, or authorize production storage. A later owner decision now
+authorizes one bounded first-tranche source-access tooling build surface:
+Source Capture Packet core/CLI, direct HTTP fetch, media/asset preservation,
+Archive.org availability/body retrieval, and honest browser snapshot support.
+That authorization does not cover Reddit API
 registration/calls, commercial fetch services, anti-detect browsers, proxies,
 SERP APIs, storage, dashboards, schedulers, deployment, production runtime,
 contract hardening, source-access boundary change, or ECR/Cleaning/Judgment

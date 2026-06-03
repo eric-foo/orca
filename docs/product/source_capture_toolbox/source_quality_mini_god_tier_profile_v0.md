@@ -8,15 +8,16 @@ use_when:
   - Planning or running bounded source-quality improvement passes after the Source Capture Toolbox has a concrete source locator.
   - Distinguishing source-capture completeness from fixture admission, Judgment scoring, ECR, Cleaning, or source discovery.
   - Preparing a source-unit queue before applying Source Capture Toolbox runners.
-authority_boundary: bounded_operating_profile
+authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/README.md
+  - docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
   - docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md
 stale_if:
   - The Source Capture Toolbox packet shape, runner set, or output lifecycle materially changes.
   - The Data Capture obligation contract changes capture obligations, forbidden outputs, or handoff states.
-  - A fixture-admission, rights, retention, or sensitivity policy becomes controlling for generated packet outputs.
+  - The Source Capture Packet fixture, retention, or sensitivity decision is amended or superseded.
 ```
 
 ## Status
@@ -82,6 +83,11 @@ token, update this profile and carry a direction-change propagation receipt.
 ## Packet Lifecycle Vocabulary
 
 Use these lifecycle states in mini god-tier reports and source-unit queues:
+
+`docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md`
+controls how these lifecycle states may be cited, retained, or escalated. This
+profile owns the operating vocabulary; the decision owns retention and
+sensitivity handling.
 
 | State | Meaning |
 | --- | --- |
