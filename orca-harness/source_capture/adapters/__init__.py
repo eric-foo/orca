@@ -25,6 +25,19 @@ from source_capture.adapters.media_asset import (
     MediaAssetCaptureSuccess,
     fetch_media_assets,
 )
+from source_capture.adapters.reddit_api import (
+    RedditApiCaptureFailure,
+    RedditApiCaptureFailureKind,
+    RedditApiCaptureResult,
+    RedditApiCaptureSuccess,
+    RedditApiClient,
+    RedditApiResponse,
+    RedditApiTransportError,
+    RedditPostCapture,
+    RedditPostFailure,
+    build_reddit_oauth_client,
+    fetch_reddit_api_capture,
+)
 
 __all__ = [
     "ArchiveOrgCaptureFailure",
@@ -42,8 +55,19 @@ __all__ = [
     "MediaAssetCaptureBatch",
     "MediaAssetCaptureFailure",
     "MediaAssetCaptureSuccess",
+    "RedditApiCaptureFailure",
+    "RedditApiCaptureFailureKind",
+    "RedditApiCaptureResult",
+    "RedditApiCaptureSuccess",
+    "RedditApiClient",
+    "RedditApiResponse",
+    "RedditApiTransportError",
+    "RedditPostCapture",
+    "RedditPostFailure",
+    "build_reddit_oauth_client",
     "fetch_archive_org_capture",
     "fetch_browser_snapshot_capture",
     "fetch_direct_http_capture",
     "fetch_media_assets",
+    "fetch_reddit_api_capture",
 ]
