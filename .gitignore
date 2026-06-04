@@ -8,6 +8,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+.claude/settings.local.json
+.codex/
 
 # Keep docs-first workspace clean until implementation is authorized
 node_modules/
@@ -15,6 +17,7 @@ __pycache__/
 .pytest_cache/
 dist/
 build/
+*.egg-info/
 orca-harness/_test_runs/
 orca-harness/_auth_state/
 orca-harness/pytest_tmp/
