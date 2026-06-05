@@ -119,6 +119,98 @@ promotion.
 ```yaml
 direction_change_propagation:
   doctrine_changed: >
+    Repo-aware Orca prompts now record a repo_map_decision and repo_map_reason
+    in required preflight so repo-map routing is explicit without making the
+    repo map a mandatory read.
+  trigger: workflow_authority
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/workflow-overlay/source-of-truth.md
+  downstream_surfaces_checked:
+    - .agents/workflow-overlay/source-loading.md
+    - docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/source-loading.md
+      reason: >
+        Source-loading already owns source-pack and repo-map read mechanics.
+        This patch records a prompt-preflight decision; it does not change the
+        read-pack rule or make repo-map loading mandatory.
+    - path: docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+      reason: >
+        The shared behavior contract already requires repo-aware prompts to
+        follow prompt-orchestration for source-gated method use and output mode
+        rules. Manually duplicating the new preflight field into templates would
+        create drift.
+  stale_language_search: >
+    rg -n "repo_map_decision|repo_map_reason|repo-map routing|mandatory read for every prompt"
+    .agents/workflow-overlay docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-05 after this patch. Hits were the intended
+    prompt-orchestration preflight field and this source-of-truth receipt. No
+    hit required template-by-template duplication or converted the repo map into
+    a mandatory read.
+  non_claims:
+    - not validation
+    - not readiness
+    - not source promotion
+    - not repo-map freshness proof
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Orca now has a lightweight Cynefin Routing Layer that classifies non-trivial
+    work before planning, delegation, review, patching, or infrastructure
+    expansion.
+  trigger: workflow_authority
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/decision-routing.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        Prompt orchestration already owns prompt families and source-gated
+        method sequencing. This patch adds router propagation to the shared
+        behavior contract, without changing output modes, preflight fields, or
+        prompt validation verdicts.
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        The overlay README and source-of-truth known-source list are sufficient
+        for this new overlay section. The repo map is already dirty from another
+        lane and does not need a routing-map change for the router to be found.
+  stale_language_search: >
+    rg -n "Cynefin Routing Layer|decision-routing|decision_routing|before planning or delegation"
+    AGENTS.md .agents/workflow-overlay docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-05 after this patch. Hits were the intended AGENTS
+    trigger, overlay README section, decision-routing owner file, source-of-truth
+    receipt and known-source entry, and shared prompt behavior contract. No hit
+    placed the full router in AGENTS.md, converted it into validation/readiness,
+    or treated prompt behavior as live-chat authority.
+  non_claims:
+    - not validation
+    - not readiness
+    - not review authority
+    - not implementation authorization
+    - not source promotion
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
     Orca doctrine-change propagation receipts now keep one primary trigger and
     may add related_triggers for secondary doctrine dimensions that need
     machine-detectable routing.
@@ -311,6 +403,7 @@ direction_change_propagation:
 - `.agents/workflow-overlay/README.md`: overlay entrypoint.
 - `.agents/workflow-overlay/artifact-roles.md`: Orca artifact role bindings, permissions, freshness markers, and paired artifacts.
 - `.agents/workflow-overlay/source-loading.md`: Orca source-loading budgets, read packs, and context-bloat controls.
+- `.agents/workflow-overlay/decision-routing.md`: Orca Cynefin Routing Layer for non-trivial, ambiguous, cross-thread, delegated, doctrine-bearing, or messy-worktree work.
 - `.agents/workflow-overlay/retrieval-metadata.md`: Orca retrieval-header contract for durable human-authored workflow artifacts.
 - `.agents/workflow-overlay/prompt-orchestration.md`: Orca prompt artifact, wrapper, preflight, output mode, validation, and rerun bindings.
 - `.agents/workflow-overlay/template-registry.md`: Orca-owned prompt template registry for project-local templates.

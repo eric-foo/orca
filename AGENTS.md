@@ -32,6 +32,8 @@ Before project work, read `.agents/workflow-overlay/README.md` and follow the Or
 
 Keep Orca project facts, source hierarchy, source-loading rules, artifact folders, review lanes, validation gates, safety rules, prompt rules, and lifecycle boundaries in `.agents/workflow-overlay/` or another Orca-owned source named there.
 
+For substantial, ambiguous, cross-thread, delegated, doctrine-changing, review/patch-affecting, infrastructure-building, or messy-worktree work, run the Orca Cynefin Routing Layer before planning or delegation; the owning rule is `.agents/workflow-overlay/decision-routing.md`.
+
 Do not treat `jb` rules, paths, handoffs, lifecycle mechanics, product policy, validation habits, or external workflow source as Orca authority. Explicitly invoked or resolver-loaded skills may provide task-local mechanics only.
 
 For doctrine-changing work, implementation boundaries, skill adoption, review lanes, validation, prompt orchestration, source loading, and delegated review-and-patch, load the owning overlay file instead of duplicating the rule here.

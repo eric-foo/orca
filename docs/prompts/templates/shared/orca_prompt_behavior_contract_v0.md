@@ -39,6 +39,18 @@ Source-Gated Method Contract.
 Avoid vague sequencing such as "use these skills" before source loading. Use
 explicit reference-load and apply wording when method order matters.
 
+## Cynefin Routing Layer
+
+Repo-aware prompts, wrappers, handoffs, review prompts, patch prompts, and
+reruns must include `.agents/workflow-overlay/decision-routing.md` when the
+task is substantial, ambiguous, cross-thread, delegated, doctrine-changing,
+review/patch-affecting, infrastructure-building, or messy-worktree sensitive.
+Use the router before planning or delegation, and include both an allowed next
+move and a disallowed next move.
+
+Do not add decision-routing ceremony for narrow clear edits, mechanical
+formatting, direct command answers, or already-scoped implementation steps.
+
 ## Output Discipline
 
 - Name exactly one output mode.

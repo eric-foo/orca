@@ -361,6 +361,11 @@ Every repo-aware Orca prompt must state:
   supplied in the current task context;
 - selected source pack from `.agents/workflow-overlay/source-loading.md`, or a
   bounded custom source pack;
+- `repo_map_decision: loaded | not_needed | unavailable`, plus
+  `repo_map_reason`, stating why this task does or does not need repo-map
+  routing. Source-loading remains the owner of the actual read-pack rule; this
+  field records the prompt author's repo-map decision and must not make
+  `docs/workflows/orca_repo_map_v0.md` a mandatory read for every prompt;
 - workspace path or repository identifier;
 - expected branch, detached revision, or commit hash when source stability matters;
 - dirty-state allowance and whether untracked files are in scope;

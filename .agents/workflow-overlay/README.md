@@ -17,6 +17,7 @@ This overlay is the project authority for Orca. Skills may provide task-local me
 - `project-authority.md`: project identity, boundary, and unknown facts.
 - `source-of-truth.md`: Orca source hierarchy, conflict rules, and doctrine-change propagation contract.
 - `source-loading.md`: source-loading budgets, read packs, and context-bloat controls.
+- `decision-routing.md`: Cynefin Routing Layer for non-trivial, ambiguous, cross-thread, delegated, doctrine-bearing, or messy-worktree work.
 - `artifact-folders.md`: accepted Orca artifact locations.
 - `artifact-roles.md`: role bindings, permissions, freshness markers, and paired artifacts.
 - `retrieval-metadata.md`: lightweight retrieval-header contract for durable human-authored workflow artifacts.
