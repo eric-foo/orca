@@ -8,15 +8,17 @@
 
 ## Thesis
 
-Project Orca is a productized outside-in strategic intelligence system. It uses clean public market signals to help companies make better product, positioning, pricing, growth, and competitive allocation decisions before internal data is conclusive.
+Project Orca is a productized outside-in strategic intelligence system. It turns messy, noisy, and contradictory public market signals into clean, classified, source-backed, and constrained decision evidence for high-stakes product, pricing, positioning, growth, and competitive allocation decisions before internal data is conclusive.
 
 ## Value Proposition
 
-Know where the market is pulling before you commit the budget.
+Orca turns messy, noisy, and contradictory public market signals into executive-grade decision decks for high-stakes product, pricing, positioning, and competitive moves, helping leaders decide whether to accelerate, narrow, delay, defend, or reframe before budget is committed.
 
 Expanded value proposition:
 
-Project Orca helps companies reduce strategic misallocation risk by using clean, source-backed public market signals to identify market pull, buyer objections, competitor narrative shifts, pricing complaints, feature gaps, and artificial amplification before committing serious product, positioning, or growth budget.
+Project Orca helps companies reduce strategic misallocation risk by cleaning, classifying, source-backing, and constraining public market signals into inspectable decision evidence. Orca's minimum viable artifact is a decision memo plus evidence appendix. Its premium buyer-facing artifact is an executive-grade decision deck derived from that memo and appendix, not a substitute for the evidence discipline.
+
+Raw public signals are inputs, not final evidence. Noisy posts, complaints, reviews, competitor narratives, pricing reactions, feature gaps, and amplification patterns become usable only after Orca records provenance, cleans and deduplicates them, classifies valid signal use, assesses source integrity, states uncertainty, and constrains the decision verbs they can support.
 
 ## Product Boundary
 
@@ -26,7 +28,7 @@ Orca is not a generic social-listening dashboard, data broker, person-level doss
 
 ## Strategic Center
 
-The durable wedge is clean public evidence plus signal-quality judgment plus decision accountability.
+The durable wedge is clean public evidence plus signal-quality judgment plus executive decision accountability.
 
 - Clean data earns trust.
 - Signal-quality judgment prevents overreaction.
@@ -46,8 +48,11 @@ Reusable core:
 - source-quality scoring
 - organic versus artificial amplification flags
 - evidence appendix
-- decision memo format
+- decision memo substrate
+- executive decision deck shape
 - outcome feedback
+
+Core is the repeatable decision spine. Satellites adapt the spine to buyer, industry, decision family, competitor set, and source families. Bespoke work is allowed only as bounded final adaptation; unbounded custom analysis is consulting-risk evidence unless it repeats around a decision family.
 
 Decision-specific deployments:
 
@@ -68,15 +73,17 @@ For `jb`, Orca should answer:
 
 Which finance-career avatar, pain wedge, copy angle, pricing/package, and workflow bet has the strongest public market pull?
 
-This validates Orca's method, data spine, signal-quality judgment, and decision-memo format. It does not validate external willingness to pay.
+This tests Orca's method, evidence discipline, signal-quality judgment, decision memo substrate, and deck-ready decision artifact shape. It does not validate external willingness to pay, buyer pull, repeatability, product readiness, commercial readiness, or Core Spine v0.
 
 ## Current Theory
 
 Before launch or scale, Orca should maximize the ceiling of the value proposition by building a solid foundation for outside-in information quality. Technical OSINT must be frontier-level, but should be framed through Orca's decision layer instead of treated as the product by itself.
 
+The first commercial offer, if discovery earns one, should be a fixed-scope paid decision sprint hypothesis. That would test whether a buyer will pay for a bounded decision artifact around a live decision. It would not prove validated commercial readiness. Any recurring relationship comes later only after repeated decision cadence and observable buyer pull.
+
 ## Open Questions
 
-- Exact first decision memo format: UNKNOWN - requires owner input.
+- Exact first decision memo, evidence appendix, and executive deck format: UNKNOWN - requires owner input.
 - Exact source taxonomy and source-quality rubric: UNKNOWN - requires owner input.
 - Exact Client 0 success criteria beyond method validation: UNKNOWN - requires owner input.
 - External willingness-to-pay validation path: UNKNOWN - requires owner input.
