@@ -1,6 +1,6 @@
 # Source Capture Packet
 
-The Source Capture Packet is the first bounded Source Capture Toolbox checkpoint
+The Source Capture Packet is the first bounded Source Capture Armory checkpoint
 implemented in `orca-harness`. It packages already-local source artifacts into a
 local packet directory without fetching anything from a network, browser, API,
 archive service, or scraper runtime.

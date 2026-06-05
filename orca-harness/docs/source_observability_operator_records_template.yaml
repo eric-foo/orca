@@ -1,7 +1,8 @@
 # Source-observability operator-record template.
 # These records are human-authored capture posture notes, not extracted source
 # truth, capture validation, archive retrieval, source acquisition, or
-# downstream ECR/Cleaning/Judgment output.
+# downstream ECR/Cleaning/Judgment output. Access-failure records keep
+# encountered limits visible; they do not authorize source-access handling.
 
 records:
   - record_id: EXAMPLE-FORUM-TEXT
@@ -56,4 +57,4 @@ records:
     media_required: false
     archive_body_expected: true
     limitation_notes:
-      - "The in-bound source attempt failed with locator and cutoff visible; no source body or archive body is inspectable."
+      - "The in-bound source attempt failed with locator and cutoff visible as deferred candidate access context; no source body or archive body is inspectable."

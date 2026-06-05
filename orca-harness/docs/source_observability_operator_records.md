@@ -54,6 +54,25 @@ records:
       - "Source-language anchors are visible, but full thread structure, media files, and archive body were not preserved."
 ```
 
+## Current Data Capture Requirements Boundary
+
+For the current Data Capture source-observability support lane, use records to
+keep these surfaces inspectable or limitation-visible:
+
+- source-language anchors and visible source structure when language or
+  structure carries decision-relevant meaning;
+- source-language anchors from the start for forum, review, and text-heavy
+  discourse captures;
+- media, screenshots, layout, gallery assets, charts, images, or app-page
+  presentation when those modalities carry source meaning;
+- archive availability, archive-body retrieval state, and the reason an archive
+  body was not retrieved.
+
+Do not treat these records as archive-retrieval, media-capture, browser, API,
+scraper, or source-access method instructions. Access failures may be recorded
+when encountered so the limitation stays visible, but access handling remains
+deferred candidate context rather than a current support target.
+
 Valid posture values are:
 
 - `preserved`
@@ -88,6 +107,11 @@ preserved source state.
 Use `not_applicable` only when the source family or slice genuinely does not
 have that observable surface.
 
+For archive fields, `archive_body_expected: true` means the operator is marking
+that source slice as needing archive-body visibility for later inspection. It is
+not a default rule that every archive-available source must retrieve an archive
+body before categorical handoff.
+
 ## Pressure-Test Examples
 
 Pointer-only media:
@@ -115,7 +139,7 @@ access_posture: inaccessible
 locator_visible: true
 cutoff_visible: true
 limitation_notes:
-  - "The capture records the blocked host/page state and cutoff, but no source body is inspectable."
+  - "The capture records the blocked host/page state and cutoff as candidate-visible access context, but no source body is inspectable."
 ```
 
 Bounded source-language anchors:

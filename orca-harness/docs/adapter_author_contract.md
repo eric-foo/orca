@@ -3,9 +3,10 @@
 Status: `SOURCE_CAPTURE_ADAPTER_AUTHOR_CONTRACT_V0`.
 
 This document **names conventions that already exist** in `orca-harness/source_capture/`.
-It is a reference for adding the next source adapter (Reddit API first). It does
-not introduce a framework, base class, registry, or dispatcher, and it does not
-authorize new build scope.
+It is a reference for adding bounded source adapters, including the selected
+CloakBrowser anti-blocking route when that implementation lane is opened. It
+does not introduce a framework, base class, registry, or dispatcher, and it does
+not authorize new build scope.
 
 Architecture thesis it records: **uniformity lives in the packet (output), not in
 an adapter interface (input).** Every adapter fills the same

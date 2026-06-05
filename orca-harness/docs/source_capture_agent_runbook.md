@@ -1,6 +1,6 @@
 # Source Capture Agent Runbook
 
-This runbook is for agents operating the Source Capture Toolbox from
+This runbook is for agents operating the Source Capture Armory from
 `orca-harness/`. It tells an agent how to run the existing packet writers and
 how to report what happened without deciding source meaning.
 
@@ -32,10 +32,10 @@ The agent must not:
 - infer source meaning beyond reporting preserved source-visible text or files;
 - choose targets through broad search or crawling;
 - discover hidden media, parse galleries, recurse through pages, or run OCR;
-- use unbuilt or separately gated methods from this runbook, including
-  password-driven login automation, direct browser profile/cookie import, APIs,
-  SDKs, scraper frameworks, proxy behavior, anti-detect behavior, CAPTCHA
-  solving, or commercial fetch services;
+- use methods that do not have an implemented runner in this runbook, including
+  password-driven login automation, direct browser profile/cookie import, broad
+  crawler/spider frameworks, proxy behavior, anti-detect behavior, standalone
+  CAPTCHA-solving services, or commercial fetch services;
 - use no-entitlement login bypass, credential misuse, undisclosed session/cookie
   use, or any method Orca would refuse to disclose internally;
 - claim validation, readiness, ECR receipt, Cleaning output, Judgment output,
@@ -48,7 +48,10 @@ Authenticated Browser Snapshot only when the operator has supplied an allowed
 session mode and a previously bootstrapped local storage-state label. If the
 operator asks for password automation, direct profile/cookie import, credentials
 in flags or environment variables, no-entitlement bypass, anti-detect behavior,
-proxy behavior, or CAPTCHA solving, stop with `visible_capture_limitation`.
+proxy behavior, or CAPTCHA solving through these existing runners, stop with
+`visible_capture_limitation`. Anti-blocking/CloakBrowser is authorized by the
+source-access tooling decision, but it is not an implemented runner in this
+runbook state.
 
 The agent cannot reliably know browser-rendering or login-wall posture before
 running a byte-preserving adapter. A Direct HTTP, Media / Asset, or Archive.org
@@ -129,6 +132,7 @@ Use the narrowest runner that matches the supplied input.
 | Original URL plus archive need | `run_source_capture_archive_packet.py` | The operator needs Archive.org availability and maybe snapshot body. |
 | Browser-rendered or screenshot-needed page | `run_source_capture_browser_packet.py` | One supplied URL needs anonymous browser rendering or screenshot preservation. |
 | Login-visible or entitled browser session content | `run_source_capture_browser_session_bootstrap.py`, then `run_source_capture_authenticated_browser_packet.py` | The operator authorizes an allowed manual-login storage-state session. |
+| Reddit pre-commercial anti-blocking capture | not implemented in this runbook state | The owner selected CloakBrowser as the future primary backend; do not simulate it with the honest browser runner. |
 
 If a supplied URL points directly to a source-meaningful asset, prefer Media /
 Asset. If it points to a page or file whose whole response body is the capture
@@ -575,13 +579,13 @@ direction_change_propagation:
     - "orca-harness/README.md"
   intentionally_not_updated:
     - path: "docs/product/source_capture_toolbox/README.md"
-      reason: "Toolbox component status, adapter boundaries, and deferred gaps did not change."
+      reason: "Armory component status, adapter boundaries, and deferred gaps did not change."
     - path: "orca-harness/README.md"
       reason: "It already points agents to this runbook; no new entrypoint or component status changed."
     - path: ".agents/workflow-overlay/source-loading.md"
       reason: "Source-loading routes were not changed; this is runner-use guidance inside the existing runbook."
     - path: "docs/workflows/orca_repo_map_v0.md"
-      reason: "Repo map already indexes the toolbox/runbook path through the harness and product docs; no new durable source family was added."
+      reason: "Repo map already indexes the armory/runbook path through the harness and product docs; no new durable source family was added."
   stale_language_search: "rg -n \"cutoff-timestamp|YYYYMMDDhhmmss|empty limitations|clean capture|postures\" orca-harness/docs/source_capture_agent_runbook.md docs/product/source_capture_toolbox/README.md orca-harness/README.md"
   non_claims:
     - "not validation"
@@ -611,13 +615,13 @@ direction_change_propagation:
     - "docs/workflows/orca_repo_map_v0.md"
   intentionally_not_updated:
     - path: "docs/product/source_capture_toolbox/README.md"
-      reason: "The toolbox component set, adapter boundaries, hard stops, and deferred gaps did not change; it already points to the runbook for agent-facing runner use."
+      reason: "The armory component set, adapter boundaries, hard stops, and deferred gaps did not change; it already points to the runbook for agent-facing runner use."
     - path: "orca-harness/README.md"
       reason: "The harness README already points to the runbook for agent-facing runner selection and report format; detailed sandbox permission sequencing belongs in the runbook."
     - path: ".agents/workflow-overlay/source-loading.md"
       reason: "Source-loading routes were not changed; this is runner-use guidance inside the existing runbook."
     - path: "docs/workflows/orca_repo_map_v0.md"
-      reason: "Repo map already indexes the toolbox implementation and runbook surfaces; no new durable source family or component path was added."
+      reason: "Repo map already indexes the armory implementation and runbook surfaces; no new durable source family or component path was added."
   stale_language_search: "rg -n \"WinError 10061|network permission|restricted sandbox|standing Python|source limitation\" orca-harness/docs/source_capture_agent_runbook.md docs/product/source_capture_toolbox/README.md orca-harness/README.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
   non_claims:
     - "not validation"
@@ -660,7 +664,7 @@ direction_change_propagation:
     - path: ".agents/workflow-overlay/source-loading.md"
       reason: "Source-loading routes were not changed; this is report-format guidance inside the existing runbook."
     - path: "docs/workflows/orca_repo_map_v0.md"
-      reason: "Repo map already indexes the toolbox/runbook path through the harness and product docs; no new durable source family was added."
+      reason: "Repo map already indexes the armory/runbook path through the harness and product docs; no new durable source family was added."
   stale_language_search: "rg -n \"mini_god_tier_source_quality_report|source_quality_mini_god_tier_profile_v0|source_quality_source_unit_queue_template_v0|operator-commissioned source-quality pass|source-quality scoring|validated|ready|fixture admission|Judgment scoring|Commissioning Gate|Decision Frame|recommended_fixture_admission|separately_admitted\" orca-harness/docs/source_capture_agent_runbook.md docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md docs/product/source_capture_toolbox/README.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
   non_claims:
     - "not validation"
@@ -702,9 +706,9 @@ direction_change_propagation:
     - path: "docs/product/source_capture_toolbox/source_quality_mixed_source_trial_closeout_v0.md"
       reason: "The closeout already supplies the helper requirements and remains trial evidence rather than helper API documentation."
     - path: ".agents/workflow-overlay/source-loading.md"
-      reason: "Source-loading already routes Data Capture source-access tooling through the toolbox README and runbook; no new read-pack entry is needed."
+      reason: "Source-loading already routes Data Capture source-access tooling through the armory README and runbook; no new read-pack entry is needed."
     - path: "docs/workflows/orca_repo_map_v0.md"
-      reason: "Repo map already indexes the toolbox and runbook entrypoints; detailed helper command routing belongs in the README/runbook."
+      reason: "Repo map already indexes the armory and runbook entrypoints; detailed helper command routing belongs in the README/runbook."
   stale_language_search: "rg -n \"run_source_quality_report_skeleton|report-skeleton|mini_god_tier_met|source-quality scoring|validated|ready|fixture admission|Judgment scoring|source discovery|source selection\" orca-harness/docs/source_capture_agent_runbook.md orca-harness/README.md docs/product/source_capture_toolbox/README.md docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md docs/product/source_capture_toolbox/source_quality_mixed_source_trial_closeout_v0.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
   non_claims:
     - "not validation"
@@ -749,7 +753,7 @@ direction_change_propagation:
     - path: ".agents/workflow-overlay/source-loading.md"
       reason: "Source-loading already routes multi-row state-census questions to the State Assembler architecture boundary."
     - path: "docs/workflows/orca_repo_map_v0.md"
-      reason: "Repo map already indexes the State Assembler architecture and toolbox entrypoint; detailed helper invocation belongs in the runbook and harness README."
+      reason: "Repo map already indexes the State Assembler architecture and armory entrypoint; detailed helper invocation belongs in the runbook and harness README."
   stale_language_search: "rg -n \"run_source_quality_state_assembler|Source Quality State Assembler|mini_god_tier_met|source-quality scoring|validated|ready|fixture admission|Judgment scoring|source discovery|source selection|runner dispatch|all rows passed|ladder complete\" orca-harness/docs/source_capture_agent_runbook.md orca-harness/README.md docs/product/source_capture_toolbox/README.md docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md"
   non_claims:
     - "not validation"
