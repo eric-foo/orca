@@ -278,6 +278,14 @@ Judgment Spine lane:
   Core Spine artifact;
 - must not move judgment ownership into Cleaning.
 
+### Evidence Candidate Record consolidation — OPENED (scoped to source-visibility; option B seed)
+
+The owner has **OPENED** the reserved ECR consolidation, **bounded to source-visibility**. Ratified as the **seed** (AF-7 **option B**): the ECR **frame** — the receipt/derive layer invariants (INV-1..INV-5) and the three-mode binding rule — plus the **SP-6 source-visibility derivation contract** (the residual-first decision table) over the *derivable subset*, with the archive-vs-current-comparison rows fail-safe to **named residuals** (D1). Design basis: `docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md` (SHA256 `50DDE207824BCB7CE38DBDDF00C23014CA73E170BB4B62907C209C622174816F`), cross-family reviewed (`accept_with_friction`). The upstream producer state the contract reads — closed posture vocabularies + `PreservedFile.hash_basis` (R2) — is committed at `102a171` (schema-enforcement tests green at HEAD).
+
+**Option B defers (still reserved, NOT ratified here):** declaring `source_visibility_posture` as a standing ECR field; accepting that "the ECR is the object"; the final ECR/Evidence Unit field architecture; the canonical-vs-working object name; SP-5 finalization; the SP-6 sufficiency grade; materiality verdicts; D2 (where any missing archive-date / archive-vs-current comparison facts live); and **JSG-01 unfreeze** (JSG-01 stays FROZEN). This records a derivation-contract seed — not an ECR schema, not ECR fields, and not the capture->ECR handoff boundary (Ob.16 unchanged).
+
+The reserved sub-questions below remain open under option B except where the source-visibility seed addresses them.
+
 Future Evidence Candidate Record / Evidence Unit consolidation should answer:
 
 - whether Evidence Candidate Record is the final canonical object name or a
@@ -349,6 +357,46 @@ direction_change_propagation:
     - "not ECR schema design"
     - "not Cleaning implementation"
     - "not Judgment authorization"
+```
+
+### ECR consolidation v0 open (source-visibility slice, option B)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The reserved Evidence Candidate Record / Evidence Unit consolidation is OPENED, bounded to source-visibility. Ratified as a seed (AF-7 option B): the ECR receipt/derive frame (INV-1..INV-5 + three-mode binding rule) and the SP-6 source-visibility derivation contract over the derivable subset (archive-vs-current rows fail-safe to named residuals). Declaring source_visibility_posture as a standing ECR field, accepting 'the ECR is the object', the final field architecture, the canonical object name, and JSG-01 unfreeze remain reserved."
+  trigger: architecture_doctrine
+  related: lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md"
+  design_basis:
+    - path: "docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md"
+      sha256: "50DDE207824BCB7CE38DBDDF00C23014CA73E170BB4B62907C209C622174816F"
+      status: "advisory; cross-family reviewed (accept_with_friction); untracked"
+  upstream_dependency:
+    - "R2 (closed posture vocabularies + PreservedFile.hash_basis) committed at 102a171; schema-enforcement tests green at HEAD this turn (test_source_capture_packet.py + test_packet_assembly.py, 31 passed)."
+  downstream_surfaces_checked:
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+    - "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+  intentionally_not_updated:
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Gates ECR schema/design as a future surface; B opens a derived-read contract seed, not ECR schema/fields, so the gate stays accurate."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Navigational; points to this boundary note for ECR status and keeps ECR design/handoff gated, which remains accurate under B."
+    - path: "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+      reason: "Ob.16 'does not define ECR fields' and the capture->ECR categorical handoff boundary are unchanged by B; its stale_if (ECR architecture changes the handoff boundary) has not fired."
+    - path: "docs/product/jsg01_source_side_receipt_translator_v0.md"
+      reason: "JSG-01 source-side consumer is FROZEN and ECR/JSG-lane-owned; coordination is by re-courier, not by editing the consumer."
+    - path: "docs/product/jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md"
+      reason: "Adopted slice spec / lane working artifact; the supersession relationship is described, not performed, while JSG-01 is frozen."
+  stale_language_search: "rg -n \"R2 .*uncommitted|hash_basis .*not_proven|consolidation .*reserved\" docs"
+  non_claims:
+    - "not declaring source_visibility_posture as a standing ECR field (option B defers it)"
+    - "not the full ECR/Evidence Unit field architecture"
+    - "not the canonical ECR object-name decision"
+    - "not JSG-01 unfreeze (JSG-01 stays FROZEN)"
+    - "not SP-5 finalization, SP-6 sufficiency grade, or materiality"
+    - "not validation or readiness; not implementation, capture execution, or a commit"
 ```
 
 ## Non-Claims
