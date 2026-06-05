@@ -282,9 +282,30 @@ Judgment Spine lane:
 
 The owner has **OPENED** the reserved ECR consolidation, **bounded to source-visibility**. Ratified as the **seed** (AF-7 **option B**): the ECR **frame** — the receipt/derive layer invariants (INV-1..INV-5) and the three-mode binding rule — plus the **SP-6 source-visibility derivation contract** (the residual-first decision table) over the *derivable subset*, with the archive-vs-current-comparison rows fail-safe to **named residuals** (D1). Design basis: `docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md` (SHA256 `50DDE207824BCB7CE38DBDDF00C23014CA73E170BB4B62907C209C622174816F`), cross-family reviewed (`accept_with_friction`). The upstream producer state the contract reads — closed posture vocabularies + `PreservedFile.hash_basis` (R2) — is committed at `102a171` (schema-enforcement tests green at HEAD).
 
-**Option B defers (still reserved, NOT ratified here):** declaring `source_visibility_posture` as a standing ECR field; accepting that "the ECR is the object"; the final ECR/Evidence Unit field architecture; the canonical-vs-working object name; SP-5 finalization; the SP-6 sufficiency grade; materiality verdicts; D2 (where any missing archive-date / archive-vs-current comparison facts live); and **JSG-01 unfreeze** (JSG-01 stays FROZEN). This records a derivation-contract seed — not an ECR schema, not ECR fields, and not the capture->ECR handoff boundary (Ob.16 unchanged).
+**Option B defers (still reserved, NOT ratified here):** declaring `source_visibility_posture` as a standing ECR field; accepting that "the ECR is the object"; the final ECR/Evidence Unit field architecture; the canonical-vs-working object name; SP-5 finalization; the SP-6 sufficiency grade; materiality verdicts; D2 (where any missing archive-date / archive-vs-current comparison facts live); and **JSG-01 unfreeze** (JSG-01 stays FROZEN). This records a derivation-contract seed — not an ECR schema, not ECR fields, and not the capture->ECR handoff boundary (Ob.16 unchanged). *(Superseded for the four JSG-01 source-side fields by the field-schema ratification below: those fields are now declared, and SP-5 and the SP-6 grade are decided.)*
 
 The reserved sub-questions below remain open under option B except where the source-visibility seed addresses them.
+
+### Evidence Candidate Record consolidation — JSG-01 source-side field schema RATIFIED (SP-1 / SP-2 / SP-3 / SP-6)
+
+The owner has **ratified the JSG-01 source-side ECR field schema**, completing the source-visibility open by **declaring the four source-side fields** the conductor's JSG-01 predicate names (`judgment_quality_promotion_operating_model_v0.md:205`). This is the **A-direction** for the source-side scope, superseding option B's field-declaration deferral **for these four fields only** — the full ECR/Evidence Unit field architecture and the canonical object name stay reserved (see *Owner Decisions Remaining*).
+
+**Declared fields (ECR-owned, derived, non-persisted; INV-1..INV-5):**
+- **SP-1 `source_identity_state`** — M2 derived-read; clears on `{resolved, family_only}`.
+- **SP-2 `inspectability_state`** — M2 over an M1-carried `PreservedFile.{sha256, hash_basis}` anchor; clears only on `inspectable_verifiable`.
+- **SP-3 timing/cutoff** — **M1 carried-by-reference** over the producer's already-closed `PacketTiming.cutoff_posture` (NOT a coined parallel field); clears only on `pre_cutoff`.
+- **SP-6 `source_visibility_posture`** — the ratified derivation contract.
+
+**Design basis (committed with this ratification):** `ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md` (`50DDE207…`) + `ecr_consolidation_v0_sp1_sp2_sp3_source_side_slice_plan_v0.md` (`12799649…`, cross-family reviewed `accept_with_friction`, AR-01 adjudicated-accepted) + the two cross-family review reports (`57AB20A3…`, `3F2C3B44…`). Producer fields bound: R2 (closed posture vocabularies + `PreservedFile.hash_basis`) committed at `102a171`.
+
+**Owner decisions recorded here:**
+- **A (process):** ratify after the cross-family review pass — done and adjudicated.
+- **B (SP-5 finalization authority):** a **distinct, cross-family, provenance-bound finalizer** (a different model family than the judge; an out-of-band record binding identity / time / inputs). Same-model or same-family self-finalization is **disallowed** (no testee-tester). The finalizer **mechanism is deferred implementation**; until it exists, JSG-01's finalization-provenance subpredicate stays `indeterminate_until_authored`.
+- **C (SP-6 visibility-sufficiency grade):** **clears** on `archive_only` and `not_applicable`; `archive_corroborated` **reserved** (dormant until a comparison fact exists); `archive_diverged` defaults to **does-not-clear** (the tunable dial); all else (`current_capture_only`, `archive_post_cutoff_only`, `attempt_failed`, `not_attempted`, every residual) **does not clear**.
+
+**SP-6 coverage note (honest, not an overclaim):** SP-6 ships at **core/honest** capability — it establishes pre-cutoff archives, rejects current look-alikes, and honestly residualizes what it cannot confirm — but the **`archive_corroborated`/`archive_diverged` (corroborated-tier) clears are deferred** behind a capture-side archive-vs-current comparison fact (**D2**, owner-reserved). A pre-cutoff-archive-plus-current-capture case therefore **evaluates determinately but may land on a residual rather than a top-tier clear until D2 exists**.
+
+**Still reserved / NOT ratified here — JSG-01 stays FROZEN:** the field **derivers** (computing each value from a packet — implementation, post-ratification); the **SP-5 finalizer mechanism**; **D2**; **materiality** (downstream); the **full ECR/Evidence Unit field architecture** and **canonical object name**; **JSG-01 unfreeze**. Declaring the schema lifts the conductor's "no ECR field schema" blocker, but JSG-01 clears no case until the derivers and finalizer are built and a case packet carries the fields.
 
 Future Evidence Candidate Record / Evidence Unit consolidation should answer:
 
@@ -397,6 +418,56 @@ direction_change_propagation:
     - "not JSG-01 unfreeze (JSG-01 stays FROZEN)"
     - "not SP-5 finalization, SP-6 sufficiency grade, or materiality"
     - "not validation or readiness; not implementation, capture execution, or a commit"
+```
+
+### ECR consolidation v0 — JSG-01 source-side field schema ratified (SP-1/2/3 + SP-6)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The JSG-01 source-side ECR field schema is RATIFIED: four declared source-side fields (SP-1 source_identity_state, SP-2 inspectability_state, SP-3 carried-by-reference cutoff_posture, SP-6 source_visibility_posture) with closed allowed-values and clear-conditions — completing the source-visibility open by DECLARING the fields (the A-direction) for these four categories, superseding option B's field-declaration deferral for them only. Owner decisions recorded: B = SP-5 finalization authority is a distinct cross-family provenance-bound finalizer (same-model/same-family self-finalization disallowed; mechanism deferred); C = the SP-6 visibility-sufficiency grade. SP-6 ships core/honest with the corroborated-tier (archive_corroborated/archive_diverged) deferred behind a capture-side comparison fact (D2). The field derivers, the SP-5 finalizer mechanism, D2, the full ECR/Evidence Unit field architecture, the canonical object name, and JSG-01 unfreeze remain reserved; JSG-01 stays FROZEN."
+  trigger: architecture_doctrine
+  related: lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md"
+  design_basis:
+    - path: "docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md"
+      sha256: "50DDE207824BCB7CE38DBDDF00C23014CA73E170BB4B62907C209C622174816F"
+      status: "committed; cross-family reviewed (accept_with_friction)"
+    - path: "docs/product/ecr_consolidation_v0_sp1_sp2_sp3_source_side_slice_plan_v0.md"
+      sha256: "12799649B1FC9B3B4CE9CF667AF61F966A4B7609D72E42BD1037DA5E778AFAB4"
+      status: "committed with this ratification; cross-family reviewed (accept_with_friction); AR-01 adjudicated-accepted by the Opus home/CA model"
+    - path: "docs/review-outputs/adversarial-artifact-reviews/ecr_consolidation_v0_plan_cross_family_review_v0.md"
+      sha256: "57AB20A36F15A5823E06DED8E0AE114DF4A1DFF4C09133B31EDD3F30F94D1109"
+      status: "committed (SP-6 plan cross-family review)"
+    - path: "docs/review-outputs/adversarial-artifact-reviews/ecr_consolidation_v0_sp1_sp2_sp3_source_side_reconcile_cross_family_review_v0.md"
+      sha256: "3F2C3B44104EC8EF303D680276B369CCC26CA1A218FFD77A0609FA9C4810257A"
+      status: "committed with this ratification (SP-1/2/3 reconcile cross-family review; non-Opus delegate)"
+  upstream_dependency:
+    - "R2 (closed posture vocabularies + PreservedFile.hash_basis) committed at 102a171; SP-2/SP-3 bind to it; schema-enforcement tests green at HEAD."
+  owner_decisions:
+    - "A: ratify after the cross-family review pass — done and adjudicated."
+    - "B (SP-5): distinct cross-family provenance-bound finalizer; same-model/same-family self-finalization disallowed; mechanism deferred."
+    - "C (SP-6 grade): clears {archive_only, not_applicable}; archive_corroborated reserved; archive_diverged default does-not-clear; all else does-not-clear."
+  downstream_surfaces_checked:
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+    - "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+  intentionally_not_updated:
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Gates ECR schema/design as a future surface; declaring the JSG-01 source-side fields names a derived-read schema, not ECR persistence/storage; the gate stays accurate."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Navigational; points to this boundary note for ECR status."
+    - path: "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+      reason: "Ob.16 'does not define ECR fields' and the capture->ECR handoff boundary are unchanged; the ECR derives/carries producer fields and defines none in the producer."
+    - path: "docs/product/jsg01_source_side_receipt_translator_v0.md"
+      reason: "JSG-01 source-side consumer is FROZEN and ECR/JSG-lane-owned; coordination by re-courier, not by editing the consumer; the translator's SP-1..SP-6 are reconciled-from, described not performed."
+  non_claims:
+    - "not the field derivers (implementation, post-ratification)"
+    - "not the SP-5 finalizer mechanism (decided, not built)"
+    - "not D2 (the archive-vs-current comparison fact)"
+    - "not the full ECR/Evidence Unit field architecture or the canonical object name"
+    - "not JSG-01 unfreeze (JSG-01 stays FROZEN)"
+    - "not validation, readiness, materiality, or a buyer-grade claim"
 ```
 
 ## Non-Claims
