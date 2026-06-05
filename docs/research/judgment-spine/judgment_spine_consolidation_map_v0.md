@@ -114,7 +114,7 @@ This map's shape — *thin door + one rich `retrieval_only` orientation submap +
 
 ## One-Way Authority & Deferred Items
 
-- **One-way:** authority flows map → source only. This map must **not** appear in any source doc's `downstream_consumers`/`open_next`/`controlling_sources_updated`; if it ever does, that registration is the breach signal (see queue).
+- **One-way:** authority flows map → source only. The breach signal is this map being **cited as authority by, or listed as a `downstream_consumer` of, an owner source** (see queue, ORCA-HYGIENE-006). A maintenance pass that edits this map may list it in its own `controlling_sources_updated` — that is upkeep, not a breach.
 - **Deferred routing/hardening** (triggers tracked, not forgotten) → `docs/hygiene/queue.md`: repo-map pointer + scatter retirement, README trim, harness-README up-pointer, product-tree reach (ORCA-HYGIENE-008); one-way restraint hardening (ORCA-HYGIENE-006); pattern promotion (ORCA-HYGIENE-007).
 
 ## Non-Claims
