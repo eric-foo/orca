@@ -11,13 +11,13 @@ authority_boundary: retrieval_only
 ```
 
 This file defines Orca's lightweight prompt-orchestration layer. It binds
-reusable mechanics from `agent-workflow` to Orca-owned paths without importing
-`jb` project policy, while preserving Orca's explicit-authorization boundary
-for implementation and runtime work.
+Orca-owned prompt mechanics without importing `jb` project policy, while
+preserving Orca's explicit-authorization boundary for implementation and
+runtime work.
 
 ## Source Boundary
 
-Reusable mechanics may come from `agent-workflow` source documents and queue records:
+Prompt mechanics come from Orca-owned source documents and queue records:
 
 - prompt artifact creation and thin-wrapper prompts;
 - worktree preflight and hash pins;
@@ -40,7 +40,7 @@ qualification, trust objections, disqualifiers, kill criteria, pull grading, or
 graduation rules. Do not redefine trust-objection semantics locally when the
 overlay applies.
 
-`prompt_orchestrator.yaml`, `product-ultraplan.yaml`, and `feature-ultraplan.yaml` are non-executable queue records unless later accepted source creates real workflow-kernel skills and Orca validates adoption. Do not create `SKILL.md`, install skills, or copy `jb` templates from Orca prompt-orchestration work.
+`prompt_orchestrator.yaml`, `product-ultraplan.yaml`, and `feature-ultraplan.yaml` are non-executable queue records unless later accepted source creates real workflow skills and Orca validates adoption. Do not create `SKILL.md`, install skills, or copy `jb` templates from Orca prompt-orchestration work.
 
 ## Project Template Registry
 
@@ -49,8 +49,7 @@ The active Orca template registry is
 `.agents/workflow-overlay/template-registry.md`.
 
 The registry binds template kinds, model variants, output modes, and template
-paths for Orca. Check it before falling back to generic `agent-workflow`
-prompt-orchestrator templates.
+paths for Orca. Check it before using any generic prompt-orchestration template.
 
 ## Supported Prompt Families
 
@@ -157,7 +156,7 @@ Every repo-aware Orca prompt must state:
 - output mode: `chat-only`, `file-write`, `review-report`,
   `paste-ready-chat`, or `patch-queue`;
 - required validation gates and where evidence is recorded;
-- external source boundary, including the rule that `agent-workflow` is read-only reusable source and `jb` is not Orca authority.
+- external source boundary, including the rule that external workflow source is read-only from Orca work and `jb` is not Orca authority.
 
 Rerun and patch prompts must also name the prior artifact, prior hash or revision, frozen decisions, mutable fields, and unresolved finding being retried.
 
@@ -237,7 +236,7 @@ Before using a generated Orca prompt, apply these gates:
    task context; source pack, edit permission, target scope, and dirty-state
    check are recorded according to `.agents/workflow-overlay/source-loading.md`.
 2. Artifact roles bound: every prompt role maps to `.agents/workflow-overlay/artifact-roles.md` or another accepted overlay file.
-3. Source resolution clean: agent-workflow material is source guidance only; installed skills are deployment copies; `jb` project policy is not imported.
+3. Source resolution clean: external workflow sources do not provide Orca authority; installed skills are deployment copies; `jb` project policy is not imported.
 4. Worktree preflight present: workspace, revision, dirty-state allowance, target scope, and edit permission are explicit when repository state matters.
 5. Output mode explicit: exactly one output mode is named, with write destination and report destination if applicable.
 6. Required checks named: validation gates can fail and include pass, fail, blocked, and not-run semantics.
@@ -264,5 +263,5 @@ Before using a generated Orca prompt, apply these gates:
 ## Anti-Import Rules
 
 - Do not copy `jb` prompt templates, skill files, GAP/CV Engine policy, compiler paths, handoff rules, product-lead rules, or repo-local lifecycle mechanics.
-- Do not claim `workflow-product-ultraplan`, `workflow-feature-ultraplan`, or `workflow-prompt-orchestrator` are executable unless a real `agent-workflow` `SKILL.md` exists and Orca source-resolution/adoption checks pass.
+- Do not claim `workflow-product-ultraplan`, `workflow-feature-ultraplan`, or `workflow-prompt-orchestrator` are executable unless a real resolver-visible `SKILL.md` exists and Orca source-resolution/adoption checks pass.
 - Generic layout ideas may be reused only after binding to Orca paths, artifact roles, output modes, and validation gates.

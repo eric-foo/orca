@@ -6,7 +6,7 @@
 - Prompt review: read-only review of prompt artifacts, thin wrappers, source maps, output modes, and validation gates. Reports go under `docs/review-outputs/` unless the prompt names another Orca-owned report path.
 - Patch-queue review: read-only review that produces ordered patch units. Applying those patches requires a separate patch or integration execution assignment.
 - Patch or integration execution: applies accepted documentation patches inside Orca and reports changed files plus validation.
-- Workflow-kernel adoption review: deferred until `agent-workflow` canonical source exists and a later turn authorizes adoption or shadow validation.
+- Skill adoption review: deferred until a later turn authorizes adoption or shadow validation.
 
 ## Rules
 

@@ -1,6 +1,6 @@
 ﻿# Orca Workflow Overlay
 
-This overlay is the project authority for Orca. Reusable workflow methods may provide mechanics, but Orca-specific facts and constraints must come from this folder or another Orca-owned source named here.
+This overlay is the project authority for Orca. Skills may provide task-local mechanics, but Orca-specific facts and constraints must come from this folder or another Orca-owned source named here.
 
 ## Overlay Sections
 
@@ -17,6 +17,6 @@ This overlay is the project authority for Orca. Reusable workflow methods may pr
 
 ## Binding Rule
 
-If reusable workflow guidance conflicts with this overlay for Orca project facts, this overlay wins unless a later accepted Orca decision supersedes it.
+If external workflow guidance or skill mechanics conflict with this overlay for Orca project facts, this overlay wins unless a later accepted Orca decision supersedes it.
 
 Missing required project facts are `UNKNOWN - requires owner input`; do not fill them from `jb` or generic defaults.

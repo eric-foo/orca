@@ -17,12 +17,12 @@ authority_boundary: retrieval_only
 2. Orca `AGENTS.md`.
 3. This overlay under `.agents/workflow-overlay/`.
 4. Orca docs under `docs/`, when they do not conflict with the overlay.
-5. Future accepted `agent-workflow` reusable workflow-kernel source for generic mechanics only.
+5. Explicitly invoked or resolver-loaded skills may provide task-local mechanics only; they are not Orca project authority.
 
 ## Conflict Rules
 
 - Orca overlay wins for Orca project facts.
-- Future `agent-workflow` source may own reusable workflow mechanics, not Orca facts.
+- External workflow sources do not own Orca project authority. Skills may provide task-local mechanics only when explicitly invoked or resolver-loaded.
 - Installed global/user/plugin skills are runtime copies or external tools, not Orca project authority.
 - If a required source is missing, report a visible failure and name the missing file or decision.
 - Source hierarchy is not a read-all list. Use `.agents/workflow-overlay/source-loading.md` and `docs/workflows/orca_repo_map_v0.md` to choose bounded source packs.
@@ -184,13 +184,76 @@ direction_change_propagation:
     - not implementation authorization
 ```
 
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Orca no longer imports or recognizes external workflow-core / agent-workflow
+    source documents as reusable workflow authority; only explicitly invoked or
+    resolver-loaded skills may provide task-local mechanics.
+  trigger: workflow_authority
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - docs/workflows/orca_repo_map_v0.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/source-loading.md
+    - .agents/workflow-overlay/review-lanes.md
+    - .agents/workflow-overlay/validation-gates.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/workflow-overlay/artifact-roles.md
+    - .agents/workflow-overlay/project-authority.md
+    - .agents/workflow-overlay/safety-rules.md
+    - .agents/workflow-overlay/skill-adoption.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - CLAUDE.md
+    - README.md
+    - docs/workflows/orca_repo_map_v0.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-loading.md
+    - .agents/workflow-overlay/review-lanes.md
+    - .agents/workflow-overlay/validation-gates.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/workflow-overlay/artifact-roles.md
+    - .agents/workflow-overlay/project-authority.md
+    - .agents/workflow-overlay/safety-rules.md
+    - .agents/workflow-overlay/skill-adoption.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/skill-adoption.md
+      reason: >
+        Skill provenance paths that contain agent-workflow remain because the
+        user explicitly preserved skills. These paths record resolver-visible
+        skill evidence only, not workflow-core authority.
+  stale_language_search: >
+    rg -n "workflow-core|@\.\./agent-workflow|supersede any conflicting local|Future accepted `agent-workflow`|Future `agent-workflow` source|reusable `agent-workflow`|agent-workflow.*mechanics|agent-workflow material|agent-workflow.*source guidance|agent-workflow.*prompt-orchestrator|candidate for promotion to the `agent-workflow`|workflow-kernel|future kernel skill|AGENTS.md.*operating constraints"
+    AGENTS.md CLAUDE.md README.md .agents/workflow-overlay docs/workflows/orca_repo_map_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-05 after this patch. Matches were confined to this
+    DCP receipt's doctrine_changed, intentionally_not_updated, and
+    stale_language_search text; no live authority or route-card surface outside
+    this receipt matched.
+    A broader `rg -n "agent-workflow" AGENTS.md CLAUDE.md README.md .agents/workflow-overlay docs/workflows/orca_repo_map_v0.md`
+    returned only skill-adoption provenance paths for the preserved skill
+    exception plus this DCP receipt.
+  non_claims:
+    - not validation
+    - not readiness
+    - not source promotion
+    - not resolver proof
+    - not skill adoption
+```
+
 ## Known Source Documents
 
 - `README.md`: workspace entrypoint.
 - `AGENTS.md`: agent operating instructions.
-- `CLAUDE.md`: Claude-specific instruction shim; subordinate to `AGENTS.md` and the Orca overlay for Orca project authority.
+- `CLAUDE.md`: Claude Code instruction shim that imports `AGENTS.md`; no Orca project authority of its own.
 - `.agents/workflow-overlay/README.md`: overlay entrypoint.
-- `.agents/workflow-overlay/artifact-roles.md`: Orca artifact role bindings for reusable workflow methods.
+- `.agents/workflow-overlay/artifact-roles.md`: Orca artifact role bindings, permissions, freshness markers, and paired artifacts.
 - `.agents/workflow-overlay/source-loading.md`: Orca source-loading budgets, read packs, and context-bloat controls.
 - `.agents/workflow-overlay/retrieval-metadata.md`: Orca retrieval-header contract for durable human-authored workflow artifacts.
 - `.agents/workflow-overlay/prompt-orchestration.md`: Orca prompt artifact, wrapper, preflight, output mode, validation, and rerun bindings.

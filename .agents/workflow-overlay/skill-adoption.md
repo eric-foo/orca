@@ -2,14 +2,14 @@
 
 ## Current Status
 
-- Orca has no local reusable workflow-kernel skill source.
+- Orca has no local reusable workflow skill source.
 - Orca has no accepted global skill shadow candidates.
 - Orca has no same-name global skill promotions.
-- Future reusable workflow skills must come from accepted `agent-workflow` canonical source and validated deployment copies.
+- Future reusable workflow skill adoption requires accepted skill source and validated deployment copies.
 
 ## Recognized Workflow Tools
 
-These tools may provide reusable workflow mechanics for Orca work. They do not
+These skills may provide task-local mechanics for Orca work. They do not
 provide Orca project authority, product facts, artifact destinations,
 validation gates, or readiness claims.
 

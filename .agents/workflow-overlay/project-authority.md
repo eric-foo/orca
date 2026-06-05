@@ -19,4 +19,4 @@ Orca owns its project-specific facts, artifact folders, review lanes, validation
 - Do not import `jb` project-specific assumptions as Orca authority.
 - Do not turn migration notes into Orca product requirements.
 - Do not create implementation scope from unknown project facts.
-- Do not treat installed skills or copied skills as canonical workflow-kernel source.
+- Do not treat installed skills or copied skills as canonical skill source.

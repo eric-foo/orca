@@ -49,7 +49,7 @@ propagation evidence.
 
 | Path | Role |
 | --- | --- |
-| `AGENTS.md` | Workspace instructions and Orca project operating constraints. |
+| `AGENTS.md` | Canonical root instructions, global behavior, and triggers to Orca owner docs. |
 | `.agents/workflow-overlay/` | Orca overlay authority for project facts, folders, source rules, prompt rules, validation, safety, and review lanes. |
 | `orca-harness/` | Bounded authorized implementation backing Data Capture source acquisition and the v0.14 Judgment Harness (capture adapters, source-observability, schemas, scoring, runners, fixtures, tests). Navigation context only; not runtime, acceptance, or readiness. See the Orca Harness section. |
 | `docs/decisions/` | Decision records. |

@@ -1,15 +1,39 @@
 ﻿# AGENTS.md
 
+## Agent Behavior Kernel
+
+Surface ambiguity or risky assumptions before acting.
+Default to the smallest complete intervention: solve the actual request completely with the narrowest sufficient scope.
+Every changed line must trace to the user request or required validation.
+Preserve real failure visibility; never create fake success paths.
+For non-trivial changes, define and run relevant verification or state why it was not run.
+Before reporting work as committed, written, pushed, or otherwise persisted, verify the durable target with a fresh read and show the verifying read's actual output for that lifecycle claim. Report only observed facts: never state a SHA, count, status, write, or check you did not observe. If verification fails, report the mismatch and stop. Sandbox escalation requires per-operation approval and must never become a standing rule.
+
+## Smallest Complete Intervention
+
+`Complete` is load-bearing. Do not underfix to minimize diff, ceremony, or
+visible change; a slightly larger fix is correct when required for durable,
+coherent, non-fragile completion.
+
+`Smallest` is also load-bearing. Do not add unrelated cleanup, speculative
+abstractions, broad rewrites, extra workflow ceremony, or nice-to-have
+improvements.
+
+Whenever the user or instructions say **"smallest complete X"** -- including
+phrases like **smallest complete fix, patch, edit, rewrite, refactor, review,
+or answer** -- interpret it as **X performed under the Smallest complete
+intervention rule above.**
+
 ## Orca Project Instructions
 
-Before project work, read `.agents/workflow-overlay/README.md` and follow the Orca overlay. If required overlay authority is missing or ambiguous, fail visibly and report the missing source instead of substituting defaults.
+`AGENTS.md` is the canonical shared project instruction source for Orca. `CLAUDE.md` is a Claude Code shim that imports this file and must not duplicate, fork, weaken, or override Orca project rules.
 
-Keep Orca project facts, constraints, artifact folders, review lanes, validation gates, and safety rules in `.agents/workflow-overlay/`. Do not treat `jb` rules, paths, handoffs, lifecycle mechanics, product policy, or validation habits as Orca authority.
+Before project work, read `.agents/workflow-overlay/README.md` and follow the Orca overlay. Treat `AGENTS.md` as triggers and global behavior, not as the full workflow manual.
 
-Doctrine-changing Orca work must not finish by updating only the immediate authority document. If the current turn changes product doctrine, architecture doctrine, workflow authority, validation philosophy, review authority, output authority, or lifecycle boundaries, update the controlling Orca source, check downstream source-loaded surfaces, and close with an inline `direction_change_propagation` receipt or explicit blocker under `.agents/workflow-overlay/source-of-truth.md`. Do not create a new skill, registry, standalone receipt file, broad template sweep, or automation for this loop unless a later turn explicitly authorizes it.
+Keep Orca project facts, source hierarchy, source-loading rules, artifact folders, review lanes, validation gates, safety rules, prompt rules, and lifecycle boundaries in `.agents/workflow-overlay/` or another Orca-owned source named there.
 
-Orca is no longer globally docs-first by default. Documentation remains the authority layer for project facts, decisions, prompts, reviews, migration notes, and overlay maintenance, but a later turn may explicitly authorize bounded implementation, automation, packages, tests, generated artifacts, or runtime work. Do not create those from planning, review, or product-method work unless the current turn or an accepted handoff explicitly authorizes that bounded implementation scope.
+Do not treat `jb` rules, paths, handoffs, lifecycle mechanics, product policy, validation habits, or external workflow source as Orca authority. Explicitly invoked or resolver-loaded skills may provide task-local mechanics only.
 
-Do not install, uninstall, rename, rewrite, or shadow global/user/plugin skills unless a later turn explicitly authorizes that workflow-kernel action. Do not edit workflow-kernel source or deployment copies from Orca project work.
+For doctrine-changing work, implementation boundaries, skill adoption, review lanes, validation, prompt orchestration, and source loading, load the owning overlay file instead of duplicating the rule here.
 
-Allowed project work by default is documentation, decisions, prompts, reviews, migration notes, and overlay maintenance inside this workspace. Implementation or runtime work requires explicit bounded authorization in the current turn or accepted handoff.
+Default allowed work is documentation, decisions, prompts, reviews, migration notes, and overlay maintenance inside this workspace. Implementation or runtime work requires explicit bounded authorization in the current turn or accepted handoff.

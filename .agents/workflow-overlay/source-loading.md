@@ -24,11 +24,10 @@ Do not convert the source hierarchy into a read-all list. Load the smallest
 source pack that can answer the current question, then expand only when a
 missing source could materially change the output.
 
-Use reusable `agent-workflow` source-loading mechanics as advisory mechanics
-only: claim-level source loading, narrow reads, source-read ledgers, evidence
-labels, strict/not-proven boundaries, targeted excerpts, and context-budget
-discipline. Orca overlay and repo map still choose Orca source files and source
-precedence.
+Use Orca-owned source-loading mechanics: claim-level source loading, narrow
+reads, source-read ledgers, evidence labels, strict/not-proven boundaries,
+targeted excerpts, and context-budget discipline. Orca overlay and repo map
+choose Orca source files and source precedence.
 
 This file is the canonical Orca owner for source-loading budgets, source-pack
 tiers, source-capsule rules, and Data Capture Spine CA read-pack limits. Repo maps,

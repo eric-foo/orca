@@ -22,7 +22,7 @@ This file binds reusable artifact-role mechanics to Orca-owned paths. Generic wo
 
 ## Protected Roles
 
-- External workflow source under `C:\Users\vmon7\Desktop\projects\agent-workflow\` is read-only from Orca work unless a later turn explicitly authorizes workflow-kernel source changes.
+- External workflow source outside this workspace is read-only from Orca work unless a later turn explicitly authorizes external source changes.
 - Installed global, user-level, plugin, and project-local skills are deployment copies or tools, not Orca project authority.
 - `jb` project rules, paths, handoffs, GAP/CV Engine policy, lifecycle mechanics, and repo-local skills are not Orca artifact roles.
 - Material in `docs/_inbox/` is not Orca authority until promoted into an accepted docs folder or overlay file.

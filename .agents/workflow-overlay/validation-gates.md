@@ -47,8 +47,8 @@ Validation must be able to fail. Missing evidence is not a pass.
   once; reference it). This gate is a check, not validation or readiness
   evidence; its presence does not prove any artifact passes it. Lifecycle:
   Orca-local adoption of general authoring/review discipline, not Orca-owned
-  doctrine; it is a candidate for promotion to the `agent-workflow` kernel and
-  becomes stale here if the kernel adopts an equivalent rule.
+  doctrine; it is a candidate for future skill-source adoption and becomes
+  stale here if an equivalent accepted skill-source rule is adopted.
 - New or materially touched durable human-authored workflow artifacts follow
   `.agents/workflow-overlay/retrieval-metadata.md` or are clearly outside that
   contract.
@@ -69,7 +69,7 @@ Validation must be able to fail. Missing evidence is not a pass.
   carry the start-preflight fields owned by
   `.agents/workflow-overlay/source-loading.md`.
 - Artifact role gate: every prompt role must be bound in `.agents/workflow-overlay/artifact-roles.md` or another accepted Orca overlay file.
-- Source-resolution gate: `agent-workflow` may provide generic mechanics only; installed skills are deployment copies; `jb` project policy must not be imported.
+- Source-resolution gate: external workflow sources do not provide Orca authority; installed skills are deployment copies; `jb` project policy must not be imported.
 - Worktree preflight gate: repository-aware prompts must state workspace, revision or hash when needed, dirty-state allowance, target scope, and edit permission.
 - Control-plane source-state gate: repository-aware prompts, prompt-policy
   patches, workflow patches, and CA handoffs must classify controlling Orca
@@ -230,12 +230,12 @@ direction_change_propagation:
     - .agents/workflow-overlay/review-lanes.md
     - .agents/workflow-overlay/prompt-orchestration.md
   intentionally_not_updated:
-    - path: agent-workflow workflow-kernel source (docs/workflow-core.md, plugin/skills/*)
+    - path: external workflow source and plugin skill source
       reason: >
         Deliberately Orca-only. jb already carries equivalent discipline
         (source-authority ceilings, no-fake-fallback, "user-confirmed is not
         verified"), so there is nothing to spread now. This rule is a candidate
-        for kernel promotion later, which is a separate governed workflow-kernel
+        for external promotion later, which is a separate governed skill-source
         change, not an Orca-lane edit.
     - path: jb project sources
       reason: >

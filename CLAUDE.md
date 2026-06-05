@@ -1,15 +1,9 @@
-# Workflow authority
+# CLAUDE.md - orca
 
-@../agent-workflow/docs/workflow-core.md
+@AGENTS.md
 
-The workflow rules above supersede any conflicting local conventions in this file.
+## Claude Code Shim
 
----
+This file only loads `AGENTS.md`; do not add, duplicate, summarize, or override Orca project rules here.
 
-# CLAUDE.md — orca
-
-For project-specific rules, artifact folders, review lanes, validation gates, and safety rules, read `.agents/workflow-overlay/README.md` and follow the Orca overlay.
-
-For Orca doctrine-changing work, follow the `direction_change_propagation` receipt or blocker rule in `.agents/workflow-overlay/source-of-truth.md` before completion claims.
-
-Do not treat jb rules, paths, handoffs, lifecycle mechanics, product policy, or validation habits as Orca authority.
+Claude-specific bootstrapping may appear below only when it cannot live in `AGENTS.md` and does not change Orca authority.
