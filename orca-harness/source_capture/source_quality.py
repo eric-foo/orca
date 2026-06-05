@@ -13,6 +13,7 @@ from source_capture.models import (
     VisibleFact,
     VisibleFactStatus,
 )
+from source_capture.packet_inspection import PacketConformanceReport, read_packet_leniently
 
 
 SOURCE_QUALITY_REPORT_SKELETON_VERSION = "mini_god_tier_source_quality_report_skeleton_v0"
@@ -74,6 +75,27 @@ def resolve_manifest_path(packet_or_manifest_path: Path) -> Path:
     if packet_or_manifest_path.is_dir():
         return packet_or_manifest_path / "manifest.json"
     return packet_or_manifest_path
+
+
+def _nonconformance_stop(report: PacketConformanceReport) -> str:
+    error_count = len(report.current_schema_errors)
+    if report.declares_current_manifest_version:
+        return (
+            f"manifest declares the current schema version "
+            f"({report.declared_manifest_version!r}) but does not conform to it: "
+            f"{error_count} schema error(s) — possible corruption of a current-version packet"
+        )
+    if report.declared_manifest_version is None:
+        return (
+            "manifest does not declare a string manifest_version; "
+            f"inspected leniently against the current schema and found {error_count} "
+            "non-conformance(s) — malformed or unknown-version packet, not off-version evidence"
+        )
+    return (
+        f"manifest declares a non-current schema version "
+        f"({report.declared_manifest_version!r}); inspected leniently against the current "
+        f"schema and found {error_count} non-conformance(s) — off-version evidence, not corruption"
+    )
 
 
 def build_source_quality_report_skeleton(
@@ -504,6 +526,32 @@ def _assemble_source_quality_row(
     if not manifest_path.exists():
         assembled["packet_state"] = "manifest_missing"
         assembled["visible_stops"].append(f"manifest not found: {manifest_path}")
+        return assembled
+
+    # Lenient inspection pre-check (Phase-1 schema-evolution slice). Distinguish a
+    # parseable-but-off-schema manifest (an honest older version, or a current-version
+    # corruption) from a genuinely unreadable one. Reuses the strict model as the single
+    # source of truth (M2) and returns a distinct report — never a packet.
+    try:
+        conformance = read_packet_leniently(manifest_path)
+    except Exception as exc:
+        assembled["packet_state"] = "manifest_uninspectable"
+        assembled["helper_state"] = "helper_failed"
+        assembled["visible_stops"].append(f"manifest could not be read: {exc}")
+        assembled["operator_completion_required"] = [
+            "repair packet reference, manifest, or lifecycle fields before operator review"
+        ]
+        return assembled
+
+    if not conformance.conforms_to_current_schema:
+        assembled["packet_state"] = "manifest_nonconforming"
+        assembled["helper_state"] = "not_invoked"
+        assembled["packet_conformance"] = conformance.model_dump(mode="json")
+        assembled["visible_stops"].append(_nonconformance_stop(conformance))
+        assembled["operator_completion_required"] = [
+            "packet does not conform to the current Source Capture schema; re-capture under "
+            "the current schema or review as off-version evidence before operator review"
+        ]
         return assembled
 
     try:

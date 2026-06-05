@@ -102,10 +102,39 @@ def test_invalid_manifest_is_row_failure_not_batch_verdict(scratch_dir: Path) ->
     )["source_quality_state_assembler"]
 
     row = census["rows"][0]
+    # A parseable manifest that fails the current schema is now a distinct, inspectable
+    # non-conformance (with a structured conformance report) — not lumped with
+    # genuinely-unreadable manifests. Still a per-row visible state, not a batch verdict.
+    assert row["packet_state"] == "manifest_nonconforming"
+    assert row["helper_state"] == "not_invoked"
+    assert row["packet_conformance"]["conforms_to_current_schema"] is False
+    assert row["packet_conformance"]["declared_manifest_version"] is None
+    assert any("does not declare a string manifest_version" in item for item in row["visible_stops"])
+    assert census["census"]["packet_state_counts"]["manifest_nonconforming"] == 1
+
+
+def test_unparseable_manifest_is_uninspectable(scratch_dir: Path) -> None:
+    packet_dir = scratch_dir / "broken_packet"
+    packet_dir.mkdir()
+    (packet_dir / "manifest.json").write_text("{ not valid json", encoding="utf-8")
+
+    census = build_source_quality_state_census(
+        rows=[
+            {
+                "source_id": "CW-UNPARSEABLE",
+                "case_or_slot": "unparseable manifest",
+                "row_status": "packet_written_needs_report",
+                "packet_path": str(packet_dir),
+                "packet_lifecycle": "scratch",
+            }
+        ],
+        base_path=Path.cwd(),
+    )["source_quality_state_assembler"]
+
+    row = census["rows"][0]
     assert row["packet_state"] == "manifest_uninspectable"
     assert row["helper_state"] == "helper_failed"
-    assert any("source-quality skeleton helper failed" in item for item in row["visible_stops"])
-    assert census["census"]["helper_state_counts"] == {"helper_failed": 1}
+    assert any("manifest could not be read" in item for item in row["visible_stops"])
 
 
 def test_not_cited_packet_remains_visible_stop(scratch_dir: Path) -> None:
@@ -177,6 +206,36 @@ def test_cli_writes_state_census_yaml(scratch_dir: Path) -> None:
     assert census["row_count"] == 1
     assert census["rows"][0]["helper_state"] == "skeleton_built"
     assert census["rows"][0]["result_token_finalization"] == "operator_review_required"
+
+
+def test_off_version_packet_is_nonconforming_not_uninspectable(scratch_dir: Path) -> None:
+    packet_dir = _write_local_body_packet(scratch_dir)
+    manifest_path = packet_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["manifest_version"] = "source_capture_packet_manifest_v0"
+    del manifest["preserved_files"][0]["hash_basis"]
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    census = build_source_quality_state_census(
+        rows=[
+            {
+                "source_id": "CW-OFFVER",
+                "case_or_slot": "off-version packet",
+                "row_status": "packet_written_needs_report",
+                "packet_path": str(packet_dir),
+                "packet_lifecycle": "scratch",
+            }
+        ],
+        base_path=Path.cwd(),
+    )["source_quality_state_assembler"]
+
+    row = census["rows"][0]
+    assert row["packet_state"] == "manifest_nonconforming"
+    assert row["helper_state"] == "not_invoked"
+    assert any("non-current schema version" in stop for stop in row["visible_stops"])
+    assert row["packet_conformance"]["conforms_to_current_schema"] is False
+    assert row["packet_conformance"]["declares_current_manifest_version"] is False
+    assert census["census"]["packet_state_counts"].get("manifest_nonconforming") == 1
 
 
 def _write_local_body_packet(root: Path) -> Path:
