@@ -131,10 +131,13 @@ failure returns `(3, message)`; uncaught exceptions map to `3`).
 ## Not in scope (deferred)
 
 No adapter base class / `Protocol`-over-adapters / registry / dispatcher / auto
-source-class routing. No second credential subsystem. Nothing in the deferred
-build set (Scrapy/crawlers, anti-detect, proxy, commercial fetch, SERP,
-storage/dashboard/scheduler/deployment/production runtime). Selection stays the
-runbook table (agent reads it and invokes the named runner), not code.
+source-class routing. No second credential subsystem. Still in the deferred
+build set (Scrapy/crawlers, commercial fetch, SERP,
+storage/dashboard/scheduler/deployment/production runtime); anti-detect and proxy
+moved to the third tranche of the source-access tooling build authorization
+(build-authorized, used only inside the unchanged source-access boundary).
+Selection stays the runbook table (agent reads it and invokes the named runner),
+not code.
 
 ## Non-claims
 

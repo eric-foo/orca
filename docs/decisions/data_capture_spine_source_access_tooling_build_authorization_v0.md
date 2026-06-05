@@ -3,7 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product decision
-scope: Owner authorization for bounded first-tranche Data Capture source-access tooling builds after the first pressure-test foundation closeout.
+scope: Owner authorization for bounded Data Capture source-access tooling builds — first tranche (capture core + HTTP/media/archive/honest-browser adapters) and second tranche (Reddit official API adapter and additional owner-named source adapters) — after the first pressure-test foundation closeout.
 use_when:
   - Checking whether Data Capture source-access tooling builds are now allowed.
   - Scoping or implementing the first tranche of local source-access/capture-support tools.
@@ -36,6 +36,47 @@ This is not blanket authorization for every source-access method named in the
 method plan. The authorization is deliberately narrow enough that implementation
 can start without silently selecting high-risk adapters, downstream schema, or
 production infrastructure.
+
+### Second-Tranche Amendment (2026-06-04)
+
+Owner decision: `AUTHORIZE_SOURCE_ACCESS_TOOLING_BUILD_SECOND_TRANCHE`.
+
+The owner authorized a second tranche of source-access adapter builds so the
+Source Capture Armory can reliably capture canonical high-information sources per
+discipline (for example Wall Street Oasis for finance, Reddit broadly) and "pull
+the trigger when needed." The authorized second-tranche surface is in
+`## Authorized Second-Tranche Build Surface` below. Scrapy/broad crawlers,
+anti-detect browsers, residential/rotating proxies, commercial fetch services,
+SERP APIs, and storage/dashboard/scheduler/deployment/production-runtime surfaces
+remain deferred. The source-access boundary and its hard stops are unchanged.
+
+### Third-Tranche Amendment (2026-06-05)
+
+Owner decision: `AUTHORIZE_SOURCE_ACCESS_TOOLING_BUILD_THIRD_TRANCHE_ANTI_BLOCKING`.
+
+The owner authorized a third tranche covering the anti-blocking techniques the
+source-access boundary already permits, for the current pre-commercial / free
+phase: anti-detect / cloaked browser configuration, residential or rotating
+proxy integration, and in-browser JS-challenge handling — used only to reach
+public / discoverable source material inside the unchanged boundary. Rationale:
+while Orca is on free / unsanctioned access tiers, anti-blocking is the in-bounds
+way to reach public sources without being rate-throttled or IP-blocked. This is a
+deliberate, disclosable, owner-accepted-risk posture (ToS / reputational /
+litigation risk per the boundary decision; real legal counsel advisable before
+commercializing).
+
+Re-tighten trigger: when Orca goes commercial / enterprise on a source, it moves
+that source to the sanctioned path (for Reddit, the enterprise API tier) and
+stops relying on anti-blocking for it. This tranche is the pre-commercial bridge,
+not the commercial-scale method.
+
+Still deferred (need a separate owner authorization): Scrapy / broad
+crawler-spider frameworks, commercial scraping / fetch-service integration,
+standalone CAPTCHA-solving services (paid solver services, distinct from the
+in-browser JS-challenge handling authorized here), SERP / discovery APIs, and
+persistent storage / database / dashboard / queue / scheduler / deployment /
+production-runtime surfaces. The source-access boundary and its hard stops are
+unchanged.
 
 ## Source Basis
 
@@ -92,18 +133,58 @@ These tools should produce capture-support artifacts. They must not decide
 credibility, usefulness, inclusion, exclusion, discounting, Signal Use, Decision
 Strength, Action Ceiling, buyer proof, or commercial meaning.
 
+## Authorized Second-Tranche Build Surface
+
+The second tranche (owner-authorized 2026-06-04) may build, against the same
+Source Capture Packet/adapter shape and the cross-adapter contract decided by the
+Source Capture Armory architecture lane:
+
+6. **Reddit official API adapter** (first / reference adapter)
+   - registered-app OAuth2 read access to public subreddit posts, comments, and
+     full comment trees through the official Reddit API;
+   - return verbatim post/comment text into the packet shape with per-thread
+     slice state, locator, cutoff posture, access posture, hashes, and limitation
+     notes;
+   - record rate-limit, deleted-row, and not-retrieved states visibly.
+
+7. **Additional owner-named source adapters**
+   - build the next high-value source adapter(s) the owner names (for example a
+     Wall Street Oasis path through the existing honest/authenticated browser
+     snapshot adapter, tested live), against the same packet/adapter contract and
+     an agent-facing source-class -> adapter selection surface.
+
+8. **Cross-adapter contract and agent-facing selection surface**
+   - the shared adapter interface, credential/secret handling pattern, and the
+     agent-facing source-class -> adapter selection map, as decided by the Source
+     Capture Armory architecture lane (not pre-decided here).
+
+Invariant for any second-tranche adapter that needs authentication or API
+credentials: credentials, tokens, cookies, and storage-state never enter the
+packet and are never copied, hashed, printed, or preserved there; they live in
+local ignored config only. This restates the source-access hard stops and the
+fixture/retention/sensitivity contamination stop; it is not optional.
+
+Like the first tranche, these tools produce capture-support artifacts only. They
+must not decide credibility, usefulness, inclusion, exclusion, discounting,
+Signal Use, Decision Strength, Action Ceiling, buyer proof, or commercial
+meaning. Generated packets remain `scratch` under the fixture/retention/
+sensitivity decision unless separately admitted.
+
 ## Deferred Or Separately Authorized Build Surface
 
 The following remain in-bounds method candidates under the source-access method
-plan, but are not authorized for first-tranche implementation by this decision:
+plan, but are not authorized for implementation by this decision (first, second,
+or third tranche). Reddit API moved to the second tranche; anti-detect browser,
+residential/rotating proxy, and in-browser JS-challenge handling moved to the
+third tranche.
 
-- Reddit API registration, OAuth setup, API calls, or PRAW/direct-API adapter
-  implementation unless a later owner/post-sale/scale/source-specific decision
-  chooses it;
+- Scrapy or other broad crawler/spider frameworks for systematic site-wide URL
+  discovery and large-scale walking (a breadth-at-scale / post-sale tool, not a
+  fetch-known-URLs tool);
 - commercial scraping or fetch-service integration;
-- anti-detect browser implementation;
-- residential, rotating, or managed proxy integration;
-- CAPTCHA-solving or challenge-handling service integration;
+- standalone CAPTCHA-solving service integration (paid solver services), as
+  distinct from the in-browser JS-challenge handling authorized in the third
+  tranche;
 - SERP/discovery API integration;
 - persistent storage, database, dashboard, queue, scheduler, deployment,
   production crawler, or broad source-system runtime.
@@ -133,9 +214,11 @@ This decision is not validation, readiness, pressure-test discharge, source
 adequacy, capture closure, source-of-truth promotion, contract hardening,
 source-access boundary amendment, ECR design, Cleaning implementation, Judgment
 design, buyer proof, commercial-readiness evidence, API authorization,
-commercial-scraper authorization, anti-detect authorization, proxy
+commercial-scraper authorization, standalone CAPTCHA-solving-service
 authorization, production-runtime authorization, storage authorization,
-dashboard authorization, deployment authorization, or legal sufficiency.
+dashboard authorization, deployment authorization, or legal sufficiency. (The
+Third-Tranche Amendment above authorizes anti-detect / proxy / in-browser
+JS-challenge builds; those are no longer disclaimed here.)
 
 ## Direction Change Propagation
 
@@ -183,4 +266,87 @@ direction_change_propagation:
     - "not source-access boundary amendment"
     - "not API, commercial-scraper, anti-detect, proxy, or production-runtime authorization"
     - "not ECR, Cleaning, or Judgment design"
+```
+
+## Direction Change Propagation - Second-Tranche Amendment
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The owner authorized a bounded second tranche of source-access adapter builds - Reddit official API adapter (reference) plus additional owner-named source adapters and the cross-adapter contract/selection surface - while Scrapy/broad crawlers, anti-detect, proxies, commercial fetch, SERP, and storage/dashboard/scheduler/deployment/production-runtime remain deferred and the source-access boundary is unchanged."
+  trigger: lifecycle_boundary
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/product/source_capture_toolbox/README.md"
+    - "docs/product/data_capture_source_access_method_plan_v0.md"
+    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+  intentionally_not_updated:
+    - path: "docs/product/data_capture_source_access_boundary_decision_v0.md"
+      reason: "Boundary permission and hard stops are unchanged; Reddit API and the deferred methods were already in-bounds. Only build authority changed."
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Its source-access paragraph accurately describes the first-tranche authorization and routes agents to this authority doc for current build scope; the second tranche is additive in this same doc, not a live contradiction. Optional follow-on cross-reference refresh."
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "Build-order step 9 and the deferred-gaps list treat Reddit API as 'decide separately'; this decision is that separate decision and routes here. README refresh left as a bounded follow-on to avoid churn on an already display-name-dirty file."
+    - path: "docs/product/data_capture_source_access_method_plan_v0.md"
+      reason: "Its Step-3 'evaluate after first-tranche dry use' and build catalogue already route build authority here; the second tranche is that evaluation outcome for Reddit and is additive."
+    - path: "AGENTS.md"
+      reason: "Already permits bounded implementation when the current turn authorizes it."
+    - path: ".agents/workflow-overlay/source-of-truth.md"
+      reason: "Source hierarchy and propagation mechanics unchanged; existing lifecycle_boundary trigger used."
+  stale_language_search: "rg -n \"Reddit API.*deferred|does not cover Reddit API|Reddit API registration.*unless|decide separately whether|Reddit API.*separately gated\" .agents/workflow-overlay/source-loading.md docs/product/source_capture_toolbox/README.md docs/product/data_capture_source_access_method_plan_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not source-access boundary amendment"
+    - "not Scrapy, anti-detect, proxy, commercial-fetch, SERP, storage, or production-runtime authorization"
+    - "not ECR, Cleaning, or Judgment design"
+    - "not legal sufficiency"
+```
+
+## Direction Change Propagation - Third-Tranche Amendment
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The owner authorized a bounded third tranche of source-access tooling - anti-detect/cloaked browser configuration, residential/rotating proxy integration, and in-browser JS-challenge handling - for the pre-commercial free phase, to reach public/discoverable sources inside the unchanged boundary; standalone CAPTCHA-solving services, commercial fetch, Scrapy/broad crawlers, SERP, and storage/dashboard/scheduler/deployment/production-runtime remain deferred."
+  trigger: lifecycle_boundary
+  related_triggers:
+    - product_doctrine
+  controlling_sources_updated:
+    - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+    - "orca-harness/docs/adapter_author_contract.md"
+  downstream_surfaces_checked:
+    - ".agents/workflow-overlay/source-loading.md"
+    - ".agents/workflow-overlay/safety-rules.md"
+    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
+    - "docs/product/data_capture_source_access_method_plan_v0.md"
+    - "docs/product/source_capture_toolbox/README.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+  intentionally_not_updated:
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Its current-build-scope paragraph still says the authorization does not cover anti-detect browsers / proxies (and Reddit API). Stale echo of build scope, not the controlling authority; flagged for an immediate bounded follow-on refresh, same treatment the second-tranche receipt gave this file."
+    - path: ".agents/workflow-overlay/safety-rules.md"
+      reason: "Line-8 bounded-scope caution lists anti-detect/proxies among separate gates to preserve; now build-authorized. Bounded follow-on refresh; the rule itself (bounded implementation is not blanket runtime authority) is unchanged."
+    - path: "docs/product/data_capture_source_access_method_plan_v0.md"
+      reason: "Build catalogue + sequencing already route build authority to this decision; the third tranche is additive. Cross-reference refresh is a bounded follow-on."
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "Armory README lists anti-detect/proxy as separately gated in its build-order and deferred-gaps; refresh left as a bounded follow-on, same treatment as the second-tranche receipt, to avoid churn on an already display-name-dirty file."
+    - path: "docs/product/data_capture_source_access_boundary_decision_v0.md"
+      reason: "Boundary already permits anti-detect/proxy/JS-challenge with owner-accepted risk; only build authority changed, not the boundary."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Repo map indexes this decision at a path level and does not enumerate per-tranche build scope."
+  stale_language_search: "rg -ni 'anti-detect|rotating proxy|residential proxy|proxy integration|proxy authorization|avoid anti-detect' across the controlling + downstream paths above"
+  stale_language_search_result: "Run 2026-06-05. Controlling surfaces (this decision's third tranche + deferred list + non-claims; the contract not-in-scope line) updated to mark anti-detect/proxy/JS-challenge as build-authorized. Remaining live hits in source-loading + safety-rules are stale build-scope echoes flagged for an immediate bounded follow-on; method-plan + toolbox README echoes are additive follow-ons; other hits are historical DCP receipts/non-claims preserved as records, and the boundary decision where these methods were already in-bounds."
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not source-access boundary amendment"
+    - "not commercial-fetch, Scrapy, SERP, standalone-CAPTCHA-service, storage, or production-runtime authorization"
+    - "not legal sufficiency"
+    - "not Reddit live-run authorization"
 ```
