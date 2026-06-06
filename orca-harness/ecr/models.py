@@ -17,6 +17,8 @@ Design constraints (do not relax without explicit owner authorization):
 """
 from __future__ import annotations
 
+from enum import StrEnum
+
 from pydantic import model_validator
 
 from schemas.case_models import StrictModel
@@ -97,5 +99,64 @@ class EcrTimingPosture(StrictModel):
                 "clears_pre_cutoff must be True iff carried_cutoff_posture == "
                 f"'pre_cutoff'; got clears_pre_cutoff={self.clears_pre_cutoff} with "
                 f"carried_cutoff_posture={self.carried_cutoff_posture!r}."
+            )
+        return self
+
+
+class InspectabilityState(StrEnum):
+    """Closed SP-2 inspectability judgment for one source slice.
+
+    These are ECR-*derived* values (SP-2 is M2 derived-read), owned here -- not a
+    carry of any producer field -- so declaring them is not a re-coining of
+    ``source_capture`` vocabulary (contrast SP-3, which carries the producer's
+    ``cutoff_posture``). The SP-2 subpredicate clears only on
+    ``INSPECTABLE_VERIFIABLE``.
+    """
+
+    INSPECTABLE_VERIFIABLE = "inspectable_verifiable"
+    INSPECTABLE_REFERENCE_ONLY = "inspectable_reference_only"
+    NOT_INSPECTABLE = "not_inspectable"
+
+
+class EcrInspectabilityPosture(StrictModel):
+    """SP-2 source-side inspectability posture derived for one source slice.
+
+    Per-slice grain (single-grain ECR record, matching ``EcrTimingPosture``): one
+    posture per source slice. ``state`` is the closed 3-value inspectability
+    judgment; ``clears_inspectable`` is a stored field (not computed) so the record
+    round-trips through YAML cleanly under ``extra="forbid"``, bound by the
+    validator to ``True`` iff ``state == inspectable_verifiable``. ``reason`` is the
+    visible non-clearing limitation: required for the two non-verifiable states,
+    forbidden for the verifiable state.
+
+    M2 derived-read over M1-carried integrity anchors: the deriver reads each
+    referenced ``PreservedFile.sha256`` (recomputed at the harness, never trusted
+    here) and the slice locator. It binds no ``EvidenceUnit`` and makes no JSG-01,
+    scoring, or readiness claim.
+    """
+
+    slice_id: str
+    state: InspectabilityState
+    clears_inspectable: bool
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def validate_posture(self) -> "EcrInspectabilityPosture":
+        expected_clears = self.state == InspectabilityState.INSPECTABLE_VERIFIABLE
+        if self.clears_inspectable != expected_clears:
+            raise ValueError(
+                "clears_inspectable must be True iff state == "
+                f"'inspectable_verifiable'; got clears_inspectable="
+                f"{self.clears_inspectable} with state={self.state.value!r}."
+            )
+        if expected_clears and self.reason is not None:
+            raise ValueError(
+                "EcrInspectabilityPosture.reason must be None when state is "
+                "'inspectable_verifiable' (a cleared posture records no limitation)."
+            )
+        if not expected_clears and (self.reason is None or not self.reason.strip()):
+            raise ValueError(
+                "EcrInspectabilityPosture.reason must be a non-empty visible "
+                f"limitation when state is {self.state.value!r} (does not clear)."
             )
         return self
