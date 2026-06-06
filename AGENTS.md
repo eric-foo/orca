@@ -19,6 +19,15 @@ coherent, non-fragile completion.
 abstractions, broad rewrites, extra workflow ceremony, or nice-to-have
 improvements.
 
+When two candidate paths both satisfy the current request under this rule,
+prefer the one with materially lower downstream lock-in -- the durable data,
+schema, interface, or workflow shape that would be irreversible, costly to
+roll back, or costly to maintain. Take the higher-lock-in path only when a
+benefit necessary to the current request outweighs that structural cost; if
+so, pause and surface the tradeoff for a decision before proceeding. This
+narrows the choice among already-complete paths only; it never authorizes
+speculative cleanup, future-proofing, or broader scope.
+
 Whenever the user or instructions say **"smallest complete X"** -- including
 phrases like **smallest complete fix, patch, edit, rewrite, refactor, review,
 or answer** -- interpret it as **X performed under the Smallest complete
