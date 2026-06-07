@@ -119,6 +119,51 @@ promotion.
 ```yaml
 direction_change_propagation:
   doctrine_changed: >
+    Forked-context subagent spawning now treats inherited runtime defaults as
+    omitted fields and forbids explicit default/null type or model overrides.
+  trigger: workflow_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/decision-routing.md
+    - .agents/workflow-overlay/source-of-truth.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        Already routes delegated work to the overlay; duplicating payload
+        mechanics would fork the rule.
+    - path: .agents/workflow-overlay/README.md
+      reason: >
+        Already names decision-routing as the delegated-work owner.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        Subagent source-context rules are unchanged; payload hygiene belongs in
+        decision-routing.
+    - path: docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+      reason: >
+        Already points delegated prompt work to decision-routing.
+  stale_language_search: >
+    rg -n "fork_context|full-history fork|agent_type|runtime-safe forked|default/null|inherited defaults"
+    AGENTS.md .agents/workflow-overlay docs/prompts/templates/shared/orca_prompt_behavior_contract_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-08 after this patch. Hits were the intended subagent
+    runtime payload rule in decision-routing.md and this DCP receipt in
+    source-of-truth.md. No downstream surface retained a conflicting instruction
+    to combine full-history fork with explicit default/null type or model
+    overrides.
+  non_claims:
+    - not validation
+    - not readiness
+    - not model routing
+    - not host API schema authority
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
     The Cynefin Routing Layer now requires a smallest-complete outcome, allows
     Mixed/Unclear classification, and requires concrete bottleneck and
     evidence-shaped stop/pivot wording.

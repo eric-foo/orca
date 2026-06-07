@@ -125,6 +125,16 @@ For chaotic work, do not assign parallel work until the bottleneck is visible.
 Idle agents are acceptable when non-bottleneck work would increase WIP or blur
 claim boundaries.
 
+## Subagent Runtime Payload Safety
+
+For forked-context subagents, inherited runtime defaults mean omitted fields.
+Do not set `agent_type`, `model`, `reasoning_effort`, `service_tier`, or
+equivalent runtime fields to `default`, `null`, empty, or same-as-parent. If a
+forked spawn is rejected for explicit type/model fields, retry with only
+`fork_context: true` and the task `message` or `items`; if an override is
+required, use a bounded source capsule instead of full-history fork or stop for
+the owner/tooling decision.
+
 ## Prompt Propagation
 
 Repo-aware prompts, wrappers, handoffs, review prompts, patch prompts, and
