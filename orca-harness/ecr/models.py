@@ -160,3 +160,73 @@ class EcrInspectabilityPosture(StrictModel):
                 f"limitation when state is {self.state.value!r} (does not clear)."
             )
         return self
+
+
+class IdentityState(StrEnum):
+    """Closed SP-1 source-identity judgment for one packet.
+
+    ECR-*derived* (SP-1 is M2 derived-read), owned here -- not a carry of any
+    producer field. The SP-1 subpredicate clears on ``{RESOLVED, FAMILY_ONLY}``
+    (``FAMILY_ONLY`` carries a visible specificity limitation) and never on
+    ``UNRESOLVED``.
+    """
+
+    RESOLVED = "resolved"
+    FAMILY_ONLY = "family_only"
+    UNRESOLVED = "unresolved"
+
+
+class EcrIdentityPosture(StrictModel):
+    """SP-1 source-side identity posture derived for one packet.
+
+    Per-packet grain (identity is a whole-packet fact): one posture per packet,
+    keyed by ``packet_id``. ``state`` is the closed 3-value identity judgment.
+
+    M2 derived-read with an M3 stop: derived from the producer's
+    ``source_family`` / ``source_surface`` / ``source_locator`` (binds the real
+    fields, coins no producer vocabulary); ``UNRESOLVED`` is the M3 stop -- a
+    named limitation, never an invented identity. Actor/audience is
+    mark-if-unavailable (Ob.7) and does not gate ``RESOLVED``.
+
+    ``clears_identity`` is stored (not computed) for clean YAML round-trip under
+    ``extra="forbid"``; the validator binds it to ``True`` iff ``state`` is in
+    ``{RESOLVED, FAMILY_ONLY}``. ``reason`` is the visible limitation: required
+    for ``{FAMILY_ONLY, UNRESOLVED}``, forbidden for ``{RESOLVED}``. Note this
+    differs from the timing/inspectability rows: ``reason``-presence is NOT the
+    same partition as ``clears_identity`` (``FAMILY_ONLY`` clears yet carries a
+    limitation).
+    """
+
+    packet_id: str
+    state: IdentityState
+    clears_identity: bool
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def validate_posture(self) -> "EcrIdentityPosture":
+        expected_clears = self.state in (
+            IdentityState.RESOLVED,
+            IdentityState.FAMILY_ONLY,
+        )
+        if self.clears_identity != expected_clears:
+            raise ValueError(
+                "clears_identity must be True iff state is in "
+                f"{{resolved, family_only}}; got clears_identity="
+                f"{self.clears_identity} with state={self.state.value!r}."
+            )
+        reason_required = self.state in (
+            IdentityState.FAMILY_ONLY,
+            IdentityState.UNRESOLVED,
+        )
+        if reason_required and (self.reason is None or not self.reason.strip()):
+            raise ValueError(
+                "EcrIdentityPosture.reason must be a non-empty visible limitation "
+                f"when state is {self.state.value!r} (family_only and unresolved "
+                "both carry a limitation)."
+            )
+        if not reason_required and self.reason is not None:
+            raise ValueError(
+                "EcrIdentityPosture.reason must be None when state is 'resolved' "
+                "(a fully resolved identity records no limitation)."
+            )
+        return self

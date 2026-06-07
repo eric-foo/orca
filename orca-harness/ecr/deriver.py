@@ -12,9 +12,11 @@ from __future__ import annotations
 import re
 
 from ecr.models import (
+    EcrIdentityPosture,
     EcrInspectabilityPosture,
     EcrTimingPosture,
     EcrTimingResidual,
+    IdentityState,
     InspectabilityState,
 )
 from source_capture.models import SourceCapturePacket, VisibleFactStatus
@@ -133,3 +135,68 @@ def derive_inspectability_postures(
                 )
             )
     return postures
+
+
+def _is_specific(value: str) -> bool:
+    """A plain producer string is "specific" when it is non-empty after strip.
+
+    Minimal placeholder discrimination (coin no sentinel list): an empty or
+    whitespace-only value is not a usable identity component.
+    """
+    return bool(value and value.strip())
+
+
+def derive_identity_postures(packet: SourceCapturePacket) -> list[EcrIdentityPosture]:
+    """Derive the SP-1 source-identity posture for the packet.
+
+    Per-packet (identity is a whole-packet fact): returns exactly one
+    ``EcrIdentityPosture`` in a list, for shape-consistency with the per-slice
+    derivers. M2 derived-read with an M3 stop:
+
+    - ``unresolved`` (does not clear) when ``source_family`` is not specific --
+      the M3 stop; the ECR names the limitation and never invents an identity.
+    - ``resolved`` (clears) when ``source_family`` and ``source_surface`` are
+      specific AND ``source_locator`` is KNOWN with a specific value.
+    - ``family_only`` (clears, with a specificity limitation) otherwise -- the
+      family is known but the full specific identity is not.
+
+    Pure: no I/O, no packet mutation, no ``EvidenceUnit`` binding. Binds the real
+    producer fields and coins no producer vocabulary; actor/audience is
+    mark-if-unavailable and does not gate ``resolved``.
+    """
+    family_specific = _is_specific(packet.source_family)
+    surface_specific = _is_specific(packet.source_surface)
+    locator = packet.source_locator
+    locator_specific = (
+        locator.status == VisibleFactStatus.KNOWN
+        and bool(locator.value)
+        and bool(locator.value.strip())
+    )
+
+    if not family_specific:
+        posture = EcrIdentityPosture(
+            packet_id=packet.packet_id,
+            state=IdentityState.UNRESOLVED,
+            clears_identity=False,
+            reason=(
+                "source_family is empty or whitespace-only; source identity is "
+                "not resolved (not invented)."
+            ),
+        )
+    elif surface_specific and locator_specific:
+        posture = EcrIdentityPosture(
+            packet_id=packet.packet_id,
+            state=IdentityState.RESOLVED,
+            clears_identity=True,
+        )
+    else:
+        posture = EcrIdentityPosture(
+            packet_id=packet.packet_id,
+            state=IdentityState.FAMILY_ONLY,
+            clears_identity=True,
+            reason=(
+                "source_family is known but the full specific identity "
+                "(source_surface and/or a specific source_locator) is not resolved."
+            ),
+        )
+    return [posture]
