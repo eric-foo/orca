@@ -25,7 +25,7 @@ stale_if:
 
 ## Status
 
-`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-30 to reflect the discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup; patched 2026-06-01 to add API cost/sequence preference without changing boundary permission; patched 2026-06-02 to link the bounded first-tranche source-access tooling build authorization; patched 2026-06-05 to reflect third-tranche anti-blocking authorization, CloakBrowser-first selection, Reddit pre-commercial ordering, old Reddit HTML preference, and `.json` unreliability.
+`ACCEPTED_SOURCE_ACCESS_METHOD_PLAN_V0` — patched 2026-05-30 to reflect the discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup; patched 2026-06-01 to add API cost/sequence preference without changing boundary permission; patched 2026-06-02 to link the bounded first-tranche source-access tooling build authorization; patched 2026-06-05 to reflect third-tranche anti-blocking authorization, CloakBrowser-first selection, Reddit pre-commercial ordering, old Reddit HTML preference, and `.json` unreliability; patched 2026-06-08 to set exact old Reddit Direct HTTP as the current operator default for supplied thread URLs while retaining CloakBrowser as the primary anti-blocking backend.
 
 Artifact type: Product artifact — method plan and build-scope input.
 Produced: 2026-05-28. Patched: 2026-05-28, 2026-05-30, 2026-06-01, 2026-06-02, and 2026-06-05.
@@ -376,14 +376,22 @@ Note on the archive.org block: the Wayback Machine availability API (`archive.or
 3. **Low-volume bounded capture** — keep capture purpose-bounded by subreddit, theme, query, thread family, or a small monitored thread set; record the bound and method provenance visibly.
 4. **Archive capture** — use archive capture for historical thread posture or when live capture is not necessary or fails visibly.
 
-Do not make the legacy `.json` endpoint trick the primary Reddit capture spine.
-Online spot checks on 2026-06-05 showed Reddit's official help now says clients
-must authenticate with registered OAuth tokens and non-OAuth/login traffic will
-be blocked, while current developer reports describe anonymous `.json` reads
-returning 403/network-security failures. Some third-party posts still claim
-`.json` can work with headers/rate limits, so treat it as an opportunistic
-fallback only when observed in the current environment and recorded in access
-posture.
+Do not make cold legacy `.json` endpoint requests the primary Reddit capture
+spine. Online spot checks on 2026-06-05 showed Reddit's official help now says
+clients must authenticate with registered OAuth tokens and non-OAuth/login
+traffic will be blocked, while current developer reports describe anonymous
+`.json` reads returning 403/network-security failures. Orca's bounded 2026-06-08
+probes saw direct cold `.json`, browser cold `.json`, and CloakBrowser+proxy
+cold `.json` fail with network-security blocks.
+
+The useful pre-commercial JSON shape is different: load the exact old Reddit
+HTML thread first in a no-proxy CloakBrowser context, confirm it is not blocked,
+then fetch the same thread's `.json` URL inside that same browser context. A
+bounded 2026-06-08 probe returned HTTP 200 JSON with this warm same-context
+shape. Treat it as `old_reddit_html_warmup_then_same_context_json`: HTML remains
+the visible provenance/warm-up surface, JSON is the structured extraction body,
+and the unit remains one supplied thread unless a separate bounded runner is
+implemented.
 
 **Recommended method for production:**
 - When Orca goes commercial / enterprise on Reddit, move to the sanctioned commercial / enterprise API or data-licensing path and stop relying on anti-blocking as the primary method.
@@ -569,8 +577,8 @@ These are risk flags, not legal opinions. Real legal counsel is advisable before
 - **API ToS:** Reddit's Developer Terms prohibit large-scale automated access except via the API. The free API tier permits public data access at rate limits appropriate for research. Bulk commercial redistribution likely requires a data license.
 - **Direct scraping:** Reddit's `robots.txt` restricts scrapers. Anti-detect and proxy methods bypass this; under the updated standard this is in-bounds, but litigation risk (Reddit has shown willingness to enforce) is real.
 - **Reputational:** Disclosing "official API with registered credentials" is stronger provenance when sanctioned access is actually available. For current pre-commercial use, the owner has decided that API approval is not a realistic default and anti-blocking capture is the practical bridge.
-- **`.json` posture:** Do not depend on anonymous `.json` endpoints as the spine. Current official guidance requires OAuth/login credentials for Data API traffic, and current developer reports show anonymous `.json` 403 failures. Use `.json` only if it works in the current environment and the packet records that access posture.
-- **Recommendation:** Use CloakBrowser anti-blocking first for bounded pre-commercial Reddit capture, prefer old Reddit HTML where available, keep capture low-volume and subreddit/thematic/thread-family scoped, parse with BeautifulSoup-style tooling only after raw HTML/body preservation, and record method provenance plainly. Move to the official commercial / enterprise API or licensing path when client-paid or commercial use begins. Legal counsel before commercializing content sourced from Reddit at scale.
+- **`.json` posture:** Do not depend on cold anonymous `.json` endpoints as the spine. Current official guidance requires OAuth/login credentials for Data API traffic, and current developer reports plus Orca's 2026-06-08 probes show cold `.json` can fail with 403/network-security blocks. If JSON is used pre-commercially, prefer the observed warm same-context pattern: load the exact old Reddit HTML thread first, then fetch that same thread's `.json` in the same browser context, preserving both bodies and method provenance.
+- **Recommendation:** Use old Reddit Direct HTTP first for supplied exact-thread URLs when current old Reddit HTML is the capture target and the bounded batch runner accepts the URL. Use CloakBrowser anti-blocking for one supplied URL when Direct HTTP is unsuitable, blocked, or browser-visible anti-blocking capture is explicitly needed; CloakBrowser remains the primary anti-blocking backend. Keep capture low-volume and subreddit/thematic/thread-family scoped, parse with BeautifulSoup-style tooling only after raw HTML/body preservation, and record method provenance plainly. Move to the official commercial / enterprise API or licensing path when client-paid or commercial use begins. Legal counsel before commercializing content sourced from Reddit at scale.
 
 ### Teal
 
@@ -612,10 +620,13 @@ bounded first tranche by
 The prior API/admin cost discipline still holds: API use may be in-bounds and
 the Reddit API adapter is build-authorized, but source-controlled approval
 practicality can make the API a poor pre-commercial default. Reddit now has its
-own pre-commercial order: CloakBrowser anti-blocking first, old Reddit HTML
-where available, low-volume bounded capture, then archive capture; commercial/API
-route when client-paid or enterprise use begins. Legacy `.json` endpoints are
-opportunistic, not the capture spine.
+own pre-commercial order: exact old Reddit Direct HTTP first for supplied
+thread URLs when current old Reddit HTML is the capture target; CloakBrowser
+anti-blocking when Direct HTTP is unsuitable or blocked; warm same-context JSON
+enrichment after exact-thread HTML
+loads, low-volume bounded capture, then archive capture; commercial/API route
+when client-paid or enterprise use begins. Cold legacy `.json` endpoints remain
+downgraded and are not the capture spine.
 
 **Reasons to sequence the first tranche first:**
 
@@ -733,12 +744,13 @@ patch_date: 2026-06-01
 patch_reason: API cost/sequence preference added; boundary permission unchanged from discoverable-or-entitled + disclosable standard with materiality-gated provenance cleanup
 patch_2026_06_02_reason: linked bounded first-tranche source-access tooling build authorization
 patch_2026_06_05_reason: aligned to third-tranche anti-blocking authorization, CloakBrowser-first backend selection, and Reddit pre-commercial ordering
+patch_2026_06_08_reason: aligned current operator default to observed exact old Reddit Direct HTTP success while retaining CloakBrowser as primary anti-blocking backend
 phase: bounded source-access tooling build authorized by separate decision
 boundary_standard_applied: yes, to all 11 candidate methods
 methods_out_of_bounds: no-entitlement gate bypass, stolen credentials/cookies, nonconsensual sessions, security exploits, malware, credential stuffing, using obvious cross-account/private/admin spillover once noticed, private/confidential account areas without consent, and methods Orca would refuse to disclose internally
 hard_line_exclusions: narrowed from blanket auth/paywall/private labels to no-entitlement, nonconsensual, exploit-style, obvious-spillover-once-noticed, confidential, internally non-disclosable, or clearly illegal / morally compromising methods
-recommended_for_reddit_pre_commercial: CloakBrowser anti-blocking first once implemented; prefer old Reddit HTML where available; then low-volume bounded capture; then archive capture
-reddit_json_posture: opportunistic fallback only; not primary capture spine
+recommended_for_reddit_pre_commercial: exact old Reddit Direct HTTP first for supplied thread URLs where current old Reddit HTML is the capture target; CloakBrowser anti-blocking when Direct HTTP is unsuitable or blocked; prefer old Reddit HTML where available; then low-volume bounded capture; then archive capture
+reddit_json_posture: warm same-context enrichment after exact old Reddit HTML loads; cold json downgraded; not standalone primary capture spine
 api_preference: APIs remain in-bounds, but manual/subscription/local-first is the pre-sale default; API/admin/tooling requires owner/post-sale/scale/source-specific justification
 build_authorization: FIRST_TRANCHE_GRANTED_BY docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md
 commits_pushes_prs: NOT authorized — docs-write only
