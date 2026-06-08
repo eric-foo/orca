@@ -43,7 +43,7 @@ moves through four stages, in order, staying inside each stage's owner contract:
 | 1. Discover | Find candidate subreddits/threads (rows + provenance only; no bodies) | `orca-harness/runners/run_reddit_candidate_intake_live.py` | `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
 | 2. Select | Build a Graph Frontier Register over candidates and queue a non-executing next-run envelope | `orca-harness/runners/run_reddit_graph_frontier_register.py` | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
 | 3. Capture | Capture exact thread URLs into packets + consolidation (this playbook) | `run_reddit_old_http_batch.py` / `run_reddit_consolidation.py` / `run_reddit_batch_quality_summary.py` | this playbook |
-| 4. Read | Read capture/intake/frontier outputs as an agent (stripped view is the default surface; full JSON for provenance) | `orca-harness/runners/run_reddit_agent_view.py` | `orca-harness/docs/source_capture_agent_runbook.md` (stripped-default rule) |
+| 4. Read | Read the **cleaned view** we prepare (after projection): full content/body kept, only worthless noise removed -- all the data at a fraction of the token cost. Verbatim JSON is provenance only. | `orca-harness/runners/run_reddit_agent_view.py` | `orca-harness/docs/source_capture_agent_runbook.md` (read-surface rule) |
 
 Stages 1–2 are planning/provenance only: they never capture bodies and never
 authorize the next run automatically — each hop needs a fresh bounded run
@@ -68,7 +68,7 @@ have subreddits" becomes "we gather information from them":
    (the separate promotion gate), then use them as the exact-URL list for the
    Capture stage (`--url-list`; see URL List Shape below).
 4. **Gather + read.** Capture and consolidate those threads (Capture stage), then
-   read them via the stripped agent view.
+   read them via the cleaned agent view (full content/body kept, only noise removed).
 
 Candidate URL Intake emits URL rows + provenance only -- it never captures bodies
 and never auto-feeds capture. The thread URLs are the bridge, promotion is the

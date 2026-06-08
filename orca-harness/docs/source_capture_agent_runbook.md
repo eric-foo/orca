@@ -229,25 +229,31 @@ choose the default view, promote candidates, or replace the durable artifact.
 Treat its `needs_agent_or_owner_outputs` status as the next human/agent
 comparison step, not as a pass/fail result.
 
-The current Reddit A/B probe decision is:
+The current Reddit agent read-surface rule is:
 
-- Use `reddit_agent_view_stripped.json` as the default agent-read surface for
-  semantic thread reading, Candidate URL Intake triage, Graph Frontier reasoning,
-  planning-level comparison, and context-efficient reasoning from visible
-  artifact content.
-- Use `reddit_agent_view_full.json` when the task needs packet/source
-  provenance, hashes, raw artifact lineage, score/timestamp state, per-row
-  receipts, method/access details, exact conversation reconstruction,
-  audit/provenance-heavy review, or any decision that could be confused with
-  promotion, validation, source completeness, fixture admission, commercial
-  readiness, Data Capture handoff, ECR, Cleaning, or Judgment.
-- Revise the strip profile before using it as default if it removes substantive
-  user text, visible candidate values, bounds/caps/exclusions, stop reasons,
-  selected frontier decisions, parser warnings that affect interpretation, or
-  non-claims.
+- The agent reads the **cleaned view** we prepare upstream (emitted today as
+  `reddit_agent_view_stripped.json`). Cleaning runs AFTER projection, on the
+  projected artifact, and is **content-lossless**: it preserves all substantive
+  content (thread/post/comment text, visible candidate values, bounds/caps/
+  exclusions, stop reasons, selected frontier decisions, parser warnings that
+  affect interpretation, non-claims) and removes only worthless noise (repeated
+  packet provenance, hashes, paths, generated identifiers, score/timestamp
+  cruft, repeated non-claims). The agent gets all the data at a fraction of the
+  token/context cost. It is not an agent toggle between two surfaces; it is the
+  one view we hand over.
+- The verbatim copy (`reddit_agent_view_full.json`) is **provenance/audit only**
+  -- open it for packet/source provenance, raw artifact lineage, exact
+  reconstruction, or any decision that could be confused with promotion,
+  validation, source completeness, fixture admission, commercial readiness, Data
+  Capture handoff, ECR, Cleaning, or Judgment.
+- Because cleaning is content-lossless, dropping any decision-relevant field is a
+  **bug**, not aggressive cleaning (e.g. the caps/exclusions regression caught
+  this session). Guard the retained fields with regression tests, not this rule
+  alone.
 
-This default is based on a three-case local A/B probe only. It is a read-surface
-operating rule, not validation, readiness, source-completeness proof, canonical
+This rule began as a three-case local A/B probe and is now framed as a
+content-lossless cleaning step for token/context efficiency. It is a read-surface
+operating rule -- not validation, readiness, source-completeness proof, canonical
 evidence replacement, or a claim that byte reduction proves quality.
 
 Do not chain runners unless the operator explicitly asks for multiple packets.
@@ -747,6 +753,45 @@ direction_change_propagation:
     - not source completeness proof
     - not canonical evidence replacement
     - not Data Capture handoff
+```
+
+## Direction Change Propagation - Agent Read Surface Reframed To Content-Lossless Cleaning
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The Reddit agent read-surface rule is reframed: the agent reads a single
+    CLEANED view we prepare upstream (after projection, on the projected
+    artifact), not a stripped-versus-full toggle. Cleaning is content-lossless --
+    it preserves all substantive content and decision-relevant fields and removes
+    only worthless noise (repeated provenance, hashes, paths, generated ids,
+    score/timestamp cruft, repeated non-claims), giving the agent all the data at
+    a fraction of the token/context cost. The verbatim copy is provenance/audit
+    only. Dropping any decision-relevant field is a bug, not cleaning, and is
+    guarded by regression tests rather than this rule alone.
+  trigger: output_authority
+  controlling_sources_updated:
+    - "orca-harness/docs/source_capture_agent_runbook.md"
+    - "docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+  intentionally_not_updated:
+    - path: "orca-harness/source_capture/reddit_agent_view.py"
+      reason: >
+        Code still emits the cleaned view as reddit_agent_view_stripped.json via
+        the _strip_* functions. This reframe changes the read-surface doctrine and
+        docs, not the artifact filenames; a stripped->cleaned code rename is an
+        optional later refactor with reference lock-in, not part of this patch.
+    - path: "AGENTS.md"
+      reason: "Root behavior does not enumerate runner-specific read surfaces."
+  non_claims:
+    - not validation
+    - not readiness
+    - not a code rename
+    - not source completeness proof
+    - not canonical evidence replacement
 ```
 
 ## Direction Change Propagation - Archive Timestamp And Posture Reporting
