@@ -1,9 +1,9 @@
-# Data Capture Spine Consolidation Map v0
+# Data Capture Spine Repo Submap v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Workflow navigation artifact (Data Capture Spine consolidation map / orientation submap)
-scope: Single entry point that orients a reader across Data Capture Spine, Source Capture Armory, source-access authority, source-quality support, and harness implementation surfaces. Map only; not source-of-truth.
+artifact_role: Workflow navigation artifact (Data Capture Spine repo submap)
+scope: Single repo submap that orients a reader across Data Capture Spine, Source Capture Armory, source-access authority, source-quality support, and harness implementation surfaces. Map only; not source-of-truth.
 use_when:
   - Orienting to Data Capture Spine or Source Capture Armory before source-access, packet, runner, source-quality, or capture-lane work.
   - Finding which owner doc owns a capture area, source-access method, armory component, packet lifecycle, or implementation surface.
@@ -17,11 +17,16 @@ stale_if:
   - The source-access tooling authorization changes build tranches, selected backend, or Reddit ordering.
   - The Source Capture Armory README changes component status, runner set, or gap list.
   - The Data Capture obligation contract changes capture obligations or forbidden outputs.
+  - The Candidate URL Intake parent contract changes candidate locator rows, run envelopes, promotion gates, caps, or traversal stops.
+  - The Reddit Candidate URL Intake default-policy decision changes caps, candidate-surface defaults, outbound policy, monitoring posture, promotion ownership, or implementation-scoping gates.
+  - The Reddit Candidate URL Intake contract changes candidate-row outputs, promotion gates, or broad-crawling stops.
+  - The Reddit Graph Frontier Lane changes hop gates, register fields, same-run traversal boundary, semantic/frontier ownership, or implementation-scoping boundary.
+  - The LinkedIn Lane changes optional POC-risk mode, people/business candidate fields, bounded-watch posture, promotion gates, or Outreach Lane separation.
   - Source Capture Packet lifecycle, retention, or fixture-admission rules move to a new owner.
   - Data Capture operating-model, obligation-baseline, lane-thesis, or commissioning-plan ownership moves.
 ```
 
-> **What this is.** A retrieval map. It tells a cold reader which owner source
+> **What this is.** A retrieval-only repo submap. It tells a cold reader which owner source
 > to open for a Data Capture / Source Capture Armory question. It is the map, not
 > the authority: on any conflict, the pointed-to owner source wins.
 >
@@ -38,12 +43,22 @@ stale_if:
 | Check source-access boundary / hard stops | `docs/product/data_capture_source_access_boundary_decision_v0.md` |
 | Compare source-access methods and Reddit ordering | `docs/product/data_capture_source_access_method_plan_v0.md` |
 | Check operating-model / commissioning-plan authority | `docs/product/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`, then `docs/product/data_capture_harness_operating_model_architecture_v2.md` or `docs/product/data_capture_spine_pressure_test_commissioning_plan_v0.md` as needed |
+| Check generic Candidate URL Intake boundaries | `docs/product/data_capture_spine_candidate_url_intake_contract_v0.md` |
+| Check bounded Reddit candidate URL intake / crawler boundaries | `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
+| Check accepted Reddit graph/frontier scouting boundaries | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
+| Check bounded Reddit candidate URL intake default policy | `docs/decisions/data_capture_spine_reddit_candidate_url_intake_default_policy_decision_v0.md` |
+| Check LinkedIn Lane discovery, bounded watch, people/business candidate boundaries, and optional POC-risk mode | `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md` |
+| Handle old Reddit search/listing HTML for Candidate URL Intake pilots | `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md` |
 | Plan bounded pre-commercial Reddit capture/consolidation | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` |
+| Check Reddit capture/consolidation success-signal hardening rationale | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
 | Check Capture obligations / forbidden outputs | `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
 | Check packet lifecycle, retention, sensitivity, or fixture movement | `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` |
 | Run existing capture tools safely | `orca-harness/docs/source_capture_agent_runbook.md` |
 | Author a new adapter against existing conventions | `orca-harness/docs/adapter_author_contract.md` |
 | Inspect actual implemented adapters/runners | `orca-harness/source_capture/` and `orca-harness/runners/` |
+| Inspect bounded live Reddit Candidate URL Intake runner | `orca-harness/runners/run_reddit_candidate_intake_live.py` and `orca-harness/tests/unit/test_reddit_candidate_intake_live_runner.py` |
+| Inspect Reddit Graph Frontier / crawling graph local support | `orca-harness/capture_spine/reddit_graph_frontier/`, `orca-harness/runners/run_reddit_graph_frontier_register.py`, `orca-harness/tests/unit/test_reddit_graph_frontier.py`, `orca-harness/tests/unit/test_reddit_graph_frontier_runner.py`, and `orca-harness/tests/contract/test_reddit_graph_frontier_contract.py` |
+| Inspect CloakBrowser anonymous v0 adapter/runner | `orca-harness/source_capture/adapters/cloakbrowser_snapshot.py`, `orca-harness/runners/run_source_capture_cloakbrowser_packet.py`, and `orca-harness/tests/unit/test_source_capture_cloakbrowser_snapshot.py` |
 | Check source-quality pass/report conventions | `docs/product/source_capture_toolbox/source_quality_mini_god_tier_profile_v0.md` and `docs/product/source_capture_toolbox/source_quality_source_unit_queue_template_v0.md` |
 | Assemble existing source-quality rows and packet state | `docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md` |
 
@@ -54,19 +69,89 @@ stale_if:
 - **Build authority is bounded.** The source-access tooling authorization owns
   first/second/third-tranche build scope. It now selects CloakBrowser as the
   primary anti-blocking backend.
-- **Reddit pre-commercial route is source-specific.** Use CloakBrowser
-  anti-blocking first once implemented, prefer old Reddit HTML where available,
-  keep capture low-volume and subreddit/thematic/thread-family bounded, then use
-  archive capture where live capture is unnecessary or fails visibly.
+- **Reddit pre-commercial route is source-specific.** Use the implemented
+  anonymous CloakBrowser Snapshot runner for one supplied old Reddit/thread URL
+  when anti-blocking browser capture is needed, prefer old Reddit HTML where
+  available, keep capture low-volume and subreddit/thematic/thread-family
+  bounded, then use archive capture where live capture is unnecessary or fails
+  visibly.
+- **CloakBrowser anonymous v0 is implemented.**
+  `orca-harness/source_capture/adapters/cloakbrowser_snapshot.py` and
+  `orca-harness/runners/run_source_capture_cloakbrowser_packet.py` preserve
+  rendered DOM, visible text, a viewport screenshot, and method-provenance
+  metadata for one supplied URL. This is not Reddit discovery/consolidation,
+  parser execution, proxy/session behavior, storage, production runtime, or
+  commercial use.
 - **Reddit consolidation now has a planning thread.**
   `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md`
   is the durable architectural planning artifact for packet-before-parser
   handoff, BeautifulSoup parser role, provenance-first consolidation shape, and
-  implementation stop lines.
-- **Reddit `.json` is not the spine.** Treat anonymous `.json` endpoints as
-  opportunistic fallback only; current official guidance and developer reports
-  indicate OAuth/login credentials are expected and anonymous `.json` access can
-  fail with 403/network-security blocks.
+  implementation stop lines. It now carries Decision-Frame-or-candidate
+  classification, non-promoting success tiers, Armory vocabulary reuse,
+  packet-contamination stops, no source-discovery expansion, and the current
+  candidate-intake destination gap.
+- **Reddit Candidate URL Intake is separate from Armory capture.**
+  `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
+  specializes the parent Candidate URL Intake contract for the operator-facing
+  Reddit "crawler" under Capture Spine. It emits candidate
+  subreddit/thread/outbound URL rows with provenance only. It does not capture
+  bodies/comments/profiles, emit Source Capture Packets, invoke Armory by
+  default, auto-promote URLs into capture units, or authorize broad crawling.
+  The bounded live first-contact runner
+  `orca-harness/runners/run_reddit_candidate_intake_live.py` may fetch one
+  declared source URL under a run envelope and live-access authorization, then
+  persist only candidate rows, provenance, and a live-run receipt. For promoted
+  Reddit capture, the lane records the existing
+  source-backed posture: old Reddit first, CloakBrowser as the approved primary
+  anti-blocking route, and residential or rotating proxies not blanket stop
+  conditions in the pre-commercial/free anti-blocking posture. That is
+  downstream access context, not Armory execution in intake.
+- **Reddit Graph Frontier Lane is accepted as a separate bounded planning lane.**
+  `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
+  owns the Graph Frontier Register shape. It may use a semantic/frontier agent
+  to choose the next candidate seed and prepare the next bounded run, but every
+  hop needs a new `run_id`, caps, exclusions, access mode, source-policy
+  posture, and stop condition. It is not same-run traversal,
+  Graph Frontier-owned live Reddit fetch, automatic capture, broad crawling,
+  Source Capture, Data Capture, storage, scheduler, dashboard, or production
+  runtime. Local register support exists under
+  `orca-harness/capture_spine/reddit_graph_frontier/` for building a register
+  from existing candidate output and preparing a next-run envelope with
+  `execution_authorized: false`. Live first-contact fetch belongs to the
+  Candidate URL Intake runner, not to the register. The operator-facing
+  "crawling graph" runner
+  `orca-harness/runners/run_reddit_graph_frontier_register.py` writes the
+  register and optional non-executing next-run envelope from an existing
+  Candidate URL Intake artifact.
+- **LinkedIn Lane discovery planning is accepted as a bounded planning lane.**
+  `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
+  owns the LinkedIn Lane boundary for candidate businesses, organizations,
+  senior decision makers, public professional actors, creators, and influential
+  people. It treats supervised browser-assist as green for Orca personal /
+  pre-commercial POC only when tagged `optional_poc_risk_mode`, bounded,
+  operator-supervised, provenance-recorded, non-commercial, and minimized; under
+  that mode it may use anti-blocking techniques (anti-detect/cloaked browser,
+  residential/rotating proxies, in-browser JS-challenge handling) to reach
+  discoverable or entitled surfaces, consistent with the unchanged source-access
+  boundary. The lane emits candidate rows, Graph Frontier planning structure, and
+  promotion receipts only; it does not authorize live LinkedIn runners,
+  autonomous scraping, no-entitlement gate bypass to non-entitled data, contact
+  harvesting, lead-list creation, follower/connection/commenter graph capture,
+  profile body harvesting, Source Capture Packets, Data Capture handoff, storage,
+  scheduler, dashboard, production runtime, commercial use, or Outreach Lane
+  execution.
+- **Reddit success-signal routing is preserved.**
+  `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md`
+  records the advisory architecture rationale for the success-signal patch and
+  is not itself validation, readiness, capture authorization, storage
+  authorization, source-quality scoring, ECR, Cleaning, Judgment, or commercial
+  Reddit authority.
+- **Reddit cold `.json` is not the spine.** Treat cold anonymous `.json`
+  endpoints as downgraded; current official guidance, developer reports, and
+  Orca's 2026-06-08 bounded probes indicate cold `.json` access can fail with
+  403/network-security blocks. The useful JSON path is warm same-context JSON:
+  load the exact old Reddit HTML thread first, then fetch the same thread's
+  `.json` in that same browser context, preserving both bodies and provenance.
 - **BeautifulSoup is parser-only.** It can parse retrieved old Reddit HTML or
   archived HTML after preservation; it does not fetch, bypass blocking, solve JS,
   or replace packet provenance.
@@ -113,13 +198,97 @@ stale_if:
   `docs/product/data_capture_spine_lane_product_thesis_v0.md`,
   `docs/product/data_capture_spine_pressure_test_commissioning_plan_v0.md`
 
+### Candidate URL Intake
+
+- summary: Generic Capture Spine parent contract for bounded candidate locator
+  intake before promotion: run envelopes, candidate locator rows, outbound
+  locator rows, provenance receipts, cap/coverage semantics, no-same-run
+  traversal, subagent boundaries, promotion gates, and explicit non-outputs.
+  It is not Source Capture Armory, Data Capture handoff, ECR, Cleaning,
+  Judgment, fixture admission, source-quality scoring, or implementation
+  authorization.
+- owner: `docs/product/data_capture_spine_candidate_url_intake_contract_v0.md`
+
 ### Reddit pre-commercial planning thread
 
 - summary: Architectural planning route for bounded Reddit capture and
-  consolidation: CloakBrowser-first old Reddit HTML, packet-before-parser
-  handoff, provenance-first consolidation fields, archive fallback, `.json`
-  fallback posture, and implementation stop lines.
+  consolidation: exact old Reddit Direct HTTP first for supplied thread URLs
+  when current old Reddit HTML is the capture target, CloakBrowser
+  anti-blocking when Direct HTTP is unsuitable or blocked, packet-before-parser
+  handoff, provenance-first consolidation fields, Decision-Frame-or-candidate
+  classification, non-promoting success tiers, Armory vocabulary reuse, archive
+  fallback, `.json` fallback posture, and implementation stop lines.
 - owner: `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md`
+
+### Reddit Candidate URL Intake
+
+- summary: Capture Spine candidate-intake contract for the operator-facing
+  bounded Reddit "crawler": candidate subreddit/thread/outbound URL rows plus
+  provenance only, declared-and-capped related-surface candidate discovery
+  without same-run traversal, CloakBrowser as approved primary downstream
+  anti-blocking route, proxies not blanket stop conditions for pre-commercial
+  capture, bounded live first-contact intake under a run envelope, no
+  body/comment/profile capture, no Source Capture Packet
+  output, and no automatic Data Capture handoff.
+- owner: `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
+
+### Reddit Graph Frontier Lane
+
+- summary: Accepted bounded graph/frontier scouting lane downstream of Reddit
+  Candidate URL Intake. It writes a Graph Frontier Register of candidate nodes,
+  edges, prior pointers, source surfaces, caps, source-policy posture, stop
+  reasons, and non-claims; semantic/frontier selection may choose the next seed
+  only by preparing a fresh bounded run. It does not authorize same-run
+  traversal, Graph Frontier-owned live Reddit fetch, automatic capture, Source Capture Packets, Data
+  Capture handoff, broad crawling, storage, scheduler, dashboard, production
+  runtime, source-quality scoring, ECR, Cleaning, Judgment, fixture admission, or
+  commercial use. Operator-facing nickname: "crawling graph."
+- owner: `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
+
+### LinkedIn Lane Discovery Planning
+
+- summary: Bounded LinkedIn-adjacent discovery and candidate-frontier lane for
+  businesses, organizations, senior decision makers, public professional actors,
+  creators, and influential people. It records candidate rows, provenance,
+  visible influence numbers, privacy/minimization flags, bounded-watch posture,
+  optional POC-risk mode guardrails, Graph Frontier planning structure, and
+  promotion requirements. It does not authorize LinkedIn scraping, no-entitlement
+  gate bypass to non-entitled data, contact harvesting, lead lists,
+  follower/connection/commenter graph capture, profile
+  body harvesting, Source Capture Packets, Data Capture handoff, Outreach Lane
+  execution, storage, scheduler, dashboard, production runtime, or commercial
+  use.
+- owner: `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
+
+### Reddit Candidate URL Intake Defaults
+
+- summary: Recommended source-family default policy for bounded Reddit Candidate
+  URL Intake: caps by `probe`, `working_batch`, and `high_recall_pass`;
+  default-on/default-off candidate surfaces; outbound-link opt-in; monitored
+  scopes default-off before a Decision Frame; continuation/widening rules;
+  operator-owned promotion receipt; listing-provenance defaults; old-Reddit-
+  first URL posture; downstream CloakBrowser/proxy setup not repeated in this
+  lane; and bounded live runner scoping under a per-run envelope after owner
+  acceptance. Pending owner acceptance; not validation, runtime authorization,
+  Source Capture Packet output, or broad implementation execution.
+- owner: `docs/decisions/data_capture_spine_reddit_candidate_url_intake_default_policy_decision_v0.md`
+
+### Reddit Candidate URL Intake Search-Surface Handling
+
+- summary: Lane-side handling note for no-live operator-supplied old Reddit
+  search/listing HTML pilots. Records the `search-title` title-anchor rule,
+  empty-result sanity checks, the difference between operator browser access and
+  Candidate URL Intake access, and the separate candidate-subreddit discovery
+  success signal for recommended/correlated subreddits with visible volume.
+- owner: `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md`
+
+### Reddit success-signal routing object
+
+- summary: Advisory routing object explaining the Reddit success-signal
+  hardening structure, including the candidate/scouting handoff gap and the
+  reason the planning thread reuses existing Armory vocabulary instead of
+  creating a Reddit-local ladder.
+- owner: `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md`
 
 ### Source Capture Armory
 
@@ -137,6 +306,18 @@ stale_if:
 
 - summary: Current runnable packet writers, adapters, runner docs, and tests.
   Implementation reality must be checked in code; docs may be ahead of runners.
+  Capture Spine local support includes Reddit Candidate URL Intake and Reddit
+  Graph Frontier register/receipt helpers under `orca-harness/capture_spine/`,
+  plus the bounded live Candidate URL Intake runner under
+  `orca-harness/runners/run_reddit_candidate_intake_live.py` and the Graph
+  Frontier register runner under
+  `orca-harness/runners/run_reddit_graph_frontier_register.py`; these are not
+  source-capture packet runners, Source Capture Armory execution, storage,
+  scheduler, dashboard, or production runtime.
+  CloakBrowser anonymous non-persistent v0 has a live engine and packet runner
+  for one explicitly supplied URL; proxy/session behavior, Reddit
+  discovery/consolidation, storage, production runtime, and commercial use are
+  not implemented by that runner.
 - owners: `orca-harness/docs/source_capture_agent_runbook.md`,
   `orca-harness/docs/adapter_author_contract.md`, `orca-harness/source_capture/`,
   `orca-harness/runners/`
@@ -194,7 +375,7 @@ direction_change_propagation:
     - path: "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
       reason: "Capture obligations and forbidden outputs did not change."
     - path: "orca-harness/docs/source_capture_agent_runbook.md"
-      reason: "The runbook already states CloakBrowser anti-blocking is authorized but not implemented in current runners; this map adds navigation, not runnable commands."
+      reason: "Historical note from the prior map patch; superseded by the later anonymous CloakBrowser v0 implementation and runbook update."
     - path: "orca-harness/docs/adapter_author_contract.md"
       reason: "Adapter author conventions already mention the selected CloakBrowser route; this map does not change adapter implementation conventions."
   stale_language_search: "rg -n \"Judgment Spine entry map|Data Capture Spine entry map|data_capture_spine_consolidation_map|Reddit official API.*cleanest|human-led/browser-visible capture by default pre-sale|anonymous `.json`.*primary|BeautifulSoup.*access method|old Reddit\" docs/workflows/orca_repo_map_v0.md .agents/workflow-overlay/source-loading.md .agents/workflow-overlay/source-of-truth.md docs/workflows/data_capture_spine_consolidation_map_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/data_capture_source_access_method_plan_v0.md docs/product/source_capture_toolbox/README.md"
@@ -209,4 +390,38 @@ direction_change_propagation:
     - "not Reddit live-run authorization"
     - "not commercial fetch, broad crawling, storage, dashboard, deployment, or production-runtime authorization"
     - "not ECR, Cleaning, or Judgment design"
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The Data Capture submap now routes to the accepted LinkedIn Lane discovery-planning architecture, including optional_poc_risk_mode for supervised personal/pre-commercial POC browser-assist and the separation of future Outreach Lane contact/lead handling."
+  trigger: workflow_authority
+  related_triggers:
+    - architecture_doctrine
+    - product_doctrine
+    - output_authority
+  controlling_sources_updated:
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+    - "docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md"
+    - "docs/product/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/README.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - ".agents/workflow-overlay/artifact-folders.md"
+    - "docs/product/data_capture_spine_candidate_url_intake_contract_v0.md"
+    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
+  intentionally_not_updated:
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "The top-level repo map already routes Data Capture detail through this submap; adding LinkedIn Lane details there would duplicate the submap."
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "LinkedIn Lane discovery is upstream of Source Capture Armory and does not emit Source Capture Packets."
+  stale_language_search: "rg -n \"LinkedIn Lane|optional_poc_risk_mode|POC-risk|browser-assist|lead-list|contact harvesting|follower/connection\" docs/workflows/data_capture_spine_consolidation_map_v0.md docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md docs/product/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md"
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not legal sufficiency"
+    - "not live LinkedIn authorization"
+    - "not Outreach Lane authorization"
+    - "not commercial authorization"
 ```
