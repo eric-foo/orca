@@ -294,7 +294,7 @@ The owner has **ratified the JSG-01 source-side ECR field schema**, completing t
 - **SP-1 `source_identity_state`** — M2 derived-read; clears on `{resolved, family_only}`.
 - **SP-2 `inspectability_state`** — M2 over an M1-carried `PreservedFile.{sha256, hash_basis}` anchor; clears only on `inspectable_verifiable`.
 - **SP-3 timing/cutoff** — **M1 carried-by-reference** over the producer's already-closed `PacketTiming.cutoff_posture` (NOT a coined parallel field); clears only on `pre_cutoff`.
-- **SP-6 `source_visibility_posture`** — the ratified derivation contract.
+- **SP-6 `source_visibility_posture`** — the ratified derivation contract. *(Archive-date class `D`-source amended post-ratification — binds to `cutoff_posture`-as-class; see Direction Change Propagation → SP-6 D-source amendment.)*
 
 **Design basis (committed with this ratification):** `ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md` (`50DDE207…`) + `ecr_consolidation_v0_sp1_sp2_sp3_source_side_slice_plan_v0.md` (`12799649…`, cross-family reviewed `accept_with_friction`, AR-01 adjudicated-accepted) + the two cross-family review reports (`57AB20A3…`, `3F2C3B44…`). Producer fields bound: R2 (closed posture vocabularies + `PreservedFile.hash_basis`) committed at `102a171`.
 
@@ -468,6 +468,36 @@ direction_change_propagation:
     - "not the full ECR/Evidence Unit field architecture or the canonical object name"
     - "not JSG-01 unfreeze (JSG-01 stays FROZEN)"
     - "not validation, readiness, materiality, or a buyer-grade claim"
+```
+
+### ECR consolidation v0 — SP-6 D-source amendment (cutoff_posture binding)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "SP-6's archive-date class D binds to the archive slice's cutoff_posture, consumed as a closed pre/post CLASS (never converted to a timestamp -- AR-03 honored), gated on an archive snapshot body present. This SUPERSEDES the design-basis rule 'D ... never cutoff_posture' (frame doc 2.3) FOR THIS BINDING ONLY. The metadata-file I/O path is dropped: the producer does not persist the cutoff (select_snapshot applies it client-side and discards it), so the ratified timestamp-comparison D-source is unimplementable; cutoff_posture is the producer's contracted pre/post class, backed by select_snapshot's at-or-before guarantee. SP-6 is therefore a pure no-I/O deriver over SourceCapturePacket. The ratified SP-6 field, its 8-value/6-residual vocabulary, and the decision-C clears grade are UNCHANGED; corroborated/diverged still residualize (D2/M absent); JSG-01 stays FROZEN."
+  trigger: architecture_doctrine
+  related: lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md"
+  evidence:
+    - "orca-harness/source_capture/adapters/archive_org.py:156-160 -- select_snapshot applies the cutoff as an in-memory `<= cutoff` filter and discards it; :122-126 -- the CDX request URL carries no cutoff param."
+    - "orca-harness/runners/run_source_capture_archive_packet.py:223-232 -- _availability_metadata writes no cutoff field; :268-270 -- the comment claiming the cutoff is 'preserved in the archive availability metadata' is inaccurate."
+    - "select_snapshot returns max(snapshot.timestamp <= cutoff_timestamp), so a selected archive body under cutoff_posture=pre_cutoff is genuinely at-or-before the cutoff for runner packets."
+  residual:
+    - "cutoff_posture can be operator-set (run_source_capture_archive_packet.py:122) -- a producer attestation, the same trust SP-3 already carries by M1-reading this field. mixed/unknown/non-KNOWN -> RESIDUAL_ARCHIVE_DATE_UNKNOWN; never invented."
+  superseded:
+    - path: "docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md"
+      what: "the 2.3 D-input rule 'never cutoff_posture' (metadata-timestamp D-source); superseded for SP-6's D-binding only. Advisory, SHA-pinned design basis -- superseded from this ratified home, not rewritten."
+  downstream_surfaces_checked:
+    - "docs/product/jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md (untracked SP-6 plan working artifact; same supersession; re-courier not edit while frozen)"
+    - "the ratified SP-6 declaration above (field/vocabulary/grade unchanged; D-source pointer added)"
+  intentionally_not_updated:
+    - path: "docs/product/judgment_quality_promotion_operating_model_v0.md"
+      reason: "JSG-01 conductor is FROZEN; the SP-6 subpredicate it names is unchanged; this amends the source-side deriver's input binding only."
+  non_claims:
+    - "not the SP-6 deriver (implementation, post-amendment); records the contract amendment only"
+    - "not JSG-01 unfreeze, readiness, or validation"
+    - "not D2 / the corroborated tier (still deferred)"
 ```
 
 ## Non-Claims
