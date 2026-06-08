@@ -9,6 +9,7 @@ Thumbs.db
 .env.*
 !.env.example
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 .codex/
 
 # Keep docs-first workspace clean until implementation is authorized
@@ -21,6 +22,7 @@ build/
 orca-harness/_test_runs/
 orca-harness/_auth_state/
 orca-harness/_reddit_credentials/
+orca-harness/_proxy_profiles/
 orca-harness/pytest_tmp/
 orca-harness/pytest_tmp_*/
 orca-harness/pytest_*_tmp/
@@ -31,3 +33,7 @@ orca-harness/reports/source_observability/*_dry_run.json
 orca-harness/reports/source_capture/
 orca-harness/cases/*/*/scores/
 orca-harness/memory/logs/
+
+# Disposable workflow scratch (precompact checkpoints, operator/subagent inbox)
+docs/hygiene/precompact_*
+docs/_inbox/
