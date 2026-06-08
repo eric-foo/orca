@@ -8,23 +8,26 @@ description: >-
   you want it prepared to a consistent, source-backed, owner-sign-off-ready
   standard. It PREPARES a decision for the owner; it does not freeze decisions,
   run outreach, produce memos or decks, build anything, or make
-  readiness / willingness-to-pay claims. Orca-local CANDIDATE skill, not yet
-  accepted; defers every Orca fact, folder, gate, role, and non-claim to
-  AGENTS.md and .agents/workflow-overlay/. Distinct from the jb-scoped
+  readiness / willingness-to-pay claims. Orca-local skill, ACCEPTED (frozen)
+  2026-06-08 — local only, not deployed or activated; defers every Orca fact,
+  folder, gate, role, and non-claim to AGENTS.md and .agents/workflow-overlay/. Distinct from the jb-scoped
   `product-lead` skill — invoke this one explicitly for Orca.
 ---
 
-# orca-product-lead (Orca-local candidate)
+# orca-product-lead (Orca-local, accepted)
 
 A distilled, all-encompassing product-lead method for Orca. It is a thin
 **router into Orca's own product authority**, not a new authority. When a
 section says "see X," open X — do not rely on this file's paraphrase for a
 frozen decision.
 
-## Candidate status and boundary
+## Status and boundary
 
-- Status: **Orca-local CANDIDATE, UNACCEPTED.** Not deployed, not activated, not
-  resolver-proven. It carries no Orca authority and decides nothing on its own.
+- Status: **Orca-local, ACCEPTED (frozen) 2026-06-08.** Still local — NOT
+  deployed, NOT activated, NOT resolver-proven; acceptance is a local freeze, not
+  deployment. Deploying or activating it into a resolver-visible skill root is a
+  separate skill-governance action (Protected Skill Boundary), not done here. It
+  carries no Orca authority and decides nothing on its own.
 - It defers all Orca facts, folders, validation gates, artifact roles, output
   contracts, and non-claims to `AGENTS.md` and `.agents/workflow-overlay/`. If
   required authority is missing or stale, **fail visibly** — do not invent it.
@@ -58,8 +61,15 @@ needs its own explicit owner authorization.
 3. Controlling product sources, opened as the decision needs them:
    - `docs/decisions/turn_08_product_thesis_v0.md` — thesis and value proposition.
    - `docs/product/orca_offer_hypothesis_v0.md` — provisional-lock offer.
-   - `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` — current
-     first-proof wedge (selected, **not** a permanent ICP lock).
+   - `docs/decisions/orca_icp_wedge_pricing_first_v0.md` — **current** first-proof
+     wedge authority: pricing-first / outside-in competitive & market intelligence
+     engine; AI-monetization beachhead (B2B SaaS making a first-time AI-monetization
+     or competitor-triggered repricing/repackaging decision, cross-sector-open frame;
+     dev-facing SaaS is a sub-instance, not the defining qualifier). Selected,
+     **not** a permanent ICP lock; direction chosen, decide-vs-confirm test pending.
+   - `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` — **superseded**
+     (wedge authority transferred to `orca_icp_wedge_pricing_first_v0.md` above);
+     retain for historical candidate-wedge comparison only; do not treat as current.
    - `docs/product/orca_product_proof_lead_charter_v0.md` — proof-lead ownership
      and exclusions.
    - `docs/product/orca_buyer_proof_packet_v0.md` — proof standard, qualification,
@@ -104,8 +114,8 @@ needs its own explicit owner authorization.
 
 ## Guardrails — what must not become skill behavior
 
-- Do not auto-lock the SaaS/API wedge (or any wedge) as Orca's permanent ICP; it
-  is a revisable first-proof selection.
+- Do not auto-lock the AI-monetization wedge (or any wedge) as Orca's permanent
+  ICP; it is a revisable first-proof selection; the decide-vs-confirm test is pending.
 - Do not treat candidate-context scans as qualified buyers.
 - Do not turn deck-first framing into deck production.
 - Do not launch outreach, public research, memo / deck production, commercial-
@@ -157,10 +167,11 @@ courier state only when useful.
   retrieval-metadata, plus the product corpus above.
 - Rollback path: delete `.agents/skills/orca-product-lead/`; no edits to
   plugin / user-level / installed / external skill source.
-- Validation notes: UNACCEPTED candidate; resolver auto-trigger not proven in
-  this thread; activation / deployment into any skill root is a separate
-  skill-governance action under the Protected Skill Boundary and is NOT done
-  here. Registering this candidate in `skill-adoption.md` and adding
-  `.agents/skills/` to `artifact-folders.md` is deferred to acceptance;
-  `skill-adoption.md` is currently modified by another lane and was deliberately
-  left untouched to avoid clobbering in-flight edits.
+- Validation notes: ACCEPTED (frozen) 2026-06-08 and registered in
+  `.agents/workflow-overlay/skill-adoption.md` (Accepted Orca-Local Candidate
+  Skills), with `.agents/skills/` added to
+  `.agents/workflow-overlay/artifact-folders.md` and the accepted source sha256
+  pinned in skill-adoption. Acceptance is a LOCAL FREEZE only: resolver
+  auto-trigger is not proven in this thread, and activation / deployment into any
+  resolver-visible skill root remains a separate skill-governance action under
+  the Protected Skill Boundary, NOT done here.
