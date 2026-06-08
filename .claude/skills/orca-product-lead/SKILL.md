@@ -1,17 +1,6 @@
 ---
 name: orca-product-lead
-description: >-
-  Orca product-lead reasoning for ANY Orca product decision — value
-  proposition, offer hypothesis, ICP / first-proof wedge, buyer-proof design,
-  positioning and packaging framing, deliverable shape, and pull / kill /
-  graduation calls. Use when making or reviewing an Orca product decision and
-  you want it prepared to a consistent, source-backed, owner-sign-off-ready
-  standard. It PREPARES a decision for the owner; it does not freeze decisions,
-  run outreach, produce memos or decks, build anything, or make
-  readiness / willingness-to-pay claims. Orca-local skill, ACCEPTED (frozen)
-  2026-06-08 — local only, not deployed or activated; defers every Orca fact,
-  folder, gate, role, and non-claim to AGENTS.md and .agents/workflow-overlay/. Distinct from the jb-scoped
-  `product-lead` skill — invoke this one explicitly for Orca.
+description: "Orca product-lead reasoning for any Orca product decision - value prop, offer, ICP/wedge, buyer-proof, positioning, packaging, pull/kill/graduation. Prepares the decision for owner sign-off."
 ---
 
 # orca-product-lead (Orca-local, accepted)

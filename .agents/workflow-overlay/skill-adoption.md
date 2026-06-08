@@ -146,10 +146,10 @@ skill-governance action under the Protected Skill Boundary.
 
 - `orca-product-lead` — accepted/frozen 2026-06-08.
   - Source path: `.agents/skills/orca-product-lead/SKILL.md` (Orca-local).
-  - Source sha256: `42EF7C2DCE667CFA09EA6F3F8CE369C7F55D7721D131692CB06C11152E908BB5`
-    (working-tree bytes; updated at deployment 2026-06-08 when the status text was
-    added; supersedes the at-acceptance hash 2B011CE8; reread-required if the file
-    changes).
+  - Source sha256: `368ED9AC08F27A640777BDBB643779DD43D71D5D4E4DD2A3EDDA61FEA0C7BA47`
+    (working-tree bytes; updated 2026-06-08 when the frontmatter description was
+    shortened to fix Claude Code slash-command registration; supersedes 42EF7C2D
+    and the at-acceptance hash 2B011CE8; reread-required if the file changes).
   - Scope: prepares — does not freeze, run outreach, produce, or build — any Orca
     product decision (value proposition, offer, ICP / first-proof wedge,
     buyer-proof design, positioning / packaging, deliverable shape, pull / kill /
