@@ -119,7 +119,8 @@ Required first read:
 - `.agents/workflow-overlay/artifact-folders.md`
 - `.agents/workflow-overlay/artifact-roles.md`
 - `.agents/workflow-overlay/validation-gates.md`
-- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md`
+- `docs/decisions/orca_icp_wedge_pricing_first_v0.md` (CURRENT ICP wedge authority — pricing-first / AI-monetization beachhead / competitive-intelligence engine)
+- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` (SUPERSEDED — reread-required; current authority is `docs/decisions/orca_icp_wedge_pricing_first_v0.md`)
 - `docs/product/orca_product_proof_lead_charter_v0.md`
 - `docs/product/orca_buyer_proof_packet_v0.md`
 
@@ -229,7 +230,7 @@ Disqualify or hold before memo production if any apply:
 - Decision outside pricing, packaging, API, billing, usage, add-on, or monetization.
 - AI exposure, `venture-backed`, `AI-native`, or `AI-adjacent` status is the only qualification basis.
 - Standalone trust, competitive-positioning, agent-workflow, or AI cost-structure question does not resolve into a first-wedge decision family.
-- No meaningful public signal surface.
+- No clean, decision-grade public substrate: no competitor price/packaging signal (pricing pages, changelogs, filings, earnings) sufficient to support a differentiated memo; user reviews alone do not satisfy this gate (biased / FTC-polluted / interview-gated; reviews are confirmatory-only).
 - Only curiosity or generic research interest.
 - Categorical public-signal refusal: buyer says public-signal evidence cannot affect this decision regardless of evidence quality, explanation, examples, numbers, case logic, proof memo, or decision artifact.
 - Requires private data before a public-signal decision artifact could matter.

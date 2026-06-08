@@ -13,7 +13,8 @@ open_next:
   - docs/decisions/turn_08_product_thesis_v0.md
   - docs/product/core_spine_v0_product_contract.md
   - docs/product/core_spine_v0_information_production_foundation_v0.md
-  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
+  - docs/decisions/orca_icp_wedge_pricing_first_v0.md  # current wedge authority (supersedes orca_product_lead_first_icp_wedge_decision_v0.md below)
+  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md  # superseded — reread-required; see pricing-first record above
   - docs/product/orca_buyer_proof_packet_v0.md
   - docs/product/orca_product_proof_lead_charter_v0.md
   - docs/review-outputs/adversarial-artifact-reviews/orca_offer_hypothesis_v0_narrow_adversarial_review.md
@@ -113,7 +114,8 @@ Controlling Orca sources:
 - `docs/decisions/turn_08_product_thesis_v0.md`
 - `docs/product/core_spine_v0_product_contract.md`
 - `docs/product/core_spine_v0_information_production_foundation_v0.md`
-- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md`
+- `docs/decisions/orca_icp_wedge_pricing_first_v0.md` — current wedge authority
+- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` — superseded by pricing-first record above; reread-required
 - `docs/product/orca_buyer_proof_packet_v0.md`
 - `docs/product/orca_product_proof_lead_charter_v0.md`
 - `.agents/workflow-overlay/product-proof.md`
@@ -608,7 +610,9 @@ test buyer pull and broad enough to matter if it works.
 This recommendation now aligns with the current first proof lane in
 `docs/product/orca_buyer_proof_packet_v0.md`,
 `docs/product/orca_product_proof_lead_charter_v0.md`, and
-`docs/product/orca_product_lead_first_icp_wedge_decision_v0.md`.
+`docs/decisions/orca_icp_wedge_pricing_first_v0.md` (current wedge authority;
+`docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` is superseded
+— reread-required).
 
 Do not front a memo as the offer. Keep the memo-like reasoning substrate and
 evidence appendix internal so the deck remains credible, inspectable, and

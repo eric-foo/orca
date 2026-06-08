@@ -10,7 +10,8 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - .agents/workflow-overlay/product-proof.md
-  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
+  - docs/decisions/orca_icp_wedge_pricing_first_v0.md  # current wedge authority (supersedes orca_product_lead_first_icp_wedge_decision_v0.md)
+  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md  # superseded; reread-required
   - docs/product/orca_buyer_proof_packet_v0.md
   - docs/decisions/turn_08_product_thesis_v0.md
 input_hashes:
@@ -19,7 +20,7 @@ input_hashes:
   - path: docs/product/core_spine_v0_method_validation_replay_packet_v0.md
     sha256: 8CB2D592D49C1C10DD5DD91A070D2800AF61DFDFC67D7C56A404A75F2EEA2161
   - path: docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
-    sha256: B570672CD7F31B2D78F9DC5E851C3AEDA7030A56ECF2CDC6733E0191ED3DDC23
+    sha256: B570672CD7F31B2D78F9DC5E851C3AEDA7030A56ECF2CDC6733E0191ED3DDC23  # superseded by orca_icp_wedge_pricing_first_v0.md; hash preserved, reread-required
   - path: docs/review-outputs/adversarial-artifact-reviews/orca_ai_exposed_icp_refinement_adversarial_review_v0.md
     sha256: 648864959A13143F9C0C4DF5A8553D5F4BD0D7608FF09ADE6632938D748CADBA
 ```
@@ -96,7 +97,8 @@ commercial path, and all not-proven boundaries are UNCHANGED.
 - Current owner instruction for Orca product-proof planning.
 - `AGENTS.md` and `.agents/workflow-overlay/` authority, especially product artifact write permission under `docs/product/`.
 - `docs/decisions/turn_08_product_thesis_v0.md`, which frames Orca as an outside-in strategic intelligence system for public market signals and allocation decisions.
-- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md`, which selects the first proof lane and binds AI exposure as trigger/context ordering only.
+- `docs/decisions/orca_icp_wedge_pricing_first_v0.md` — current wedge authority (owner-locked 2026-06-08); supersedes the v0 ICP wedge below.
+- `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md`, which selects the first proof lane and binds AI exposure as trigger/context ordering only. SUPERSEDED by `docs/decisions/orca_icp_wedge_pricing_first_v0.md`; reread-required.
 - `docs/review-outputs/adversarial-artifact-reviews/orca_ai_exposed_icp_refinement_adversarial_review_v0.md`, which rejects AI buyer-attribute filters and standalone AI/trust/competitive-positioning decision-family expansion.
 - `docs/product/core_spine_v0_method_validation_replay_packet_v0.md`, accepted only as bounded method signal, not validation, buyer validation, feature readiness, implementation readiness, or commercial readiness.
 - Advisory `workflow-product-ultraplan` standard lanes: directional, adversarial, and grounding. These were advisory inputs only, not verdicts or readiness proof.

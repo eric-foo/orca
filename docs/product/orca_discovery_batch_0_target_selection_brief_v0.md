@@ -11,7 +11,8 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - .agents/workflow-overlay/product-proof.md
-  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
+  - docs/decisions/orca_icp_wedge_pricing_first_v0.md  # current wedge authority (pricing-first)
+  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md  # superseded by above; reread-required
   - docs/product/orca_product_proof_lead_charter_v0.md
   - docs/product/orca_buyer_proof_packet_v0.md
   - docs/prompts/product-planning/orca_product_proof_lead_customer_discovery_prompt_v0.md
@@ -137,7 +138,7 @@ Disqualify or hold before memo production if any condition applies:
 - AI exposure, `venture-backed`, `AI-native`, or `AI-adjacent` status is the only qualification basis.
 - Standalone trust, competitive-positioning, agent-workflow, or AI cost-structure question does not resolve into a first-wedge decision family.
 - Specific decision, timing, or allocation consequence cannot be stated.
-- No meaningful public-signal surface exists or can be plausibly verified.
+- No clean, decision-grade competitor price/packaging substrate (pricing pages, changelogs, filings, earnings) exists or can be plausibly verified; user reviews alone do not satisfy this gate (biased / FTC-polluted / interview-gated; confirmatory-only).
 - Categorical public-signal refusal: buyer says public-signal evidence cannot affect this decision regardless of evidence quality, explanation, examples, numbers, mechanism, case logic, or proof experience.
 - Requires private data, dashboards, source systems, automation, source maps, or data-spine design before any decision use.
 - Wants generic market research, market monitoring, source volume, deck polish, or dashboard access rather than a decision-risk artifact.
@@ -153,7 +154,7 @@ No public web research or researched company selection has been authorized for t
 | 1 | TBD | TBD | TBD | TBD | TBD | not_screened | What live 30-90 day pricing, packaging, API, billing, usage, add-on, or monetization decision is pending? |
 | 2 | TBD | TBD | TBD | TBD | TBD | not_screened | Who owns the decision and the budget or business consequence? |
 | 3 | TBD | TBD | TBD | TBD | TBD | not_screened | What allocation risk would be costly to get wrong? |
-| 4 | TBD | TBD | TBD | TBD | TBD | not_screened | What public customer, developer, buyer, partner, competitor, or ecosystem signals may matter? |
+| 4 | TBD | TBD | TBD | TBD | TBD | not_screened | What clean competitor price/packaging signal exists (pricing pages, changelogs, filings, earnings)? Are user reviews the only available substrate (biased/FTC-polluted/interview-gated; confirmatory-only)? |
 | 5 | TBD | TBD | TBD | TBD | TBD | not_screened | What would make public-signal evidence trustworthy or untrustworthy for this decision? |
 | 6 | TBD | TBD | TBD | TBD | TBD | not_screened | Would the decision owner agree to decision-artifact readback before any memo or deck is produced? |
 | 7 | TBD | TBD | TBD | TBD | TBD | not_screened | What specific action should the decision artifact help avoid, narrow, reframe, sequence, or defend? |
@@ -183,7 +184,7 @@ Stop before memo production unless all memo-production gates pass:
 - Named qualified buyer.
 - Named decision owner or budget-accountable decision lead.
 - Live 30-90 day pricing, packaging, API, billing, usage, add-on, or monetization decision trigger.
-- Sufficient public-signal surface.
+- Sufficient clean, decision-grade competitor price/packaging substrate (pricing pages, changelogs, filings, earnings); user reviews are confirmatory-only and do not satisfy this gate alone.
 - Public-signal trust posture is `trust_open` or `trust_objection`.
 - Clear memo question.
 - Concrete decision stakes and consequence of being wrong.
