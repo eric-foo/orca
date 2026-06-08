@@ -1,7 +1,7 @@
-"""Mixed-grain composition (I1): the SP-1 / SP-2 / SP-3 derivers read together.
+"""Mixed-grain composition (I1): the SP-1 / SP-2 / SP-3 / SP-6 derivers read together.
 
-Proves the three source-side derivers compose into one coherent parallel ECR
-record over a single packet at mixed grain (SP-1 per-packet; SP-2/SP-3
+Proves the four source-side derivers compose into one coherent parallel ECR
+record over a single packet at mixed grain (SP-1 / SP-6 per-packet; SP-2/SP-3
 per-slice). It asserts STRUCTURAL composition only -- each dimension's clears_*
 read at its own grain -- and deliberately computes NO aggregate source-side
 verdict: combining the dimensions is the frozen JSG-01 conductor's job, not this
@@ -12,10 +12,11 @@ from _ecr_builders import build_packet, varied_packet
 from ecr.deriver import (
     derive_identity_postures,
     derive_inspectability_postures,
+    derive_source_visibility_postures,
     derive_timing_postures,
 )
-from ecr.models import IdentityState, InspectabilityState
-from source_capture.models import VisibleFactStatus, not_attempted
+from ecr.models import IdentityState, InspectabilityState, SourceVisibilityValue
+from source_capture.models import VisibleFactStatus, known_fact, not_attempted
 
 _SHA = "a" * 64
 
@@ -176,6 +177,44 @@ def test_each_posture_round_trips():
         list(derive_identity_postures(packet))
         + list(derive_timing_postures(packet))
         + list(derive_inspectability_postures(packet))
+        + list(derive_source_visibility_postures(packet))
     )
     for posture in postures:
         assert type(posture).model_validate(posture.model_dump()) == posture
+
+
+def test_four_rows_compose_at_mixed_grain():
+    packet = varied_packet()
+    identity = derive_identity_postures(packet)
+    visibility = derive_source_visibility_postures(packet)
+    timing = derive_timing_postures(packet)
+    inspect = derive_inspectability_postures(packet)
+
+    # two per-packet rows (SP-1, SP-6), keyed by packet_id
+    assert len(identity) == 1 and identity[0].packet_id == packet.packet_id
+    assert len(visibility) == 1 and visibility[0].packet_id == packet.packet_id
+
+    # two per-slice rows (SP-2, SP-3), one each per slice, 1:1 in source_slices order
+    slice_ids = [s.slice_id for s in packet.source_slices]
+    assert [p.slice_id for p in timing] == slice_ids
+    assert [p.slice_id for p in inspect] == slice_ids
+
+    # SP-6 reads at packet grain independently: varied_packet has current bodies
+    # and no archive -> current_capture_only (does not clear), composing alongside
+    # the per-slice rows without altering them.
+    assert visibility[0].value is SourceVisibilityValue.CURRENT_CAPTURE_ONLY
+    assert visibility[0].clears_source_visibility is False
+
+
+def test_source_visibility_archive_only_composes_on_archive_packet():
+    # the SP-6 clearing path (archive_only) co-reads with SP-1 at the packet grain
+    packet = build_packet(
+        [{"id": "archive_snapshot_body", "files": [("f0", _SHA)], "cutoff": "pre_cutoff"}],
+        archive_history=known_fact("archived"),
+    )
+    [visibility] = derive_source_visibility_postures(packet)
+    assert visibility.value is SourceVisibilityValue.ARCHIVE_ONLY
+    assert visibility.clears_source_visibility is True
+
+    [identity] = derive_identity_postures(packet)
+    assert identity.packet_id == packet.packet_id == visibility.packet_id

@@ -230,3 +230,117 @@ class EcrIdentityPosture(StrictModel):
                 "(a fully resolved identity records no limitation)."
             )
         return self
+
+
+class SourceVisibilityValue(StrEnum):
+    """Closed SP-6 source-visibility value set (8, ECR-owned; ratified 387b630).
+
+    ECR-*derived* values (SP-6 is M2 derived-read over producer facts), owned
+    here -- not a carry of a producer field. The SP-6 visibility-sufficiency
+    grade (decision C) clears only on ``{ARCHIVE_ONLY, NOT_APPLICABLE}``.
+
+    Two members are declared but the deriver never emits them today:
+    ``ARCHIVE_CORROBORATED`` / ``ARCHIVE_DIVERGED`` need a recorded
+    archive-vs-current comparison fact (M / D2) the producer does not store, so
+    those rows route to ``RESIDUAL_COMPARISON_NOT_RECORDED`` (D1). And
+    ``NOT_APPLICABLE`` (the immutable/official-source clear) needs the row-1 X
+    condition, which the ratified contract leaves "consumed, not designed"; it is
+    deferred, so v1 clears only on ``ARCHIVE_ONLY``.
+    """
+
+    ARCHIVE_CORROBORATED = "archive_corroborated"
+    ARCHIVE_ONLY = "archive_only"
+    ARCHIVE_DIVERGED = "archive_diverged"
+    CURRENT_CAPTURE_ONLY = "current_capture_only"
+    ARCHIVE_POST_CUTOFF_ONLY = "archive_post_cutoff_only"
+    ATTEMPT_FAILED = "attempt_failed"
+    NOT_ATTEMPTED = "not_attempted"
+    NOT_APPLICABLE = "not_applicable"
+
+
+# Decision C (387b630): the SP-6 grade clears on exactly these values.
+SOURCE_VISIBILITY_CLEARING_VALUES = frozenset(
+    {SourceVisibilityValue.ARCHIVE_ONLY, SourceVisibilityValue.NOT_APPLICABLE}
+)
+
+
+class SourceVisibilityResidual(StrEnum):
+    """Closed SP-6 named-residual set (6, ECR-owned; ratified 387b630).
+
+    The D1 honesty surface: emitted (never invented) when the producer holds
+    neither the value nor the derivable inputs.
+    ``RESIDUAL_SLICE_DIVERGENT_VISIBILITY`` -- the per-slice no-hide rollup
+    residual -- is declared but not emitted by this per-packet (flat) deriver
+    (see ``EcrSourceVisibilityPosture``).
+    """
+
+    RESIDUAL_ARCHIVE_POST_CUTOFF_WITH_CURRENT = "RESIDUAL_ARCHIVE_POST_CUTOFF_WITH_CURRENT"
+    RESIDUAL_COMPARISON_NOT_RECORDED = "RESIDUAL_COMPARISON_NOT_RECORDED"
+    RESIDUAL_ARCHIVE_DATE_UNKNOWN = "RESIDUAL_ARCHIVE_DATE_UNKNOWN"
+    RESIDUAL_ARCHIVE_POSTURE_UNKNOWN = "RESIDUAL_ARCHIVE_POSTURE_UNKNOWN"
+    RESIDUAL_NO_VISIBILITY_BASIS = "RESIDUAL_NO_VISIBILITY_BASIS"
+    RESIDUAL_SLICE_DIVERGENT_VISIBILITY = "RESIDUAL_SLICE_DIVERGENT_VISIBILITY"
+
+
+class EcrSourceVisibilityPosture(StrictModel):
+    """SP-6 source-side source-visibility posture derived for one packet.
+
+    Per-packet grain (flat) -- resolving the ratified field's ``not_proven``
+    vector-vs-flat refinement to *flat*: one posture per packet, keyed by
+    ``packet_id``. Justification: the producer builds single-source packets and
+    its packet-level ``archive_history_posture`` is already conservative, so
+    there is no intra-packet slice divergence for a no-hide rollup to guard. If
+    multi-source packets are ever introduced, add a per-slice vector + rollup
+    then -- this per-packet value becomes the one-entry rollup.
+
+    Exactly one of ``value`` / ``residual`` is set:
+
+    - ``value``: a ratified closed ``SourceVisibilityValue``.
+    - ``residual``: a ratified named ``SourceVisibilityResidual`` (D1 honesty);
+      never clears; carries a ``reason``.
+
+    ``clears_source_visibility`` is stored (not computed) for clean YAML
+    round-trip under ``extra="forbid"``; the validator binds it to ``True`` iff
+    ``value`` is in the decision-C clearing set ``{archive_only, not_applicable}``.
+
+    D-source amendment (recorded inline at the boundary doc's Direction Change
+    Propagation, commit 641cf15): the archive-date class ``D`` is the archive
+    slice's ``cutoff_posture`` consumed as a closed pre/post CLASS (never a
+    timestamp; AR-03). M2 derived-read; binds no ``EvidenceUnit`` and makes no
+    JSG-01, scoring, or readiness claim.
+    """
+
+    packet_id: str
+    value: SourceVisibilityValue | None = None
+    residual: SourceVisibilityResidual | None = None
+    clears_source_visibility: bool
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def validate_posture(self) -> "EcrSourceVisibilityPosture":
+        has_value = self.value is not None
+        has_residual = self.residual is not None
+        if has_value == has_residual:
+            raise ValueError(
+                "EcrSourceVisibilityPosture requires exactly one of "
+                "{value, residual} to be set."
+            )
+        expected_clears = has_value and self.value in SOURCE_VISIBILITY_CLEARING_VALUES
+        if self.clears_source_visibility != expected_clears:
+            raise ValueError(
+                "clears_source_visibility must be True iff value is in "
+                "{archive_only, not_applicable} (decision C); got "
+                f"clears_source_visibility={self.clears_source_visibility} with "
+                f"value={self.value!r}, residual={self.residual!r}."
+            )
+        if has_residual and (self.reason is None or not self.reason.strip()):
+            raise ValueError(
+                "EcrSourceVisibilityPosture.reason must be a non-empty visible "
+                f"limitation when a residual is set (got residual={self.residual!r})."
+            )
+        if has_value and self.reason is not None:
+            raise ValueError(
+                "EcrSourceVisibilityPosture.reason must be None when a value is "
+                "set; reasons are carried only by residual postures."
+            )
+        return self

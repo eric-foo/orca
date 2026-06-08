@@ -12,12 +12,16 @@ from __future__ import annotations
 import re
 
 from ecr.models import (
+    SOURCE_VISIBILITY_CLEARING_VALUES,
     EcrIdentityPosture,
     EcrInspectabilityPosture,
+    EcrSourceVisibilityPosture,
     EcrTimingPosture,
     EcrTimingResidual,
     IdentityState,
     InspectabilityState,
+    SourceVisibilityResidual,
+    SourceVisibilityValue,
 )
 from source_capture.models import SourceCapturePacket, VisibleFactStatus
 
@@ -200,3 +204,163 @@ def derive_identity_postures(packet: SourceCapturePacket) -> list[EcrIdentityPos
             ),
         )
     return [posture]
+
+
+# SP-6 archive-slice identification: the producer's slice_id naming convention
+# (a free str -- "implemented convention, not a contracted field"), isolated here
+# so the delta-sensitivity is contained to one spot.
+_ARCHIVE_SLICE_IDS = frozenset({"archive_snapshot_body", "archive_availability"})
+_ARCHIVE_BODY_SLICE_ID = "archive_snapshot_body"
+
+
+def _archive_body_slice(packet: SourceCapturePacket):
+    """The archived-body slice (carries D = its cutoff_posture), or None."""
+    for source_slice in packet.source_slices:
+        if source_slice.slice_id == _ARCHIVE_BODY_SLICE_ID:
+            return source_slice
+    return None
+
+
+def _has_current_body(packet: SourceCapturePacket) -> bool:
+    """C: a current (non-archive) slice references >=1 preserved file."""
+    return any(
+        source_slice.slice_id not in _ARCHIVE_SLICE_IDS and source_slice.preserved_file_ids
+        for source_slice in packet.source_slices
+    )
+
+
+def _source_visibility_posture(
+    packet_id: str,
+    *,
+    value: SourceVisibilityValue | None = None,
+    residual: SourceVisibilityResidual | None = None,
+    reason: str | None = None,
+) -> EcrSourceVisibilityPosture:
+    clears = value in SOURCE_VISIBILITY_CLEARING_VALUES if value is not None else False
+    return EcrSourceVisibilityPosture(
+        packet_id=packet_id,
+        value=value,
+        residual=residual,
+        clears_source_visibility=clears,
+        reason=reason,
+    )
+
+
+def derive_source_visibility_postures(
+    packet: SourceCapturePacket,
+) -> list[EcrSourceVisibilityPosture]:
+    """Derive the SP-6 source-visibility posture for the packet.
+
+    Per-packet (flat) M2 derived-read realizing the ratified residual-first
+    decision table over the producer's already-closed facts: returns exactly one
+    ``EcrSourceVisibilityPosture`` in a list (shape-consistent with the per-slice
+    derivers). Inputs, all read from the packet:
+
+    - A = ``packet.archive_history_posture`` (packet-level; closed
+      ``{archived, attempt_failed}`` on KNOWN, else its ``VisibleFactStatus``);
+    - D = the archive-body slice's ``cutoff_posture`` class (the 641cf15
+      amendment: a pre/post CLASS, never a timestamp);
+    - C = a current (non-archive) slice with a preserved file.
+
+    Comparison rows route to ``RESIDUAL_COMPARISON_NOT_RECORDED`` (M / D2 absent);
+    the immutable/official ``not_applicable`` clear (the row-1 X condition) is
+    deferred, so a not-archived packet with no current body residualizes
+    ``RESIDUAL_NO_VISIBILITY_BASIS`` rather than inventing a clear.
+
+    Pure: no I/O, no packet mutation, no ``EvidenceUnit`` binding; no JSG-01,
+    scoring, or readiness claim.
+    """
+    packet_id = packet.packet_id
+    archive = packet.archive_history_posture
+    archive_known = archive.status == VisibleFactStatus.KNOWN
+
+    if archive_known and archive.value == "archived":
+        body = _archive_body_slice(packet)
+        cutoff = body.timing.cutoff_posture if body is not None else None
+        d_class = (
+            cutoff.value
+            if cutoff is not None and cutoff.status == VisibleFactStatus.KNOWN
+            else None
+        )
+        current = _has_current_body(packet)
+        if d_class == "pre_cutoff":
+            if current:
+                return [
+                    _source_visibility_posture(
+                        packet_id,
+                        residual=SourceVisibilityResidual.RESIDUAL_COMPARISON_NOT_RECORDED,
+                        reason=(
+                            "pre-cutoff archive and a current capture body are both "
+                            "present, but no recorded archive-vs-current comparison "
+                            "fact exists (D2/M absent)."
+                        ),
+                    )
+                ]
+            return [
+                _source_visibility_posture(packet_id, value=SourceVisibilityValue.ARCHIVE_ONLY)
+            ]
+        if d_class == "post_cutoff":
+            if current:
+                return [
+                    _source_visibility_posture(
+                        packet_id,
+                        residual=SourceVisibilityResidual.RESIDUAL_ARCHIVE_POST_CUTOFF_WITH_CURRENT,
+                        reason=(
+                            "archive is post-cutoff dated and a current capture body "
+                            "is present; cannot establish pre-cutoff visibility."
+                        ),
+                    )
+                ]
+            return [
+                _source_visibility_posture(
+                    packet_id, value=SourceVisibilityValue.ARCHIVE_POST_CUTOFF_ONLY
+                )
+            ]
+        return [
+            _source_visibility_posture(
+                packet_id,
+                residual=SourceVisibilityResidual.RESIDUAL_ARCHIVE_DATE_UNKNOWN,
+                reason=(
+                    "archive history is 'archived' but the archive snapshot's "
+                    "pre/post-cutoff class is not resolvable from the archive slice "
+                    "cutoff_posture."
+                ),
+            )
+        ]
+
+    if archive_known and archive.value == "attempt_failed":
+        return [
+            _source_visibility_posture(packet_id, value=SourceVisibilityValue.ATTEMPT_FAILED)
+        ]
+
+    if archive.status == VisibleFactStatus.UNKNOWN_WITH_REASON:
+        return [
+            _source_visibility_posture(
+                packet_id,
+                residual=SourceVisibilityResidual.RESIDUAL_ARCHIVE_POSTURE_UNKNOWN,
+                reason=(
+                    "archive_history_posture is unknown_with_reason; the archive "
+                    "posture is not resolved."
+                ),
+            )
+        ]
+
+    if _has_current_body(packet):
+        return [
+            _source_visibility_posture(
+                packet_id, value=SourceVisibilityValue.CURRENT_CAPTURE_ONLY
+            )
+        ]
+
+    if archive.status == VisibleFactStatus.NOT_ATTEMPTED:
+        return [
+            _source_visibility_posture(packet_id, value=SourceVisibilityValue.NOT_ATTEMPTED)
+        ]
+
+    return [
+        _source_visibility_posture(
+            packet_id,
+            residual=SourceVisibilityResidual.RESIDUAL_NO_VISIBILITY_BASIS,
+            reason="no archived body and no current capture body; no source-visibility basis.",
+        )
+    ]

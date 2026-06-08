@@ -97,6 +97,7 @@ def build_packet(
     source_family: str = "reddit",
     source_surface: str = "r/example",
     source_locator: VisibleFact | None = None,
+    archive_history: VisibleFact | None = None,
 ) -> SourceCapturePacket:
     """Build a producer-valid packet from per-slice specs (see module docstring).
 
@@ -154,7 +155,9 @@ def build_packet(
         session_identity="test",
         timing=_packet_timing(),
         access_posture=not_applicable("test"),
-        archive_history_posture=not_applicable("test"),
+        archive_history_posture=(
+            archive_history if archive_history is not None else not_applicable("test")
+        ),
         media_modality_posture=not_applicable("test"),
         re_capture_relationship=not_applicable("test"),
         source_slices=slices,
