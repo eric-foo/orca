@@ -34,6 +34,7 @@ authority_boundary: retrieval_only
 - `docs/research/judgment-spine/harness/v0_14/smoke_tests/`: Judgment Harness v0.14 no-case smoke-test receipts and operator provenance records. Artifacts in this folder are plumbing evidence only and do not become real-case probe, validation, fixture-admission, product-proof, or judgment-quality evidence by location.
 - `docs/hygiene/`: triage queues and cleanup notes for Orca artifacts.
 - `docs/_inbox/`: non-authoritative temporary holding area for scratch prompts, notes, imports, and untriaged material.
+- `.agents/skills/`: Orca-local accepted/candidate workflow skill source (for example, `orca-product-lead`), governed by `.agents/workflow-overlay/skill-adoption.md`. Orca-local only; this is NOT plugin, user-level, installed, or external skill source, and living here does not deploy, activate, or make a skill resolver-visible.
 
 ## Rules
 
@@ -47,6 +48,7 @@ authority_boundary: retrieval_only
 - Keep product artifacts in `docs/product/` unless they are accepted decision records, prompt artifacts, workflow records, review artifacts, or migration records.
 - Keep research artifacts in `docs/research/` when the primary purpose is source discovery, corpus qualification, evidence gathering, candidate screening, or rejected-source mapping. Promote research conclusions into `docs/product/` or `docs/decisions/` only through a later accepted product or decision artifact.
 - Do not create implementation folders such as `src`, `app`, `packages`, `tests`, or automation runtimes until explicitly authorized.
+- Orca-local workflow skills live only under `.agents/skills/` and are governed by `.agents/workflow-overlay/skill-adoption.md`; acceptance there is a local freeze, not deployment, and must not edit plugin, user-level, installed, or external skill source.
 - Do not copy or move material from external reference folders unless a later turn explicitly authorizes the import.
 
 ## Direction Change Propagation - Source Capture Armory Product Folder
@@ -122,4 +124,45 @@ direction_change_propagation:
     - not live-call authorization
     - not fixture admission
     - not judgment-quality proof
+```
+
+## Direction Change Propagation - Orca-Local Skill Folder
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    `.agents/skills/` is now a bound Orca-local accepted/candidate workflow-skill
+    source folder, and the first Orca-local skill (`orca-product-lead`) is
+    accepted/frozen. Acceptance is a local freeze only — not deployment,
+    activation, or resolver-visibility.
+  trigger: output_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/artifact-folders.md
+    - .agents/workflow-overlay/skill-adoption.md
+    - .agents/skills/orca-product-lead/SKILL.md
+  downstream_surfaces_checked:
+    - AGENTS.md                                      # grep: no skill/folder reference; skill rules already defer to overlay; no change
+    - .agents/workflow-overlay/README.md             # grep: no reference; no change
+    - .agents/workflow-overlay/source-of-truth.md    # grep: no reference; skill is not an authority source (it defers)
+    - .agents/workflow-overlay/project-authority.md  # grep: no reference; skill is explicitly non-authority
+  stale_language_search: 'rg -n "orca-product-lead|\.agents/skills|no accepted Orca-local" . (run 2026-06-08; only skill-adoption.md carried the stale "no accepted" status, now fixed)'
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/skill-adoption.md (Known Snapshots, 2026-05-24 line)
+      reason: dated historical observation, true as of its date.
+    - path: docs/workflows/orca_pricing_first_doc_cascade_proposal_v0.md
+      reason: historical proposal record (row 7 deferral); current acceptance state now lives in skill-adoption.md; the proposal is not retro-edited.
+    - path: docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
+      reason: already-superseded historical record; its supersede banner governs.
+    - path: docs/decisions/orca_icp_wedge_convergence_break_in_first_v0.md
+      reason: already-superseded historical record; its supersede banner governs.
+    - path: docs/prompts/product-planning/orca_product_lead_ca_first_icp_wedge_prompt_v0.md
+      reason: historical generator prompt; records a then-open question, not current state.
+    - path: docs/prompts/handoffs/jb_prompt_path_assignment_ca_settlement_prompt_v0.md
+      reason: jb-scoped non-Orca lane; its "do not edit .agents/skills" guardrail is not stale.
+  non_claims:
+    - not deployment
+    - not activation
+    - not resolver-visibility
+    - not validation
+    - not readiness
 ```
