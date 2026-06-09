@@ -7,7 +7,7 @@ Default to the smallest complete intervention: solve the actual request complete
 Every changed line must trace to the user request or required validation.
 Preserve real failure visibility; never create fake success paths.
 For non-trivial changes, define and run relevant verification or state why it was not run.
-Before reporting work as committed, written, pushed, or otherwise persisted, verify the durable target with a fresh read and show the verifying read's actual output for that lifecycle claim. Report only observed facts: never state a SHA, count, status, write, or check you did not observe. If verification fails, report the mismatch and stop. Sandbox escalation requires per-operation approval and must never become a standing rule.
+Before reporting work as committed, written, pushed, or otherwise persisted, verify the durable target with a fresh read and show the verifying read's actual output for that lifecycle claim. Report only observed facts: never state a SHA, count, status, write, or check you did not observe. Absence and build-state are claims, not defaults: a doc that says something is missing, deferred, superseded, or done is a secondary report, not an observation of that state -- when such a claim is load-bearing and cheaply checkable, confirm it against the primary source (the code, commits, repo map, or owning lane) before reporting it. If verification fails, report the mismatch and stop. Sandbox escalation requires per-operation approval and must never become a standing rule.
 
 ## Smallest Complete Intervention
 
