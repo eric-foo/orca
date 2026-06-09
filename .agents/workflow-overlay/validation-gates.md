@@ -202,6 +202,27 @@ Validation must be able to fail. Missing evidence is not a pass.
   participant-facing packet is contaminated and must be rebuilt from clean
   pre-cutoff sources before blind use.
 
+## Enforcement Placement
+
+A load-bearing rule that is mechanically checkable at a tool boundary is
+enforced there — a write-time hook plus a portable checker with a `--strict`
+commit/CI mode — rather than carried only as an instruction, which fires only
+when the model attends to it. The checker references the rule's authority and
+never restates it; it is advisory and forward-only by default. Judgment-based
+rules (claim discipline, scope, lifecycle reasoning) stay resident and still
+must actually fire, not merely be present; a substrate enforces shape, never
+truth (cf. the receipt-field provenance gate above). The per-rule
+classification and the owner gate for building each substrate live in
+`docs/decisions/overlay_enforcement_placement_classification_v0.md`.
+
+Active instance: the retrieval-header check
+(`.agents/hooks/check_retrieval_header.py`, EP-06) enforces
+`.agents/workflow-overlay/retrieval-metadata.md` at the write boundary and is
+registered in the repo map's "Active Hooks" note; reuse this pattern for the
+next such rule. Placement decides where a rule is enforced, not whether it is
+correct: a passing check is not validation, readiness, approval, or
+source-of-truth promotion.
+
 ## Future Gates
 
 - Orca independence dry run: UNKNOWN - requires owner input.
