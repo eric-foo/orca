@@ -119,6 +119,22 @@ routing, and Chief Architect consumption rules.
   visible measurement gap, not a captured measurement, and is never treated as
   success. The measurement is realized only when tooling actually populates the
   real values.
+- **Two-bar de-correlation (review tier; family = vendor).** A **cross-vendor**
+  delegate (different vendor / model lineage, e.g., Claude <-> GPT; vendor =
+  upstream developer/provider, not host / reseller / wrapper) is the **discovery**
+  bar, required to claim the no-new-seam standard for a full or doctrine-surface
+  pass. A **same-vendor** delegate (typically a lower/mechanical tier, e.g.,
+  Opus -> Sonnet) is the **bounded sanity / verification** tier: it **may only
+  claim bounded verification/sanity, never discovery / no-new-seam** -- appropriate
+  for a bounded authored change or a post-patch recheck, run **advisory** (findings
+  adjudicated by the CA). Tier is not family; the de-correlation definition is
+  owned by `.agents/workflow-overlay/delegated-review-patch.md`. **When the
+  same-vendor bar is chosen, the review record must record `de_correlation_bar`**
+  (`cross_vendor_discovery` | `same_vendor_sanity` | `self_fallback`) **plus, for
+  `same_vendor_sanity`, a `same_vendor_rationale`** (why the cross-vendor bar was
+  not needed: e.g., bounded change; no doctrine/seam surface; no no-new-seam
+  claim) -- recorded alongside `reviewed_by` / `authored_by` so a missing
+  justification is mechanically detectable.
 
 ## Template Retrieval Binding
 
@@ -223,4 +239,27 @@ direction_change_propagation:
     - not readiness
     - not model routing/recommendation
     - not a kept change until committed and the same-family post-patch blast-radius re-review resolves
+```
+
+## Direction Change Propagation — De-correlation Family = Vendor (Two-Bar)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    De-correlation "family" is now defined as VENDOR / model lineage (Claude vs GPT), NOT tier.
+    Cross-VENDOR is the discovery bar (required to claim the no-new-seam standard for full or
+    doctrine-surface passes); a SAME-VENDOR lower/mechanical-tier delegate (e.g., Opus -> Sonnet)
+    is the bounded sanity/verification tier, run advisory. The same-vendor tier is generalized
+    beyond the no_repo post-patch recheck to any bounded authored change. When the same-vendor
+    bar is chosen, the review record must state why cross-vendor was not needed. Owner-decided 2026-06-10.
+  trigger: review_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md  # de_correlation_criterion + de-correlation paragraph + no_repo wording -> vendor
+    - .agents/workflow-overlay/review-lanes.md            # two-bar rule + same-vendor justification requirement
+  downstream_surfaces_checked:
+    - {path: .agents/workflow-overlay/prompt-orchestration.md, note: model-neutrality unchanged; no edit}
+  non_claims:
+    - CROSS-VENDOR review resolved (GPT-5.5 Thinking / OpenAI: 1 major + 2 minor refinements accepted + applied -- vendor-key definition, same-vendor claim-ceiling, named de_correlation_bar field); not a kept change until the same-vendor bounded post-patch recheck resolves AND it is committed
+    - resolves the prior internal contradiction (de_correlation_criterion "Opus->non-Opus" vs no_repo "same-family lower-tier"); family is now unambiguously vendor
+    - not model routing/recommendation; a who-constraint only
 ```

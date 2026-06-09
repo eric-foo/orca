@@ -72,14 +72,22 @@ argument belongs in the verdict and residual, not the citations. Neutral tone is
 not thinness: thin citations would push the Chief Architect back onto its own
 priors and defeat the de-correlation.
 
-**De-correlation — observable criterion and fallback.** The commission must
-record the author model family and the delegate model family; the lane is
-satisfied only when they differ, and when the Chief Architect authors with an
-Opus-class model the delegate must be a different, non-Opus family. A
-same-family or self pass does not satisfy it. If de-correlation cannot be
-established (for example, no different-family model is available), do not claim
-this lane: fall back to the standard source-read-only review lane plus Chief
-Architect self-review, and record the limitation.
+**De-correlation — observable criterion and fallback.** "Family" here means
+**vendor / model lineage** (e.g., Claude vs GPT), **not tier**. **Vendor** = the upstream model
+developer/provider (e.g., Anthropic, OpenAI) — **not** the hosting platform, API
+reseller, deployment surface, or wrapper/fine-tune owner; **unknown or undisclosed
+lineage cannot satisfy the cross-vendor (discovery) bar** and falls to the
+same-vendor/sanity tier. The commission
+must record the author vendor and the delegate vendor; the **cross-vendor
+discovery** bar is satisfied only when they **differ**. A same-vendor delegate —
+**even a different or lower tier** (e.g., an Opus author with a Sonnet delegate)
+— does **not** satisfy cross-vendor de-correlation; it is the **same-vendor
+verification/sanity tier** (see the two-bar rule in
+`.agents/workflow-overlay/review-lanes.md`), not a discovery pass. A self pass
+never satisfies it. If a cross-vendor delegate cannot be established, do not
+claim the discovery (no-new-seam) bar: use the same-vendor sanity tier, or fall
+back to source-read-only review plus Chief Architect self-review, and record the
+limitation.
 
 This is a who-constraint recorded in the commission, not a model-quality
 recommendation and not runtime model routing. It does not belong in review
@@ -136,8 +144,14 @@ delegated_review_patch_overlay_interface:
     ownership: operator_and_commission   # NOT Orca review-lane authority; review-lane model-neutrality preserved
     rungs: author -> de_correlated_controller -> cheap_executor
     de_correlation_criterion: >
-      author model family != delegate model family, recorded in the commission;
-      an Opus-class author requires a non-Opus delegate. A who-constraint only.
+      family = vendor / model lineage (Claude vs GPT), NOT tier. Vendor = the
+      upstream model developer/provider, NOT hosting platform / API reseller /
+      wrapper or fine-tune owner; unknown or undisclosed lineage cannot satisfy
+      cross-vendor. Cross-vendor de-correlation (author vendor != delegate vendor,
+      recorded in the commission) is the DISCOVERY bar, required to claim the
+      no-new-seam standard. A same-vendor delegate (typically a different/lower
+      tier, Opus -> Sonnet) may only claim bounded verification/sanity, never
+      discovery/no-new-seam. A who-constraint only.
     concrete_model_ids: none_bound_in_overlay   # operator/tooling decision; the overlay does not prescribe, rank, or imply runtime models
     fallback: >
       if no different-family model is available, do not claim this lane; fall
@@ -147,8 +161,8 @@ delegated_review_patch_overlay_interface:
     no_repo: >
       delegate advisory-only via portable-adversarial-artifact-review-method (returns findings, not a diff);
       CA applies the patch; REQUIRED post-patch re-review before keep, BOUNDED to closure-of-findings + new
-      blocker/major in the touched delta and run by a SAME-FAMILY different/lower (mechanical-tier) model, NOT
-      cross-family (the recheck is verification, not discovery); cross-family de-correlation is reserved for the
+      blocker/major in the touched delta and run by a SAME-VENDOR different/lower (mechanical-tier) model, NOT
+      cross-vendor (the recheck is verification, not discovery); cross-vendor de-correlation is reserved for the
       discovery pass and is required to claim the no-new-seam standard; review target shipped as a
       hash-confirmable verbatim attachment; assembler/CA runs the portable-method freshness gate pre-bundle and records the result.
   preflight_schema:
