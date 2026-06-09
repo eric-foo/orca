@@ -12,12 +12,12 @@ use_when:
   - Checking why the AGENTS.md observed-facts rule now explicitly covers absence/build-state claims.
   - Deciding whether the deferred overlay companion (source-loading.md ground-truth pointer) should be added.
 authority_boundary: retrieval_only
-status: LOCKED
-decided: 2026-06-09
 open_next:
   - AGENTS.md
   - .agents/workflow-overlay/source-loading.md
 ```
+
+**Status:** LOCKED (decided 2026-06-09).
 
 ## Decision
 

@@ -19,15 +19,6 @@ open_next:
   - docs/product/judgment_quality_promotion_operating_model_v0.md
   - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
   - docs/research/judgment-spine/cases/canoo-walmart/case_index.md
-doctrine_change_check:
-  finding: no_doctrine_change
-  basis: >
-    Reference synthesis only. It restates and connects existing doctrine (the
-    conductor's case-selection posture, the mandatory memorization probe, the
-    by-hand product-learning cap, the evidence-ladder tiers). It mints NO new
-    claim tier — "almost judgment quality" below is a proximity description, not
-    a ladder state; Orca's current tier remains product-learning. Satellite
-    artifact; no direction_change_propagation receipt required.
 stale_if:
   - The conductor's case-selection posture, the by-hand cap, or the probe's role changes.
   - The evidence ladder changes its tier vocabulary.
@@ -146,12 +137,24 @@ reviewer)" are different things; we have the former.
 - The conductor is hardened (Round-18) and the gate predicates are
   mechanically checkable against real receipts (canoo-walmart exercise).
 
-**The gap to judgment-quality (the binding constraints, not identity):**
-- **Auditable execution machinery** — a contestant-execution runner that proves
-  clean isolation/no-tools/seal-ordering, **and** a memorization-probe runner.
-  This is what lifts the by-hand product-learning cap.
-- **Post-cutoff / prospective case sourcing** — the case-finder pipeline (Part 3).
-- **Scoring** (JSG-07) wired to a clean blind judgment.
+**The gap to judgment-quality (the binding constraints) — corrected 2026-06-09 against the harness code:**
+
+A prior version of this list named the memorization-probe runner and scoring as
+gaps. That was wrong: both are **built** (`orca-harness/runners/run_memorization_probe.py`;
+`scoring/band_scorer.py` + the `run_case.py` "fixed Step A case scorer"). See
+`judgment_spine_machinery_build_state_gap_map_v0.md` for the verified inventory.
+The accurate, narrower gap:
+- **Authorized live blind-judgment execution under proven isolation.** The
+  harness is **deterministic-only by design** (a `test_no_llm_imports` contract;
+  it never calls a model), so what lifts the by-hand cap is **not** a harness
+  runner but an *authorized live-execution surface* (raw API is the accepted one)
+  producing a blind judgment under proven isolation, bound to an auditable
+  live-execution record. Today this is by-hand; no authorized real-case record exists.
+- **SP-5 finalizer** — the `pre_decision_status` finalization receipt + provenance
+  (not built; no `FinalizationReceipt` in `schemas/`).
+- **JSG-01 `EvidenceUnit` binding** — the ECR derivers are built but bind no
+  `EvidenceUnit`; no case packet yet carries the derived fields.
+- **Post-cutoff / prospective case sourcing** — the case-finder pipeline (Part 3); only a frame doc exists.
 
 So "almost" = **product-learning now, with a clearly-named gap**: close in design
 and on the identity piece, gapped on the cleanliness machinery + case sourcing

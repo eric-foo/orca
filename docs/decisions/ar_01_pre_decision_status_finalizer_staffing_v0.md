@@ -13,13 +13,12 @@ use_when:
   - Designing or authorizing the SP-5 finalizer mechanism (who holds the finalization credential).
   - Checking whether AR-01 is still open (it is RESOLVED here; the packing interface and core-spine boundary docs still carry stale "undecided/reserved" entries pending propagation).
 authority_boundary: retrieval_only
-status: LOCKED
-decided: 2026-06-09
-decided_by: owner
 open_next:
   - docs/research/judgment-spine/harness/v0_14/packing_to_harness_foundation_interface_architecture_v3.md
   - docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md
 ```
+
+**Status:** LOCKED (owner, decided 2026-06-09).
 
 ## What AR-01 was
 
