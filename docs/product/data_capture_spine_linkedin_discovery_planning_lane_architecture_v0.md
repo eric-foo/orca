@@ -183,6 +183,13 @@ being mentioned or tagged by others, posting routine work updates, or being a
 commenter, follower, or connection is not a qualifying basis. If no such basis
 can be recorded, the person is held or quarantined, not promoted.
 
+Visible influence numbers (counts or coarse bands) and their trajectory over
+time may *corroborate* a qualifying basis and prioritize watch, but are never
+themselves a qualifying basis; a small-but-fast-rising ("meteoric") actor may be
+flagged for watch on the trajectory of visible numbers, not on the social graph.
+Trajectory tracking is a deferred Bounded Watch capability — see
+`docs/product/data_capture_spine_linkedin_influence_trajectory_watch_spec_v0.md`.
+
 ## Candidate Row Schema
 
 ```yaml
@@ -377,6 +384,29 @@ below):
   proof, commercial use, storage, scheduler, dashboard, deployment, or
   production runtime.
 
+## Attended-Automation POC-Risk Variant
+
+The "unattended LinkedIn automation / background runs" hard stop forbids
+operation with **no owner present**. An **owner-present attended-automation** run
+is a separately opted-in POC-risk exception (`method_mode:
+owner_present_attended_automation_optional_poc_risk`, `optional_poc_risk_mode:
+yes`) — it is not a "background run" because the owner is present — allowed only
+when all bind:
+
+- the owner is present at the machine, enforced by a **programmatic presence
+  check** that halts the run if presence lapses;
+- the same source-access boundary (`discoverable-or-entitled + disclosable`), run
+  envelope, caps, minimization rule, acceptance gate, and hard stops verbatim as
+  every other run;
+- **`no-entitlement gate bypass` to non-entitled data remains a hard stop**;
+- a stop-on-friction / stop-on-person-data-drift rule.
+
+Caveat (recorded, not waved): a presence check proves the owner is *present*, not
+that they *supervise each action*, and it does **not** make automated access
+ToS-compliant. It is green for Orca personal / pre-commercial POC routing only —
+not a platform, legal, or commercial claim. Truly-unattended (no owner present)
+operation stays a hard stop.
+
 ## Smallest Implementation Scope
 
 No implementation is authorized by this artifact alone.
@@ -468,4 +498,34 @@ direction_change_propagation:
     - "not Source Capture Packet generation"
     - "not Outreach Lane authorization"
     - "not commercial authorization"
+```
+
+```yaml
+# Appended 2026-06-10 (owner-accepted D1 + D5).
+direction_change_propagation:
+  doctrine_changed: "Two owner-accepted refinements. (D1) Visible influence numbers and their trajectory over time may corroborate a public-actor basis and prioritize watch but are never themselves a qualifying basis; meteoric-rise detection rides on the trajectory of visible counts, NOT the social graph, and is a deferred Bounded Watch capability specced separately. (D5) An owner-present attended-automation POC-risk variant (method_mode owner_present_attended_automation_optional_poc_risk) is a separately opted-in exception to the unattended/background-run hard stop, gated by a programmatic owner-presence check that halts on presence lapse, binding the same boundary/caps/minimization/acceptance-gate/hard-stops verbatim with no-entitlement gate bypass still hard-stopped; a presence check proves presence not per-action supervision and does not cure ToS, and truly-unattended operation stays a hard stop."
+  trigger: architecture_doctrine
+  related_triggers:
+    - product_doctrine
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md"
+    - "docs/workflows/linkedin_lane_operator_pilot_plan_v0.md"
+    - "orca-harness/capture_spine/linkedin_lane/models.py"
+    - "docs/product/data_capture_spine_linkedin_influence_trajectory_watch_spec_v0.md"
+  downstream_surfaces_checked:
+    - "orca-harness/capture_spine/linkedin_lane/validation.py"
+    - "docs/product/data_capture_spine_future_exploration_lanes_v0.md"
+  intentionally_not_updated:
+    - path: "orca-harness/capture_spine/linkedin_lane/validation.py"
+      reason: "D1 adds no validator rule (a concrete basis is still required; influence is already captured). D5 adds a MethodMode member only; the presence check is a live-runner concern, and the closed-enum validator already accepts any MethodMode value, so the no-live slice needs no validator change."
+    - path: "source-access boundary / safety-rules / build-authorization decisions"
+      reason: "D5 stays inside the existing discoverable-or-entitled boundary and the no-entitlement-gate-bypass hard stop; no controlling permission, boundary, or safety rule is weakened."
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not live LinkedIn authorization"
+    - "not a presence-check implementation"
+    - "not the social graph"
+    - "not Bounded Watch implementation authorization"
 ```

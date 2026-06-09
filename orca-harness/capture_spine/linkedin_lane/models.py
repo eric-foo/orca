@@ -69,6 +69,7 @@ class MethodMode(StrEnum):
     OPERATOR_SUPPLIED_LINK_OR_NOTE = "operator_supplied_link_or_note"
     AGENT_ASSISTED_ROWING_ONLY = "agent_assisted_rowing_only"
     SUPERVISED_BROWSER_ASSIST_OPTIONAL_POC_RISK = "supervised_browser_assist_optional_poc_risk"
+    OWNER_PRESENT_ATTENDED_AUTOMATION_OPTIONAL_POC_RISK = "owner_present_attended_automation_optional_poc_risk"
 
 
 class SourceSurface(StrEnum):

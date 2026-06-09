@@ -281,6 +281,17 @@ This plan's default does **not** invoke it. A pilot may opt into
 It remains green for Orca personal / pre-commercial POC routing only — not a
 platform, legal, or commercial claim.
 
+A second opt-in variant, `method_mode:
+owner_present_attended_automation_optional_poc_risk` (`optional_poc_risk_mode:
+yes`), allows **owner-present attended automation** — the run is automated but
+the owner is present at the machine, enforced by a **programmatic presence check
+that halts the run if presence lapses.** It binds everything the supervised
+variant binds (boundary, caps, minimization, acceptance gate, hard stops
+verbatim, `no-entitlement gate bypass` still hard-stopped, stop-on-friction /
+person-data-drift). Recorded caveat: a presence check proves presence, not
+per-action supervision, and does not make automated access ToS-compliant;
+truly-unattended (no owner present) operation stays a hard stop.
+
 ## Pilot Closeout Shape
 
 ```yaml
