@@ -366,7 +366,7 @@ case_selection_posture:
   post_cutoff_first_means: the decision AND the outcome both fall after the model's training cutoff, giving both non-recognition and a real ground-truth outcome
   probe: JSG-05 memorization probe is mandatory and is the verifier of non-recognition; it is never skipped
   anonymization: probe-verified secondary only; renaming or perturbing a famous case risks hidden re-identification and severs ground-truth anchoring, so it is never assumed
-  live_case_note: a post-cutoff live case naturally passes through sealed_awaiting_outcome until its outcome lands
+  live_case_note: liveness is NOT a conductor predicate — the conductor only reads the JSG-08 receipt_status field; an operator MAY attach the non-binding sealed_awaiting_outcome annotation to a case they independently know to be live, but the conductor routes receipt_status == absent as not-cleared regardless and never itself decides live-versus-no-outcome (Invariant A)
   superseded_first_targets: famous pre-cutoff cases (for example a 2022 event) are poor FIRST judgment-quality targets
 ```
 
@@ -383,8 +383,13 @@ case_selection_posture:
    JSG-09 or JSG-10.
 5. **Mark the execution mode.** If JSG-04, JSG-05, or JSG-06 ran by-hand, apply
    the by-hand cap (Seam 3).
-6. **For a live post-cutoff case with no outcome yet,** record
-   `sealed_awaiting_outcome` and hold; revisit JSG-08 when the outcome lands.
+6. **At JSG-08, read `receipt_status` mechanically.** `receipt_status ==
+   absent` routes as not-cleared via the owner contract's `absent` state (the
+   Seam-2 held branch); the conductor does not decide whether a real-world
+   outcome is still pending. An operator MAY attach the non-binding
+   `sealed_awaiting_outcome` annotation when they independently know the case is
+   live — it adds no gate clearance and is not a conductor liveness
+   determination (Invariant A). Revisit JSG-08 when a new owner receipt lands.
 7. **Record JSG-09 classification and JSG-10 closeout** at the achieved cap, or
    `halted_no_completed_closeout` per Seam 5.
 
@@ -763,5 +768,51 @@ direction_change_propagation:
     - not readiness
     - not judgment-quality evidence
     - not a clean adversarial pass (new seams were opened; a de-correlated post-patch re-review is required before keep)
+    - JSG-01 stays FROZEN; this pass does not unfreeze it
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Round-18 patch (2026-06-09), from the fresh FULL de-correlated, no-repo,
+    cross-family adversarial review of the patched (post-Round-17) conductor
+    (reviewer GPT-5.5 Thinking; author family Claude Opus-class; commission
+    workflow-delegated-review-patch no_repo mode; courier bundle archive sha256
+    8E47AB4D28CE200A3DD3F49F30968776C4765FFF9C77C22BE955CE32AE17B091, all 16
+    bundled sources byte-matched the embedded manifest). The pass confirmed the
+    four seams, Invariant A/B, and Seam 5 hold, and opened exactly one residual
+    seam (NEW-SEAM-F5-LIVE-PROCEDURE, severity major), CA-accepted: the Round-17
+    F5 repair de-judged liveness in the formal transition function and lifecycle
+    table, but two procedural-prose spots still told the conductor to record
+    sealed_awaiting_outcome for "a live post-cutoff case with no outcome yet" — a
+    conductor-side liveness determination the F5 fix had removed. This patch
+    rebinds both spots: (1) the Case-Selection Posture live_case_note now states
+    liveness is NOT a conductor predicate (the conductor only reads JSG-08
+    receipt_status; sealed_awaiting_outcome is a non-binding operator annotation);
+    (2) How-To-Run-A-Case step 6 now reads JSG-08 receipt_status mechanically
+    (receipt_status == absent routes not-cleared via the owner contract's absent
+    state, the Seam-2 held branch), with sealed_awaiting_outcome as an optional
+    non-binding operator annotation and no conductor liveness call. This only
+    aligns procedural prose with the already-patched transition function and
+    lifecycle table; no predicate, transition rule, ladder vocabulary, or claim
+    tier changed. No new claim tier or closeout_state minted; JSG-01 stays FROZEN.
+    NOT YET KEPT: the mandatory bounded same-family post-patch recheck has not yet
+    run. Tracked-but-not-changed-here: the JSG-01 row's note that the SP-1/2/3/6
+    derivers are "deferred" is stale — they are built and committed in the ECR
+    lane (orca-harness/ecr/, commits d857c58/51f4193/14490ce/6329d71); this
+    CA-discovered accuracy correction is deferred to the JSG-01 work item.
+  trigger: architecture_doctrine
+  related_triggers:
+    - validation_philosophy
+  controlling_sources_updated:
+    - docs/product/judgment_quality_promotion_operating_model_v0.md
+  downstream_surfaces_checked:
+    - docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md
+    - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
+  non_claims:
+    - not validation
+    - not readiness
+    - not judgment-quality evidence
+    - not kept until the bounded same-family post-patch recheck clears
     - JSG-01 stays FROZEN; this pass does not unfreeze it
 ```
