@@ -51,8 +51,8 @@ stale_if:
 - **Judgment-quality lane — where we are / next** (orientation, refreshed 2026-06-09; verify against the lane records, which own the detail):
   - *Tier:* capped at **product-learning** (by-hand); "almost judgment-quality" is a proximity description, **not** a minted tier → `ideal_judgment_quality_run_and_current_position_v0.md`.
   - *Settled this lane:* AR-01 staffing, option C → `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`; ground-truth-before-absence/build-state kernel rule → `docs/decisions/ground_truth_check_before_absence_or_build_state_claims_v0.md`; conductor hardened to Round-18 (F5 fix); gate predicates exercised mechanically checkable → `conductor_per_gate_predicate_exercise_canoo_walmart_v0.md`.
-  - *Next authorized (docs/spec only; build needs implementation authorization):* SP-5 A2 finalization-receipt field-set spec (A1 separate record keyed by `evidence_id`, A3 operator family-attestation — both settled); conductor **cross-family re-pass** (fresh bundle on Round-18 bytes; prior finding was major); then a run-executability/gap map as the design-completion predicate.
-  - *JQ gap (named build work, not yet authorized):* contestant-execution runner + memorization-probe runner + case-finder pipeline + scoring.
+  - *Next authorized (docs/spec only; build needs implementation authorization):* SP-5 A2 finalization-receipt field-set spec (A1 separate record keyed by `evidence_id`, A3 operator family-attestation — both settled); conductor JSG-01 wording correction + **cross-family re-pass** on corrected bytes (prior finding was major). The build-state gap map is **built** → `judgment_spine_machinery_build_state_gap_map_v0.md`.
+  - *JQ gap (named build work, not yet authorized):* authorized live blind-judgment execution under isolation + SP-5 finalizer + JSG-01 `EvidenceUnit` binding + case-finder. (Scoring and the memorization-probe runner are **built** — see `judgment_spine_machinery_build_state_gap_map_v0.md`.)
 
 ## Areas (each → one owner; summaries are locational, never evaluative)
 

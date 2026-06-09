@@ -22,7 +22,7 @@ open_next:
 stale_if:
   - The conductor's case-selection posture, the by-hand cap, or the probe's role changes.
   - The evidence ladder changes its tier vocabulary.
-  - A contestant-execution runner / memorization-probe runner / scoring route is built (which would move Orca's position).
+  - An authorized live blind-judgment runner, a non-synthetic post-cutoff run, the SP-5 finalizer, or the JSG-01 EvidenceUnit binding lands (the memorization-probe runner and scoring are already built).
 ```
 
 ## What this is
@@ -144,10 +144,11 @@ gaps. That was wrong: both are **built** (`orca-harness/runners/run_memorization
 `scoring/band_scorer.py` + the `run_case.py` "fixed Step A case scorer"). See
 `judgment_spine_machinery_build_state_gap_map_v0.md` for the verified inventory.
 The accurate, narrower gap:
-- **Authorized live blind-judgment execution under proven isolation.** The
-  harness is **deterministic-only by design** (a `test_no_llm_imports` contract;
-  it never calls a model), so what lifts the by-hand cap is **not** a harness
-  runner but an *authorized live-execution surface* (raw API is the accepted one)
+- **Authorized live blind-judgment execution under proven isolation.**
+  `test_no_llm_imports` bars the LLM **SDK import packages** (not raw HTTP), and
+  `run_memorization_probe_raw_api.py` already makes opt-in guarded live calls for the
+  *probe* via raw `urllib`. The missing piece is the equivalent for the **blind
+  judgment**: an *authorized live-execution surface* (raw API is the accepted one)
   producing a blind judgment under proven isolation, bound to an auditable
   live-execution record. Today this is by-hand; no authorized real-case record exists.
 - **SP-5 finalizer** — the `pre_decision_status` finalization receipt + provenance

@@ -45,18 +45,21 @@ at **product-learning**; it authorizes no run and mints no tier.
 | ECR derivers (SP-1/2/3/6) | **Built; bind no `EvidenceUnit`** | `ecr/deriver.py` — four posture derivers off the `SourceCapturePacket` |
 | SP-5 finalizer | **Gap (not built)** | no `FinalizationReceipt` / finalizer provenance in `schemas/`; `case_models.py` has only `pre_decision_status` + `pre_decision_basis` |
 | JSG-01 `EvidenceUnit` binding | **Gap** | derivers bind no `EvidenceUnit`; no case packet yet carries the derived fields → JSG-01 stays FROZEN |
-| Blind-judgment contestant execution under proven isolation | **Gap (by-hand; harness is no-LLM by design)** | needs an authorized live-execution surface + isolation-receipt binding, not a harness runner |
+| Blind-judgment contestant execution under proven isolation | **Gap (by-hand; no live runner for the blind judgment)** | the probe has a raw-API live runner (`run_memorization_probe_raw_api.py`); the blind judgment has none — needs an authorized live-execution surface + isolation-receipt binding |
 | An authorized real (non-synthetic) run | **None** | the 50+ `_test_runs/` are `cases/plumbing/...` with a `fixed_contestant` (canned `blind_judgement.yaml`) — synthetic smoke tests |
 | Case-finder (post-cutoff / prospective sourcing) | **Gap** | only a frame doc (`docs/product/orca_memorization_resistant_case_finder_frame_v0.md`) |
 
 ## The corrected gap (what actually lifts the cap)
 
-The harness is **deterministic-only by design** — a `tests/contract/test_no_llm_imports.py`
-contract; it never calls a model. So the by-hand product-learning cap is **not**
-lifted by building a harness "runner" (scoring and the probe are already built).
-It is lifted by an **authorized live-execution surface** (raw API is the accepted
-one) that produces a blind judgment under proven isolation, **bound to an
-auditable live-execution record** — *plus* the SP-5 finalizer, the JSG-01
+The harness keeps its **scoring and dry paths model-free**: `tests/contract/test_no_llm_imports.py`
+bars the LLM **SDK import packages** (`openai`/`anthropic`/`litellm`/`langchain`) across
+`scoring/`, `reports/`, `runners/`, `schemas/`. That bars *imports*, not raw HTTP —
+`runners/run_memorization_probe_raw_api.py` makes opt-in live calls to the OpenAI/Anthropic
+endpoints via raw `urllib` (guarded by `--allow-live-provider-call`). So a guarded live-API
+path **already exists for the memorization probe**. What is still missing is the equivalent
+for the **blind judgment**: a live-execution surface (raw API is the accepted one) that
+produces the sealed blind judgment under proven isolation, **bound to an auditable
+live-execution record** (today it is by-hand) — *plus* the SP-5 finalizer, the JSG-01
 `EvidenceUnit` binding, and a case-finder. No authorized real-case run exists today.
 
 This corrects an earlier framing (in the ideal-JQ reference) that named the
@@ -75,4 +78,3 @@ has happened or that the tier is lifted.
 - Mints no claim tier; authorizes no model run, live execution, fixture admission, or build.
 - Build-state verified by reading the code at the stated worktree; reread if the harness changes.
 - A map of build-state; each component is owned by its code module / owner doc, which wins on any conflict.
-```
