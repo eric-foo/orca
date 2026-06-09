@@ -63,7 +63,7 @@ Architect reserves final authority over what is kept and may veto any change it
 judges to add no benefit or net-negative value, even when individually
 defensible.
 
-**Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only via the portable review method (registry id `portable-adversarial-artifact-review-method`), returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a de-correlated post-patch re-review**: a second different-family advisory pass over the CA's patch, bounded to closure-of-findings plus any new blocker/major in the delta, adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the portable method's **freshness gate** (hash-compare its `derived_from` pins to live sources; re-derive on mismatch) before bundling, recording the result in the commission. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
+**Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only via the portable review method (registry id `portable-adversarial-artifact-review-method`), returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a bounded post-patch re-review** before keep — closure-of-findings plus any new blocker/major in the touched delta. Because that recheck is a narrow, near-mechanical verification against the findings' explicit closure conditions rather than open seam-discovery, it runs as a **same-family, different (lower / mechanical-tier) model** (a who-constraint, not a runtime-model recommendation), **not** a cross-family pass. **Cross-family de-correlation is reserved for discovery** (the original full adversarial review) and is **required to claim** the *survives-an-adversarial-review-with-no-new-seam* standard; a bounded same-family recheck does not by itself support that claim. The recheck is CA-adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the portable method's **freshness gate** (hash-compare its `derived_from` pins to live sources; re-derive on mismatch) before bundling, recording the result in the commission. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
 
 **Citations.** The delegate's citations are neutral in tone — factual source
 evidence, no advocacy or editorializing — but decision-sufficient in substance,
@@ -146,7 +146,10 @@ delegated_review_patch_overlay_interface:
     values: [repo, no_repo]   # default repo; operator/commission access constraint, NOT model routing
     no_repo: >
       delegate advisory-only via portable-adversarial-artifact-review-method (returns findings, not a diff);
-      CA applies the patch; REQUIRED de-correlated post-patch re-review before keep; review target shipped as a
+      CA applies the patch; REQUIRED post-patch re-review before keep, BOUNDED to closure-of-findings + new
+      blocker/major in the touched delta and run by a SAME-FAMILY different/lower (mechanical-tier) model, NOT
+      cross-family (the recheck is verification, not discovery); cross-family de-correlation is reserved for the
+      discovery pass and is required to claim the no-new-seam standard; review target shipped as a
       hash-confirmable verbatim attachment; assembler/CA runs the portable-method freshness gate pre-bundle and records the result.
   preflight_schema:
     - orca_start_preflight (.agents/workflow-overlay/source-loading.md)
@@ -280,4 +283,40 @@ direction_change_propagation:
     - not readiness
     - not a bound, mandatory, or machine-routable review lane (the convention stays provisional)
     - not runtime model routing (access is an operator/commission constraint)
+```
+
+```yaml
+# Bounded recheck actor refined 2026-06-09 (CA decision): same-family lower/mechanical-tier, not cross-family.
+direction_change_propagation:
+  doctrine_changed: >
+    no_repo post-patch re-review refined: the REQUIRED post-patch re-review is now a BOUNDED closure +
+    blast-radius recheck run by a SAME-FAMILY different/lower (mechanical-tier) model, not a cross-family
+    de-correlated pass. A bounded recheck verifies a known patch against explicit closure conditions
+    (near-mechanical) rather than discovering unknown seams, so cross-family de-correlation — whose value is
+    in discovery — is reserved for the discovery (full adversarial) pass and for claiming the
+    survives-an-adversarial-review-with-no-new-seam standard. Amends the 2026-06-08 no_repo entry's
+    "de-correlated post-patch re-review" to this bounded same-family recheck. CA adjudication, review-side
+    de-correlation, protected paths, the freshness gate, and the strict-claim boundary are unchanged.
+    who-constraint only; not a runtime-model recommendation.
+  trigger: review_authority
+  related_triggers: [workflow_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md
+  downstream_surfaces_checked:
+    - .agents/workflow-overlay/review-lanes.md
+    - AGENTS.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/review-lanes.md
+      reason: >
+        the no_repo lane line distinguishes repo vs no_repo by who-patches (delegate read-only/advisory,
+        CA patches); the recheck-actor tier is owned here and needs no lane-line change.
+    - path: .agents/workflow-overlay/delegated-review-patch.md (model_ladder block)
+      reason: >
+        the executor rung already defines a cheap same-family tier; the bounded recheck reuses that concept
+        rather than adding a rung.
+  non_claims:
+    - not validation
+    - not readiness
+    - not a bound, mandatory, or machine-routable review lane (the convention stays provisional)
+    - not runtime model routing (same-family/lower-tier is a who-constraint)
 ```
