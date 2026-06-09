@@ -42,12 +42,17 @@ stale_if:
 | Work from the harness spec (schemas, scorer, runner, probe) | `harness/v0_14/index.md` | research |
 | Understand no-tools isolation for JSG-04/05/06 | `harness/v0_14/contestant_no_tools_execution_contract_v0.md` | research |
 
-## Current Reality Snapshot (as of v0 — verify each against its owner)
+## Current Reality Snapshot (as of v0, refreshed 2026-06-09 — verify each against its owner)
 
 - **Conductor exists and is test-worthy, not proven** — it routes/verifies receipts and computes nothing (→ conductor non-claims).
 - **By-hand cap is in force:** there is no contestant-execution runner, so JSG-04/05/06 run by-hand and a run **caps at product-learning** (→ conductor, Seam 3).
-- **JSG-01 is `indeterminate_until_authored`:** no ECR field schema exists yet for source-identity/inspectability/timing, and Judgment-authority (AR-01) finalization is unstaffed (→ conductor, JSG-01 row).
+- **JSG-01 stays FROZEN (`indeterminate_until_authored`)** — for narrower reasons than v0 stated. The ECR SP-1/2/3/6 derivers **are built** (`orca-harness/ecr/deriver.py`: timing / inspectability / identity / source-visibility postures off the `SourceCapturePacket`; they bind no `EvidenceUnit` and make no JSG-01 claim). AR-01 (who finalizes `pre_decision_status`) is **resolved** — distinct cross-family act, operator-for-now (→ `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`). What still gates an unfreeze: the **SP-5 finalizer mechanism built** + a **case packet carrying the derived fields** (ECR slice-2). (→ conductor JSG-01 row, whose "derivers deferred" wording is now itself stale — correct it together with the re-pass, since editing conductor bytes invalidates a fresh review bundle.)
 - **Current cases are pre-cutoff** and cap at qualitative / product-learning; none is a scoreable fixture. Which cases exist → manifest (the inventory owner); what each can claim → evidence ladder. (This map does not list cases — that would inherit the manifest's drift.)
+- **Judgment-quality lane — where we are / next** (orientation, refreshed 2026-06-09; verify against the lane records, which own the detail):
+  - *Tier:* capped at **product-learning** (by-hand); "almost judgment-quality" is a proximity description, **not** a minted tier → `ideal_judgment_quality_run_and_current_position_v0.md`.
+  - *Settled this lane:* AR-01 staffing, option C → `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`; ground-truth-before-absence/build-state kernel rule → `docs/decisions/ground_truth_check_before_absence_or_build_state_claims_v0.md`; conductor hardened to Round-18 (F5 fix); gate predicates exercised mechanically checkable → `conductor_per_gate_predicate_exercise_canoo_walmart_v0.md`.
+  - *Next authorized (docs/spec only; build needs implementation authorization):* SP-5 A2 finalization-receipt field-set spec (A1 separate record keyed by `evidence_id`, A3 operator family-attestation — both settled); conductor **cross-family re-pass** (fresh bundle on Round-18 bytes; prior finding was major); then a run-executability/gap map as the design-completion predicate.
+  - *JQ gap (named build work, not yet authorized):* contestant-execution runner + memorization-probe runner + case-finder pipeline + scoring.
 
 ## Areas (each → one owner; summaries are locational, never evaluative)
 
