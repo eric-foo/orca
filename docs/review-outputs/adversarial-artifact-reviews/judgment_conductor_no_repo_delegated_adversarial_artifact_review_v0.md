@@ -162,3 +162,13 @@ Apply the bounded conductor patch per the per-finding closures above (F1 frozen;
 `direction_change_propagation` receipt and an `input_hashes` recompute, then commission the **mandatory
 de-correlated post-patch re-review** (a second non-Opus pass over the patch, bounded to closure-of-findings
 plus any new blocker/major in the touched scope). Nothing is kept until that re-review clears. JSG-01 stays FROZEN.
+
+## Post-Patch Re-Review (Round 2, bounded) + Closure (2026-06-09)
+
+- Bundle: `docs/review-inputs/judgment_conductor_post_patch_recheck_v0.zip` (sha256 `8C004351…EEF1D2F1`) — patched conductor (sha `49739850…`) + Round-17 patch diff (`02_PATCH_DIFF.txt`) + this record + 16 owner sources.
+- `reviewed_by`: GPT-5.5 Thinking (cross-family, de-correlated from the author — run under the then-current overlay `no_repo` rule, before the 2026-06-09 amendment noted below); `authored_by`: Claude Opus-class.
+- Result: **BOUNDED** recheck (closure + blast-radius). All 7 findings **F1–F7 CLOSED** (per-finding owner + conductor cites in the return); **`NEW_BLOCKER_OR_MAJOR: none found`**.
+- CA adjudication: **ACCEPT** — closures align with the applied Round-17 edits and carry specific owner-source cites.
+- Keep: convention keep condition met → **Round-17 patch KEPT** (commit `cc41cfb`). JSG-01 stays FROZEN.
+- Success-signal status (honest): owner accepted option (i) "sufficient — no major error." This rests on [round-1 full de-correlated pass found 7 → patch → clean **bounded** recheck], **not** on a fresh full adversarial pass returning no new seam. Recorded as **owner-accepted, not a strict clean-full-pass**; the fresh-full-pass option was declined.
+- Convention note: as of 2026-06-09 the `no_repo` post-patch recheck was amended to run **same-family lower/mechanical-tier**, not cross-family (cross-family reserved for discovery + for claiming the no-new-seam standard). This cycle's recheck predates that amendment and was run cross-family.
