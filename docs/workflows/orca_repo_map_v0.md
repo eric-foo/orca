@@ -16,6 +16,7 @@ stale_if:
   - New top-level folders (under the repo root or docs/) are added.
   - orca-harness/ packages, adapters, runners, fixtures, or its build authorizations are added or reorganized.
   - Core Spine, Data Capture Spine, Cleaning Spine, Judgment Spine, offer, proof, or prompt families are materially reorganized.
+  - Reddit CloakBrowser/proxy allowance, Candidate URL Intake, Reddit Graph Frontier Lane, or Source Capture Armory routing changes.
   - .agents/workflow-overlay/source-of-truth.md changes source hierarchy or the doctrine-change propagation contract.
   - A later repo-map artifact supersedes this file.
 ```
@@ -23,7 +24,7 @@ stale_if:
 - Status: ACTIVE_RETRIEVAL_MAP (retrieval-only; source authority remains in `.agents/workflow-overlay/source-of-truth.md`)
 - Artifact type: Workflow navigation artifact
 - Scope: Repo navigation and source-pack selection
-- Refreshed: 2026-06-05 (repo-map/submap hygiene: Data Capture detail routed through its submap; Judgment source-loading routed through its submap)
+- Refreshed: 2026-06-09 (Signal Content Record v0 + ECR harness modules registered; Reddit Graph Frontier / CloakBrowser routes preserved)
 - Implementation authorized: no
 
 ## How To Use This Map
@@ -44,6 +45,247 @@ downstream surfaces. That contract owns primary `trigger` plus
 `related_triggers` grammar for multi-dimensional doctrine changes. Use this map
 to identify likely downstream surfaces; do not treat the map itself as
 propagation evidence.
+
+## Active Hooks (IMPORTANT)
+
+ORCA enforces load-bearing, mechanically-checkable rules at **tool
+boundaries**, not by instruction alone. The owning principle is
+`.agents/workflow-overlay/validation-gates.md` -> "Enforcement Placement"
+(cross-referenced from `decision-routing.md`); the per-rule classification is
+`docs/decisions/overlay_enforcement_placement_classification_v0.md`.
+
+**Retrieval-header check.** A PostToolUse hook (matcher `Write|Edit`) in the
+tracked `.claude/settings.json` runs:
+
+```
+python .agents/hooks/check_retrieval_header.py --hook
+```
+
+When a newly written or edited `*.md` in a durable in-scope folder (the folders
+`.agents/workflow-overlay/retrieval-metadata.md` enumerates) is missing its
+retrieval header, the hook returns a non-blocking advisory warning. It is
+forward-only (only the file just touched), advisory (never blocks the edit),
+and references the rule authority rather than restating it.
+
+**Portable CLI / commit / CI backstop** (runs outside Claude Code too):
+
+```
+# advisory (exit 0): warn on any changed in-scope file missing its header
+python  .agents/hooks/check_retrieval_header.py --changed          # Windows
+python3 .agents/hooks/check_retrieval_header.py --changed          # POSIX
+# strict gate (exit 1 on violation): for a pre-commit hook or CI
+python3 .agents/hooks/check_retrieval_header.py --staged --strict
+# explicit paths also work:
+python3 .agents/hooks/check_retrieval_header.py path/to/artifact.md
+```
+
+**Reinstall (fresh clone, or if local settings were reset).** The checker
+script is tracked at `.agents/hooks/check_retrieval_header.py`. The hook lives
+in the tracked `.claude/settings.json`; if it is missing (for example only
+present in a gitignored `.claude/settings.local.json`, or settings were reset),
+re-add:
+
+```json
+"hooks": {
+  "PostToolUse": [
+    { "matcher": "Write|Edit",
+      "hooks": [ { "type": "command",
+                   "command": "python .agents/hooks/check_retrieval_header.py --hook",
+                   "timeout": 10 } ] } ]
+}
+```
+
+Hooks load at session start, so **restart the Claude Code session** after
+editing settings. The command uses a path relative to the project root (where
+Claude Code runs hooks); if your environment runs hooks from another directory,
+use an absolute path or `"$CLAUDE_PROJECT_DIR/.agents/hooks/check_retrieval_header.py"`.
+On POSIX, use `python3` if `python` is unavailable.
+
+**Repo-map freshness check.** A second PostToolUse hook (matcher `Write|Edit`)
+in the tracked `.claude/settings.json` runs:
+
+```
+python .agents/hooks/check_repo_map_freshness.py --hook
+```
+
+It reads THIS map as its own spec and, forward-only on the file just touched,
+emits a non-blocking advisory when an edit adds navigable structure this map
+does not yet cover -- the mechanically-detectable subset of the `stale_if:` block
+above: a new top-level area (#1) or a new `orca-harness/` runner/adapter (#2).
+Edits to `source-of-truth.md` get a coarser advisory nudge (#5). It stays silent
+on ordinary content in already-mapped folders (a new `docs/decisions/*` is
+reachable by convention, not a map event) and cannot see judgment-shaped
+staleness -- "a spine was reorganized" (#3) or "routing doctrine changed" (#4) --
+which stays with the Doctrine Change Propagation contract in
+`.agents/workflow-overlay/source-of-truth.md` (which already lists this map as a
+downstream surface).
+
+**Portable CLI / commit / CI backstop** (runs outside Claude Code too):
+
+```
+# advisory (exit 0): report structural drift in the working tree
+python  .agents/hooks/check_repo_map_freshness.py --changed          # Windows
+python3 .agents/hooks/check_repo_map_freshness.py --changed          # POSIX
+# strict gate (exit 1): block a commit that adds new structure without
+# updating this map / a submap and without an acknowledgment
+python .agents/hooks/check_repo_map_freshness.py --commit-msg "$1"   # commit-msg hook
+python3 .agents/hooks/check_repo_map_freshness.py --changed --strict --message "$PR_BODY"  # CI
+python .agents/hooks/check_repo_map_freshness.py --selftest          # self-check logic
+```
+
+To acknowledge a legitimate non-map change so the strict gate passes: for a
+one-off, put `repo-map-ack: <reason>` in the commit message; for a recurring
+class (generated scratch), add a backtick'd token to the "Generated/gitignored
+scratch ... do not enumerate" list (this checker reads that list as its exclusion
+source). Updating this map or a submap in the same change also satisfies the
+gate. The check enforces map *shape*, never the truth of a route, and fails OPEN
+on internal error. Reinstall = re-add the second PostToolUse entry beside the
+retrieval-header hook in `.claude/settings.json`, then restart the session.
+
+**Permission floor (protected paths + git lifecycle).** A second
+enforcement-placement substrate (EP-01 + EP-03 in
+`docs/decisions/overlay_enforcement_placement_classification_v0.md`), built as
+Claude Code `permissions` rules — no script:
+
+- **`ask` — git lifecycle, shared/tracked in `.claude/settings.json`:**
+  `git push`, `git commit`, `git remote`, `gh pr`, `git reset --hard`,
+  `git clean`, for both the `Bash` and `PowerShell` tools. Claude Code prompts for
+  explicit approval; the approval is the authorization (`safety-rules.md`
+  "...unless explicitly authorized"). Travels with the repo.
+- **`deny` — protected paths, machine-local in `.claude/settings.local.json`:**
+  writes/edits to external / installed-skill roots — `agent-workflow`, `jb*`,
+  `~/.codex/{plugins,skills}`, `~/.claude/{plugins,skills}`, `~/.agents/skills`.
+  Hard-blocked. Machine-specific absolute paths, so NOT tracked; a fresh clone
+  re-adds its own external paths.
+- Authority: `safety-rules.md` (the rules) + validation-gates "Enforcement
+  Placement" (the placement principle). Config enforces existing rules; it
+  changes no doctrine. EP-02 (impl-dir blocking) was deliberately excluded.
+- Limits: Claude-Code-only (Codex unaffected — the resident instruction stays);
+  `deny` is machine-local; restart the session to load; not a security boundary.
+
+**Reinstall the permission floor (fresh clone, or if local settings were
+reset).** The `ask` git-lifecycle rules live in the tracked
+`.claude/settings.json`; the `deny` path rules live in the gitignored
+`.claude/settings.local.json`, so a clone does NOT recover them — re-add both
+(adjust the absolute paths to the local machine). In `.claude/settings.json`:
+
+```json
+"permissions": {
+  "ask": [
+    "Bash(git push*)", "PowerShell(git push*)",
+    "Bash(git commit*)", "PowerShell(git commit*)",
+    "Bash(git remote*)", "PowerShell(git remote*)",
+    "Bash(gh pr*)", "PowerShell(gh pr*)",
+    "Bash(git reset --hard*)", "PowerShell(git reset --hard*)",
+    "Bash(git clean*)", "PowerShell(git clean*)"
+  ]
+}
+```
+
+In `.claude/settings.local.json` (machine-specific absolute paths):
+
+```json
+"permissions": {
+  "deny": [
+    "Edit(//c/Users/vmon7/Desktop/projects/agent-workflow/**)", "Write(//c/Users/vmon7/Desktop/projects/agent-workflow/**)",
+    "Edit(//c/Users/vmon7/Desktop/projects/jb*/**)", "Write(//c/Users/vmon7/Desktop/projects/jb*/**)",
+    "Edit(//c/Users/vmon7/.codex/plugins/**)", "Write(//c/Users/vmon7/.codex/plugins/**)",
+    "Edit(//c/Users/vmon7/.codex/skills/**)", "Write(//c/Users/vmon7/.codex/skills/**)",
+    "Edit(//c/Users/vmon7/.claude/plugins/**)", "Write(//c/Users/vmon7/.claude/plugins/**)",
+    "Edit(//c/Users/vmon7/.claude/skills/**)", "Write(//c/Users/vmon7/.claude/skills/**)",
+    "Edit(//c/Users/vmon7/.agents/skills/**)", "Write(//c/Users/vmon7/.agents/skills/**)"
+  ]
+}
+```
+
+Restart the Claude Code session after editing settings.
+
+**Protected-action guard (PreToolUse) — the auto-mode enforcement.** The `ask`
+config rules above are inert in auto / bypass mode (no human to prompt), so the
+real enforcement of EP-01 + EP-03 is a `PreToolUse` hook that fires in ALL
+permission modes:
+
+- script: `.agents/hooks/guard_protected_actions.py` (tracked); matcher
+  `Bash|PowerShell|Write|Edit|MultiEdit|NotebookEdit` in `.claude/settings.json`.
+- blocks (exit 2): writes/edits into protected roots (`agent-workflow`, `jb*`,
+  `~/.codex/{plugins,skills}`, `~/.claude/{plugins,skills}`, `~/.agents/skills`);
+  and main-affecting git — landing a PR to `main` (`gh pr merge`), push to
+  `main`, force-push, bare/ambiguous push — plus `reset --hard` / `clean`, via
+  Bash or PowerShell. **Allows** an explicit non-main, non-force lane push
+  (`git push -u origin <lane>`) so lanes prep PRs (per-lane PR flow in
+  `docs/decisions/dev_workflow_ci_branch_protection_doctrine_v0.md`); a
+  human/authorized action lands the PR to `main`. Narrow: `commit`, generic
+  deletion, and *mentions* of these in quoted strings are NOT blocked.
+- references authority (`safety-rules.md`), fails OPEN on internal error, and has
+  a selftest: `python .agents/hooks/guard_protected_actions.py --selftest`.
+- authorized exception: run the action yourself, or temporarily remove the hook.
+
+Reinstall the PreToolUse guard in `.claude/settings.json`:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    { "matcher": "Bash|PowerShell|Write|Edit|MultiEdit|NotebookEdit",
+      "hooks": [ { "type": "command",
+                   "command": "python .agents/hooks/guard_protected_actions.py",
+                   "timeout": 10 } ] } ]
+}
+```
+
+Restart the Claude Code session after editing settings.
+
+**Future agents: reuse this pattern.** To enforce the next load-bearing,
+deterministically-checkable rule, do not add another instruction -- add a
+sibling checker under `.agents/hooks/` that references the rule's authority
+(never restates it), advisory + forward-only with a `--strict` gate, wire a
+PostToolUse hook the same way, and document it here. See
+`.agents/workflow-overlay/validation-gates.md` -> "Enforcement Placement".
+
+This note is navigation and discoverability only; the hook and checker are
+advisory tooling, not validation, readiness, or source-of-truth promotion.
+
+## Reddit CloakBrowser / Proxy Allowance Quick Route
+
+If a new CA is deciding whether bounded pre-commercial Reddit work may use
+CloakBrowser, anti-blocking, residential/rotating proxies, or old Reddit HTML,
+do not block by default. Open these in order:
+
+| Question | Open |
+| --- | --- |
+| Is CloakBrowser/proxy-backed Reddit access allowed at all? | `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md` |
+| What is the Reddit-specific capture/intake route? | `docs/workflows/data_capture_spine_consolidation_map_v0.md` |
+| Is this Candidate URL Intake rather than Armory capture? | `docs/product/data_capture_spine_candidate_url_intake_contract_v0.md`, then `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
+| Is bounded graph/frontier scouting accepted? | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
+| How should old Reddit search/listing HTML be saved, parsed, and interpreted? | `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md` |
+| What are the proxy and anti-blocking hard stops? | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
+| What is implemented now? | `docs/product/source_capture_toolbox/README.md`, then `orca-harness/docs/source_capture_agent_runbook.md` and the named runner/adapter files |
+
+Current map-level summary: CloakBrowser is the approved primary anti-blocking
+route for bounded pre-commercial Reddit capture, and residential/rotating
+proxies are not blanket stop conditions inside that pre-commercial/free
+anti-blocking posture. Candidate URL Intake may record this approved downstream
+route, but it does not invoke CloakBrowser, configure proxies, emit Source
+Capture Packets, fetch bodies/comments/profiles, auto-promote URLs, or authorize
+broad crawling, storage, scheduler/dashboard, deployment, production runtime,
+commercial fetch, ECR, Cleaning, Judgment, fixture admission, or source-quality
+scoring. For no-live operator-supplied old Reddit HTML pilots, open
+`docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md`
+before interpreting empty results, `search-title` anchors, raw HTML input
+hygiene, or candidate-subreddit discovery with visible volume.
+
+Reddit Candidate URL Intake is also the bounded first-contact sourcing path for
+declared Reddit source surfaces when a run envelope and live access
+authorization are supplied. The implemented runner is
+`orca-harness/runners/run_reddit_candidate_intake_live.py`; it writes candidate
+rows, provenance, and a live-run receipt only.
+
+Reddit Graph Frontier is accepted only as a bounded planning lane with a Graph
+Frontier Register. It may choose the next candidate seed and prepare a fresh
+bounded run, but it does not authorize same-run traversal, Graph Frontier-owned
+live Reddit fetch, automatic capture, broad crawling, Source Capture, Data
+Capture, storage, scheduler, dashboard, or production runtime. Operator-facing
+nickname: "crawling graph." The runner is
+`orca-harness/runners/run_reddit_graph_frontier_register.py`.
 
 ## Top-Level Structure
 
@@ -91,7 +333,7 @@ propagation evidence.
 | --- | --- |
 | `docs/workflows/artifact_retrievability_guide.md` | Operational guidance for durable artifact headers, body-opening source surfaces, stale/recheck patterns, repo-map/index treatment, report-only retrieval checks, and hygiene anti-rot. |
 | `docs/workflows/orca_repo_map_v0.md` | Compact navigation map for bounded source-pack selection and prompt setup. |
-| `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine / Source Capture Armory submap. Open before enumerating capture owner docs. |
+| `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine repo submap. Open before enumerating capture owner docs. |
 | `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | Judgment Spine submap. Open before enumerating Judgment owners across `docs/research/judgment-spine/` and `docs/product/judgment_spine_*`. |
 
 ## Orca Harness
@@ -105,13 +347,16 @@ design) remain gated.
 
 | Path | Use for |
 | --- | --- |
+| `orca-harness/capture_spine/` | Capture Spine local support for Reddit Candidate URL Intake projection and Reddit Graph Frontier register/receipt helpers. Not Source Capture Armory execution, Source Capture Packet output, storage, scheduler, dashboard, or production runtime. |
 | `orca-harness/source_capture/` | Source-capture packet core: models, writer, CLI support, and plaintext receipts. |
-| `orca-harness/source_capture/adapters/` | Bounded capture adapters (direct HTTP, media/asset, Archive.org, browser snapshot, authenticated browser, Reddit API where present); anti-blocking/CloakBrowser is selected and authorized by decision but should be verified in implementation before use. Not scraper frameworks, commercial fetch, broad crawling, storage, dashboards, deployment, or production runtime. |
+| `orca-harness/source_capture/adapters/` | Bounded capture adapters (direct HTTP, media/asset, Archive.org, browser snapshot, authenticated browser, Reddit API where present). CloakBrowser Snapshot anonymous non-persistent v0 now has a live engine and packet runner for one explicitly supplied URL; Reddit discovery/consolidation, proxy/session behavior, commercial fetch, broad crawling, storage, dashboards, deployment, and production runtime remain separately gated. |
 | `orca-harness/source_observability/` | Local operator-record posture checker and limitation reporter. |
+| `orca-harness/ecr/` | Evidence Candidate Record source-side integrity postures (SP-1/2/3/6): per-packet/slice derived records keyed to the `SourceCapturePacket`; bind no `EvidenceUnit`; JSG-01 frozen. Boundary context: `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`. |
+| `orca-harness/signal_content/` | Signal Content Record (v0): the second derived-record kind (content — "what a signal says"), parallel to `ecr/`; wedge-agnostic StrictModel + validators, references packet/ECR by key, no deriver/persistence/binding. Direction: `docs/product/core_spine_v0_signal_content_record_architecture_v0.md`. |
 | `orca-harness/schemas/` | Pydantic v2 models for cases, judgments, scoring, and probes (v0.14). |
 | `orca-harness/scoring/` | Deterministic band scorer and mapping table (v0.14 Step A); not judgment-quality proof. |
 | `orca-harness/reports/` | Report-rendering code (case and source-observability reports); generated dry-run outputs under it are gitignored. |
-| `orca-harness/runners/` | CLI entrypoints for case runs, memorization probe, source-capture packets, and source-observability reports. |
+| `orca-harness/runners/` | CLI entrypoints for case runs, memorization probe, bounded Candidate URL Intake live first-contact sourcing, Reddit Graph Frontier / crawling graph register preparation, source-capture packets, and source-observability reports. |
 | `orca-harness/cases/` | Tracked deterministic fixture case(s) (e.g. TR/Casetext v0.14) with evidence, packet, and ledger; generated `scores/` and run outputs are gitignored. |
 | `orca-harness/config/` | Static YAML config (contestants, models, prompts) consumed by runners. |
 | `orca-harness/docs/` | Harness operating docs: source-capture packet and agent runbook, source-observability record guide, and scalability note. |
@@ -153,13 +398,13 @@ The Judgment Spine spans **both** trees — `docs/research/judgment-spine/` (the
 
 The Data Capture Spine spans product authority, source-access decisions, Source
 Capture Armory docs, source-quality support, and `orca-harness/` implementation.
-**Open the consolidation map first** for capture/armory work: it is the
+**Open the repo submap first** for capture/armory work: it is the
 `retrieval_only` entry that orients across these surfaces and routes one hop to
 the owner sources. Do not pre-load all capture artifacts from this map.
 
 | Path | Use for |
 | --- | --- |
-| `docs/workflows/data_capture_spine_consolidation_map_v0.md` | **Data Capture Spine entry map — open first.** Routes to Capture obligations, source-access boundary, build authorization, method plan, Source Capture Armory README, packet lifecycle, harness runners, source-quality support, and current Reddit pre-commercial routing. Map only; not validation, readiness, source-access permission, or implementation authority. |
+| `docs/workflows/data_capture_spine_consolidation_map_v0.md` | **Data Capture Spine repo submap — open first.** Routes to Capture obligations, source-access boundary, build authorization, method plan, Source Capture Armory README, packet lifecycle, harness runners, source-quality support, and current Reddit pre-commercial routing. Map only; not validation, readiness, source-access permission, or implementation authority. |
 
 ## Core Spine Files
 
@@ -168,6 +413,7 @@ the owner sources. Do not pre-load all capture artifacts from this map.
 | `docs/product/core_spine_v0_product_contract.md` | Core Spine product contract and eight primitives. |
 | `docs/product/core_spine_v0_information_production_foundation_v0.md` | Manual information-production foundation and Evidence Unit standard. |
 | `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md` | Data Capture/Cleaning/Judgment boundary and Evidence Candidate Record setup context. |
+| `docs/product/core_spine_v0_signal_content_record_architecture_v0.md` | Signal Content Record (v0) architecture DIRECTION — the second derived-record kind ("what a signal says"), parallel to the ECR integrity postures and structuring the IPF Evidence Unit content vocabulary; records the owner carrier/lifecycle/decision-relevance-tag decisions and the bounded content-field ratification. Direction only; the final Evidence Unit field architecture stays owner-reserved and JSG-01 frozen. v0 model lives in `orca-harness/signal_content/`. |
 | `docs/product/core_spine_v0_corroboration_vs_amplification_discipline_v0.md` | Proposed Core Spine design note on placing independent-corroboration vs artificial-amplification discipline across the Cleaning/Judgment boundary; proposed, not validated. |
 | `docs/decisions/daimler_advisory_001_claim_tier_classification_decision_v0.md` | Daimler advisory claim-tier classification decision recording the current no-durable-evidence state, required product-learning receipt before any evidence claim, and blocked buyer-proof/judgment-quality claims. |
 | `docs/product/engagement_logic_registry_v0.md` | Signal-use and engagement interpretation registry. |
@@ -176,13 +422,14 @@ the owner sources. Do not pre-load all capture artifacts from this map.
 | `docs/product/core_spine_v0_proof_packet_preflight_v0.md` | Proof packet preflight. |
 | `docs/product/core_spine_v0_proof_case_selection_brief_v0.md` | Early proof case-selection brief; status BLOCKED_OWNER_CANDIDATES_NEEDED. For current case/backtest selection see the heavyweight discovery pass (`docs/product/core_spine_v0_heavyweight_proof_case_discovery_results_v0.md` and `..._results_part_2_v0.md`), which produced the candidates the brief was blocked on. |
 
-For Data Capture / Source Capture Armory detail, open
+For Data Capture / Source Capture Armory detail, open the repo submap at
 `docs/workflows/data_capture_spine_consolidation_map_v0.md`; this repo map
 intentionally does not duplicate the owner-doc inventory.
 
 ## Data Capture Harness Operating Model
 
-Route Data Capture operating-model and commissioning-plan questions through
+Route Data Capture operating-model and commissioning-plan questions through the
+repo submap at
 `docs/workflows/data_capture_spine_consolidation_map_v0.md` first. That submap
 owns the one-hop pointers to v2 operating-model architecture, owner acceptance,
 obligation baseline, lane thesis, and commissioning plan. This repo map does
@@ -371,6 +618,94 @@ Use a new thread or compact handoff when the next task needs more than one
 recommended read pack, more than six full artifacts, or both repo-map refresh
 and CA prompt drafting. The handoff should cite this map, the source-loading
 overlay, the target read pack, and the files excluded by default.
+
+## Direction Change Propagation - Reddit CloakBrowser / Proxy Allowance Quick Route
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The top-level repo map now exposes a Reddit CloakBrowser/proxy allowance quick route so new CA lanes see that CloakBrowser is the approved primary anti-blocking route and residential/rotating proxies are not blanket stop conditions for bounded pre-commercial Reddit capture, while Candidate URL Intake remains non-executing rows/provenance only."
+  trigger: workflow_authority
+  related_triggers:
+    - architecture_doctrine
+    - output_authority
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/workflows/orca_repo_map_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/README.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+    - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+    - "docs/product/data_capture_spine_candidate_url_intake_contract_v0.md"
+    - "docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md"
+    - "docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md"
+    - "docs/product/source_capture_toolbox/README.md"
+  intentionally_not_updated:
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "The canonical read-pack still routes Data Capture work through the consolidation sub-map. This patch adds a top-level anti-friction cue, not a new source-loading pack."
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "The Armory README already records CloakBrowser implementation limits and non-claims. This patch changes repo-map discoverability, not Armory implementation."
+    - path: "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+      reason: "The authorization already controls CloakBrowser/proxy allowance. This patch does not change the owner decision."
+  stale_language_search: "rg -n \"Reddit CloakBrowser / Proxy Allowance Quick Route|CloakBrowser is the approved primary|residential/rotating|Candidate URL Intake may record this approved downstream route|approved primary anti-blocking route|not blanket stop\" docs/workflows/orca_repo_map_v0.md docs/workflows/data_capture_spine_consolidation_map_v0.md docs/product/data_capture_spine_candidate_url_intake_contract_v0.md docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md"
+  stale_language_search_result: "Executed 2026-06-06 after this patch. Hits were the new repo-map quick route, the Data Capture sub-map allowance summary, the parent Candidate URL Intake downstream access posture, the Reddit Candidate URL Intake specialization, and controlling source-access authorization / Reddit success-signal hard-stop language. No checked surface required a new CA to block CloakBrowser or residential/rotating proxies by default for bounded pre-commercial Reddit capture."
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not source-access boundary amendment"
+    - "not implementation authorization"
+    - "not live Reddit authorization"
+    - "not proxy implementation proof"
+    - "not Source Capture Packet generation"
+    - "not broad crawling, storage, dashboard, scheduler, deployment, production runtime, ECR, Cleaning, Judgment, fixture admission, source-quality scoring, or commercial authorization"
+```
+
+## Direction Change Propagation - Reddit Graph Frontier Route
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The top-level repo map now exposes Reddit Graph Frontier as an accepted
+    bounded planning lane with a Graph Frontier Register, while preserving the
+    no-same-run-traversal, no-Graph-Frontier-owned-live-fetch, no-capture,
+    no-storage, no-scheduler, no-dashboard, and no-production-runtime
+    boundaries.
+  trigger: workflow_authority
+  related_triggers:
+    - architecture_doctrine
+    - output_authority
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - "docs/workflows/orca_repo_map_v0.md"
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+    - "docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md"
+    - "docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md"
+    - "docs/workflows/reddit_candidate_intake_to_projection_lane_handoff_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/README.md"
+    - ".agents/workflow-overlay/decision-routing.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - "docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md"
+    - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
+  intentionally_not_updated:
+    - path: "docs/product/source_capture_toolbox/README.md"
+      reason: "Graph Frontier is not Source Capture Armory and does not emit Source Capture Packets."
+    - path: "orca-harness/docs/source_capture_agent_runbook.md"
+      reason: "No runner behavior changed and this patch does not authorize implementation execution."
+  stale_language_search: "rg -n \"Future Crawler-Graph|future crawler|may be architected|architected or rejected|candidate_graph_ledger|crawler_graph_exploration_lane|should wait for an architecture decision|Commission the separate crawler-graph|accepted Reddit Graph Frontier|Graph Frontier Register\" docs/workflows/orca_repo_map_v0.md docs/workflows/data_capture_spine_consolidation_map_v0.md docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md docs/workflows/reddit_candidate_intake_to_projection_lane_handoff_v0.md"
+  stale_language_search_result: "Executed 2026-06-08 after this patch. Active route surfaces now point to accepted Reddit Graph Frontier and Graph Frontier Register language; the old future-question wording is not present in the active route surfaces checked."
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not Graph Frontier-owned live Reddit fetch authorization"
+    - "not implementation authorization"
+    - "not broad crawling authorization"
+    - "not Source Capture"
+    - "not Data Capture"
+```
 
 ## Not-Proven Boundaries
 
