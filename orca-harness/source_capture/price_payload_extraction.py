@@ -246,25 +246,38 @@ def _match_braces(s: str, start: int) -> tuple[int, int]:
     raise ValueError("unbalanced braces while extracting prices object")
 
 
-def extract_prices_object(js: str) -> dict[str, dict[str, float]]:
-    """Extract ``{token: {currency: minor_units}}`` from a JS module's prices object.
+def extract_object_at_anchor(text: str, anchor: "re.Pattern[str] | str") -> dict:
+    """Extract the brace-delimited JS object literal that begins at a content anchor.
 
-    Anchored on the stable ``prices:{"chatgpt.`` marker, brace-matched, then the
-    JS object literal is normalised to JSON (unquoted currency keys quoted; JS
-    numeric literals incl. ``2e4`` are already valid JSON numbers) and parsed.
-    Raises ``ValueError`` if the anchor/object is absent or unparseable.
+    Source-agnostic spine primitive: the caller supplies the stable content
+    marker (regex or compiled pattern) for the object it wants -- an OpenAI price
+    adapter passes ``prices:{"chatgpt.``. The object is brace-matched from the
+    first ``{`` at/after the anchor, JS unquoted keys are quoted, and the literal
+    is parsed as JSON. Raises ``ValueError`` if the object is absent or
+    unparseable -- an honest miss, never a silent empty result.
     """
-    m = PRICES_ANCHOR.search(js)
+    pattern = re.compile(anchor) if isinstance(anchor, str) else anchor
+    m = pattern.search(text)
     if not m:
-        raise ValueError("prices anchor 'prices:{\"chatgpt.' not present in chunk")
-    brace_start = js.index("{", m.start())
-    start, end = _match_braces(js, brace_start)
-    obj_src = js[start:end]
-    normalised = _UNQUOTED_KEY_RE.sub(r'\1"\2":', obj_src)
-    prices = json.loads(normalised)
-    if not isinstance(prices, dict) or not prices:
-        raise ValueError("parsed prices object is empty or not an object")
-    return prices
+        raise ValueError(f"anchor {pattern.pattern!r} not present in text")
+    brace_start = text.index("{", m.start())
+    start, end = _match_braces(text, brace_start)
+    normalised = _UNQUOTED_KEY_RE.sub(r'\1"\2":', text[start:end])
+    obj = json.loads(normalised)
+    if not isinstance(obj, dict) or not obj:
+        raise ValueError("parsed object is empty or not an object")
+    return obj
+
+
+def extract_prices_object(js: str) -> dict[str, dict[str, float]]:
+    """OpenAI price adapter over :func:`extract_object_at_anchor`.
+
+    Recovers ``{token: {currency: minor_units}}`` from a JS module's
+    ``prices:{"chatgpt.`` object. The generic recovery (anchor -> brace-match ->
+    JS-to-JSON) lives in :func:`extract_object_at_anchor`; this wrapper only
+    binds the OpenAI price anchor, so the spine carries no price/vendor specifics.
+    """
+    return extract_object_at_anchor(js, PRICES_ANCHOR)
 
 
 def extract_token_list(js: str) -> list[str]:
@@ -376,84 +389,145 @@ class CertificationCheck:
     detail: str
 
 
+@dataclass(frozen=True)
+class PayloadBody:
+    """One fetched body backing a certified payload (source-agnostic).
+
+    ``label`` namespaces this body's checks (``{label}_not_block_shell`` and
+    ``{label}_body_inspectable``); an OpenAI price capture passes ``page`` and
+    ``prices_chunk``. ``detail_label`` preserves a legacy human-readable label in
+    serialized check DETAILS when it differs from ``label`` (e.g. the "prices
+    chunk" wording vs the ``prices_chunk`` check namespace); defaults to ``label``.
+    """
+    label: str
+    block_class: str
+    status: int
+    block_signal: str | None
+    detail_label: str | None = None
+
+
+_GENERIC_DISCRIMINATOR_NOTE = (
+    "interpretation-layer INTERNAL-CONSISTENCY discriminator over rung-1 provenance: "
+    "asserts at least one backing body is present and every one is inspectable, 2xx, and "
+    "not a block/empty shell, the payload parsed cleanly, and at least one caller-supplied "
+    "domain check is present and all passed. Does NOT assert freshness or completeness "
+    "(recorded as provenance, not certified) and does NOT weaken block_shell"
+)
+
+
 @dataclass
 class CertificationVerdict:
     certified: bool
     checks: list[CertificationCheck]
-    resolved_tier_count: int
-    priced_tier_count: int
+    discriminator: str = "embedded_payload_v0"
+    discriminator_note: str | None = None
+    resolved_tier_count: int | None = None
+    priced_tier_count: int | None = None
 
     def as_dict(self) -> dict:
-        return {
-            "certified_content": self.certified,
-            "resolved_tier_count": self.resolved_tier_count,
-            "priced_tier_count": self.priced_tier_count,
-            "discriminator": "rung15_price_payload_v0",
-            "discriminator_note": (
-                "interpretation-layer INTERNAL-CONSISTENCY discriminator over rung-1 provenance: "
-                "asserts the payload parsed cleanly and cross-checks (two-way token list, all "
-                "displayed tokens resolved, amounts plausible). Does NOT assert freshness or "
-                "completeness (recorded as provenance, not certified) and does NOT weaken block_shell"
-            ),
-            "checks": [
-                {"check": c.name, "passed": c.passed, "detail": c.detail}
-                for c in self.checks
-            ],
-        }
+        out: dict = {"certified_content": self.certified}
+        if self.resolved_tier_count is not None:
+            out["resolved_tier_count"] = self.resolved_tier_count
+        if self.priced_tier_count is not None:
+            out["priced_tier_count"] = self.priced_tier_count
+        out["discriminator"] = self.discriminator
+        out["discriminator_note"] = self.discriminator_note or _GENERIC_DISCRIMINATOR_NOTE
+        out["checks"] = [
+            {"check": c.name, "passed": c.passed, "detail": c.detail}
+            for c in self.checks
+        ]
+        return out
 
 
-def certify_extraction(
+def certify_payload(
     *,
-    page_block_class: str,
-    page_status: int,
-    page_block_signal: str | None,
-    chunk_block_class: str,
-    chunk_status: int,
-    chunk_block_signal: str | None,
+    bodies: list[PayloadBody],
+    payload_parsed: bool,
+    domain_checks: list[CertificationCheck],
+    discriminator: str = "embedded_payload_v0",
+    discriminator_note: str | None = None,
+    payload_check_name: str = "payload_parsed",
+    payload_check_detail: str | None = None,
+) -> CertificationVerdict:
+    """Source-agnostic certification scaffold for a recovered embedded payload.
+
+    Certifies INTERNAL CONSISTENCY only: at least one backing ``PayloadBody`` is
+    present and every one is 2xx, NOT a block/empty shell, and INSPECTABLE (not
+    an undecoded/encoded body); the payload parsed; and at least one
+    caller-supplied ``domain_checks`` entry is present and all passed. A 200 is
+    never certified as content on its own, an encoded/uninspectable body always
+    refuses, and a parsed payload with NO backing body or NO domain check cannot
+    certify (no vacuous pass). Does NOT assert freshness or completeness. The
+    domain layer (e.g. price coherence) lives entirely in ``domain_checks``, so
+    this scaffold carries no price/vendor semantics.
+
+    ``payload_check_name`` / ``payload_check_detail`` let an adapter preserve a
+    legacy serialized name/detail for the parse check (the OpenAI price path
+    keeps ``prices_object_parsed``).
+    """
+    checks: list[CertificationCheck] = []
+    if not bodies:
+        checks.append(CertificationCheck(
+            "body_provenance_present",
+            False,
+            "at least one backing body is required; a parsed payload without "
+            "provenance cannot certify",
+        ))
+    for body in bodies:
+        detail_label = body.detail_label or body.label
+        checks.append(CertificationCheck(
+            f"{body.label}_not_block_shell",
+            body.block_class == "content_unverified" and 200 <= body.status < 300,
+            f"{detail_label} HTTP {body.status}, block_shell={body.block_class}",
+        ))
+    for body in bodies:
+        detail_label = body.detail_label or body.label
+        checks.append(CertificationCheck(
+            f"{body.label}_body_inspectable",
+            body.block_signal != "encoded_body_uninspectable",
+            f"{detail_label} block_shell signal={body.block_signal!r} "
+            "(content cannot be certified from an undecoded/encoded body)",
+        ))
+    checks.append(CertificationCheck(
+        payload_check_name,
+        bool(payload_parsed),
+        (payload_check_detail if payload_check_detail is not None
+         else f"structured payload parsed: {bool(payload_parsed)}"),
+    ))
+    if not domain_checks:
+        checks.append(CertificationCheck(
+            "domain_checks_present",
+            False,
+            "at least one caller-supplied domain check is required for "
+            "internal-consistency certification",
+        ))
+    checks.extend(domain_checks)
+    return CertificationVerdict(
+        certified=all(c.passed for c in checks),
+        checks=checks,
+        discriminator=discriminator,
+        discriminator_note=discriminator_note,
+    )
+
+
+def _price_domain_checks(
+    *,
     token_list: list[str],
     prices: dict[str, dict[str, float]],
     resolved_tiers: list[ResolvedTier],
     currency: str = "usd",
-) -> CertificationVerdict:
-    """Decide 'certified content' via explicit checks over recorded provenance.
+) -> tuple[list[CertificationCheck], int, int]:
+    """OpenAI price-domain checks for :func:`certify_payload` (the price adapter).
 
-    Pass requires: both source bodies are 2xx, NOT block/empty shells, and
-    INSPECTABLE (not an undecoded/encoded body); the prices object parsed; a
-    non-empty canonical token list whose tokens are all present in the prices
-    object; EVERY consumer tier that carries a numeric token resolved to a
-    numeric amount in the target currency; and every resolved amount within a
+    Returns ``(domain_checks, priced_tier_count, resolved_tier_count)``. The
+    checks: a non-empty canonical token list whose tokens are all present in the
+    prices object; every displayed token covered by that list (two-way
+    coherence); EVERY consumer tier with a numeric token resolved in the target
+    currency; at least one paid tier priced; and every resolved amount within a
     plausible range (>= 0, below a sane ceiling). A custom/usage static price
     (Enterprise) is an honest non-numeric tier, not a failure.
     """
     checks: list[CertificationCheck] = []
-
-    checks.append(CertificationCheck(
-        "page_not_block_shell",
-        page_block_class == "content_unverified" and 200 <= page_status < 300,
-        f"page HTTP {page_status}, block_shell={page_block_class}",
-    ))
-    checks.append(CertificationCheck(
-        "prices_chunk_not_block_shell",
-        chunk_block_class == "content_unverified" and 200 <= chunk_status < 300,
-        f"prices chunk HTTP {chunk_status}, block_shell={chunk_block_class}",
-    ))
-    checks.append(CertificationCheck(
-        "page_body_inspectable",
-        page_block_signal != "encoded_body_uninspectable",
-        f"page block_shell signal={page_block_signal!r} "
-        "(content cannot be certified from an undecoded/encoded body)",
-    ))
-    checks.append(CertificationCheck(
-        "prices_chunk_body_inspectable",
-        chunk_block_signal != "encoded_body_uninspectable",
-        f"prices chunk block_shell signal={chunk_block_signal!r} "
-        "(content cannot be certified from an undecoded/encoded body)",
-    ))
-    checks.append(CertificationCheck(
-        "prices_object_parsed",
-        len(prices) > 0,
-        f"{len(prices)} price tokens parsed from JS-module prices object",
-    ))
 
     # An ABSENT token list is a missing cross-check input, not a confirmed match:
     # fail (was a vacuous pass) so a payload reshape that drops the token array
@@ -523,21 +597,67 @@ def certify_extraction(
          + (f"; implausible={implausible}" if implausible else "")),
     ))
 
-    certified = all(c.passed for c in checks)
     resolved_count = sum(1 for rt in resolved_tiers if rt.prices or rt.static_price)
-    return CertificationVerdict(
-        certified=certified,
-        checks=checks,
-        resolved_tier_count=resolved_count,
-        priced_tier_count=priced,
+    return checks, priced, resolved_count
+
+
+_PRICE_DISCRIMINATOR_NOTE = (
+    "interpretation-layer INTERNAL-CONSISTENCY discriminator over rung-1 provenance: "
+    "asserts the payload parsed cleanly and cross-checks (two-way token list, all "
+    "displayed tokens resolved, amounts plausible). Does NOT assert freshness or "
+    "completeness (recorded as provenance, not certified) and does NOT weaken block_shell"
+)
+
+
+def certify_extraction(
+    *,
+    page_block_class: str,
+    page_status: int,
+    page_block_signal: str | None,
+    chunk_block_class: str,
+    chunk_status: int,
+    chunk_block_signal: str | None,
+    token_list: list[str],
+    prices: dict[str, dict[str, float]],
+    resolved_tiers: list[ResolvedTier],
+    currency: str = "usd",
+) -> CertificationVerdict:
+    """OpenAI price adapter over :func:`certify_payload`.
+
+    Binds the two OpenAI bodies (page + prices chunk) and the price-domain
+    checks, preserving the ``rung15_price_payload_v0`` discriminator. Behaviour
+    is identical to the pre-isolation certifier; the generic scaffold and the
+    price checks are now separable so a non-price adapter can reuse the scaffold.
+    """
+    domain_checks, priced, resolved_count = _price_domain_checks(
+        token_list=token_list, prices=prices,
+        resolved_tiers=resolved_tiers, currency=currency,
     )
+    verdict = certify_payload(
+        bodies=[
+            PayloadBody("page", page_block_class, page_status, page_block_signal),
+            PayloadBody("prices_chunk", chunk_block_class, chunk_status,
+                        chunk_block_signal, detail_label="prices chunk"),
+        ],
+        payload_parsed=len(prices) > 0,
+        domain_checks=domain_checks,
+        discriminator="rung15_price_payload_v0",
+        discriminator_note=_PRICE_DISCRIMINATOR_NOTE,
+        payload_check_name="prices_object_parsed",
+        payload_check_detail=f"{len(prices)} price tokens parsed from JS-module prices object",
+    )
+    verdict.resolved_tier_count = resolved_count
+    verdict.priced_tier_count = priced
+    return verdict
 
 
 __all__ = [
     "decode_react_router_stream",
     "Tier", "TierPrice", "extract_tier_structure",
-    "PRICES_ANCHOR", "chunk_contains_prices", "extract_prices_object", "extract_token_list",
+    "PRICES_ANCHOR", "chunk_contains_prices",
+    "extract_object_at_anchor", "extract_prices_object", "extract_token_list",
     "ResolvedTier", "ResolvedTierPrice", "join_tiers_with_amounts", "minor_units_to_display",
     "extract_announcement_effective_date",
-    "CertificationVerdict", "CertificationCheck", "certify_extraction",
+    "PayloadBody", "CertificationVerdict", "CertificationCheck",
+    "certify_payload", "certify_extraction",
 ]

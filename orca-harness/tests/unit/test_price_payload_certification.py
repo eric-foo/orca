@@ -151,3 +151,23 @@ def test_discriminator_note_does_not_overclaim_currency_or_completeness():
     note = _certify().as_dict()["discriminator_note"]
     assert "INTERNAL-CONSISTENCY" in note
     assert "freshness" in note  # the claim explicitly does NOT assert freshness/completeness
+
+
+def test_openai_cert_artifact_check_names_and_details_are_byte_stable():
+    # pins the byte-stable OpenAI certification artifact after the spine isolation:
+    # the generic scaffold must reproduce the legacy serialized check NAMES and
+    # DETAILS (the prices-chunk detail keeps its space; the parse check keeps its
+    # legacy name). This is the regression guard the divergence slipped past.
+    d = _certify().as_dict()
+    names = [c["check"] for c in d["checks"]]
+    assert names[:5] == [
+        "page_not_block_shell",
+        "prices_chunk_not_block_shell",
+        "page_body_inspectable",
+        "prices_chunk_body_inspectable",
+        "prices_object_parsed",
+    ]
+    chunk = next(c for c in d["checks"] if c["check"] == "prices_chunk_not_block_shell")
+    assert chunk["detail"].startswith("prices chunk HTTP")
+    parsed = next(c for c in d["checks"] if c["check"] == "prices_object_parsed")
+    assert "price tokens parsed from JS-module prices object" in parsed["detail"]
