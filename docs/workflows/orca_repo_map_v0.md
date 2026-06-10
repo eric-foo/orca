@@ -24,7 +24,7 @@ stale_if:
 - Status: ACTIVE_RETRIEVAL_MAP (retrieval-only; source authority remains in `.agents/workflow-overlay/source-of-truth.md`)
 - Artifact type: Workflow navigation artifact
 - Scope: Repo navigation and source-pack selection
-- Refreshed: 2026-06-09 (Signal Content Record v0 + ECR harness modules registered; Reddit Graph Frontier / CloakBrowser routes preserved)
+- Refreshed: 2026-06-11 (repo-structure binding v0: machine map `repo-structure.yaml` + EP-04 placement checker registered; root strays quarantined to `docs/_inbox/`)
 - Implementation authorized: no
 
 ## How To Use This Map
@@ -141,6 +141,29 @@ source). Updating this map or a submap in the same change also satisfies the
 gate. The check enforces map *shape*, never the truth of a route, and fails OPEN
 on internal error. Reinstall = re-add the second PostToolUse entry beside the
 retrieval-header hook in `.claude/settings.json`, then restart the session.
+
+**Placement check (EP-04) — built, NOT YET WIRED.** A third substrate,
+`.agents/hooks/check_placement.py`, enforces placement shape at the write
+boundary: it reads `repo-structure.yaml` as its ONLY rule source (authority
+stays in `artifact-folders.md`; binding in
+`docs/decisions/orca_repo_structure_binding_v0.md`), WARNs on unplaced writes,
+nudges flat `docs/product/` writes toward the bound lanes, and checks
+map<->tree consistency in both directions. `_inbox` age and declared legacy
+debt are WARN-only. A pass is placement shape only — never validation,
+readiness, or authority.
+
+```
+python .agents/hooks/check_placement.py --check      # advisory tree report (exit 0)
+python .agents/hooks/check_placement.py --strict     # commit/CI gate (exit 1 on violation or stale map)
+python .agents/hooks/check_placement.py --selftest   # decision-logic self-check
+```
+
+REGISTRATION PENDING (owner action): the PostToolUse wiring was prepared but
+its `.claude/settings.json` edit was permission-denied this session
+(self-modification needs specific owner authorization). To wire it, add a
+third entry beside the two existing PostToolUse hooks:
+`{ "type": "command", "command": "python .agents/hooks/check_placement.py --hook", "timeout": 10 }`
+then restart the session (hooks load at session start).
 
 **Permission floor (protected paths + git lifecycle).** A second
 enforcement-placement substrate (EP-01 + EP-03 in
@@ -312,6 +335,7 @@ nickname: "crawling graph." The runner is
 | Path | Role |
 | --- | --- |
 | `AGENTS.md` | Canonical root instructions, global behavior, and triggers to Orca owner docs. |
+| `repo-structure.yaml` | Machine structure map (router only): homes + scratch/tolerance declarations consumed by `check_placement.py` and agents. Placement authority stays in `.agents/workflow-overlay/artifact-folders.md`; binding/parameters in `docs/decisions/orca_repo_structure_binding_v0.md`. |
 | `.agents/workflow-overlay/` | Orca overlay authority for project facts, folders, source rules, prompt rules, validation, safety, and review lanes. |
 | `orca-harness/` | Bounded authorized implementation backing Data Capture source acquisition and the v0.14 Judgment Harness (capture adapters, source-observability, schemas, scoring, runners, fixtures, tests). Navigation context only; not runtime, acceptance, or readiness. See the Orca Harness section. |
 | `docs/decisions/` | Decision records. |
@@ -324,7 +348,7 @@ nickname: "crawling graph." The runner is
 | `docs/migration/` | Import and migration records. |
 | `docs/hygiene/` | Triage and cleanup queues. |
 | `docs/_inbox/` | Non-authoritative scratch and parked material. |
-| `slot1_*` / `slot2_*` `_CAPTURE_operator_workfile.md` (repo root) | Loose Data Capture pressure-test operator workfiles parked at the repo root; un-triaged drift, not authoritative. Route through `docs/hygiene/queue.md`. |
+| (root strays) | Quarantined 2026-06-11: `slot1_mi`/`slot2_teal` operator workfiles and `di_dd.html` moved from the repo root to `docs/_inbox/`; see `docs/hygiene/queue.md` ORCA-HYGIENE-010. The root is now fully enumerated by `repo-structure.yaml` `known_top_level`. |
 
 ## Overlay Files
 
