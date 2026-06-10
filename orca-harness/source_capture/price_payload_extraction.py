@@ -404,8 +404,10 @@ def certify_extraction(
     *,
     page_block_class: str,
     page_status: int,
+    page_block_signal: str | None,
     chunk_block_class: str,
     chunk_status: int,
+    chunk_block_signal: str | None,
     token_list: list[str],
     prices: dict[str, dict[str, float]],
     resolved_tiers: list[ResolvedTier],
@@ -413,10 +415,13 @@ def certify_extraction(
 ) -> CertificationVerdict:
     """Decide 'certified content' via explicit checks over recorded provenance.
 
-    Pass requires: both source bodies are 2xx and NOT block/empty shells; the
-    prices object parsed; and EVERY consumer tier that carries a numeric token
-    resolved to a numeric amount in the target currency. A custom/usage static
-    price (Enterprise) is an honest non-numeric tier, not a failure.
+    Pass requires: both source bodies are 2xx, NOT block/empty shells, and
+    INSPECTABLE (not an undecoded/encoded body); the prices object parsed; a
+    non-empty canonical token list whose tokens are all present in the prices
+    object; EVERY consumer tier that carries a numeric token resolved to a
+    numeric amount in the target currency; and every resolved amount within a
+    plausible range (>= 0, below a sane ceiling). A custom/usage static price
+    (Enterprise) is an honest non-numeric tier, not a failure.
     """
     checks: list[CertificationCheck] = []
 
@@ -431,16 +436,33 @@ def certify_extraction(
         f"prices chunk HTTP {chunk_status}, block_shell={chunk_block_class}",
     ))
     checks.append(CertificationCheck(
+        "page_body_inspectable",
+        page_block_signal != "encoded_body_uninspectable",
+        f"page block_shell signal={page_block_signal!r} "
+        "(content cannot be certified from an undecoded/encoded body)",
+    ))
+    checks.append(CertificationCheck(
+        "prices_chunk_body_inspectable",
+        chunk_block_signal != "encoded_body_uninspectable",
+        f"prices chunk block_shell signal={chunk_block_signal!r} "
+        "(content cannot be certified from an undecoded/encoded body)",
+    ))
+    checks.append(CertificationCheck(
         "prices_object_parsed",
         len(prices) > 0,
         f"{len(prices)} price tokens parsed from JS-module prices object",
     ))
 
-    tokens_in_prices = all(t in prices for t in token_list) if token_list else True
+    # An ABSENT token list is a missing cross-check input, not a confirmed match:
+    # fail (was a vacuous pass) so a payload reshape that drops the token array
+    # cannot silently certify a prices object that lacks the displayed tiers.
+    tokens_in_prices = bool(token_list) and all(t in prices for t in token_list)
     checks.append(CertificationCheck(
         "token_list_consistent_with_prices",
         tokens_in_prices,
-        f"canonical token list ({len(token_list)}) all present in prices object: {tokens_in_prices}",
+        ("canonical token list absent — cross-check input missing"
+         if not token_list
+         else f"canonical token list ({len(token_list)}) all present in prices object: {tokens_in_prices}"),
     ))
 
     numeric_tier_prices = [
@@ -464,6 +486,22 @@ def certify_extraction(
         "at_least_one_paid_tier_priced",
         priced >= 1,
         f"{priced} tiers resolved to a positive {currency} amount",
+    ))
+
+    # Plausibility floor/ceiling on resolved amounts: catches garbage from a
+    # payload reshape (a negative, or an epoch/timestamp grabbed instead of a
+    # price). $0 is a legitimate amount (Free tier), so the floor is 0, not >0.
+    max_plausible_minor = 100_000_000  # $1,000,000 in 2-dp minor units
+    implausible = [
+        rp.price_token for rp in numeric_tier_prices
+        if rp.resolved and not (0 <= (rp.amount_minor or 0) < max_plausible_minor)
+    ]
+    resolved_amount_count = sum(1 for rp in numeric_tier_prices if rp.resolved)
+    checks.append(CertificationCheck(
+        "resolved_amounts_plausible",
+        not implausible,
+        (f"all {resolved_amount_count} resolved amounts within [0, {max_plausible_minor}) minor units"
+         + (f"; implausible={implausible}" if implausible else "")),
     ))
 
     certified = all(c.passed for c in checks)

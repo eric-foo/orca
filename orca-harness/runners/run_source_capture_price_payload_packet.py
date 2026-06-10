@@ -215,7 +215,9 @@ def run_price_payload_capture(
 
     verdict = certify_extraction(
         page_block_class=page_cls.classification.value, page_status=page_res.status,
+        page_block_signal=page_cls.signal,
         chunk_block_class=chunk_cls.classification.value, chunk_status=chunk_res.status,
+        chunk_block_signal=chunk_cls.signal,
         token_list=token_list, prices=prices, resolved_tiers=resolved, currency=currency,
     )
 
