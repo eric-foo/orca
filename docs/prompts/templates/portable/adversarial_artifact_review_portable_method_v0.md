@@ -21,7 +21,7 @@ stale_if:
 model_neutrality: Method/posture only. It never names, recommends, ranks, or routes a runtime model. The cross-family property is satisfied by the operator's model choice, not by this file.
 ```
 
-> **How to use:** paste the delimited PORTABLE METHOD block below to the reviewer, together with the review target and the authority excerpts it must conform to — **always including the authoring environment's foundational behavior + scope-discipline doctrine** (for Orca: the `AGENTS.md` kernel, which carries the *Smallest Complete Intervention* rule), since conformance to it is part of the review. The reviewer needs nothing else — no repo, no skills, no overlay.
+> **How to use:** deliver the delimited PORTABLE METHOD block to the reviewer — **pasted in chat, or shipped as the bundle `README`** (the no_repo package shape is bound in `.agents/workflow-overlay/delegated-review-patch.md`) — together with the review target and the authority excerpts it must conform to — **always including the authoring environment's foundational behavior + scope-discipline doctrine** (for Orca: the `AGENTS.md` kernel, which carries the *Smallest Complete Intervention* rule), since conformance to it is part of the review. The reviewer needs nothing else — no repo, no skills, no overlay.
 
 ---
 
