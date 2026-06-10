@@ -2,26 +2,32 @@
 
 Translate the accepted live-layer ADR's slice-3a predicates into raising
 validators (``LinkedInLaneError``): every negative is a raise, so a test proves
-the gate fails bad input rather than passing hollow. Hardened to the slice-1/2
-standard: a fail-closed top-level KEY allowlist (derived from the dataclass), the
-IMPORTED forbidden-output-field walk (from ``linkedin_lane``), and a NEGATED
-non_claims check (a positive inverse claim must not satisfy a category).
+the gate fails bad input rather than passing hollow. The generic fail-closed
+primitives (forbidden-output-field walk, key allowlist, required-field check,
+NEGATED non_claims category check) are IMPORTED from
+``linkedin_lane.shared_validation`` -- the single source of truth -- not
+re-implemented.
 
-The load-bearing predicates (ADR refinement B / slice 3a) -- the point of this
-slice -- are enforced here, NOT carried as enum labels: owner-presence is
-ATTESTED (a bool that must be True + a stated check method), entitlement-gate
-bypass is FORBIDDEN (must be False), execution is NOT authorized (this is a
-no-runtime contract record, must be False), the live mode is one of the two
-attended modes, and the autonomous attended mode must carry the POC-risk flag.
+The load-bearing predicates (ADR refinement B / slice 3a) are enforced here, NOT
+carried as enum labels: owner-presence is ATTESTED (a bool that must be True + a
+stated check method), entitlement-gate bypass is FORBIDDEN (must be False),
+execution is NOT authorized (no-runtime contract record, must be False), the live
+mode is one of the two attended modes, and the autonomous attended mode must
+carry the POC-risk flag (iff).
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import fields
 from typing import Any
 
-from capture_spine.linkedin_lane.models import LinkedInLaneError
-from capture_spine.linkedin_lane.validation import assert_no_forbidden_output_fields
+from capture_spine.linkedin_lane.shared_validation import (
+    assert_no_forbidden_output_fields,
+    fail as _fail,
+    reject_unknown_keys as _reject_unknown_keys,
+    require_fields as _require,
+    validate_non_claims_categories as _validate_non_claims,
+)
 from capture_spine.linkedin_live_adapter.models import (
     LINKEDIN_LIVE_ACCESS_ENVELOPE_SCHEMA_VERSION,
     LiveAccessEnvelope,
@@ -38,8 +44,8 @@ _POC_RISK_LIVE_ACCESS_MODE_VALUES = frozenset(
     {LiveAccessMode.OWNER_PRESENT_ATTENDED_AUTOMATION.value}
 )
 
-# Required descriptive (str/enum) fields -- must be present and non-empty. The
-# boolean predicates (presence/bypass/execution) are checked separately below.
+# Required descriptive (str/enum) fields -- present and non-empty. The boolean
+# predicates (presence/bypass/execution) are checked separately below.
 _REQUIRED_LIVE_ACCESS_ENVELOPE_FIELDS: tuple[str, ...] = (
     "live_access_id",
     "run_id",
@@ -47,16 +53,6 @@ _REQUIRED_LIVE_ACCESS_ENVELOPE_FIELDS: tuple[str, ...] = (
     "source_policy_posture",
     "stop_condition",
     "attended_presence_check_method",
-)
-
-# non_claims must DISCLAIM (negate) each hard-stop category -- a positive inverse
-# claim like "live LinkedIn access" must NOT satisfy "live" (mirrors slice 2).
-_REQUIRED_NON_CLAIM_CATEGORIES: tuple[str, ...] = (
-    "live",
-    "promotion",
-    "source capture packet",
-    "data capture",
-    "outreach",
 )
 
 
@@ -114,63 +110,3 @@ def validate_live_access_envelope(envelope: Mapping[str, Any]) -> None:
             "(no over-attesting POC-risk on a non-POC mode)",
         )
     _validate_non_claims(envelope.get("non_claims"), "live_access_envelope")
-
-
-def _reject_unknown_keys(value_map: Mapping[str, Any], allowed_keys: frozenset[str], label: str) -> None:
-    unknown = sorted(str(key) for key in value_map if str(key) not in allowed_keys)
-    if unknown:
-        _fail("unknown_field", f"{label} contains unknown field(s): {unknown}")
-
-
-def _require(value_map: Mapping[str, Any], field_names: tuple[str, ...], label: str) -> None:
-    for field_name in field_names:
-        value = value_map.get(field_name)
-        if value is None or (isinstance(value, str) and not value.strip()):
-            _fail(f"missing_{field_name}", f"{label} missing required field: {field_name}")
-
-
-def _validate_non_claims(value: Any, label: str) -> None:
-    if not _is_list(value):
-        _fail("missing_non_claims", f"{label} requires non_claims")
-    claims = [str(item).strip().lower() for item in value]
-    missing = [
-        category
-        for category in _REQUIRED_NON_CLAIM_CATEGORIES
-        if not any(category in claim and _is_negated(claim) for claim in claims)
-    ]
-    if missing:
-        _fail(
-            "incomplete_non_claims",
-            f"{label} non_claims must DISCLAIM (negate) the required hard-stop categories; missing: {missing}",
-        )
-
-
-# An expansive / exceptive qualifier reverses a leading negation ("not ONLY X",
-# "not merely X", "... but X", "... also X"), so the claim does NOT disclaim the
-# category. Lexical negation cannot be fully robust against a determined adversary
-# (a contrived "not X; X is enabled" still reads as negated); this closes the
-# demonstrated reversal class. A canonical accepted-disclaimer allowlist would be
-# the fully-robust form -- deferred. (Slice-2's _is_negated shares this weakness.)
-_NON_DISCLAIMER_MARKERS: tuple[str, ...] = (
-    "only",
-    "merely",
-    "also",
-    "as well",
-    "but ",
-    "however",
-    "except",
-)
-
-
-def _is_negated(claim: str) -> bool:
-    if not (claim.startswith("not ") or claim.startswith("no ")):
-        return False
-    return not any(marker in claim for marker in _NON_DISCLAIMER_MARKERS)
-
-
-def _is_list(value: Any) -> bool:
-    return isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
-
-
-def _fail(code: str, message: str) -> None:
-    raise LinkedInLaneError(code, message)

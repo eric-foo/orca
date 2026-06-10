@@ -134,13 +134,20 @@ def test_visible_influence_counts_do_not_trip_the_forbidden_walk() -> None:
 # --- negatives: every one must raise ---
 
 def test_forbidden_field_present_raises() -> None:
-    bad = {**_business_row().to_dict(), "followers": ["a", "b", "c"]}
+    # forbidden field under an ALLOWED container -> caught by the recursive walk
+    # (a top-level "followers" would be caught earlier by the key allowlist, which
+    # would not exercise the walk).
+    bad = _business_row().to_dict()
+    bad["visible_influence_numbers_or_none"] = {"follower_list": ["a", "b", "c"]}
     with pytest.raises(LinkedInLaneError):
         validate_candidate_row(bad)
 
 
 def test_nested_forbidden_field_present_raises() -> None:
-    bad = {**_business_row().to_dict(), "extra": {"connection_list": ["x"]}}
+    # nested forbidden key under an ALLOWED container -> caught by the recursive
+    # walk (under an UNKNOWN container it would be caught earlier by the allowlist).
+    bad = _business_row().to_dict()
+    bad["visible_influence_numbers_or_none"] = {"connection_graph": {"a": ["b"]}}
     with pytest.raises(LinkedInLaneError):
         validate_candidate_row(bad)
 
@@ -287,3 +294,50 @@ def test_envelope_hollow_non_claims_raises() -> None:
     # F4: a non-empty but hollow non_claims override must fail the required-category check.
     with pytest.raises(LinkedInLaneError):
         validate_run_envelope(_envelope(non_claims=("not ready",)))
+
+
+# --- negatives added after the shared-validation consolidation (F4 closed + superset markers) ---
+
+def test_envelope_positive_non_claims_raises() -> None:
+    # F4 NOW CLOSED: slice-1 inherited the shared NEGATED check, so a non_claims
+    # stating the POSITIVE inverse must NOT satisfy the category (it did before).
+    with pytest.raises(LinkedInLaneError):
+        validate_run_envelope(
+            _envelope(
+                non_claims=(
+                    "live LinkedIn access",
+                    "automatic promotion",
+                    "Source Capture Packet output",
+                    "Data Capture handoff",
+                    "Outreach Lane execution",
+                )
+            )
+        )
+
+
+def test_person_row_routine_employer_basis_raises() -> None:
+    # The shared excluded-basis SUPERSET adds "routine employer", which slice-1's
+    # local list lacked; a person row on that basis must now raise.
+    with pytest.raises(LinkedInLaneError):
+        validate_candidate_row(
+            _person_row(
+                senior_role_or_public_actor_basis_or_none="surfaced via routine employer staff listing"
+            ).to_dict()
+        )
+
+
+def test_benign_compound_non_claims_passes() -> None:
+    # F3 (cross-vendor): a legitimate negated disclaimer that contains a benign
+    # qualifier ("only") in a SEPARATE clause must STILL count as disclaiming --
+    # it leads with "not <category>", not "not only <category>", so no false positive.
+    validate_run_envelope(
+        _envelope(
+            non_claims=(
+                "not live LinkedIn access; only planning metadata is kept",
+                "not promotion",
+                "not source capture packet",
+                "not data capture",
+                "not outreach",
+            )
+        )
+    )

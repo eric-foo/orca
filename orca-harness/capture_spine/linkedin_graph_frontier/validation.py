@@ -4,24 +4,28 @@ Translate the architecture's Graph Frontier Register Additions + the pilot's
 frontier stage into raising validators (``LinkedInLaneError``). Every negative is
 a raise, so a test can prove the gate fails bad input rather than passing hollow.
 
-Hardened to the slice-1 candidate-row standard (a cross-vendor delegated review
-caught that this module had not carried those lessons): a fail-closed top-level
-KEY allowlist on every mapping (derived from the dataclasses, so a forbidden
-graph cannot be smuggled under an innocuous key the exact-match walk misses);
-closed-enum allowlists on node_type/edge_type; a person-node excluded-basis
-gate; the public_role_context theme-linkage rule; an originating-run guard so a
-same-run frontier hop is fail-closed (not only execution_authorized=False); and
-a NEGATED non_claims check (a positive inverse claim must not satisfy a category).
-The forbidden-output-field walk is IMPORTED from linkedin_lane (slice 1).
+The generic fail-closed primitives -- the forbidden-output-field walk, the
+fail-closed key allowlist, the required-field check, the NEGATED non_claims
+category check, and the excluded public-actor-basis markers -- are IMPORTED from
+``linkedin_lane.shared_validation`` (the single source of truth), not
+re-implemented. Slice-specific structure (node/edge/decision shape, the
+public_role_context theme-linkage rule, the originating-run guard) stays here.
 """
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from dataclasses import fields
 from typing import Any
 
-from capture_spine.linkedin_lane.models import LinkedInLaneError
-from capture_spine.linkedin_lane.validation import assert_no_forbidden_output_fields
+from capture_spine.linkedin_lane.shared_validation import (
+    assert_no_forbidden_output_fields,
+    fail as _fail,
+    is_list as _is_list,
+    reject_unknown_keys as _reject_unknown_keys,
+    require_fields as _require,
+    validate_non_claims_categories as _validate_non_claims,
+    validate_public_actor_basis,
+)
 from capture_spine.linkedin_graph_frontier.models import (
     LINKEDIN_GRAPH_FRONTIER_NEXT_RUN_ENVELOPE_SCHEMA_VERSION,
     LINKEDIN_GRAPH_FRONTIER_REGISTER_SCHEMA_VERSION,
@@ -46,9 +50,8 @@ _PERSON_PRIVACY_SENSITIVITIES = frozenset(
 _PERSON_DATA_MINIMIZED_SET = frozenset({"yes", "no"})
 
 # Fail-closed top-level KEY allowlists, derived from the dataclasses so they track
-# the schema with zero drift (mirrors slice-1 candidate-row hardening). This closes
-# the alias path the exact-key forbidden walk cannot: a forbidden graph under an
-# innocuous key, e.g. {"graph_payload": "follower graph: A->B"}.
+# the schema with zero drift. This closes the alias path the exact-key forbidden
+# walk cannot: a forbidden graph under an innocuous key.
 _ALLOWED_REGISTER_WRAPPER_KEYS = frozenset(
     {"schema_version", "register_id", "source_run_id", "nodes", "edges", "frontier_decisions", "non_claims"}
 )
@@ -56,40 +59,6 @@ _ALLOWED_NODE_KEYS = frozenset(f.name for f in fields(FrontierNode))
 _ALLOWED_EDGE_KEYS = frozenset(f.name for f in fields(FrontierEdge))
 _ALLOWED_DECISION_KEYS = frozenset(f.name for f in fields(FrontierDecision))
 _ALLOWED_NEXT_RUN_ENVELOPE_KEYS = frozenset(f.name for f in fields(NextRunEnvelope))
-
-# A person qualifies only on a concrete public-actor basis that stands OUTSIDE the
-# org chart. These markers name bases the architecture/pilot disqualify outright;
-# conservative fail-closed lexical exclusion (mirrors slice-1 candidate-row).
-_EXCLUDED_PERSON_BASIS_MARKERS: tuple[str, ...] = (
-    "org chart",
-    "org-chart",
-    "orgchart",
-    "organization chart",
-    "organisation chart",
-    "reporting line",
-    "reports to",
-    "mentioned by",
-    "tagged by",
-    "mention/tag",
-    "routine post",
-    "routine employer",
-    "routine work update",
-    "routine update",
-    "commenter",
-    "follower",
-    "connection",
-)
-
-# non_claims must DISCLAIM each hard-stop category (negative posture), not merely
-# mention the category word -- a positive claim like "live LinkedIn access" must
-# NOT satisfy "live". Each category must appear in a NEGATED claim.
-_REQUIRED_NON_CLAIM_CATEGORIES: tuple[str, ...] = (
-    "live",
-    "promotion",
-    "source capture packet",
-    "data capture",
-    "outreach",
-)
 
 
 def validate_graph_frontier_register(register: Mapping[str, Any]) -> None:
@@ -200,20 +169,9 @@ def _validate_node(node: Mapping[str, Any]) -> None:
 
 
 def _validate_person_node(node: Mapping[str, Any]) -> None:
-    basis = node.get("senior_role_or_public_actor_basis_or_none")
-    if not isinstance(basis, str) or not basis.strip():
-        _fail(
-            "missing_public_actor_basis",
-            "a person-candidate node requires a concrete org-chart-independent public-actor basis",
-        )
-    lowered_basis = basis.lower()
-    for marker in _EXCLUDED_PERSON_BASIS_MARKERS:
-        if marker in lowered_basis:
-            _fail(
-                "excluded_public_actor_basis",
-                "a person-candidate node basis must stand outside the org chart and must not rely on a "
-                f"mention/tag, routine post, commenter, follower, or connection status (matched: {marker!r})",
-            )
+    validate_public_actor_basis(
+        node.get("senior_role_or_public_actor_basis_or_none"), "person-candidate node"
+    )
     if node.get("privacy_sensitivity_or_none") not in _PERSON_PRIVACY_SENSITIVITIES:
         _fail(
             "invalid_person_privacy_sensitivity",
@@ -273,44 +231,3 @@ def _validate_decision(decision: Mapping[str, Any], node_ids: set[Any]) -> None:
     if not isinstance(reason, str) or not reason.strip():
         _fail("missing_selection_reason", "frontier decision requires a selection reason")
     _validate_non_claims(decision.get("non_claims"), "frontier_decision")
-
-
-def _reject_unknown_keys(value_map: Mapping[str, Any], allowed_keys: frozenset[str], label: str) -> None:
-    unknown = sorted(str(key) for key in value_map if str(key) not in allowed_keys)
-    if unknown:
-        _fail("unknown_field", f"{label} contains unknown field(s): {unknown}")
-
-
-def _require(value_map: Mapping[str, Any], field_names: tuple[str, ...], label: str) -> None:
-    for field_name in field_names:
-        value = value_map.get(field_name)
-        if value is None or (isinstance(value, str) and not value.strip()):
-            _fail(f"missing_{field_name}", f"{label} missing required field: {field_name}")
-
-
-def _validate_non_claims(value: Any, label: str) -> None:
-    if not _is_list(value):
-        _fail("missing_non_claims", f"{label} requires non_claims")
-    claims = [str(item).strip().lower() for item in value]
-    missing = [
-        category
-        for category in _REQUIRED_NON_CLAIM_CATEGORIES
-        if not any(category in claim and _is_negated(claim) for claim in claims)
-    ]
-    if missing:
-        _fail(
-            "incomplete_non_claims",
-            f"{label} non_claims must DISCLAIM (negate) the required hard-stop categories; missing: {missing}",
-        )
-
-
-def _is_negated(claim: str) -> bool:
-    return claim.startswith("not ") or claim.startswith("no ") or " not " in claim
-
-
-def _is_list(value: Any) -> bool:
-    return isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray))
-
-
-def _fail(code: str, message: str) -> None:
-    raise LinkedInLaneError(code, message)

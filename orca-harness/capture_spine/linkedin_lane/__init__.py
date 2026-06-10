@@ -24,9 +24,11 @@ from capture_spine.linkedin_lane.models import (
     StopReason,
     VisibleInfluenceNumbers,
 )
-from capture_spine.linkedin_lane.validation import (
+from capture_spine.linkedin_lane.shared_validation import (
     FORBIDDEN_OUTPUT_FIELDS,
     assert_no_forbidden_output_fields,
+)
+from capture_spine.linkedin_lane.validation import (
     validate_candidate_row,
     validate_run_envelope,
 )
