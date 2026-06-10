@@ -447,6 +447,27 @@ production runtime, contract hardening, source-access boundary change, or
 ECR/Cleaning/Judgment design. Do not use this pack to design ECR schema,
 Cleaning implementation, or Judgment behavior.
 
+## ECR Source-Side Spine Read Pack
+
+Use this pack when the task touches the ECR source-side derived-record spine —
+the integrity postures (ECR SP-1/2/3/6) or the Signal Content Record — including
+their plans, models, or deriver code.
+
+Start with:
+
+- `docs/workflows/ecr_spine_submap_v0.md` for orientation. It is the
+  `retrieval_only` front door: it states the cross-kind invariants and routes one
+  hop to every owner (the SCR direction + deriver plan, the ECR frame + SP-1/2/3
+  and SP-6 slices, the receipt-translator origin, the schema-evolution doctrine,
+  and the built `orca-harness/ecr/` + `orca-harness/signal_content/` code).
+
+Then open only the controlling owner doc named by the submap for the current
+claim. Do not bulk-load every ECR/SCR plan or all derived-record code from this
+pack. This is a navigation pointer only; it does not claim ECR/SCR is validated,
+ratified, ready for Evidence-Unit binding, or that JSG-01 is unfrozen (the gate
+stays FROZEN). This pack must not fork the source-loading rule; the submap
+routes, the owner docs decide.
+
 ## Judgment Spine Evidence Ladder Read Pack
 
 Use this pack when classifying what a Judgment Spine run, case, model answer,
