@@ -71,15 +71,15 @@ direction_change_propagation:
     - ".agents/workflow-overlay/source-loading.md"
     - "docs/workflows/orca_repo_map_v0.md"
     - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
-    - "docs/product/data_capture_source_access_method_plan_v0.md"
+    - "docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md"
   intentionally_not_updated:
     - path: ".agents/workflow-overlay/artifact-roles.md"
       reason: "The existing Product artifact role covers Source Capture Armory design notes and scoped specs; this patch binds folder routing, not a new artifact role."
-    - path: "docs/product/data_capture_source_access_boundary_decision_v0.md"
+    - path: "docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md"
       reason: "Source-access boundary permission and hard stops did not change."
-    - path: "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+    - path: "docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
       reason: "Data Capture obligations did not change."
-  stale_language_search: "rg -n \"source_capture_toolbox|Source Capture Armory\" .agents/workflow-overlay/artifact-folders.md docs/product/README.md docs/product/source_capture_toolbox/README.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/data_capture_source_access_method_plan_v0.md"
+  stale_language_search: "rg -n \"source_capture_toolbox|Source Capture Armory\" .agents/workflow-overlay/artifact-folders.md docs/product/README.md docs/product/source_capture_toolbox/README.md .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md"
   non_claims:
     - "not validation"
     - "not readiness"
@@ -154,7 +154,7 @@ direction_change_propagation:
       reason: dated historical observation, true as of its date.
     - path: docs/workflows/orca_pricing_first_doc_cascade_proposal_v0.md
       reason: historical proposal record (row 7 deferral); current acceptance state now lives in skill-adoption.md; the proposal is not retro-edited.
-    - path: docs/product/orca_product_lead_first_icp_wedge_decision_v0.md
+    - path: docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md
       reason: already-superseded historical record; its supersede banner governs.
     - path: docs/decisions/orca_icp_wedge_convergence_break_in_first_v0.md
       reason: already-superseded historical record; its supersede banner governs.

@@ -35,10 +35,10 @@ stale_if:
 | --- | --- | --- |
 | Know the north-star / what "good judgment" means here | `judgment_spine_thesis_v0.md` | research |
 | Find the case inventory + per-case artifact status | `manifest_v0.md` | research |
-| Run or plan a case through gates JSG-01→JSG-10 | `docs/product/judgment_quality_promotion_operating_model_v0.md` (conductor) | product |
-| Know who owns a gate + its required receipts | `docs/product/judgment_spine_gate_ownership_map_v0.md` | product |
-| Know what a run/artifact can **claim** (tiers, closeout states, caps) | `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` | product |
-| Apply the JSG-08 reveal/calibration receipt | `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` | product |
+| Run or plan a case through gates JSG-01→JSG-10 | `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` (conductor) | product |
+| Know who owns a gate + its required receipts | `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` | product |
+| Know what a run/artifact can **claim** (tiers, closeout states, caps) | `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` | product |
+| Apply the JSG-08 reveal/calibration receipt | `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` | product |
 | Work from the harness spec (schemas, scorer, runner, probe) | `harness/v0_14/index.md` | research |
 | Understand no-tools isolation for JSG-04/05/06 | `harness/v0_14/contestant_no_tools_execution_contract_v0.md` | research |
 | Know what machinery is built vs a named gap (build-state) | `judgment_spine_machinery_build_state_gap_map_v0.md` | research |
@@ -71,22 +71,22 @@ stale_if:
 ### Conductor — how a case walks the gates
 - summary: Sequences JSG-01→JSG-10, checks each gate's receipt, routes between them. Holds routing/lifecycle only.
 - status: working operating model; the **path toward** judgment-quality evidence, not proof of it.
-- pointer: `docs/product/judgment_quality_promotion_operating_model_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` (product).
 
 ### Gate ownership
 - summary: Who owns each gate, its required receipts, and gate dependencies.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_gate_ownership_map_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` (product).
 
 ### Evidence ladder — what a run can claim
 - summary: Claim tiers (product_learning / buyer_proof / judgment_quality), closeout states, weakest-cleared-gate + sub-floor caps.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` (product).
 
 ### JSG-08 reveal / calibration owner contract
 - summary: The reveal/calibration receipt shape and its satisfaction states the conductor reads at JSG-08.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` (product).
 
 ### Harness v0.14 spec (+ no-tools isolation)
 - summary: Phase-1 code-readiness spec — schemas, action bands, scorer, runner contracts, probe; the no-tools contract owns JSG-04/05/06 isolation.

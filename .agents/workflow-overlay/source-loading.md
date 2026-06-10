@@ -288,15 +288,15 @@ For a Data Capture Spine setup CA, start with these targeted sections:
 
 - `docs/decisions/turn_08_product_thesis_v0.md`: thesis, value proposition,
   strategic center, and current theory sections.
-- `docs/product/orca_offer_hypothesis_v0.md`: core offer hypothesis,
+- `docs/product/product_lead/orca_offer_hypothesis_v0.md`: core offer hypothesis,
   mechanism, fit diagnostic, and non-claims sections.
-- `docs/product/orca_buyer_proof_packet_v0.md`: proof standard, target buyer,
+- `docs/product/product_lead/orca_buyer_proof_packet_v0.md`: proof standard, target buyer,
   signal surface, disqualifiers, and not-build boundaries.
-- `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`:
+- `docs/product/core_spine/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`:
   purpose, decision, layer rules, and future ECR/Evidence Unit boundaries.
-- `docs/product/core_spine_v0_product_contract.md`: product bet, core rule,
+- `docs/product/core_spine/core_spine_v0_product_contract.md`: product bet, core rule,
   frozen primitives, and explicit non-goals only.
-- `docs/product/core_spine_v0_information_production_foundation_v0.md`:
+- `docs/product/core_spine/core_spine_v0_information_production_foundation_v0.md`:
   Evidence Unit standard and boundary rules only.
 
 Do not read these six files in full by default. Use the targeted sections
@@ -333,13 +333,13 @@ Projection, categorical ECR receipt, and Cleaning handoff.
 
 Start with:
 
-- `docs/product/data_capture_spine_intake_surface_consolidation_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_intake_surface_consolidation_v0.md`
 
 For post-batch patch planning, review, or owner decision, also open:
 
-- `docs/product/data_capture_spine_post_batch_patch_plan_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_post_batch_patch_plan_v0.md`
 - `docs/decisions/data_capture_spine_post_batch_patch_plan_owner_decision_v0.md`
-- `docs/product/data_capture_spine_obligation_contract_patch_proposal_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_obligation_contract_patch_proposal_v0.md`
 - `docs/decisions/data_capture_spine_obligation_contract_patch_proposal_owner_decision_v0.md`
 - `docs/review-outputs/adversarial-artifact-reviews/data_capture_spine_obligation_contract_patch_proposal_adversarial_artifact_review_v0.md`
 
@@ -352,33 +352,33 @@ also open:
   lifecycle, harness implementation, source-quality support, and current Reddit
   pre-commercial ordering without bulk-loading every capture artifact.
 - `docs/decisions/data_capture_spine_source_observability_scoping_authorization_v0.md`
-- `docs/product/data_capture_spine_source_observability_requirements_scoping_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_source_observability_requirements_scoping_v0.md`
 - `docs/decisions/data_capture_spine_source_observability_requirements_boundary_decision_v0.md`
 - `docs/decisions/data_capture_spine_source_observability_requirements_support_implementation_scoping_authorization_v0.md`
 - `docs/decisions/data_capture_spine_source_observability_local_support_implementation_scoping_authorization_v0.md`
 - `docs/decisions/data_capture_spine_source_observability_local_support_implementation_execution_authorization_v0.md`
 - `docs/decisions/data_capture_spine_source_observability_support_closeout_decision_v0.md`
-- `docs/product/data_capture_spine_pressure_test_closeout_synthesis_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_pressure_test_closeout_synthesis_v0.md`
 - `docs/product/source_capture_toolbox/README.md`
 - `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` when deciding whether generated Source Capture Packets remain scratch, may be cited by durable closeouts, require retention/sensitivity handling, or require a cited separate admission decision before `separately_admitted` can be used.
 - `docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md` when checking whether already-bounded source-quality rows and existing Source Capture Packets may be assembled into a state census without runner dispatch, source discovery, scoring, fixture admission, or Judgment authority.
 - `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md`
-- `docs/product/data_capture_spine_pressure_test_all_slot_synthesis_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_pressure_test_all_slot_synthesis_v0.md`
 - `docs/review-outputs/adversarial-artifact-reviews/data_capture_spine_pressure_test_all_slot_synthesis_blast_radius_recheck_v0.md`
 
 Then open only the controlling source needed for the current claim:
 
 - `docs/decisions/data_capture_spine_pressure_test_batch_classification_decision_v0.md`
-- `docs/product/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`
-- `docs/product/data_capture_harness_operating_model_architecture_v2.md`
-- `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md`
-- `docs/product/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`
-- `docs/product/data_capture_source_access_boundary_decision_v0.md`
-- `docs/product/data_capture_spine_pressure_test_commissioning_plan_v0.md`
-- `docs/product/data_capture_spine_pressure_test_execution_authorization_v0.md`
+- `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`
+- `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2.md`
+- `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md`
+- `docs/product/core_spine/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`
+- `docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md`
+- `docs/product/data_capture_spine/data_capture_spine_pressure_test_execution_authorization_v0.md`
 
 For Slot 3 WSO continuation or cross-venue Slot 3 synthesis, also open
-`docs/product/data_capture_spine_pressure_test_slot3_reddit_subbatch_control_note_v0.md`
+`docs/product/data_capture_spine/data_capture_spine_pressure_test_slot3_reddit_subbatch_control_note_v0.md`
 before treating Reddit capture as complete venue coverage. That note records
 the Reddit sub-batch checker outcomes, source-language-anchor lesson, media and
 cutoff limitations, and the open WSO-run versus WSO-defer control decision.
@@ -480,16 +480,16 @@ Start with:
   orientation across Judgment Spine product docs, research docs, cases,
   manifest, conductor, gate ownership, evidence ladder, JSG-08, and harness
   surfaces without bulk-loading the corpus.
-- `docs/product/judgment_spine_evidence_ladder_architecture_v0.md`
-- `docs/product/judgment_spine_gate_ownership_map_v0.md` when the work asks
+- `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md`
+- `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` when the work asks
   which gate owns source identity, packet freeze, no-tools isolation,
   memorization probe, sealed output, scoring, reveal/calibration, claim
   classification, closeout, or judgment-quality promotion blockers.
-- `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` when
+- `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` when
   the work asks whether reveal/calibration material is absent, reveal-only,
   qualitative calibration, score-linked calibration, contaminated, or strong
   enough to satisfy `JSG-08` for a stronger claim.
-- `docs/product/judgment_quality_promotion_operating_model_v0.md` when the work
+- `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` when the work
   needs to run or plan a case through gates JSG-01 to JSG-10, decide a run's
   lifecycle state, or check what a partial or by-hand run can claim. This is the
   conductor: it sequences and verifies gate receipts and never computes judgment
@@ -498,7 +498,7 @@ Start with:
 Then open only the controlling source for the stronger claim being considered:
 
 - For buyer-proof claims, open `.agents/workflow-overlay/product-proof.md` and
-  `docs/product/orca_buyer_proof_packet_v0.md`.
+  `docs/product/product_lead/orca_buyer_proof_packet_v0.md`.
 - For judgment-quality, blind-use, fixture-admission, clean no-tools, scoring,
   probe, or calibration claims, open
   `docs/research/judgment-spine/harness/v0_14/contestant_no_tools_execution_contract_v0.md`

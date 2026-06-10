@@ -48,15 +48,15 @@ docs_roles:
   - { home: docs/hygiene, entry: docs/hygiene/queue.md }
   - { home: docs/_inbox, entry: docs/_inbox/README.md }
 
-# docs/product/ second-level lanes (binding: by-lane axis). status: planned until
+# docs/product/ second-level lanes (binding: by-lane axis). status: current until
 # the Phase-2 consolidation applies; new product artifacts use lanes immediately.
 product_lanes:
-  - { name: core_spine, status: planned }
-  - { name: data_capture_spine, status: planned }
-  - { name: judgment_spine, status: planned }
-  - { name: signal_content, status: planned }
-  - { name: ecr, status: planned }
-  - { name: product_lead, status: planned }
+  - { name: core_spine, status: current }
+  - { name: data_capture_spine, status: current }
+  - { name: judgment_spine, status: current }
+  - { name: signal_content, status: current }
+  - { name: ecr, status: current }
+  - { name: product_lead, status: current }
   - { name: source_capture_toolbox, status: current }   # pre-existing bound folder
 
 # Runtime/scratch: excluded from placement evaluation wherever they sit.
@@ -76,7 +76,6 @@ scratch_rules:
 # Known pre-move debt the checker tolerates (WARN-only, never strict-fail).
 # Each entry is removed by the change that retires the debt.
 legacy_tolerated:
-  - "docs/product/*.md"               # flat product files until Phase-2 apply
                                       # (single '*' never crosses '/' - lanes
                                       # are evaluated normally)
   - "orca-harness/**"                 # harness INTERNAL layout is not evaluated

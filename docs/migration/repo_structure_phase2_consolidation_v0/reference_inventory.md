@@ -231,6 +231,7 @@ files themselves - rewritten only under --rewrite-product-internal
 | `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_observation_slice3b_code_review_v0.md` | historical | 1 |
 | `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_projection_slice3b2_code_review_v0.md` | historical | 1 |
 | `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_projection_slice3b2_code_review_v1.md` | historical | 1 |
+| `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_runtime_browser_fetcher_slice3c2b_code_review_v0.md` | historical | 1 |
 | `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_runtime_capture_harness_slice3c2a_code_review_v0.md` | historical | 1 |
 | `docs/review-outputs/adversarial-artifact-reviews/linkedin_live_runtime_minimizer_slice3c1_code_review_v0.md` | historical | 1 |
 | `docs/review-outputs/adversarial-artifact-reviews/orca_ai_exposed_icp_refinement_adversarial_review_v0.md` | historical | 11 |
@@ -700,4 +701,4 @@ files themselves - rewritten only under --rewrite-product-internal
 | `docs/product/signal_content_record_deriver_architecture_plan_v0.md` | moved_set | 2 |
 | `docs/product/source_capture_packet_schema_evolution_architecture_v0.md` | moved_set | 3 |
 
-Totals: {'historical': 591, 'live': 10, 'moved_set': 91}
+Totals: {'historical': 592, 'live': 10, 'moved_set': 91}

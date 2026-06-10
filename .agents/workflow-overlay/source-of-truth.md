@@ -405,19 +405,19 @@ direction_change_propagation:
     - .agents/workflow-overlay/source-of-truth.md
     - .agents/workflow-overlay/source-loading.md
     - docs/workflows/orca_repo_map_v0.md
-    - docs/product/judgment_spine_gate_ownership_map_v0.md
+    - docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md
   downstream_surfaces_checked:
     - AGENTS.md
     - .agents/workflow-overlay/README.md
     - .agents/workflow-overlay/source-loading.md
     - docs/workflows/orca_repo_map_v0.md
-    - docs/product/judgment_spine_gate_ownership_map_v0.md
-    - docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md
+    - docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md
+    - docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md
     - .agents/workflow-overlay/validation-gates.md
     - .agents/workflow-overlay/prompt-orchestration.md
     - .agents/workflow-overlay/communication-style.md
   intentionally_not_updated:
-    - path: docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md
+    - path: docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md
       reason: >
         The owner-contract DCP receipt remains a primary architecture-doctrine
         change. The concrete lifecycle-audit failure mode was exposed in the
@@ -439,8 +439,8 @@ direction_change_propagation:
     .agents/workflow-overlay/source-of-truth.md
     .agents/workflow-overlay/source-loading.md
     docs/workflows/orca_repo_map_v0.md
-    docs/product/judgment_spine_gate_ownership_map_v0.md
-    docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md
+    docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md
+    docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md
   stale_language_search_result: >
     Executed on 2026-06-03 after the AR-01 through AR-03 minor review patch for
     the DCP primary/related trigger grammar. Hits in source-of-truth are
@@ -829,7 +829,7 @@ direction_change_propagation:
 - `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md`: retrieval-only entry map for Judgment Spine navigation across product docs, research docs, cases, manifest, conductor, gate ownership, evidence ladder, JSG-08, and harness surfaces; routes to owner sources and carries no validation, readiness, buyer-proof, fixture-admission, scoring, model-execution, or judgment-quality authority.
 - `docs/migration/import_queue.md`: read-only import queue state.
 - `docs/decisions/turn_08_product_thesis_v0.md`: current Orca product thesis and value proposition.
-- `docs/product/judgment_spine_evidence_ladder_architecture_v0.md`: Judgment Spine claim-tier architecture for Product-Learning, Buyer-Proof, and Judgment-Quality evidence boundaries.
-- `docs/product/judgment_spine_gate_ownership_map_v0.md`: Judgment Spine gate ownership map for source identity, packet freeze, no-tools isolation, memorization probe, sealed output, scoring, reveal/calibration, classification, and closeout blockers.
-- `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md`: JSG-08 owner contract for outcome reveal/calibration receipt shape, satisfaction states, scoring relationship, and claim caps.
+- `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md`: Judgment Spine claim-tier architecture for Product-Learning, Buyer-Proof, and Judgment-Quality evidence boundaries.
+- `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md`: Judgment Spine gate ownership map for source identity, packet freeze, no-tools isolation, memorization probe, sealed output, scoring, reveal/calibration, classification, and closeout blockers.
+- `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md`: JSG-08 owner contract for outcome reveal/calibration receipt shape, satisfaction states, scoring relationship, and claim caps.
 - `docs/workflows/turn_08_workflow_bedrock_maximization.md`: docs-first maximization plan for `workflow-deep-thinking`, future `workflow-product-ultraplan`, and future `workflow-feature-ultraplan`.

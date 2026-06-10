@@ -12,7 +12,7 @@ authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/README.md
   - docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md
-  - docs/product/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md
+  - docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md
 stale_if:
   - The source-access tooling authorization changes build tranches, selected backend, or Reddit ordering.
   - The Source Capture Armory README changes component status, runner set, or gap list.
@@ -40,18 +40,18 @@ stale_if:
 | --- | --- |
 | Understand current Source Capture Armory components and gaps | `docs/product/source_capture_toolbox/README.md` |
 | Check whether a source-access build or backend is authorized | `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md` |
-| Check source-access boundary / hard stops | `docs/product/data_capture_source_access_boundary_decision_v0.md` |
-| Compare source-access methods and Reddit ordering | `docs/product/data_capture_source_access_method_plan_v0.md` |
-| Check operating-model / commissioning-plan authority | `docs/product/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`, then `docs/product/data_capture_harness_operating_model_architecture_v2.md` or `docs/product/data_capture_spine_pressure_test_commissioning_plan_v0.md` as needed |
-| Check generic Candidate URL Intake boundaries | `docs/product/data_capture_spine_candidate_url_intake_contract_v0.md` |
-| Check bounded Reddit candidate URL intake / crawler boundaries | `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
-| Check accepted Reddit graph/frontier scouting boundaries | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
+| Check source-access boundary / hard stops | `docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md` |
+| Compare source-access methods and Reddit ordering | `docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md` |
+| Check operating-model / commissioning-plan authority | `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`, then `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2.md` or `docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md` as needed |
+| Check generic Candidate URL Intake boundaries | `docs/product/data_capture_spine/data_capture_spine_candidate_url_intake_contract_v0.md` |
+| Check bounded Reddit candidate URL intake / crawler boundaries | `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
+| Check accepted Reddit graph/frontier scouting boundaries | `docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
 | Check bounded Reddit candidate URL intake default policy | `docs/decisions/data_capture_spine_reddit_candidate_url_intake_default_policy_decision_v0.md` |
-| Check LinkedIn Lane discovery, bounded watch, people/business candidate boundaries, and optional POC-risk mode | `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md` |
+| Check LinkedIn Lane discovery, bounded watch, people/business candidate boundaries, and optional POC-risk mode | `docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md` |
 | Handle old Reddit search/listing HTML for Candidate URL Intake pilots | `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md` |
 | Plan bounded pre-commercial Reddit capture/consolidation | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` |
 | Check Reddit capture/consolidation success-signal hardening rationale | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
-| Check Capture obligations / forbidden outputs | `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
+| Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
 | Check whether Reddit capture output lands usefully in ECR (real-data probe; resolved by-design) | `docs/workflows/reddit_capture_to_ecr_consumption_probe_finding_v0.md` |
 | Check packet lifecycle, retention, sensitivity, or fixture movement | `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` |
 | Run existing capture tools safely | `orca-harness/docs/source_capture_agent_runbook.md` |
@@ -92,7 +92,7 @@ stale_if:
   packet-contamination stops, no source-discovery expansion, and the current
   candidate-intake destination gap.
 - **Reddit Candidate URL Intake is separate from Armory capture.**
-  `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
+  `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
   specializes the parent Candidate URL Intake contract for the operator-facing
   Reddit "crawler" under Capture Spine. It emits candidate
   subreddit/thread/outbound URL rows with provenance only. It does not capture
@@ -108,7 +108,7 @@ stale_if:
   conditions in the pre-commercial/free anti-blocking posture. That is
   downstream access context, not Armory execution in intake.
 - **Reddit Graph Frontier Lane is accepted as a separate bounded planning lane.**
-  `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
+  `docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
   owns the Graph Frontier Register shape. It may use a semantic/frontier agent
   to choose the next candidate seed and prepare the next bounded run, but every
   hop needs a new `run_id`, caps, exclusions, access mode, source-policy
@@ -125,7 +125,7 @@ stale_if:
   register and optional non-executing next-run envelope from an existing
   Candidate URL Intake artifact.
 - **LinkedIn Lane discovery planning is accepted as a bounded planning lane.**
-  `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
+  `docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
   owns the LinkedIn Lane boundary for candidate businesses, organizations,
   senior decision makers, public professional actors, creators, and influential
   people. It treats supervised browser-assist as green for Orca personal /
@@ -166,13 +166,13 @@ stale_if:
 ### Capture obligations
 
 - summary: What a Data Capture packet must preserve and what it must not decide.
-- owner: `docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md`
+- owner: `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md`
 
 ### Source-access boundary
 
 - summary: Discoverable-or-entitled + disclosable standard, owner-accepted
   anti-blocking risk posture, and hard stops.
-- owner: `docs/product/data_capture_source_access_boundary_decision_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md`
 
 ### Source-access build authority
 
@@ -184,7 +184,7 @@ stale_if:
 
 - summary: Candidate methods, source-family recommendations, Reddit `.json`
   posture, old Reddit HTML preference, BeautifulSoup parser position.
-- owner: `docs/product/data_capture_source_access_method_plan_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md`
 
 ### Operating model / commissioning
 
@@ -192,12 +192,12 @@ stale_if:
   obligation baseline, lane thesis, and bounded pressure-test commissioning
   plan. These are pressure-test planning authorities, not validation,
   hardening, product readiness, runtime, ECR, Cleaning, or Judgment design.
-- owners: `docs/product/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`,
-  `docs/product/data_capture_harness_operating_model_architecture_v2.md`,
-  `docs/product/data_capture_harness_product_goal_direction_signal_decision_v0.md`,
-  `docs/product/data_capture_obligation_baseline_decision_v0.md`,
-  `docs/product/data_capture_spine_lane_product_thesis_v0.md`,
-  `docs/product/data_capture_spine_pressure_test_commissioning_plan_v0.md`
+- owners: `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2_acceptance_decision_v0.md`,
+  `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2.md`,
+  `docs/product/data_capture_spine/data_capture_harness_product_goal_direction_signal_decision_v0.md`,
+  `docs/product/data_capture_spine/data_capture_obligation_baseline_decision_v0.md`,
+  `docs/product/data_capture_spine/data_capture_spine_lane_product_thesis_v0.md`,
+  `docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md`
 
 ### Candidate URL Intake
 
@@ -208,7 +208,7 @@ stale_if:
   It is not Source Capture Armory, Data Capture handoff, ECR, Cleaning,
   Judgment, fixture admission, source-quality scoring, or implementation
   authorization.
-- owner: `docs/product/data_capture_spine_candidate_url_intake_contract_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_spine_candidate_url_intake_contract_v0.md`
 
 ### Reddit pre-commercial planning thread
 
@@ -231,7 +231,7 @@ stale_if:
   capture, bounded live first-contact intake under a run envelope, no
   body/comment/profile capture, no Source Capture Packet
   output, and no automatic Data Capture handoff.
-- owner: `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
 
 ### Reddit Graph Frontier Lane
 
@@ -244,7 +244,7 @@ stale_if:
   Capture handoff, broad crawling, storage, scheduler, dashboard, production
   runtime, source-quality scoring, ECR, Cleaning, Judgment, fixture admission, or
   commercial use. Operator-facing nickname: "crawling graph."
-- owner: `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md`
 
 ### LinkedIn Lane Discovery Planning
 
@@ -259,7 +259,7 @@ stale_if:
   body harvesting, Source Capture Packets, Data Capture handoff, Outreach Lane
   execution, storage, scheduler, dashboard, production runtime, or commercial
   use.
-- owner: `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
+- owner: `docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
 
 ### Reddit Candidate URL Intake Defaults
 
@@ -356,7 +356,7 @@ direction_change_propagation:
     - ".agents/workflow-overlay/source-loading.md"
     - ".agents/workflow-overlay/source-of-truth.md"
     - "docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md"
-    - "docs/product/data_capture_source_access_method_plan_v0.md"
+    - "docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md"
     - "docs/product/source_capture_toolbox/README.md"
   downstream_surfaces_checked:
     - "AGENTS.md"
@@ -364,22 +364,22 @@ direction_change_propagation:
     - ".agents/workflow-overlay/artifact-folders.md"
     - "orca-harness/docs/source_capture_agent_runbook.md"
     - "orca-harness/docs/adapter_author_contract.md"
-    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
-    - "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+    - "docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md"
+    - "docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
   intentionally_not_updated:
     - path: "AGENTS.md"
       reason: "Top-level project instructions do not enumerate per-spine repo maps or Reddit source-access method ordering."
     - path: ".agents/workflow-overlay/artifact-folders.md"
       reason: "docs/workflows already owns repo maps and workflow navigation artifacts; no new folder convention was introduced."
-    - path: "docs/product/data_capture_source_access_boundary_decision_v0.md"
+    - path: "docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md"
       reason: "Boundary permission and hard stops already permit disclosable anti-blocking; this patch changes route/order and navigation, not the boundary."
-    - path: "docs/product/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
+    - path: "docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md"
       reason: "Capture obligations and forbidden outputs did not change."
     - path: "orca-harness/docs/source_capture_agent_runbook.md"
       reason: "Historical note from the prior map patch; superseded by the later anonymous CloakBrowser v0 implementation and runbook update."
     - path: "orca-harness/docs/adapter_author_contract.md"
       reason: "Adapter author conventions already mention the selected CloakBrowser route; this map does not change adapter implementation conventions."
-  stale_language_search: "rg -n \"Judgment Spine entry map|Data Capture Spine entry map|data_capture_spine_consolidation_map|Reddit official API.*cleanest|human-led/browser-visible capture by default pre-sale|anonymous `.json`.*primary|BeautifulSoup.*access method|old Reddit\" docs/workflows/orca_repo_map_v0.md .agents/workflow-overlay/source-loading.md .agents/workflow-overlay/source-of-truth.md docs/workflows/data_capture_spine_consolidation_map_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/data_capture_source_access_method_plan_v0.md docs/product/source_capture_toolbox/README.md"
+  stale_language_search: "rg -n \"Judgment Spine entry map|Data Capture Spine entry map|data_capture_spine_consolidation_map|Reddit official API.*cleanest|human-led/browser-visible capture by default pre-sale|anonymous `.json`.*primary|BeautifulSoup.*access method|old Reddit\" docs/workflows/orca_repo_map_v0.md .agents/workflow-overlay/source-loading.md .agents/workflow-overlay/source-of-truth.md docs/workflows/data_capture_spine_consolidation_map_v0.md docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md docs/product/data_capture_spine/data_capture_source_access_method_plan_v0.md docs/product/source_capture_toolbox/README.md"
   stale_language_search_result: "Executed 2026-06-05 after this patch. Remaining hits are this map, the main repo-map pointer, source-loading pointer, source-of-truth known-document entry, current old Reddit / `.json` / BeautifulSoup posture text, and historical receipt text. No live route makes anonymous `.json` primary or BeautifulSoup an access method."
   non_claims:
     - "not validation"
@@ -403,21 +403,21 @@ direction_change_propagation:
     - output_authority
   controlling_sources_updated:
     - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
-    - "docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md"
+    - "docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md"
     - "docs/product/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md"
   downstream_surfaces_checked:
     - "AGENTS.md"
     - ".agents/workflow-overlay/README.md"
     - ".agents/workflow-overlay/source-of-truth.md"
     - ".agents/workflow-overlay/artifact-folders.md"
-    - "docs/product/data_capture_spine_candidate_url_intake_contract_v0.md"
-    - "docs/product/data_capture_source_access_boundary_decision_v0.md"
+    - "docs/product/data_capture_spine/data_capture_spine_candidate_url_intake_contract_v0.md"
+    - "docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md"
   intentionally_not_updated:
     - path: "docs/workflows/orca_repo_map_v0.md"
       reason: "The top-level repo map already routes Data Capture detail through this submap; adding LinkedIn Lane details there would duplicate the submap."
     - path: "docs/product/source_capture_toolbox/README.md"
       reason: "LinkedIn Lane discovery is upstream of Source Capture Armory and does not emit Source Capture Packets."
-  stale_language_search: "rg -n \"LinkedIn Lane|optional_poc_risk_mode|POC-risk|browser-assist|lead-list|contact harvesting|follower/connection\" docs/workflows/data_capture_spine_consolidation_map_v0.md docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md docs/product/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md"
+  stale_language_search: "rg -n \"LinkedIn Lane|optional_poc_risk_mode|POC-risk|browser-assist|lead-list|contact harvesting|follower/connection\" docs/workflows/data_capture_spine_consolidation_map_v0.md docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md docs/product/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md"
   non_claims:
     - "not validation"
     - "not readiness"
