@@ -57,16 +57,26 @@ false-positive in CI.
 ## Solution
 
 **Detector** → `.agents/checks/registration_integrity.py` (canonical; see `open_next`).
-Contract:
-- `--checks hook-registration` (default = all): every `.py` referenced by a hook
-  `command` in `.claude/settings.json` must exist in the tree.
+Contract (hardened by the GPT-5.5 cross-vendor review — see *Review hardening* below):
+- `--checks hook-registration` (default = all): for every hook `command` in
+  `.claude/settings.json`, the registered Python script must exist as an **in-tree
+  regular file**. Scope is the `python[3] <script>.py [args]` form (the only form ORCA
+  uses); a hook command it cannot verify in that form is reported `unverifiable` and
+  **fails** — never silently passed.
 - **Decidable from the checked-out tree alone** — reads `settings.json` + the
   filesystem; **no base ref, no git, no network** (a shallow CI checkout works and
   cannot false-positive on "new in this PR").
 - **Directional** — entry→file only; never flags a file that merely lacks a registry
   entry (READMEs / special-purpose files are legitimately unregistered).
-- **Fails loud** — unknown/empty `--checks` or unreadable settings → exit `2`; never a
-  silent no-op. Exit codes: `0` pass · `1` dangling reference (the defect) · `2` misuse.
+- **In-tree regular file only (F1)** — a registered script counts as present only if it
+  resolves to a regular file inside the checkout; a same-named directory, or an absolute
+  / `..`-escaping path, does not satisfy it.
+- **Precise script extraction (F2)** — the script is the first positional after the
+  `python` interpreter, per `;`/`&&`/`||`/`|` segment; an option value like
+  `--config x.py` is not mistaken for it, and a compound command is not missed.
+- **Fails loud (F3/F4)** — unknown/empty `--checks`, unreadable settings, or an
+  unverifiable hook command exit non-zero; never a silent no-op. Exit codes: `0` pass ·
+  `1` dangling reference or unverifiable command · `2` misuse/internal error.
 - `settings.local.json` (gitignored) is intentionally not consulted — only the
   committed `settings.json` a fresh clone has.
 
@@ -96,8 +106,8 @@ deterministic check. It is **not** a new doctrine — no overlay-authority rule 
 
 ## Verification evidence (this lane, current tree)
 
-- `python .agents/checks/registration_integrity.py --selftest` → **9/9 PASS** (incl.
-  detects-missing-script and fail-loud-on-misuse).
+- `python .agents/checks/registration_integrity.py --selftest` → **20/20 PASS** (a case
+  per closed review finding F1–F4, plus detects-missing-script and fail-loud-on-misuse).
 - `python .agents/checks/registration_integrity.py --checks hook-registration` → `OK`,
   **exit 0** — green on a consistent tree (no false positive).
 - `--checks bogus` → **exit 2** (loud), never a silent pass.
@@ -105,6 +115,24 @@ deterministic check. It is **not** a new doctrine — no overlay-authority rule 
   `guard_protected_actions.py`, `check_retrieval_header.py`, `check_repo_map_freshness.py`;
   `git ls-tree origin/main -- .agents/hooks/` confirms **all three present** → the check
   is **green on `main` today**, red only on a real defect.
+
+## Review hardening (GPT-5.5 cross-vendor pass)
+
+Per the `no_repo` delegated review-and-patch flow, the detector was reviewed by a
+**cross-vendor** reviewer (GPT-5.5 / OpenAI — de-correlated from the Claude author) via
+the portable adversarial-artifact-review method, then patched by the CA and re-verified
+by a same-vendor bounded recheck before keep. Findings adjudicated:
+- **F1 (major) — accepted/fixed:** `Path.exists()` accepted directories and let
+  absolute/`..` paths escape the checkout → now requires an in-tree regular file.
+- **F2 (major) — accepted/fixed:** "all `.py` tokens" both missed (compound commands)
+  and over-matched (option values) → now precise first-positional-per-segment extraction.
+- **F3 (major) — accepted, modified:** Python-only undercapture closed by **narrowing
+  the claim** to python-script hooks and **failing loud** on any unverifiable form
+  (speculative `.sh`/`.js` broadening declined — ORCA hooks are 100% python).
+- **F4 (minor) — accepted, partial:** command-level unverifiable surfacing covers the
+  silent-pass gap; full settings-schema validation declined as scope creep.
+
+Bounded same-vendor recheck: all four **CLOSED**, no new blocker/major in the delta.
 
 ## Enforcement reach (honesty)
 
@@ -127,10 +155,10 @@ detector is advisory" stance, which governs the *local* nudges only.
    commit message.
 5. Add a one-line traceability receipt; narrow any stale doc line that says no CI
    registration check exists.
-6. **Independent scoping review before landing** — a cold, cross-vendor pass on the
-   detector's parse/scoping logic specifically (a buggy filter could mask the defect or
-   false-fail a PR). Route via `workflow-delegated-review-patch` / the portable
-   adversarial-artifact-review method — dog-foods ORCA's own review-lanes doctrine.
+6. **Independent scoping review — DONE** (see *Review hardening*): a cold cross-vendor
+   (GPT-5.5) pass via the portable adversarial method found 4 logic seams (F1–F4), all
+   adjudicated, fixed, and bounded-rechecked before keep. Re-review only if the
+   extraction/existence logic changes again.
 7. Human merges (the guard blocks an agent self-merge).
 
 ## Extension (documented, not shipped)
