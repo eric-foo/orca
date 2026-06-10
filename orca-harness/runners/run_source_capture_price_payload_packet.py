@@ -137,7 +137,11 @@ def _discover_prices_chunk(chunk_urls, *, timeout, max_chunks, byte_budget):
             return url, success, classification, scanned, None
         if spent > byte_budget:
             return None, None, None, scanned, "byte_budget_exceeded"
-    return None, None, None, scanned, "anchor_not_found"
+    # loop exhausted without a hit: distinguish "scanned the whole list, anchor
+    # absent" (a real full-page miss) from "stopped at max_chunks before scanning
+    # the full list" (a coverage limit, not a vendor change).
+    reason = "max_chunks_exhausted" if len(chunk_urls) > max_chunks else "anchor_not_found"
+    return None, None, None, scanned, reason
 
 
 _DEGRADED_CHUNK_FLOOR = 15  # a full pricing page exposes ~31 module-preload chunks;
@@ -228,10 +232,16 @@ def run_price_payload_capture(
     page_res = page_cls = page_html = base_url = None
     chunk_url = chunk_res = chunk_cls = scan_log = None
     page_module_preload_count = None
+    # Only a *transient* miss is retried: a thin degraded page (heals on re-fetch)
+    # or a transient page-fetch failure. A FULL page missing the anchor, a byte-budget
+    # stop, or a max_chunks scan-limit is NOT transient -> fail loud immediately rather
+    # than retry-mask a likely vendor change (or coverage limit) as a transient cluster.
+    retryable = {"page_fetch_failed", "parser_no_chunks", "anchor_not_found_thin_page"}
     for attempt_i in range(max_page_attempts):
         pr, pc = _rung1_fetch(page_url, timeout=timeout_seconds, max_bytes=12_000_000)
         if isinstance(pr, AntiBlockingHttpCaptureFailure):
-            attempts.append({"attempt": attempt_i, "failure_class": "page_fetch_failed",
+            fclass = "page_fetch_failed"
+            attempts.append({"attempt": attempt_i, "failure_class": fclass,
                              "detail": pr.message})
         else:
             phtml = pr.body.decode("utf-8", "replace")
@@ -239,7 +249,8 @@ def run_price_payload_capture(
             curls = _chunk_urls(phtml, burl)
             ncount = len(curls)
             if not curls:
-                attempts.append({"attempt": attempt_i, "failure_class": "parser_no_chunks",
+                fclass = "parser_no_chunks"
+                attempts.append({"attempt": attempt_i, "failure_class": fclass,
                                  "status": pr.status, "final_url": burl,
                                  "body_sha256": _sha256(pr.body), "byte_count": len(pr.body),
                                  "module_preload_count": 0})
@@ -253,15 +264,22 @@ def run_price_payload_capture(
                     chunk_url, chunk_res, chunk_cls, scan_log = curl, cres, ccls, slog
                     page_module_preload_count = ncount
                     attempts.append({"attempt": attempt_i, "outcome": "found",
-                                     "module_preload_count": ncount})
+                                     "status": pr.status, "final_url": burl,
+                                     "body_sha256": _sha256(pr.body), "byte_count": len(pr.body),
+                                     "module_preload_count": ncount, "prices_chunk_url": curl})
                     break
-                fclass = (reason if reason == "byte_budget_exceeded"
-                          else ("anchor_not_found_thin_page" if ncount < _DEGRADED_CHUNK_FLOOR
-                                else "anchor_not_found_full_page"))
+                if reason in ("byte_budget_exceeded", "max_chunks_exhausted"):
+                    fclass = reason
+                elif ncount < _DEGRADED_CHUNK_FLOOR:
+                    fclass = "anchor_not_found_thin_page"
+                else:
+                    fclass = "anchor_not_found_full_page"
                 attempts.append({"attempt": attempt_i, "failure_class": fclass,
                                  "status": pr.status, "final_url": burl,
                                  "body_sha256": _sha256(pr.body), "byte_count": len(pr.body),
                                  "module_preload_count": ncount, "scan_log": slog})
+        if fclass not in retryable:
+            break  # terminal failure (likely a real vendor change / coverage limit)
         if attempt_i < max_page_attempts - 1 and page_retry_backoff_seconds > 0:
             time.sleep(page_retry_backoff_seconds)
 
@@ -439,7 +457,7 @@ def run_price_payload_capture(
 
     if verdict.certified:
         access_posture = known_fact(
-            "rung-1.5 payload extraction: displayed pricing tiers + amounts recovered "
+            "rung-1.5 payload extraction: pricing-card payload tiers + amounts recovered "
             "browser-free from structured payloads (HTML turbo-stream structure + "
             "JS-module prices object amounts). Discriminator rung15_price_payload_v0 PASSED "
             f"({verdict.priced_tier_count} tiers priced): the payload is an INTERNALLY-CONSISTENT "
