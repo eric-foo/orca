@@ -35,6 +35,9 @@ provenance:
 ## Same-vendor recheck (Sonnet)
 All 6 `closed` with on-artifact evidence; F1/F3 source-facts re-confirmed; the 3a-harden-vs-no-new-fields consistency question resolves correctly (hardening validation on already-present fields ≠ widening); **revision regressions: none.** Verdict: clean.
 
+## Post-review amendment (2026-06-10, assumption-gate)
+F5's accepted form ("harden the existing envelope, no new package") was superseded at the pre-build assumption-gate: a source read showed the core envelopes lack `owner_presence_attested`/`entitlement_gate_bypass` fields, and isolation forbids adding them to the core. Slice-3a was re-scoped to a minimal **adapter contract record** (Opt 2 — attestation fields in the satellite). See ADR §8 (v0.1 amendment). This is the gate catching, via source, what the artifact-level review did not.
+
 ## Boundary
 Advisory only. Not approval, validation, readiness, or mandatory remediation. The accepted architecture is `data_capture_spine_linkedin_live_layer_architecture_v0.md` (owner sign-off 2026-06-10); this record is its review provenance.
 ```

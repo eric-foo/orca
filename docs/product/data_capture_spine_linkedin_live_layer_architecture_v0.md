@@ -8,11 +8,12 @@ scope: >
   invariants, and slice sequence. It is NOT implementation, a route, validation,
   readiness, or legal/ToS clearance.
 authority_boundary: retrieval_only
-status: ACCEPTED — owner sign-off 2026-06-10 (shape + agnosticism tradeoff + the 3 review-raised reframes)
+status: ACCEPTED (v0.1) — owner sign-off 2026-06-10 (shape + agnosticism tradeoff + 3 review reframes); amended 2026-06-10 per assumption-gate (slice-3a → Opt 2 adapter contract record)
 authored_by: claude-opus-4.x
 review_provenance:
   - cross_vendor_discovery: openai/gpt-5.5 (advisory, no-repo) — 6 findings, all adjudicated/accepted (F5 modified)
   - same_vendor_recheck: anthropic/sonnet — clean closure, no regressions
+  - assumption_gate (pre-build, source-read): slice-3a "harden existing core fields" verified_false — core lacks presence/no-bypass fields; amended to Opt 2 (attestation fields live in the adapter, not the core — honoring isolation)
   - record: docs/review-outputs/adversarial-artifact-reviews/linkedin_live_layer_architecture_cross_vendor_review_v0.md
   - input_bundle: docs/review-outputs/linkedin_live_layer_architecture_v0_no_repo_review_bundle.zip (commit 01a063d)
 conforms_to:
@@ -44,7 +45,7 @@ NOT conceptual purity: the core **already** carries D5 concepts — `MethodMode.
 AO-1 thin adapter (**build**) · AO-2 parallel pipeline (reserved) · AO-3 extend-in-place (**rejected** — widens core coupling) · AO-4 hybrid (**stance**, = AO-1 + honest enum naming) · AO-5 validator-as-only-door (principle adopted, §6; standalone module deferred).
 
 ## 5. Target + refinements
-Thin isolated live-adapter, one-way import, deletable. (A) Agnosticism = named fields + open enum axes + closed allowlist; **no `dict[str,Any]` bag**; new signal = new named, separately-walked field → "any authorized, named, minimized signal." (B) Live posture = validated predicates the validator hard-fails on, enforced on the D5/`optional_poc_risk` fields the core already has (the `execution_authorized must be False` technique).
+Thin isolated live-adapter, one-way import, deletable. (A) Agnosticism = named fields + open enum axes + closed allowlist; **no `dict[str,Any]` bag**; new signal = new named, separately-walked field → "any authorized, named, minimized signal." (B) Live posture = validated predicates the validator hard-fails on (the `execution_authorized must be False` technique). [Amended per assumption-gate: the presence/no-bypass attestation fields do NOT exist in the core, and adding them would widen it — so they live as NEW validated fields in the **adapter** record (satellite), not on core fields. The core can carry only an optional consistency predicate on its existing `method_mode`/`optional_poc_risk_mode`.]
 
 ## 6. The three surfaced risks + resolutions
 1. *Validators are post-hoc assertions, not a gate* → enforceable closure = **"adapter exported functions only ever return validated rows/dicts"** (checkable adapter-API invariant), NOT "raw constructor unreachable" (impossible in plain Python — public frozen dataclasses, constructed directly in tests). Import-boundary mechanism = separately-authorized option.
@@ -53,18 +54,19 @@ Thin isolated live-adapter, one-way import, deletable. (A) Agnosticism = named f
 
 ## 7. Core / satellite + invariants
 Core (slices 1+2): no *new* live/ToS fields, no runtime; D5/POC tags frozen at current extent. Satellite (live adapter): one-way import, deletable.
-Invariants: (1) one-way import; (2) no new live/ToS fields or runtime in core; (3) no free-form bag before the rails; (4) live posture = validated predicates with failing tests; (5)[3b+] adapter exports only validated rows/dicts; (6)[3b] observation contract excludes over-capture, [3c] runtime tape-test verifies read-time minimization.
+Invariants: (1) one-way import; (2) no new live/ToS fields or runtime in core; (3) no free-form bag before the rails; (4) live posture = validated predicates with failing tests, **with the presence/no-bypass attestation fields living in the adapter record (satellite), never the core** [per assumption-gate]; (5)[3b+] adapter exports only validated rows/dicts; (6)[3b] observation contract excludes over-capture, [3c] runtime tape-test verifies read-time minimization.
 
-## 8. Slice sequence
-- **3a — Harden the EXISTING envelope validators (no new package, no runtime).** Enforce presence/no-bypass/attended as predicates on the already-present D5/`optional_poc_risk` fields; negatives-must-raise tests; zero new schema; existing 54 tests must stay green. The separate-package question is deferred to scoping.
-- **3b — Live-adapter package + observation contract (with §6.2 minimization boundary) + the §6.1 adapter-API mint-path.**
+## 8. Slice sequence — [amended per assumption-gate: 3a = Opt 2 adapter contract record, not core hardening]
+- **3a — Minimal adapter contract record (new `linkedin_live_adapter/` package; NO runtime).** A frozen dataclass (e.g. `LiveAccessEnvelope`) carrying **presence-attested + no-entitlement-bypass + attended-mode as NEW validated predicate fields** (the validator hard-fails on them; the `execution_authorized must be False` technique). These fields live in the satellite, not the core — honoring isolation (the source read confirmed the core has no such fields, and adding them there would widen it). Reuse the slice-1 `LinkedInLaneError` + `assert_no_forbidden_output_fields` walk + key-allowlist; negatives-must-raise tests; no live code. **Optional ride-along:** a small core consistency predicate (POC-risk attended `method_mode` ⟺ `optional_poc_risk_mode=True`) — the only part enforceable on existing core fields with no widening; existing 54 tests must stay green.
+  - *Why this amends F5/decision-5:* "harden existing, no new package" cannot carry presence/no-bypass — those fields are absent from the core and isolation forbids adding them there. A minimal adapter record is therefore required, but it is the **no-runtime contract** (slice-3a "no live code" spirit preserved).
+- **3b — Observation contract + lowering + mint-path** (in the adapter): the named-field observation contract (with the §6.2 minimization boundary), its projection into the existing core types, and the §6.1 adapter-API mint-path invariant.
 - **3c — Live driver/runtime.** Separately authorized, behind the legal/ToS hard gate, requiring the read-time-minimization tape-test.
 
 ## 9. Rejected / reserved / change triggers
 Rejected: AO-3; foreign abstractions (`Protocol`/registry). Reserved: AO-2 (real 2nd signal source); separate live-posture package (decided at scoping). Would change it: near-term 2nd live source; core validators can't gate a live-only invariant; #3 anonymized-aggregate resolving toward individual aggregation.
 
 ## 10. Sign-off
-Owner accepted (2026-06-10): the isolated thin-adapter shape; the named-field agnosticism tradeoff; isolation reframe (F1); ToS/reachability claim-status downgrade (F2); slice-3a-harden-not-new-package (F5). F3/F4/F6 folded as corrections.
+Owner accepted (2026-06-10): the isolated thin-adapter shape; the named-field agnosticism tradeoff; isolation reframe (F1); ToS/reachability claim-status downgrade (F2). F3/F4/F6 folded as corrections. **Amendment (2026-06-10, per assumption-gate):** F5's "harden existing, no new package" superseded — slice-3a is a minimal adapter *contract* record (Opt 2), because the presence/no-bypass attestation fields are absent from the core and isolation forbids adding them there. Owner accepted Opt 2.
 
 ## 11. Non-claims
 Planning authority only. NOT implementation/route/validation/readiness/promotion/live-runner. **Legal/ToS UNVERIFIED** — presence does not make automated access ToS-compliant; deferred hard gate. **Reachability is an owner-accepted, informal assumption**, outside this artifact's proven scope. "No black-letter ToS violations" is a chosen constraint, not a verified state. No live-layer code exists.
