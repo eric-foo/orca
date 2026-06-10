@@ -30,6 +30,8 @@ authority_boundary: retrieval_only
 - `docs/migration/`: migration and import queue records.
 - `docs/product/`: product contracts, product proof plans, core-spine notes, satellite notes, evidence standards, source maps, decision artifacts, memo substrates, evidence appendices, and executive-deck shape drafts.
 - `docs/product/source_capture_toolbox/`: product-facing Source Capture Armory design notes, scoped specs, and gap notes. Existing controlling Data Capture source-access decisions, method plans, and obligation contracts remain at their historical paths unless a later migration decision moves them.
+- `docs/product/` lane subfolders (`core_spine/`, `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`, `product_lead/`): the bound second-level axis for product artifacts per `docs/decisions/orca_repo_structure_binding_v0.md`. New product artifacts use the matching lane; files matching no lane may stay at `docs/product/` root. Existing flat files move only via the Phase-2 migration package, not ad hoc.
+- `repo-structure.yaml` (repo root): the machine structure map - router only, consumed by `.agents/hooks/check_placement.py` and agents for navigation. It declares homes and never states rules; this overlay file remains the placement authority and wins on conflict.
 - `docs/research/`: public/source research artifacts, evidence-only lane outputs, synthesis reports, candidate screens, and reject-pattern maps that support Orca product or proof work without becoming product authority by default.
 - `docs/research/judgment-spine/harness/v0_14/smoke_tests/`: Judgment Harness v0.14 no-case smoke-test receipts and operator provenance records. Artifacts in this folder are plumbing evidence only and do not become real-case probe, validation, fixture-admission, product-proof, or judgment-quality evidence by location.
 - `docs/hygiene/`: triage queues and cleanup notes for Orca artifacts.
@@ -50,6 +52,7 @@ authority_boundary: retrieval_only
 - Do not create implementation folders such as `src`, `app`, `packages`, `tests`, or automation runtimes until explicitly authorized.
 - Orca-local workflow skills live only under `.agents/skills/` and are governed by `.agents/workflow-overlay/skill-adoption.md`; acceptance there is a local freeze, not deployment, and must not edit plugin, user-level, installed, or external skill source.
 - Do not copy or move material from external reference folders unless a later turn explicitly authorizes the import.
+- Placement is checked at the write boundary by `.agents/hooks/check_placement.py` (EP-04, advisory; `--strict` commit/CI mode available), which reads `repo-structure.yaml` as its only rule source. A passing check is placement shape only - never validation, readiness, or authority. Parameters and invariants: `docs/decisions/orca_repo_structure_binding_v0.md`.
 
 ## Direction Change Propagation - Source Capture Armory Product Folder
 
@@ -165,4 +168,48 @@ direction_change_propagation:
     - not resolver-visibility
     - not validation
     - not readiness
+```
+
+## Direction Change Propagation - Repo Structure Binding v0
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Orca adopts the agent-first repo-structure invariant core as Orca-owned
+    doctrine via docs/decisions/orca_repo_structure_binding_v0.md, binds the
+    docs/product/ by-lane second axis and root machine map repo-structure.yaml
+    (router-only), and authorizes the EP-04 placement substrate
+    (.agents/hooks/check_placement.py, advisory write-boundary + --strict
+    commit/CI mode). Forward-only; the docs/product flat-file consolidation is
+    packaged under docs/migration/repo_structure_phase2_consolidation_v0/ and
+    is not executed by this change.
+  trigger: output_authority
+  related_triggers:
+    - workflow_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/artifact-folders.md
+    - docs/decisions/orca_repo_structure_binding_v0.md
+    - repo-structure.yaml
+  downstream_surfaces_checked:
+    - AGENTS.md                                      # no structure facts; defers to overlay; no change
+    - .agents/workflow-overlay/README.md             # section ownership unchanged; no change
+    - .agents/workflow-overlay/source-of-truth.md    # hierarchy/propagation mechanics unchanged; receipt inline here per contract
+    - .agents/workflow-overlay/source-loading.md     # read packs reference unchanged paths until Phase-2 apply
+    - .agents/workflow-overlay/validation-gates.md   # Enforcement Placement principle already present and generic
+    - docs/workflows/orca_repo_map_v0.md             # updated in this change set (Active Hooks + root map entry)
+    - docs/STRUCTURE.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/source-of-truth.md
+      reason: shared commit-once-whole file; hierarchy unchanged; DCP contract stores receipts inline in the changed artifact.
+    - path: docs/STRUCTURE.md
+      reason: narrative tier per the binding's surface tiering; gains lane detail when the Phase-2 move applies, not before.
+    - path: .agents/workflow-overlay/validation-gates.md
+      reason: the principle is already bound there; the EP-04 instance is recorded in the EP classification decision update and the repo map Active Hooks note.
+  stale_language_search: 'rg -n "repo-structure.yaml|check_placement|orca_repo_structure_binding" .agents/workflow-overlay docs/STRUCTURE.md docs/workflows/orca_repo_map_v0.md AGENTS.md (run at closeout; expected hits only in this change set)'
+  non_claims:
+    - not validation
+    - not readiness
+    - not a commit, push, or branch action
+    - not execution of the Phase-2 move
+    - hook wiring not live until session restart
 ```
