@@ -12,6 +12,9 @@ from capture_spine.linkedin_live_adapter.models import (
     LiveAccessMode,
     LiveObservation,
 )
+from capture_spine.linkedin_live_adapter.projection import (
+    project_observation_to_candidate_row,
+)
 from capture_spine.linkedin_live_adapter.validation import (
     validate_live_access_envelope,
     validate_live_observation,
@@ -25,6 +28,7 @@ __all__ = [
     "LiveAccessEnvelope",
     "LiveAccessMode",
     "LiveObservation",
+    "project_observation_to_candidate_row",
     "validate_live_access_envelope",
     "validate_live_observation",
 ]

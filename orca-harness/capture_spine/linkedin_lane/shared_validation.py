@@ -105,6 +105,46 @@ def _assert_no_forbidden_output_value(value: str, *, path: str) -> None:
             fail("forbidden_output_value", f"forbidden secret-like value ({marker}) at {path}")
 
 
+# --- visible influence values: minimized counts / coarse bands only ---
+# The visible-influence ``*_count_or_none`` / ``*_band_or_none`` fields pass the
+# forbidden-key walk (they are counts, not lists) and the secret-value scan only
+# catches credentials, not narrative prose -- so nothing else stops a copied
+# profile/body from landing in a field documented "counts / coarse bands only".
+# Any slice that mints or accepts such a field enforces the count/band shape here
+# (cross-vendor review F1). Fail-closed: a non-count/band value raises.
+_MAX_VISIBLE_INFLUENCE_VALUE_LEN = 64
+_VISIBLE_INFLUENCE_VALUE_RE = re.compile(
+    r"^(?:"
+    r"(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?[kKmM]?\+?"
+    r"|(?:under|over|less than|more than) \d+(?:,\d{3})*[kKmM]?\+?"
+    r"|(?:\d{1,3}(?:,\d{3})+|\d+)[kKmM]?\s*(?:-|to|–)\s*"
+    r"(?:\d{1,3}(?:,\d{3})+|\d+)[kKmM]?"
+    r")$"
+)
+
+
+def validate_visible_influence_value(field_name: str, value: Any) -> None:
+    """Require a minimized count / coarse-band value (or None) -- never free text."""
+    if value is None:
+        return
+    if not isinstance(value, str) or not value.strip():
+        fail(
+            "invalid_visible_influence_number",
+            f"{field_name} must be a minimized count / coarse band string when present",
+        )
+    stripped = value.strip()
+    if len(stripped) > _MAX_VISIBLE_INFLUENCE_VALUE_LEN:
+        fail(
+            "oversized_visible_influence_number",
+            f"{field_name} exceeds the minimized count / coarse band length cap",
+        )
+    if not _VISIBLE_INFLUENCE_VALUE_RE.fullmatch(stripped):
+        fail(
+            "invalid_visible_influence_number",
+            f"{field_name} must be a minimized count / coarse band, not free text",
+        )
+
+
 # --- key allowlist + required fields ---
 def reject_unknown_keys(value_map: Mapping[str, Any], allowed_keys: frozenset[str], label: str) -> None:
     unknown = sorted(str(key) for key in value_map if str(key) not in allowed_keys)

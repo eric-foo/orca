@@ -28,6 +28,7 @@ from capture_spine.linkedin_lane.shared_validation import (
     require_fields as _require,
     validate_non_claims_categories as _validate_non_claims,
     validate_public_actor_basis,
+    validate_visible_influence_value,
 )
 from capture_spine.linkedin_live_adapter.models import (
     LINKEDIN_LIVE_ACCESS_ENVELOPE_SCHEMA_VERSION,
@@ -122,6 +123,13 @@ _LENGTH_CAPPED_FREETEXT_FIELDS: tuple[str, ...] = (
     "observed_location_or_none",
     "senior_role_or_public_actor_basis_or_none",
 )
+# Visible influence fields are counts / coarse bands only -- NOT in the length-capped
+# free-text list above, and the forbidden-walk catches only secrets (not prose), so
+# the shared count/band guard enforces their shape (cross-vendor review F1).
+_VISIBLE_INFLUENCE_OBSERVATION_FIELDS: tuple[str, ...] = (
+    "visible_follower_count_or_none",
+    "visible_connection_count_band_or_none",
+)
 _REQUIRED_LIVE_OBSERVATION_FIELDS: tuple[str, ...] = (
     "observation_id",
     "live_access_id",
@@ -177,6 +185,9 @@ def validate_live_observation(observation: Mapping[str, Any]) -> None:
                 f"oversized_{field_name}",
                 f"{field_name} exceeds the minimized-signal length cap ({_MAX_OBSERVED_FREETEXT_LEN} chars)",
             )
+    # Visible influence fields: counts / coarse bands only (shared guard; review F1).
+    for field_name in _VISIBLE_INFLUENCE_OBSERVATION_FIELDS:
+        validate_visible_influence_value(field_name, observation.get(field_name))
     # Person observations: the shared public-actor-basis gate + must be minimized.
     if observation.get("observed_entity_type") in _PERSON_ENTITY_TYPE_VALUES:
         validate_public_actor_basis(
