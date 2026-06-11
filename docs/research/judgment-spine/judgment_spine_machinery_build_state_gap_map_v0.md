@@ -43,7 +43,7 @@ at **product-learning**; it authorizes no run and mints no tier.
 | No-tools isolation | **Built as a recording schema** (records evidence; does not enforce) | `ContestantExecutionIsolation` etc.; `contestant_no_tools_execution_contract_v0.md` is docs-only |
 | Schemas / reports / tests | **Built** | `schemas/{case,scoring,probe,judgement}_models.py`, `reports/case_report.py`, unit + integration + contract tests |
 | ECR derivers (SP-1/2/3/6) | **Built; bind no `EvidenceUnit`** | `ecr/deriver.py` — four posture derivers off the `SourceCapturePacket` |
-| SP-5 finalizer | **Partial — finalizer half built** | `schemas/finalization_models.py` (committed `a37f896`): the `FinalizationReceipt` model + a validate-only, block-don't-repair consumer (binding_hash via `canonical_yaml_hash`; current-designation via per-receipt ULID + `supersedes`); 23 tests; cross-family-reviewed. **Remaining gap:** the `EvidenceUnit` binding + a case packet carrying a `FinalizationReceipt` (+ D2). JSG-01 stays FROZEN |
+| SP-5 finalizer | **Built — model + consumer + producer acting half** | `schemas/finalization_models.py` (committed `a37f896`): the `FinalizationReceipt` model + a validate-only, block-don't-repair consumer (binding_hash via `canonical_yaml_hash`; current-designation via per-receipt ULID + `supersedes`); 23 tests; cross-family-reviewed. `runners/run_finalization_receipt.py`: the operator-driven producer recording the out-of-band act (append-only receipt stream; block-don't-repair both sides; explicit-supersedes-only corrections; distinct recorded-but-not-verified failure path; 16 tests; cross-vendor reviewed + adjudicated 2026-06-12). **Remaining gap:** the `EvidenceUnit` binding + a case packet carrying a `FinalizationReceipt` (+ the conductor row's D2 wording, owner-routed). JSG-01 stays FROZEN |
 | JSG-01 `EvidenceUnit` binding | **Gap** | derivers bind no `EvidenceUnit`; no case packet yet carries the derived fields → JSG-01 stays FROZEN |
 | Blind-judgment contestant execution under proven isolation | **Gap (by-hand; no live runner for the blind judgment)** | the probe has a raw-API live runner (`run_memorization_probe_raw_api.py`); the blind judgment has none — needs an authorized live-execution surface + isolation-receipt binding |
 | An authorized real (non-synthetic) run | **None** | the 50+ `_test_runs/` are `cases/plumbing/...` with a `fixed_contestant` (canned `blind_judgement.yaml`) — synthetic smoke tests |
@@ -60,8 +60,9 @@ path **already exists for the memorization probe**. What is still missing is the
 for the **blind judgment**: a live-execution surface (raw API is the accepted one) that
 produces the sealed blind judgment under proven isolation, **bound to an auditable
 live-execution record** (today it is by-hand) — *plus* the JSG-01
-`EvidenceUnit` binding and a case-finder. (The **SP-5 finalizer half is now built** —
-`schemas/finalization_models.py`, `a37f896` — but no case packet yet carries a
+`EvidenceUnit` binding and a case-finder. (The **SP-5 finalizer is now built** —
+the model + validate-only consumer at `schemas/finalization_models.py` (`a37f896`) and the
+producer acting half at `runners/run_finalization_receipt.py` — but no case packet yet carries a
 `FinalizationReceipt`, so it does not lift the cap on its own.) No authorized real-case run exists today.
 
 This corrects an earlier framing (in the ideal-JQ reference) that named the
