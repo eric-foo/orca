@@ -16,7 +16,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/decisions/beauty_venue_card_set_promotion_decision_v0.md   # binding parameters + owner acceptance
-  - docs/product/core_spine/orca_venue_exploration_procedure_v0.md  # the consuming procedure
+  - docs/product/core_spine/orca_vertical_exploration_guide_v0.md  # the consuming procedure
 stale_if:
   - A card passes its review_by date (that card is a stale hint; review or retire it).
   - The promotion decision record is superseded or the set breaches its terms.

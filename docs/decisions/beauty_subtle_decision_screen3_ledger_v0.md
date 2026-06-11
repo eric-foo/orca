@@ -20,7 +20,7 @@ open_next:
   - docs/product/core_spine/beauty_venue_card_set_v0.md                 # the promoted card-set (this ledger's trigger outcome)
   - docs/decisions/beauty_venue_card_set_promotion_decision_v0.md       # owner promotion decision + binding terms
   - docs/decisions/venue_procedure_proving_screen_beauty_ledger_v0.md   # screen 2 (hub read this screen targeted from)
-  - docs/product/core_spine/orca_venue_exploration_procedure_v0.md      # the operative method
+  - docs/product/core_spine/orca_vertical_exploration_guide_v0.md      # the operative method
   - docs/decisions/orca_venue_registry_rejection_decision_v0.md         # trigger terms + survival ingredients
 stale_if:
   - The owner decides the card-set question (that decision record takes over).
