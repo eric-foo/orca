@@ -34,6 +34,4 @@ include = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# scratch consolidated under _scratch/ per docs/decisions/orca_repo_structure_binding_v0.md
-addopts = "-q --basetemp=_scratch/pytest_tmp"
-cache_dir = "_scratch/pytest_cache"
+addopts = "-q -p no:cacheprovider"

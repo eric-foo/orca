@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 import shutil
 import sys
 import uuid
@@ -14,13 +15,24 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 
+@pytest.fixture
+def tmp_path() -> Iterator[Path]:
+    path = PROJECT_ROOT.parent / "_scratch" / f"orca_harness_tmp_path_{uuid.uuid4().hex}"
+    path.mkdir(parents=True)
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path, ignore_errors=True)
+
+
 def _copy_ignore(_directory: str, names: list[str]) -> set[str]:
     ignored: set[str] = set()
     for name in names:
-        if name in {"_test_runs", ".pytest_cache", "pytest_tmp"}:
+        if name in {"_test_runs", ".pytest_cache", ".pytest_tmp", "pytest_tmp", "_scratch"}:
             ignored.add(name)
         if (
-            name.startswith("pytest_run_")
+            name.startswith(".pytest_")
+            or name.startswith("pytest_run_")
             or name.startswith("pytest-cache-files-")
             or name.startswith("pytest_tmp")
             or (name.startswith("pytest_") and name.endswith("_tmp"))
