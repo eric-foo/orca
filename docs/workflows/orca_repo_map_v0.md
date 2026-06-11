@@ -430,6 +430,7 @@ Use these before broad product architecture or CA setup:
 | `docs/product/product_lead/orca_buyer_proof_packet_v0.md` | First buyer-proof packet, proof gates, pull signals, kill/graduation criteria. |
 | `docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md` | Selected first ICP wedge and decision-family focus. |
 | `docs/product/product_lead/orca_product_proof_lead_charter_v0.md` | Product proof lead role and proof execution boundary. |
+| `docs/product/product_lead/orca_claim_defense_doctrine_v0.md` | Operative external-claims policy (owner-signed 2026-06-11): built-to vs proven-at, per-tier wording table, debunking triage. Read before any externally visible sentence about Orca's judgment evidence. |
 
 ## Judgment Spine
 
