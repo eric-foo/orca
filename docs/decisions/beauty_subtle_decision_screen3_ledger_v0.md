@@ -17,6 +17,8 @@ use_when:
   - Designing any future subtle-class screen (assembly model + access shapes).
 authority_boundary: retrieval_only
 open_next:
+  - docs/product/core_spine/beauty_venue_card_set_v0.md                 # the promoted card-set (this ledger's trigger outcome)
+  - docs/decisions/beauty_venue_card_set_promotion_decision_v0.md       # owner promotion decision + binding terms
   - docs/decisions/venue_procedure_proving_screen_beauty_ledger_v0.md   # screen 2 (hub read this screen targeted from)
   - docs/product/core_spine/orca_venue_exploration_procedure_v0.md      # the operative method
   - docs/decisions/orca_venue_registry_rejection_decision_v0.md         # trigger terms + survival ingredients
@@ -219,6 +221,30 @@ named owner; a fixed review date per entry; a hard size cap; delivery into
 the screen step itself. If declined, the trail keeps compounding as dated
 ledger provenance exactly as now, and the trigger re-fires at the next reuse
 threshold.
+
+## Owner Direction Recorded (2026-06-11, in-thread, post-close)
+
+- Trigger question RESOLVED — PROMOTED: the owner promoted beauty's trail into
+  the bounded card-set (`docs/product/core_spine/beauty_venue_card_set_v0.md`;
+  binding terms in
+  `docs/decisions/beauty_venue_card_set_promotion_decision_v0.md`). The
+  trigger section above is now historical.
+- Material-change A-leg ACCEPTED WITH CORROBORATION (owner: "let's
+  corroborate"): for silent decisions where no brand statement exists, the
+  A-leg may be satisfied by material evidence of the change from 2+
+  INDEPENDENT sources PLUS a community detection wave. Effect: a single
+  source's error cannot mint a candidate; the wave requirement keeps
+  candidates market-visible (demand-relevant); assembly cost rises slightly;
+  residual risk remains — a corroborated change is still not proof of a
+  deliberate decision, so the decision-grade screen still applies downstream.
+- Under that rule, Xerjoff Irisss QUALIFIES as an assembled subtle-class
+  candidate: D = two Basenotes detection waves (threads 477386, 560510);
+  A-material = old-vs-new formula comparisons documented independently across
+  Basenotes, Parfumo, and reviewer coverage (community-comparison grade, not
+  lab-grade — flagged); O = secondary-market premium for original-formula
+  bottles. Screen output only; admitted to no batch.
+- Dry-rule refinement (venue-dry counting) remains OPEN — not accepted, not
+  applied.
 
 ## Non-Claims
 

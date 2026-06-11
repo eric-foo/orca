@@ -20,6 +20,7 @@ open_next:
   - docs/decisions/judgment_spine_backtest_batch1_ledger_declaration_v0.md   # exemplar Screen Provenance block
   - docs/research/source_registry_practices_deep_research_report_v0.md       # evidence base for this shape
   - docs/product/source_capture_toolbox/capture_recon_index_v0.md            # capture-seam counterpart (HOW-side)
+  - docs/product/core_spine/beauty_venue_card_set_v0.md                      # promoted beauty card-set (Step 0 reads it FIRST for beauty screens)
 stale_if:
   - The finder frame is owner-signed (fold this procedure in or re-home it at that sign-off).
   - The promote-on-reuse trigger fires and the owner promotes a vertical's trail into an owned card-set.
@@ -188,3 +189,29 @@ Mints no ladder vocabulary; the Status label is doc-local.
   observation of any actor or venue is a monitor (forbidden); no influencer
   registry, atlas, or card-set arises from this; consolidation of influence
   trails routes only through the promote-on-reuse trigger.
+- 2026-06-11 (owner-accepted, in-thread; promote-on-reuse EXECUTED for
+  beauty): the trigger fired at beauty's third screen and the owner promoted
+  that vertical's trail into the bounded card-set
+  `docs/product/core_spine/beauty_venue_card_set_v0.md` (binding terms:
+  `docs/decisions/beauty_venue_card_set_promotion_decision_v0.md`). Delivery
+  wiring: for a vertical with a promoted card-set, Step 0 reads the card-set
+  FIRST, then runs the provenance grep as before. Cards are dated hints with
+  review dates — fail-soft semantics unchanged. The registry rejection stands
+  for every other vertical; this promotes ONE vertical's trail under the
+  survival ingredients, nothing more.
+- 2026-06-11 (owner-accepted, in-thread; two rules from screen 3 — the
+  durable method records of the in-ledger acceptances):
+  (i) DRY RULE — venue-dry counting: only a move that WALKED a venue and
+  yielded nothing counts toward the two-consecutive-dry stop. A move whose
+  access path failed (search/tool returned nothing reachable) is an ACCESS
+  NOTE, not an exploration move; it still consumes the batch move cap (budget
+  protection intact — a broken access path cannot extend a walk), but it
+  cannot kill the walk. Walk prompts must carry the stop rule as a hard
+  per-move self-check (screen 3 recorded an executor breach).
+  (ii) SUBTLE-CLASS A-LEG — corroborated material change: when assembling
+  subtle-class candidates and no brand statement exists, the brand-action leg
+  may be satisfied by material evidence of the change from 2+ INDEPENDENT
+  sources PLUS a community detection wave. A single source cannot mint a
+  candidate; the wave requirement keeps candidates market-visible. Origin and
+  first application (Xerjoff):
+  `docs/decisions/beauty_subtle_decision_screen3_ledger_v0.md`.
