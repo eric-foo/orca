@@ -29,6 +29,15 @@ delegated review). Not yet part of the conductor; do not cite as ratified.**
 Motivated by the org-motion Beauty Pie pilot. Three additions, none of which adds a
 new gate - each is a constraint on an existing gate or an invocation note.
 
+**Delegated review outcome (2026-06-12): NEEDS_ARCHITECTURE_PASS.** A cross-vendor
+review (`docs/review-outputs/adversarial-artifact-reviews/conductor_construction_integrity_probe_addendum_adversarial_review_v0.md`)
+returned three accepted findings - AR-01 critical (Rule 3's passive read cannot be a
+JSG-05 refinement: JSG-05 precedes JSG-06, so the sealed judgment does not yet exist),
+AR-02 major (the outcome-blind receipt is hollow if only self-attested), AR-03 major
+(Rule 1 over-claims the consolidation map's authority). **This proposal is BLOCKED from
+ratification pending an architecture pass** that resolves all three. The three rules
+below are the as-authored design and must NOT fold into the conductor as written.
+
 ## 1. Invocation expectation (activation)
 
 The conductor is a by-hand operating model, not an auto-firing runtime; it governs a
