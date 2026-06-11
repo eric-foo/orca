@@ -94,6 +94,23 @@ orca_start_preflight:
 | Unity Runtime Fee monetization crossroads | `docs/research/judgment-spine/cases/unity-runtime-fee/` | Tier 0 candidate, single-case transfer unproven | Revealed | Reveal readout exists; case index exists; canonical source packet, sealed memo, and outcome calibration exist in `docs/product/`; participant packet and safety artifacts still missing |
 | Canoo/Walmart last-mile EV fleet commitment | `docs/research/judgment-spine/cases/canoo-walmart/` | Tier 0 case learning captured; artifact volume is not readiness; not repeatability proof, scoreable fixture, or model validation | Revealed and qualitatively calibrated | Case index, preflight, source packet, safety receipt, adversarial source-packet review, participant packet, blind LLM judgment, owner-assisted judgment, pre-reveal comparison, facilitator ledger, reveal readout, calibration-gate adversarial review, outcome calibration, JSG-08 reveal/calibration receipt, fixture-admission review, and draft v0.14 fixture pack exist; no model run, score, or score-ready fixture exists |
 
+## Harness-Side Product-Learning Realizations (2026-06-11)
+
+Distinct from the docs-tree case track above: a product-learning cross-vendor blind
+exam was built and **run in the harness** on the Inoreader 2019 decide-vs-confirm
+subject at `orca-harness/cases/product_learning/inoreader_repricing_2019_v0/` plus an
+anonymized re-skin at `.../feedhaven_repricing_2019_anon_v0/`. Each carries a
+participant packet, evidence units, a frozen facilitator ledger, and scored contestant
+runs; the Inoreader dir also carries `cross_vendor_blind_run_findings_v0.md`.
+
+| Field | State |
+| --- | --- |
+| Tier | **Capped at product-learning** (by-hand contestants; instructed/attested isolation; one sub-agent run verified `tool_uses=0`). |
+| Relation to the `inoreader-repricing` row above | Realizes that frame-lock **subject** in a different tree (harness `cases/`, not the docs case track). It is **not** the docs-tree case-track artifacts and does **not** clear its `NEEDS_CAPTURE`. |
+| Headline findings (honest; detail in the findings doc) | Anti-over-reach replicated across vendors; anonymizing a famous case did **not** defeat strong recognizers (structural fingerprint re-identifies even neutral-framed); the scored band floor (3 vs 4) is **contested/unresolved**; a dr construct-critique of the scoring key was **walked back by cross-family review** — open thread is an *architecture pass* (surface band-input definitions → re-author → re-harden). |
+| Working discipline adopted | Claim-lifecycle (confidence-label + kill-criterion per finding; de-correlation-harden before any durable action) — itself a **hypothesis**, not doctrine. |
+| Caps | Not judgment-quality, not buyer-proof, not a scoreable fixture; the JSG-08-style reveal/calibration here is by-hand product-learning only. |
+
 ## Milwaukee Artifact Status
 
 | Artifact | Path | Status |
