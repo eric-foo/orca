@@ -227,10 +227,10 @@ def test_finalization_read_populated_only_on_cleared():
             result=FinalizationProvenanceResult.CLEARED,
             reason="cleared without the surfaced values",
         )
-    with pytest.raises(ValidationError, match="current_receipt_id"):
+    with pytest.raises(ValidationError, match="current_receipt_id must be non-empty"):
         Jsg01FinalizationRead(
             result=FinalizationProvenanceResult.CLEARED,
-            reason="cleared with a blank surfaced receipt id",
+            reason="cleared with a blank receipt id",
             final_pre_decision_status=PreDecisionStatus.VERIFIED_PRE_DECISION,
             current_receipt_id="   ",
         )
@@ -256,11 +256,11 @@ def test_record_key_coherence_validators_reject_mismatches():
     with pytest.raises(ValidationError, match="exactly one carried slice row"):
         Jsg01EvidenceRecord.model_validate(unbound)
 
-    duplicated = record.model_dump()
-    duplicated["timing"].append(duplicated["timing"][-1])
-    duplicated["inspectability"].append(duplicated["inspectability"][-1])
-    with pytest.raises(ValidationError, match="unique by slice_id"):
-        Jsg01EvidenceRecord.model_validate(duplicated)
+    duplicate_non_bound = record.model_dump()
+    duplicate_non_bound["timing"][2]["slice_id"] = "s_placeholder"
+    duplicate_non_bound["inspectability"][2]["slice_id"] = "s_placeholder"
+    with pytest.raises(ValidationError, match="must not contain duplicate slice_id"):
+        Jsg01EvidenceRecord.model_validate(duplicate_non_bound)
 
 
 def test_single_slice_packet_composes():

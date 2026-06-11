@@ -40,16 +40,6 @@ from schemas.case_models import PreDecisionStatus, StrictModel
 from schemas.finalization_models import FinalizationProvenanceResult
 
 
-def _duplicate_values(values: list[str]) -> list[str]:
-    seen: set[str] = set()
-    duplicates: set[str] = set()
-    for value in values:
-        if value in seen:
-            duplicates.add(value)
-        seen.add(value)
-    return sorted(duplicates)
-
-
 class Jsg01EvidenceBinding(StrictModel):
     """The durable binding declaration: three keys, reference-never-merge.
 
@@ -87,10 +77,6 @@ class Jsg01FinalizationRead(StrictModel):
     def validate_read(self) -> "Jsg01FinalizationRead":
         if not self.reason.strip():
             raise ValueError("Jsg01FinalizationRead.reason must be non-empty")
-        if self.current_receipt_id is not None and not self.current_receipt_id.strip():
-            raise ValueError(
-                "Jsg01FinalizationRead.current_receipt_id must be non-empty when set"
-            )
         cleared = self.result is FinalizationProvenanceResult.CLEARED
         has_value = (
             self.final_pre_decision_status is not None
@@ -102,6 +88,10 @@ class Jsg01FinalizationRead(StrictModel):
             raise ValueError(
                 "a CLEARED finalization read must carry the consumer-surfaced "
                 "final_pre_decision_status and current_receipt_id"
+            )
+        if cleared and not self.current_receipt_id.strip():
+            raise ValueError(
+                "a CLEARED finalization read current_receipt_id must be non-empty"
             )
         if not cleared and has_value:
             raise ValueError(
@@ -156,11 +146,10 @@ class Jsg01EvidenceRecord(StrictModel):
                 "timing and inspectability vectors must align 1:1 by slice_id "
                 f"and order; got {timing_ids} vs {inspect_ids}"
             )
-        duplicate_ids = _duplicate_values(timing_ids)
-        if duplicate_ids:
+        if len(set(timing_ids)) != len(timing_ids):
             raise ValueError(
-                "carried timing/inspectability slice rows must be unique by "
-                f"slice_id; duplicate slice_id(s): {duplicate_ids}"
+                "timing and inspectability vectors must not contain duplicate "
+                f"slice_id rows; got {timing_ids}"
             )
         if timing_ids.count(self.evidence_slice_id) != 1:
             raise ValueError(
