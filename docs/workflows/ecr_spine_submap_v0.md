@@ -14,12 +14,12 @@ open_next:
   - docs/product/ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md
   - orca-harness/ecr/__init__.py
 downstream_consumers:
-  - JSG-01 conductor (FROZEN) — the eventual reader of the records this spine produces; nothing under this map readies or unfreezes it.
+  - JSG-01 conductor (UNFROZEN 2026-06-12 by the owner's dated act, docs/decisions/jsg01_unfreeze_decision_v0.md; evaluable, clears no case until an authorized run) — the reader of the records this spine produces; nothing under this map authorizes runs or clears cases.
 stale_if:
   - A new derived-record kind is added beside the ECR integrity postures and the Signal Content Record.
   - The shared M1/M2/M3 carry-or-residualize discipline or the per-kind grain invariant changes in an owner doc.
   - The authored-interpretation lane (signal_family + event-core) is built (activates the dormant SCR M2 seam).
-  - The owner settles the reserved final Evidence Unit field architecture or unfreezes JSG-01.
+  - The owner settles the reserved final Evidence Unit field architecture, or a JSG-01 run is authorized (the unfreeze itself happened 2026-06-12).
 ```
 
 > **What this is.** A retrieval-only repo submap. It tells a cold reader which owner
@@ -45,7 +45,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only �
 2. **One derived record per epistemic kind, composed by the Evidence Unit, never merged.** The integrity postures and the content row are siblings at their own grain; future kinds (e.g. corroboration) follow the same shape rather than sprawling. → *SCR direction brief.*
 3. **Carry-supplied-or-residualize; never author from prose.** Every source-side deriver is a pure function of its frozen inputs (the packet plus caller-supplied bodies / posture-keys / authored-interpretation). Each field is carried from an input or emitted as a **named residual**; an absent input → honest residual. No deriver classifies, selects, or infers an interpretive value from packet prose (the shared M1-carry / M2-derive / M3-residual discipline). → *SCR deriver plan (Amendment v0.1); ECR frame plan.*
 4. **Derived / re-derivable — re-derive, never migrate.** These are M2-style derived reads over the still-frozen raw observable, not persisted-at-capture columns; a taxonomy change is a re-derive, not a stored-column migration (inherits the capture-packet schema-evolution doctrine verbatim: read-checked `_vN`, additive enum growth, lenient-read/strict-admit). → *schema-evolution doctrine.*
-5. **Foundation only — the conductor stays frozen.** Everything here is source-side derivation feeding an *eventual* JSG-01 evaluation. JSG-01 is FROZEN and the final Evidence Unit field architecture is owner-reserved; nothing under this map readies, binds, or unfreezes either. → *data/cleaning boundary doc; `safety-rules.md`.*
+5. **Foundation only — the conductor owns evaluation.** Everything here is source-side derivation feeding JSG-01 evaluation. JSG-01 was unfrozen by the owner's dated act (2026-06-12, `docs/decisions/jsg01_unfreeze_decision_v0.md`) and clears no case until a separately authorized run; the final Evidence Unit field architecture stays owner-reserved; nothing under this map authorizes runs or widens the reserved architecture. → *data/cleaning boundary doc; `safety-rules.md`.*
 
 ## Fast Route
 
@@ -71,7 +71,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only �
 - **Declared-but-dormant:** the SCR **authored-interpretation lane** (`signal_family` + event-core). The deriver residualizes that core today (the default) because no authored-classification input / SP-5-style finalizer exists in source. A named, typed seam — not built (the SP-6 precedent).
 - **Built (SP-5 finalization, judgment-lane sibling):** the `FinalizationReceipt` model + validate-only consumer (`orca-harness/schemas/finalization_models.py`, committed `a37f896`) and the operator-driven producer recording the out-of-band act (`orca-harness/runners/run_finalization_receipt.py`; cross-vendor reviewed + adjudicated). Binds no Evidence Unit; clears no case.
 - **Ratified + built (JSG-01-scoped composition layer):** the **JSG-01-scoped EvidenceUnit binding** (three-key `Jsg01EvidenceBinding` + pure no-aggregate-verdict composer; owner-ratified 2026-06-12 at the boundary doc; code in `orca-harness/evidence_binding/`, cross-vendor reviewed + adjudicated). Scoped to exactly what the JSG-01 predicate reads; the full field-by-field Evidence Unit schema stays reserved.
-- **Deferred / frozen (named, not owned here):** the field-by-field Evidence Unit schema; Cleaning; Judgment; the JSG-01 unfreeze. Each separately gated.
+- **Deferred / reserved (named, not owned here):** the field-by-field Evidence Unit schema; D2; Cleaning; Judgment; run authorization. Each separately gated. (The JSG-01 unfreeze was performed by the owner's dated act, 2026-06-12.)
 
 ## Owners By Layer
 
@@ -79,7 +79,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only �
 - **Integrity (ECR postures):** frame + SP-6 slice — `ecr_consolidation_v0_frame_source_visibility_slice_architecture_plan_v0.md`; SP-1/2/3 — `ecr_consolidation_v0_sp1_sp2_sp3_source_side_slice_plan_v0.md`; SP-6 derivation ownership/rule — `jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md` (+ `..._routing_v0.md`); origin of the closed values — `jsg01_source_side_receipt_translator_v0.md`. Code: `orca-harness/ecr/`.
 - **Content (SCR):** direction + invariants — `core_spine_v0_signal_content_record_architecture_v0.md`; deriver contract — `signal_content_record_deriver_architecture_plan_v0.md`. Code: `orca-harness/signal_content/`.
 - **Shared discipline:** schema evolution — `source_capture_packet_schema_evolution_architecture_v0.md`; data/cleaning boundary — `core_spine_v0_data_and_cleaning_spine_boundary_v0.md`.
-- **Frozen downstream consumer:** the JSG-01 conductor — owner-reserved final Evidence Unit field architecture; boundary in `.agents/workflow-overlay/safety-rules.md`.
+- **Downstream consumer:** the JSG-01 conductor (unfrozen 2026-06-12; evaluable, clears no case until an authorized run) — the final Evidence Unit field architecture stays owner-reserved; boundary in `.agents/workflow-overlay/safety-rules.md`.
 
 ## Non-Claims
 
