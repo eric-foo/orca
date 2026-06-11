@@ -31,8 +31,12 @@ content is NOT edited (content-hash pins in other lanes' records survive).
 Path references are rewritten only in the 10 live navigation/authority
 surfaces named in `reference_inventory.md`; the 591 historical referencing
 files keep their original path text and resolve via `moved_paths_index.md`
-(written by the apply). Validated by dry-run 2026-06-11 (exit 0, zero
-collisions).
+(written by the apply). Dry-run checked 2026-06-11: exit 0, zero collisions.
+
+**Status: APPLIED 2026-06-11.** Per this runbook's `stale_if`, it now documents
+the executed procedure; the deferred activations below were also completed the
+same day (placement-hook wiring landed via the owner-authorized settings
+commit; harness scratch config committed).
 
 ## PRECONDITION GATE (do not skip)
 

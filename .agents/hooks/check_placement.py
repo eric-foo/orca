@@ -180,6 +180,11 @@ def classify(rel: str, mapdata) -> tuple[str, str]:
                  for r in (mapdata.get("docs_roles") or []) if isinstance(r, dict)}
         if parts[1] not in homes:
             return VIOLATION, f"'docs/{parts[1]}/' is not a declared docs role"
+        if parts[1] == "product" and len(parts) >= 4:
+            lanes = {str(l.get("name")) for l in (mapdata.get("product_lanes") or [])
+                     if isinstance(l, dict)}
+            if lanes and parts[2] not in lanes:
+                return VIOLATION, f"'docs/product/{parts[2]}/' is not a bound product lane"
         return OK, f"docs role '{parts[1]}'"
 
     return OK, f"declared top-level area '{parts[0]}'"
@@ -193,7 +198,8 @@ def product_lane_hint(rel: str, mapdata) -> str:
                  if isinstance(l, dict)]
         if lanes:
             return ("new product artifacts belong in a lane subfolder ("
-                    + ", ".join(lanes) + "); flat placement is tolerated legacy debt only")
+                    + ", ".join(lanes) + "); flat placement at docs/product/ root is for "
+                    "bounded residuals only, per the binding")
     return ""
 
 
@@ -311,7 +317,9 @@ def run_hook(root: Path) -> int:
                f"declared role folder, or quarantine in docs/_inbox/ and add a "
                f"docs/hygiene/queue.md entry. A new lane/role needs a recorded decision. "
                + _authority_line())
-    elif status == LEGACY:
+    elif status in (OK, LEGACY):
+        # forward-only lane nudge for flat docs/product writes (fires whether the
+        # flat file is tolerated legacy debt or a post-apply residual)
         hint = product_lane_hint(rel, mapdata)
         if hint:
             msg = f"PLACEMENT NOTE: '{rel}' - {hint}. " + _authority_line()
@@ -371,6 +379,8 @@ def selftest() -> int:
         ("docs/notarole/file.md", VIOLATION),         # undeclared docs role
         ("docs/product/flat_note_v0.md", LEGACY),     # tolerated debt, warn-only
         ("docs/product/core_spine/x_v0.md", OK),      # lane placement
+        ("docs/product/random_lane/file.md", VIOLATION),  # DRB-002: unknown lane rejected
+        ("docs/product/core_spine/deep/nested_v0.md", OK),  # depth below a bound lane
         ("docs/_inbox/whatever.bin", SCRATCH),        # quarantine, excluded
         ("orca-harness/pytest_run_3/out.json", SCRATCH),
         ("orca-harness/__pycache__/x.pyc", SCRATCH),

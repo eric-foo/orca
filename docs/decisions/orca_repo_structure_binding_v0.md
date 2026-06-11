@@ -86,9 +86,10 @@ docs/_inbox/).
   `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`,
   `product_lead/`. Existing bound subfolders (e.g. `source_capture_toolbox/`)
   are unchanged. Files matching no lane may remain at `docs/product/` root
-  (bounded residual). Lanes are `planned` in `repo-structure.yaml` until the
-  Phase-2 consolidation applies; new product artifacts should use the lane
-  folders immediately (forward-only).
+  (bounded residual). Product lanes are bound here. Their `repo-structure.yaml`
+  status must match the actual migration state: `planned` before the Phase-2
+  apply, `current` only after the apply has run (the apply ran 2026-06-11).
+  New product artifacts should use the lane folders immediately (forward-only).
 - `docs/decisions/`: stays flat in v0; its naming grammar plus this binding's
   map entry are the navigation aid. Revisit only by a later decision.
 - Archive mechanism: supersede banners and `superseded_by` header fields
