@@ -1,5 +1,15 @@
 ﻿# Project Authority
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Orca overlay authority
+scope: Orca project identity, stage, boundary, relationship to jb, and unknown facts.
+use_when:
+  - Checking Orca project identity, stage, boundary, or relationship to jb.
+  - Confirming a project fact before filling it from defaults.
+authority_boundary: retrieval_only
+```
+
 ## Identity
 
 - Project/workspace: Orca

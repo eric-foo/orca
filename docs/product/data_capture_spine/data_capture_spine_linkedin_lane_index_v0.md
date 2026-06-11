@@ -11,7 +11,7 @@ use_when:
   - Choosing the source pack before building or reviewing a LinkedIn lane slice.
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md
+  - docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md
   - docs/workflows/linkedin_lane_operator_pilot_plan_v0.md
 ```
 
@@ -31,7 +31,7 @@ Discovery → Bounded Watch → Graph Frontier → Semantic Projection → Promo
 
 ## Authority (source of truth — read before building/reviewing)
 
-- **Architecture:** `docs/product/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
+- **Architecture:** `docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md`
   — Candidate Row Schema, frontier node/edge vocab, person-basis rules, Hard
   Stops, Non-Claims, and the owner-accepted **D1** (influence + trajectory
   *corroborate* a basis, never replace it) and **D5** (owner-present
@@ -76,9 +76,9 @@ Discovery → Bounded Watch → Graph Frontier → Semantic Projection → Promo
   people as **anonymized aggregate** "bottom-level" signal — a *feel* for
   bottom-level data **without** building any individual's dossier or row. Needs a
   deep-think + assumption-gate first (privacy-design lock-in). **Not yet decided.**
-- **Bounded Watch / influence trajectory:** `docs/product/data_capture_spine_linkedin_influence_trajectory_watch_spec_v0.md`.
+- **Bounded Watch / influence trajectory:** `docs/product/data_capture_spine/data_capture_spine_linkedin_influence_trajectory_watch_spec_v0.md`.
 - **Out-of-lane, legally-gated future lanes** (relationship-graph analytics;
-  contact/outreach): `docs/product/data_capture_spine_future_exploration_lanes_v0.md`.
+  contact/outreach): `docs/product/data_capture_spine/data_capture_spine_future_exploration_lanes_v0.md`.
 
 ## Review provenance
 
