@@ -426,10 +426,10 @@ Use these before broad product architecture or CA setup:
 
 | Path | Use for |
 | --- | --- |
-| `docs/decisions/turn_08_product_thesis_v0.md` | Orca thesis, value proposition, strategic center, broad product boundary. |
+| `docs/decisions/orca_product_thesis_consumer_demand_v0.md` | Orca thesis (consumer-demand decision intelligence, beauty first; owner-ratified 2026-06-12; supersedes `turn_08_product_thesis_v0.md`), value proposition, strategic center, product boundary. |
 | `docs/product/product_lead/orca_offer_hypothesis_v0.md` | Offer hypothesis, buyer-facing language, first proof offer, ICP boundary. |
 | `docs/product/product_lead/orca_buyer_proof_packet_v0.md` | First buyer-proof packet, proof gates, pull signals, kill/graduation criteria. |
-| `docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md` | Selected first ICP wedge and decision-family focus. |
+| `docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md` | Current first-proof ICP wedge (beauty operator door; owner co-ratified 2026-06-12; supersedes pricing-first) and decision-family focus. |
 | `docs/product/product_lead/orca_product_proof_lead_charter_v0.md` | Product proof lead role and proof execution boundary. |
 | `docs/product/product_lead/orca_claim_defense_doctrine_v0.md` | Operative external-claims policy (owner-signed 2026-06-11): built-to vs proven-at, per-tier wording table, debunking triage. Read before any externally visible sentence about Orca's judgment evidence. |
 
@@ -649,10 +649,10 @@ map versions unless the task is explicitly reviewing that older state.
 
 Start with:
 
-- `docs/decisions/turn_08_product_thesis_v0.md`
+- `docs/decisions/orca_product_thesis_consumer_demand_v0.md`
 - `docs/product/product_lead/orca_offer_hypothesis_v0.md`
 - `docs/product/product_lead/orca_buyer_proof_packet_v0.md`
-- `docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md`
+- `docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md`
 - `.agents/workflow-overlay/product-proof.md`
 
 ### Core Spine Evidence Standard Work
