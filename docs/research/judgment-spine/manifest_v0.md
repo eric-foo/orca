@@ -12,12 +12,14 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/research/judgment-spine/README.md
-  - docs/product/judgment_quality_promotion_operating_model_v0.md
+  - docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md
   - docs/research/judgment-spine/judgment_spine_thesis_v0.md
   - docs/research/judgment-spine/harness/v0_14/index.md
   - docs/research/judgment-spine/cases/milwaukee-fiscal-crossroads/case_index.md
   - docs/research/judgment-spine/cases/unity-runtime-fee/case_index.md
   - docs/research/judgment-spine/cases/canoo-walmart/case_index.md
+  - docs/research/judgment-spine/cases/daimler-carve-out/case_02_preflight_v0.md
+  - docs/decisions/judgment_spine_backtest_batch1_ledger_declaration_v0.md
 ```
 
 ## Preflight
@@ -35,8 +37,9 @@ orca_start_preflight:
 
 ## Status
 
-- manifest_status: initial index
-- current_scope: Milwaukee and Unity Runtime Fee case indexes, preservation prompt, and v0.14 Judgment Harness spec inventory
+- manifest_status: maintained index
+- current_scope: docs-tree case tracks (Milwaukee, Unity, Canoo/Walmart, Daimler carve-out, two DvC frame-locks), harness-side product-learning realizations plus the backtest batch-1 pointer, preservation prompt, and the v0.14 Judgment Harness spec inventory
+- maintenance_note: brought current 2026-06-11 (hygiene rows ORCA-HYGIENE-009/012) — daimler case track and fixture-prep set indexed, batch-1 ledger referenced, six stale pre-Phase-2 `docs/product/` paths re-pointed to their by-lane homes
 - dirty_state_note: workspace was dirty before this manifest was created; this manifest only indexes the scoped Judgment Spine files
 - strict_claims: not proven
 
@@ -55,10 +58,10 @@ orca_start_preflight:
 
 | Path | Role | Status |
 | --- | --- | --- |
-| `docs/product/judgment_quality_promotion_operating_model_v0.md` | Conductor that sequences gates JSG-01 to JSG-10 with mechanical receipt predicates, total fail/blocked transitions, a by-hand isolation cap, and named run lifecycle states | Working operating model; routes and verifies receipts; not validation, readiness, scoring, fixture admission, or judgment-quality evidence |
-| `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` | Claim-tier and closeout-state vocabulary the conductor routes to | Controlling doctrine |
-| `docs/product/judgment_spine_gate_ownership_map_v0.md` | Gate ownership the conductor sequences | Controlling doctrine |
-| `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` | JSG-08 receipt shape the conductor reads | Controlling doctrine |
+| `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` | Conductor that sequences gates JSG-01 to JSG-10 with mechanical receipt predicates, total fail/blocked transitions, a by-hand isolation cap, and named run lifecycle states | Working operating model; routes and verifies receipts; not validation, readiness, scoring, fixture admission, or judgment-quality evidence |
+| `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` | Claim-tier and closeout-state vocabulary the conductor routes to | Controlling doctrine |
+| `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` | Gate ownership the conductor sequences | Controlling doctrine |
+| `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` | JSG-08 receipt shape the conductor reads | Controlling doctrine |
 
 ## Reusable Prompt
 
@@ -77,6 +80,7 @@ orca_start_preflight:
 | `docs/research/judgment-spine/harness/v0_14/unity_v0_14_fixture_extraction_plan_v0.md` | Unity v0.14 fixture extraction plan | Working docs-only extraction plan; maps Unity into fixture-admission surfaces and preserves probe, leakage, scoring, implementation, and proof non-claims |
 | `docs/research/judgment-spine/harness/v0_14/fixtures/unity_runtime_fee_2023_v0_14/fixture_authoring_receipt_v0.md` | Unity v0.14 draft fixture pack receipt | Draft docs-only fixture pack; blocked before scoring; does not authorize implementation, probe execution, model runs, validation, scoring, proof, product proof, or lesson promotion |
 | `docs/research/judgment-spine/harness/v0_14/fixtures/canoo_walmart_2022_v0_14/fixture_authoring_receipt_v0.md` | Canoo/Walmart v0.14 draft fixture pack receipt | Draft docs-only fixture pack; blocked before scoring; does not authorize implementation, probe execution, model runs, validation, scoring, proof, product proof, or lesson promotion |
+| `docs/research/judgment-spine/harness/v0_14/fixtures/daimler_corporate_structure_vote_2019_v0_14/` | Daimler corporate-structure vote 2019 fixture-prep set (fixture entry plan, source acquisition plan + receipt, evidence registry draft, participant packet draft + conversion plan, memorization-probe request prep, facilitator work queue) | Draft docs-only prep set; no `fixture_authoring_receipt` yet; blocked before scoring; does not authorize implementation, probe execution, model runs, validation, scoring, proof, product proof, or lesson promotion |
 | `docs/research/judgment-spine/harness/v0_14/action_band_mapping_table_numbers.md` | Numeric action-band mapping source | Imported v0.14 spec |
 | `docs/research/judgment-spine/harness/v0_14/action_band_mapping_executable_spec.md` | Mapping function interface and behavior | Imported v0.14 spec |
 | `docs/research/judgment-spine/harness/v0_14/pydantic_schema_reference.md` | Pydantic-ready schema contracts | Imported v0.14 spec |
@@ -93,6 +97,7 @@ orca_start_preflight:
 | Milwaukee fiscal crossroads | `docs/research/judgment-spine/cases/milwaukee-fiscal-crossroads/` | Tier 0 candidate, single-case transfer unproven | Revealed | Reveal readout exists; case index exists; source packet and safety artifacts still missing |
 | Unity Runtime Fee monetization crossroads | `docs/research/judgment-spine/cases/unity-runtime-fee/` | Tier 0 candidate, single-case transfer unproven | Revealed | Reveal readout exists; case index exists; canonical source packet, sealed memo, and outcome calibration exist in `docs/product/`; participant packet and safety artifacts still missing |
 | Canoo/Walmart last-mile EV fleet commitment | `docs/research/judgment-spine/cases/canoo-walmart/` | Tier 0 case learning captured; artifact volume is not readiness; not repeatability proof, scoreable fixture, or model validation | Revealed and qualitatively calibrated | Case index, preflight, source packet, safety receipt, adversarial source-packet review, participant packet, blind LLM judgment, owner-assisted judgment, pre-reveal comparison, facilitator ledger, reveal readout, calibration-gate adversarial review, outcome calibration, JSG-08 reveal/calibration receipt, fixture-admission review, and draft v0.14 fixture pack exist; no model run, score, or score-ready fixture exists |
+| Daimler corporate-structure vote 2019 (carve-out) | `docs/research/judgment-spine/cases/daimler-carve-out/` | Case-2 candidate per the selection rule below; tier TBD | Not assessed in this index pass | Case-02 preflight, participant packet, and safety receipt exist (indexed 2026-06-11 per ORCA-HYGIENE-009); fixture-prep set exists in the harness tree (row above); case index, source packet, facilitator ledger, blind judgments, and reveal artifacts not present in the track |
 
 ## Harness-Side Product-Learning Realizations (2026-06-11)
 
@@ -110,6 +115,17 @@ runs; the Inoreader dir also carries `cross_vendor_blind_run_findings_v0.md`.
 | Headline findings (honest; detail in the findings doc) | Anti-over-reach replicated across vendors; anonymizing a famous case did **not** defeat strong recognizers (structural fingerprint re-identifies even neutral-framed); the scored band floor (3 vs 4) is **contested/unresolved**; a dr construct-critique of the scoring key was **walked back by cross-family review** — open thread is an *architecture pass* (surface band-input definitions → re-author → re-harden). |
 | Working discipline adopted | Claim-lifecycle (confidence-label + kill-criterion per finding; de-correlation-harden before any durable action) — itself a **hypothesis**, not doctrine. |
 | Caps | Not judgment-quality, not buyer-proof, not a scoreable fixture; the JSG-08-style reveal/calibration here is by-hand product-learning only. |
+
+## Backtest Batch 1 Pointer (product-learning)
+
+The active backtest batch is governed by its own pre-declared decision record:
+`docs/decisions/judgment_spine_backtest_batch1_ledger_declaration_v0.md`
+(`BATCH1_ACTIVE_OWNER_SIGNED`, 2026-06-11; six cases — the two harness
+realizations above as retro dev cases plus four beauty-vertical cases, two of
+them holdouts; pinned scoring key; swap pool; all-results rule; dated
+org-motion amendment for case #3). This manifest only routes to it: the ledger
+owns batch scope, execution rules, and amendments; per-case findings records
+land as they run, and the batch closes with one distillation record.
 
 ## Milwaukee Artifact Status
 
@@ -129,11 +145,11 @@ runs; the Inoreader dir also carries `cross_vendor_blind_run_findings_v0.md`.
 | --- | --- | --- |
 | Case index | `docs/research/judgment-spine/cases/unity-runtime-fee/case_index.md` | Created for navigation and residue tracking |
 | Reveal readout | `docs/research/judgment-spine/cases/unity-runtime-fee/reveal_readout_v0.md` | Exists |
-| Pre-cutoff source packet | `docs/product/orca_backtest_specimen_unity_runtime_fee_source_packet_v0.md` | Exists outside case folder |
-| Sealed at-cutoff memo | `docs/product/orca_backtest_specimen_memo_unity_runtime_fee_at_cutoff_v0.md` | Exists outside case folder |
-| Outcome calibration | `docs/product/orca_backtest_specimen_unity_runtime_fee_outcome_calibration_v0.md` | Exists outside case folder |
+| Pre-cutoff source packet | `docs/product/core_spine/orca_backtest_specimen_unity_runtime_fee_source_packet_v0.md` | Exists outside case folder |
+| Sealed at-cutoff memo | `docs/product/core_spine/orca_backtest_specimen_memo_unity_runtime_fee_at_cutoff_v0.md` | Exists outside case folder |
+| Outcome calibration | `docs/product/core_spine/orca_backtest_specimen_unity_runtime_fee_outcome_calibration_v0.md` | Exists outside case folder |
 | Draft v0.14 fixture pack | `docs/research/judgment-spine/harness/v0_14/fixtures/unity_runtime_fee_2023_v0_14/fixture_authoring_receipt_v0.md` | Draft docs-only pack exists; blocked before scoring and not probe-safe or score-ready |
-| Adjacent MV-04 method replay | `docs/product/core_spine_v0_method_validation_mv04_unity_runtime_fee_replay_v0.md` | Exists outside case folder; secondary method-validation evidence |
+| Adjacent MV-04 method replay | `docs/product/core_spine/core_spine_v0_method_validation_mv04_unity_runtime_fee_replay_v0.md` | Exists outside case folder; secondary method-validation evidence |
 | Participant packet | `docs/research/judgment-spine/cases/unity-runtime-fee/participant_packet_v0.md` | Missing |
 | Safety receipt | `docs/research/judgment-spine/cases/unity-runtime-fee/safety_receipt_v0.md` | Missing |
 | Consolidated blind judgments | `docs/research/judgment-spine/cases/unity-runtime-fee/blind_judgments_v0.md` | Missing |

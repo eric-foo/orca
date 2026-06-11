@@ -20,8 +20,9 @@ open_next:
   - docs/migration/repo_structure_phase2_consolidation_v0/runbook.md
 stale_if:
   - repo-structure.yaml and this binding disagree on a home or parameter.
-  - The Phase-2 consolidation applies (planned lanes become current).
   - A later accepted Orca decision supersedes a parameter bound here.
+  # (retired 2026-06-11: "The Phase-2 consolidation applies" fired - see the
+  # dated note in Status)
 ```
 
 ## Status
@@ -32,6 +33,13 @@ pipeline. This binds the structure discipline below as Orca project doctrine
 and authorizes the EP-04 placement substrate build recorded here. It is not
 validation, not readiness, not ratification of any external doctrine, and not
 acceptance of the jb draft doctrine as Orca authority.
+
+Dated note — Phase-2 applied (2026-06-11): the prepared consolidation ran
+(commit `1b0f3fc`, 99-file by-lane move); the harness pytest/uv scratch config
+followed (`8516cdc`); EP-04 hook wiring landed in `.claude/settings.json`
+(`27bade9`) and the hooks have been observed firing in-session. The `stale_if`
+trigger "Phase-2 consolidation applies" fired and is retired; lane statuses in
+`repo-structure.yaml` read `current` and match the migration state.
 
 ## Provenance (origin, not authority)
 

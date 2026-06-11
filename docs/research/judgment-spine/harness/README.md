@@ -10,6 +10,7 @@ use_when:
   - Keeping side context near the harness without making it controlling spec authority.
 authority_boundary: retrieval_only
 open_next:
+  - docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md   # up: spine-wide entry map
   - docs/research/judgment-spine/harness/v0_14/index.md
   - docs/research/judgment-spine/harness/adjacent-context/README.md
 ```

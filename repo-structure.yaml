@@ -48,8 +48,9 @@ docs_roles:
   - { home: docs/hygiene, entry: docs/hygiene/queue.md }
   - { home: docs/_inbox, entry: docs/_inbox/README.md }
 
-# docs/product/ second-level lanes (binding: by-lane axis). status: current until
-# the Phase-2 consolidation applies; new product artifacts use lanes immediately.
+# docs/product/ second-level lanes (binding: by-lane axis). Phase-2 consolidation
+# applied 2026-06-11 (commit 1b0f3fc): all lanes current; new product artifacts
+# use the lane folders directly.
 product_lanes:
   - { name: core_spine, status: current }
   - { name: data_capture_spine, status: current }

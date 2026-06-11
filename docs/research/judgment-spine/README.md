@@ -10,10 +10,7 @@ use_when:
   - Preserving cross-case consulting lessons without creating a skill, model-training dataset, or product feature.
 authority_boundary: retrieval_only
 open_next:
-  - docs/research/judgment-spine/judgment_spine_thesis_v0.md
-  - docs/research/judgment-spine/manifest_v0.md
-  - docs/research/judgment-spine/harness/README.md
-  - docs/prompts/deep-thinking/orca_judgment_spine_case_learning_preservation_prompt_v0.md
+  - docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md   # single entry map; routes one hop to thesis, manifest, cases, harness, and prompts
 ```
 
 ## Preflight
