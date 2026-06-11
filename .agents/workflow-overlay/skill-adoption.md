@@ -144,9 +144,14 @@ authority-claiming local skills. Acceptance is a LOCAL FREEZE only: it does not
 deploy, activate, or make the skill resolver-visible; that remains a separate
 skill-governance action under the Protected Skill Boundary.
 
-- `orca-product-lead` — accepted/frozen 2026-06-08.
+- `orca-product-lead` — accepted/frozen 2026-06-08; refreshed + re-frozen
+  2026-06-12 (owner-authorized skill-edit: thesis/wedge citations re-routed
+  through the repo-map product-anchor rows after the consumer-demand
+  ratification; both copies verified identical; closes ORCA-HYGIENE-019).
   - Source path: `.agents/skills/orca-product-lead/SKILL.md` (Orca-local).
-  - Source sha256: `42EF7C2DCE667CFA09EA6F3F8CE369C7F55D7721D131692CB06C11152E908BB5`
+  - Source sha256: `C8DEAA4DDEC94321ED47BA879D0C85269CACFEEE8D733B3634AB1A1C792634A3`
+    (re-pinned 2026-06-12; prior frozen sha
+    `42EF7C2DCE667CFA09EA6F3F8CE369C7F55D7721D131692CB06C11152E908BB5`)
     (working-tree bytes; updated at deployment 2026-06-08 when the status text was
     added; supersedes the at-acceptance hash 2B011CE8; reread-required if the file
     changes).

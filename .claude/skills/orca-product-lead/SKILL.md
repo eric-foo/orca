@@ -12,8 +12,10 @@ frozen decision.
 
 ## Status and boundary
 
-- Status: **Orca-local, ACCEPTED (frozen) + DEPLOYED/ACTIVATED 2026-06-08.**
-  Deployed for the Claude Code runtime as a PROJECT-level copy at
+- Status: **Orca-local, ACCEPTED (frozen) + DEPLOYED/ACTIVATED 2026-06-08;
+  refreshed + re-frozen 2026-06-12** (authorized skill-edit: thesis/wedge
+  citations re-routed after the consumer-demand ratification; sha re-pinned
+  in skill-adoption.md). Deployed for the Claude Code runtime as a PROJECT-level copy at
   `.claude/skills/orca-product-lead/SKILL.md` (this project only; NOT
   user-global/personal, NOT a plugin, NOT external). This `.agents/skills/` file
   remains the canonical, cross-runtime source-of-record; the `.claude/skills/`
@@ -51,23 +53,28 @@ needs its own explicit owner authorization.
    the nearest controlling product doc(s) for the specific decision. Use
    `docs/workflows/orca_repo_map_v0.md` to choose among many docs.
 3. Controlling product sources, opened as the decision needs them:
-   - `docs/decisions/turn_08_product_thesis_v0.md` — thesis and value proposition.
-   - `docs/product/orca_offer_hypothesis_v0.md` — provisional-lock offer.
-   - `docs/decisions/orca_icp_wedge_pricing_first_v0.md` — **current** first-proof
-     wedge authority: pricing-first / outside-in competitive & market intelligence
-     engine; AI-monetization beachhead (B2B SaaS making a first-time AI-monetization
-     or competitor-triggered repricing/repackaging decision, cross-sector-open frame;
-     dev-facing SaaS is a sub-instance, not the defining qualifier). Selected,
-     **not** a permanent ICP lock; direction chosen, decide-vs-confirm test pending.
-   - `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` — **superseded**
-     (wedge authority transferred to `orca_icp_wedge_pricing_first_v0.md` above);
-     retain for historical candidate-wedge comparison only; do not treat as current.
-   - `docs/product/orca_product_proof_lead_charter_v0.md` — proof-lead ownership
-     and exclusions.
-   - `docs/product/orca_buyer_proof_packet_v0.md` — proof standard, qualification,
-     rubric, kill / graduation.
+   - Current product thesis and first-proof wedge: resolve BOTH through the
+     repo map's "Product Anchor Files" table (route, don't restate — wedge
+     facts pinned in this file have rotted before). At the 2026-06-12
+     refresh they are
+     `docs/decisions/orca_product_thesis_consumer_demand_v0.md`
+     (consumer-demand decision intelligence; beauty first vertical; US-first
+     geography; OWNER_LOCKED) and
+     `docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md` (beauty
+     operator first door; OWNER_LOCKED_DIRECTION) — but the repo-map row and
+     the records' own supersession banners govern, not this line.
+   - `docs/product/product_lead/orca_offer_hypothesis_v0.md` — offer
+     hypothesis (broad offer + first-proof offer layer).
+   - `docs/product/product_lead/orca_product_proof_lead_charter_v0.md` —
+     proof-lead ownership and exclusions.
+   - `docs/product/product_lead/orca_buyer_proof_packet_v0.md` — proof
+     standard, demand-substrate hard gate, qualification, rubric,
+     kill / graduation.
    - `.agents/workflow-overlay/product-proof.md` — trust, pull-vs-praise, claim
      tiers, non-claims.
+   - Superseded wedge-chain records (pricing-first, break-in-first, the v0
+     ICP wedge) are history; their banners route forward — treat none of
+     them as current.
 4. Verify any pinned `input_hashes` before treating a source-heavy artifact as
    stable; record dirty / untracked / stale state. Strict claims need the
    controlling source — reading more cannot create missing authority.
@@ -92,7 +99,7 @@ needs its own explicit owner authorization.
    language); and the kill / graduation gates verbatim from the buyer-proof
    packet. Classify the Judgment-Spine claim tier and `closeout_state`
    (`.agents/workflow-overlay/product-proof.md` +
-   `docs/product/judgment_spine_evidence_ladder_architecture_v0.md`) before any
+   `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md`) before any
    proof, readiness, or judgment-quality claim; missing evidence is not a pass.
 4. **Keep deck-first without weakening the substrate.** Lead buyer-facing framing
    with the executive deck, but the internal memo + evidence appendix remain the
@@ -106,8 +113,9 @@ needs its own explicit owner authorization.
 
 ## Guardrails — what must not become skill behavior
 
-- Do not auto-lock the AI-monetization wedge (or any wedge) as Orca's permanent
-  ICP; it is a revisable first-proof selection; the decide-vs-confirm test is pending.
+- Do not auto-lock the current first-proof wedge (whichever the repo map
+  routes to) as Orca's permanent ICP; a wedge is a revisable first-proof
+  selection whose pivot and kill conditions live in its own record.
 - Do not treat candidate-context scans as qualified buyers.
 - Do not turn deck-first framing into deck production.
 - Do not launch outreach, public research, memo / deck production, commercial-
@@ -169,3 +177,10 @@ courier state only when useful.
   user-global, not plugin, not external. A one-time Claude Code restart is
   required to start watching the newly-created `.claude/skills/` directory.
   Codex / other-runtime activation is a separate target, not done here.
+- Refresh record: 2026-06-12, owner-authorized in-thread ("go" on the
+  deep-think rollout-readiness assessment) — stale thesis/wedge citations
+  re-routed through the repo-map product-anchor rows (route-don't-restate),
+  pre-migration flat `docs/product/` paths updated to their `product_lead/`
+  and `judgment_spine/` homes, and the wedge guardrail generalized. Both
+  copies updated identically; new source sha256 re-pinned in
+  skill-adoption.md (closes ORCA-HYGIENE-019).
