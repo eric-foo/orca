@@ -103,6 +103,13 @@ route agents by stale doctrine. At minimum, consider:
 - executor, prompt, validation, review, and closeout surfaces when the doctrine
   affects them.
 
+Keep propagated restatements faithful to the controlling source's strength. A
+restatement in a downstream surface must not soften or narrow the controlling
+rule — for example a `required`/`must` weakened to "add when known" — nor
+silently fork it. Where the same wording would otherwise be copied across
+surfaces, prefer pointing them at the single controlling source over duplicating
+it, so the copies cannot desynchronize.
+
 Store the propagation evidence inline in the changed artifact, prompt, handoff,
 or final closeout. Do not create a standalone receipt file, new skill,
 registry, broad template sweep, or automation for this loop unless a later turn
@@ -122,7 +129,7 @@ direction_change_propagation:
   intentionally_not_updated:
     - path: "<path>"
       reason: "<why unchanged>"
-  stale_language_search: "<query or not_run + why>"
+  stale_language_search: "<query, or not_run + why — not_run only for a purely additive change>"
   non_claims:
     - "not validation"
     - "not readiness"
@@ -193,6 +200,69 @@ direction_change_propagation:
     - not readiness
     - not model routing
     - not host API schema authority
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The Doctrine Change Propagation Contract now requires propagated
+    restatements to stay faithful to the controlling source's strength — no
+    softening, narrowing, or silent forking, and prefer pointing at the single
+    controlling source over copying — and allows stale_language_search to be
+    not_run only for a purely additive change.
+  trigger: workflow_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/source-of-truth.md
+    - docs/decisions/doctrine_change_propagation_restatement_integrity_decision_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - CLAUDE.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-loading.md
+    - docs/workflows/orca_repo_map_v0.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        Already requires that CLAUDE.md and downstream surfaces not duplicate,
+        fork, or weaken Orca rules and "load the owning overlay file instead of
+        duplicating the rule here." The restatement-integrity rule generalizes
+        that existing principle into the propagation contract; copying its text
+        into AGENTS.md would itself fork the rule it adds.
+    - path: .agents/workflow-overlay/source-loading.md
+      reason: >
+        Already states convenience copies "must not fork the rule." Owner text
+        stays solely in source-of-truth.md; source-loading references the
+        contract rather than restating it.
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        Already practices reference-over-copy ("intentionally does not duplicate
+        the owner-doc inventory"); routing is unchanged and points to this
+        overlay as the propagation owner.
+    - path: .agents/workflow-overlay/README.md
+      reason: >
+        The overlay index already names source-of-truth.md as the
+        doctrine-change-propagation owner; no new section owner was added.
+  stale_language_search: >
+    rg -n 'not_run only|purely additive|reference over copy|prefer reference|do
+    not copy|duplicat|fork the rule|faithful to the controlling|must not soften'
+    .agents/workflow-overlay AGENTS.md CLAUDE.md docs/workflows/orca_repo_map_v0.md
+  stale_language_search_result: >
+    Executed on 2026-06-08 after this patch (this change includes a schema edit,
+    so it is not purely additive and the search is required). A separate check
+    confirmed the receipt-schema placeholder stale_language_search lives in
+    exactly one place (source-of-truth.md), so the additive-only tightening forks
+    no copy. Every duplicate/fork hit elsewhere (AGENTS.md, CLAUDE.md,
+    source-loading.md, the repo map, validation-gates.md, and prior DCP receipts)
+    already asserts reference-over-copy or no-fork and is consistent with the new
+    restatement-integrity rule. No surface retained an instruction to weaken,
+    narrow, or freely copy a propagated restatement, and none permitted not_run
+    for a non-additive change.
+  non_claims:
+    - not validation
+    - not readiness
+    - not review authority
+    - not implementation authorization
+    - not source promotion
 ```
 
 ```yaml
