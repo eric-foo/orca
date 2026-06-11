@@ -16,13 +16,14 @@ use_when:
   - Deciding how much to invest in judgment-quality machinery vs product-learning.
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/judgment_quality_promotion_operating_model_v0.md
-  - docs/product/judgment_spine_evidence_ladder_architecture_v0.md
+  - docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md
+  - docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md
   - docs/research/judgment-spine/cases/canoo-walmart/case_index.md
+  - docs/product/product_lead/orca_claim_defense_doctrine_v0.md   # claims posture while the gap stands (dated note below)
 stale_if:
   - The conductor's case-selection posture, the by-hand cap, or the probe's role changes.
   - The evidence ladder changes its tier vocabulary.
-  - An authorized live blind-judgment runner, a non-synthetic post-cutoff run, the SP-5 finalizer, or the JSG-01 EvidenceUnit binding lands (the memorization-probe runner and scoring are already built).
+  - An authorized live blind-judgment runner, a non-synthetic post-cutoff run, the SP-5 finalizer's remaining half, or the JSG-01 EvidenceUnit binding lands (the memorization-probe runner, scoring, and the SP-5 finalizer half are already built).
 ```
 
 ## What this is
@@ -151,8 +152,11 @@ The accurate, narrower gap:
   judgment**: an *authorized live-execution surface* (raw API is the accepted one)
   producing a blind judgment under proven isolation, bound to an auditable
   live-execution record. Today this is by-hand; no authorized real-case record exists.
-- **SP-5 finalizer** — the `pre_decision_status` finalization receipt + provenance
-  (not built; no `FinalizationReceipt` in `schemas/`).
+- **SP-5 finalizer** — half built (corrected 2026-06-11): the
+  `FinalizationReceipt` model + validate-only consumer exist
+  (`orca-harness/schemas/finalization_models.py`, committed `a37f896`); the
+  remaining gap is the case-packet/`EvidenceUnit` side. Current inventory:
+  `judgment_spine_machinery_build_state_gap_map_v0.md`.
 - **JSG-01 `EvidenceUnit` binding** — the ECR derivers are built but bind no
   `EvidenceUnit`; no case packet yet carries the derived fields.
 - **Post-cutoff / prospective case sourcing** — the case-finder pipeline (Part 3); only a frame doc exists.
@@ -169,6 +173,24 @@ occasional, *prospective* effort when external proof is specifically needed — 
 defensible posture. Whether to invest in the judgment-quality machinery vs. bank
 product-learning value is a **product-strategy decision** (owner-owned), not
 settled here.
+
+## Dated Note — Claims Posture While The Gap Stands (owner-accepted 2026-06-11)
+
+After a claims-policy pass (cross-vendor adversarially reviewed), the owner
+accepted that the gap above cannot be closed by declaration or framing: Orca
+does not "JQ itself." External wording is governed by
+`docs/product/product_lead/orca_claim_defense_doctrine_v0.md` — the
+Judgment-Quality **Standard** frame: Orca markets being **built to** the
+standard now; **proven at** the judgment-quality rung becomes claimable only
+when the ladder's `completed_judgment_quality_evidence` receipt exists. Per
+Parts 1–2 above, that receipt arrives only through the sealed path
+(probe-gated post-cutoff retrospectives at best; prospective seal-and-wait as
+the future-proof core) plus the named machinery receipts — not through
+rebuttal capability, staged disclosure, or branding. Until then the honest
+tier stays product-learning, and the commercial route runs through buyer-proof
+(paid pilots generate sealed forward calls as a side effect). Owner read,
+recorded so a future thread does not re-litigate self-declared JQ: "that would
+come again only when [we] have sealed."
 
 ## Non-Claims
 
