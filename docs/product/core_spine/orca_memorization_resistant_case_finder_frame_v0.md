@@ -19,6 +19,7 @@ open_next:
   - docs/research/judgment-spine/manifest_v0.md   # Selection-Rule-for-Case-2
   - docs/research/judgment-spine/decide_vs_confirm_backtest_case_frame_template_v0.md
   - docs/decisions/orca_moat_judgment_quality_proof_path_decision_chain_v0.md
+  - docs/product/core_spine/orca_venue_exploration_procedure_v0.md   # WHERE-side venue procedure (owner-adopted shape, subordinate to this frame)
 stale_if:
   - Owner signs off and promotes this into binding selection doctrine.
   - The deferred-architecture trigger fires (manual screen proven + throughput bottleneck).
