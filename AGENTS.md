@@ -33,6 +33,18 @@ phrases like **smallest complete fix, patch, edit, rewrite, refactor, review,
 or answer** -- interpret it as **X performed under the Smallest complete
 intervention rule above.**
 
+## Mini God Tier
+
+Whenever the user or instructions say **"mini god tier"** (including "god tier
+but small"), interpret it as the owner-invoked capability-target lens bound in
+`docs/decisions/orca_mini_god_tier_doctrine_v0.md`: target most of the maximal
+capability's value at a fraction of its cost and speed, with the foregone
+limitations named and consciously accepted, never quietly dropped. Only the
+owner sets this bar; it never authorizes agent-initiated scope expansion, and
+every intervention toward it remains governed by the Smallest Complete
+Intervention rule above. It is a design lens, not a claim tier: the label
+asserts no validation or readiness.
+
 ## Orca Project Instructions
 
 `AGENTS.md` is the canonical shared project instruction source for Orca. `CLAUDE.md` is a Claude Code shim that imports this file and must not duplicate, fork, weaken, or override Orca project rules.
