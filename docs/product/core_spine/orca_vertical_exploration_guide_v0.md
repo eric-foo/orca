@@ -117,6 +117,49 @@ its evidence base today is
 (substrate-first diagnosis, escalation ladder, honest NO-GO). This procedure
 designs no capture mechanics and authorizes no capture run.
 
+## Walker Equipment Kit (canonical block — paste into every walk prompt)
+
+No walker deploys without this block (2026-06-12 amendment). It distills the
+capture lane's read-escalation patterns (capture investigation playbook +
+recon index) for screening use, plus the rules this guide's own screens
+earned. It updates by dated note as ledgers learn new walls.
+
+> WALK CONTRACT (non-negotiable):
+> 1. HARD STOP SELF-CHECK — keep a numbered move log; after EVERY move check
+>    in order: (a) candidate target met -> STOP NOW; (b) last two moves both
+>    VENUE-DRY -> STOP NOW; (c) move cap reached -> STOP NOW. Show the check
+>    in the log (e.g. "a:no b:no c:no"). Continuing past a fired stop
+>    violates the walk contract.
+> 2. YIELD CLASSES per move: CANDIDATE | EVIDENCE | INFLUENCE-OBS (hub,
+>    pointing structure, wind-caller/detector) | VENUE-DRY (venue actually
+>    read, zero yield) | ACCESS-NOTE (could not reach it — counts toward the
+>    move cap, never toward the dry stop).
+> 3. READ ESCALATION before any ACCESS-NOTE (screening posture only — public
+>    pages, no logins, no bulk): try (i) a URL variant (old./www., mobile,
+>    print view), (ii) search-snippet mining (site:domain queries), (iii) an
+>    archived copy of the SPECIFIC page. Record which shapes you tried.
+>    "Blocked" is a hypothesis, not a verdict.
+> 4. KNOWN WALLS (do not burn moves rediscovering): reddit.com is unreachable
+>    via the agent fetch tool (tool-level block) AND unreliable in external
+>    search indexes — snippet-mine only, and record what you needed so the
+>    orchestrator can route it; basenotes.com 403s direct fetch — snippets
+>    and archives work.
+> 5. POLICY SKIPS (hard): LinkedIn, TikTok, Instagram — record pointers,
+>    never follow. No logins anywhere. No capture: URLs + short quotes only.
+> 6. HUB ORDER: brand-story trade press FIRST (outlets covering brands and
+>    their decisions); ingredient/market trade press ONLY when hunting
+>    regulatory forcing functions. US brands / US ecosystem by default (owner
+>    direction 2026-06-12); flag incidental non-US finds.
+> 7. EVERY claim URL-backed — found sources only, never your memory. Return
+>    candidates, influence observations with receipts, the negative set, and
+>    access notes in the structured shape the orchestrator specifies.
+
+Orchestrator obligations (the contract's other half): supply direction,
+targets, caps, and the exclusion list; collect access notes at batch close
+and consult the capture seam (playbook / recon index) on every unresolved
+wall BEFORE that vertical's next screen; fold newly-diagnosed walls into this
+kit by dated note.
+
 ## Promote-on-reuse trigger
 
 Keeps the registry rejection honest, not permanent. Route a venue-registry
@@ -222,3 +265,21 @@ Mints no ladder vocabulary; the Status label is doc-local.
   same turn; historical records (the commissioning prompt, past cleanup
   reports, dated ledger filenames) keep their original path text. Section-name
   grep contracts ("Screen Provenance" / "Venue Provenance") are unchanged.
+- 2026-06-12 (owner direction, in-thread): screens DEFAULT TO US BRANDS AND
+  THE US ECOSYSTEM until further owner direction (highest consumer spending;
+  densest public signal layer). Non-US candidates surfaced incidentally are
+  recorded but flagged non-US for the consuming batch. Pre-existing pool
+  members affected (consuming batches treat per this direction): Purito (KR),
+  Dear Klairs (KR), Manifesto (UK), Puredistance (NL), Xerjoff (IT); Bonjout
+  and The Nue Co. are borderline (foreign-founded, US-market distribution).
+- 2026-06-12 (owner-accepted, in-thread; walker equipment + trade-press fork
+  + access-wall routing): (i) Step 2 move 1 FORKS — brand-story trade press
+  (outlets covering brands and their decisions) is walked FIRST for
+  candidates; ingredient/market trade press is consulted only for regulatory
+  forcing functions (twice-observed: beauty + ingestible beauty). (ii) Access
+  walls: walkers escalate the read shape within screening posture and record
+  shapes tried; consulting the capture playbook/recon seam is the
+  ORCHESTRATOR's job at batch close — every unresolved wall routes to the
+  capture seam before that vertical's next screen. (iii) Every walk prompt
+  must include the Walker Equipment Kit (section above) — walkers deploy
+  equipped, not naked.
