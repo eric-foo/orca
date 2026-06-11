@@ -61,6 +61,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only �
 | Inspect the built ECR integrity derivers (SP-1/2/3/6) + models | `orca-harness/ecr/` |
 | Inspect the built Signal Content Record deriver + model | `orca-harness/signal_content/` |
 | Record an out-of-band SP-5 finalization act (`FinalizationReceipt` producer) | `orca-harness/runners/run_finalization_receipt.py` (model + validate-only consumer: `orca-harness/schemas/finalization_models.py`) |
+| Bind what JSG-01 reads onto one case-packet evidence unit (three-key binding + composer) | `orca-harness/evidence_binding/` (ratified contract: boundary doc → "JSG-01-scoped EvidenceUnit binding contract RATIFIED") |
 | Inspect the tests | `orca-harness/tests/unit/test_ecr_*`, `orca-harness/tests/unit/test_signal_content_*`, `orca-harness/tests/unit/test_finalization_models.py`, `orca-harness/tests/unit/test_run_finalization_receipt.py` |
 | Reach the upstream provenance layer (the packet this all keys to) | `docs/workflows/data_capture_spine_consolidation_map_v0.md` (capture submap) |
 
@@ -69,7 +70,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only �
 - **Built + committed (clean working tree; unit tests under `orca-harness/tests/unit/`):** the four ECR integrity postures — SP-1 identity, SP-2 inspectability, SP-3 timing-cutoff, SP-6 source-visibility — in `orca-harness/ecr/`, and the Signal Content Record deriver in `orca-harness/signal_content/`. Each at its own true grain; pure; binds no Evidence Unit. *Implementation reality is the code — check it there; plan docs may run ahead of or behind it. Review history lives in the owning plan docs and the commit log.*
 - **Declared-but-dormant:** the SCR **authored-interpretation lane** (`signal_family` + event-core). The deriver residualizes that core today (the default) because no authored-classification input / SP-5-style finalizer exists in source. A named, typed seam — not built (the SP-6 precedent).
 - **Built (SP-5 finalization, judgment-lane sibling):** the `FinalizationReceipt` model + validate-only consumer (`orca-harness/schemas/finalization_models.py`, committed `a37f896`) and the operator-driven producer recording the out-of-band act (`orca-harness/runners/run_finalization_receipt.py`; cross-vendor reviewed + adjudicated). Binds no Evidence Unit; clears no case.
-- **Ratified, build in flight:** the **JSG-01-scoped EvidenceUnit binding contract** (three-key `Jsg01EvidenceBinding` + pure no-aggregate-verdict composer; owner-ratified 2026-06-12 at the boundary doc). Scoped to exactly what the JSG-01 predicate reads; the full field-by-field Evidence Unit schema stays reserved.
+- **Ratified + built (JSG-01-scoped composition layer):** the **JSG-01-scoped EvidenceUnit binding** (three-key `Jsg01EvidenceBinding` + pure no-aggregate-verdict composer; owner-ratified 2026-06-12 at the boundary doc; code in `orca-harness/evidence_binding/`, cross-vendor reviewed + adjudicated). Scoped to exactly what the JSG-01 predicate reads; the full field-by-field Evidence Unit schema stays reserved.
 - **Deferred / frozen (named, not owned here):** the field-by-field Evidence Unit schema; Cleaning; Judgment; the JSG-01 unfreeze. Each separately gated.
 
 ## Owners By Layer
