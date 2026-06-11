@@ -1,0 +1,262 @@
+"""LinkedIn live-adapter validators (no runtime).
+
+Every negative is a raise (``LinkedInLaneError``), so a test proves the gate
+fails bad input rather than passing hollow. The generic fail-closed primitives
+(forbidden-output-field walk, key allowlist, required-field check, NEGATED
+non_claims category check, excluded public-actor-basis markers) are IMPORTED from
+``linkedin_lane.shared_validation`` (the single source of truth).
+
+- ``validate_live_access_envelope`` (slice 3a): owner-presence ATTESTED, no
+  entitlement-gate bypass, execution NOT authorized, attended mode, POC-risk iff.
+- ``validate_live_observation`` (slice 3b): the §6.2 minimization boundary -- the
+  record is named-fields-only and the retained/captured flags must be False, so
+  over-captured state (profile body / contact / follower list / content) cannot
+  pass; person observations carry the shared public-actor-basis gate. No runtime,
+  no projection into ``CandidateRow`` yet (that is slice 3b-2).
+"""
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from dataclasses import fields
+from typing import Any
+
+from capture_spine.linkedin_lane.models import (
+    EntityType,
+    MinimizationRule,
+    PERSON_ENTITY_TYPES,
+    PersonDataMinimized,
+    SourceSurface,
+)
+from capture_spine.linkedin_lane.shared_validation import (
+    assert_no_forbidden_output_fields,
+    fail as _fail,
+    reject_unknown_keys as _reject_unknown_keys,
+    require_fields as _require,
+    validate_non_claims_categories as _validate_non_claims,
+    validate_public_actor_basis,
+    validate_visible_influence_value,
+)
+from capture_spine.linkedin_live_adapter.models import (
+    LINKEDIN_LIVE_ACCESS_ENVELOPE_SCHEMA_VERSION,
+    LINKEDIN_LIVE_OBSERVATION_SCHEMA_VERSION,
+    LiveAccessEnvelope,
+    LiveAccessMode,
+    LiveObservation,
+)
+
+
+# --- slice 3a: Live Access Envelope ---
+_ALLOWED_LIVE_ACCESS_ENVELOPE_KEYS = frozenset(f.name for f in fields(LiveAccessEnvelope))
+_ALLOWED_LIVE_ACCESS_MODES = frozenset(v.value for v in LiveAccessMode)
+_POC_RISK_LIVE_ACCESS_MODE_VALUES = frozenset(
+    {LiveAccessMode.OWNER_PRESENT_ATTENDED_AUTOMATION.value}
+)
+_REQUIRED_LIVE_ACCESS_ENVELOPE_FIELDS: tuple[str, ...] = (
+    "live_access_id",
+    "run_id",
+    "live_access_mode",
+    "source_policy_posture",
+    "stop_condition",
+    "attended_presence_check_method",
+)
+
+
+def validate_live_access_envelope(envelope: Mapping[str, Any]) -> None:
+    assert_no_forbidden_output_fields(envelope)
+    _reject_unknown_keys(envelope, _ALLOWED_LIVE_ACCESS_ENVELOPE_KEYS, "live_access_envelope")
+    _require(envelope, _REQUIRED_LIVE_ACCESS_ENVELOPE_FIELDS, "live_access_envelope")
+    if envelope.get("schema_version") != LINKEDIN_LIVE_ACCESS_ENVELOPE_SCHEMA_VERSION:
+        _fail(
+            "invalid_schema_version",
+            f"live access envelope schema_version must be {LINKEDIN_LIVE_ACCESS_ENVELOPE_SCHEMA_VERSION}",
+        )
+    if envelope.get("live_access_mode") not in _ALLOWED_LIVE_ACCESS_MODES:
+        _fail(
+            "invalid_live_access_mode",
+            "live_access_mode must be an attended mode "
+            "(attended_manual / owner_present_attended_automation); no unattended mode",
+        )
+    if envelope.get("owner_presence_attested") is not True:
+        _fail(
+            "presence_not_attested",
+            "owner_presence_attested must be True (a live access run requires confirmed owner presence)",
+        )
+    if envelope.get("entitlement_gate_bypass") is not False:
+        _fail(
+            "entitlement_gate_bypass_forbidden",
+            "entitlement_gate_bypass must be False (no circumventing login walls, caps, or paid tiers)",
+        )
+    if envelope.get("execution_authorized") is not False:
+        _fail(
+            "execution_authorization_forbidden",
+            "execution_authorized must be False (this is a no-runtime contract record, not a live runner)",
+        )
+    caps = envelope.get("caps")
+    if not isinstance(caps, Mapping) or not caps:
+        _fail("missing_caps", "caps are required (a live access run must declare its caps)")
+    # Each declared cap must be a non-negative integer under a non-empty name, and the
+    # total must be positive -- so a run's caps are a strict posture, not coerced from a
+    # string / bool / negative at runtime (cross-vendor 3c-2a review).
+    caps_total = 0
+    for cap_name, cap_value in caps.items():
+        if not isinstance(cap_name, str) or not cap_name.strip():
+            _fail("invalid_cap", "each cap name must be a non-empty string")
+        if type(cap_value) is not int or cap_value < 0:
+            _fail("invalid_cap", "each cap value must be a non-negative integer (no bools, strings, or negatives)")
+        caps_total += cap_value
+    if caps_total < 1:
+        _fail("invalid_cap", "the declared caps total must be positive")
+    is_poc_mode = envelope.get("live_access_mode") in _POC_RISK_LIVE_ACCESS_MODE_VALUES
+    poc_flag_set = envelope.get("optional_poc_risk_mode") is True
+    if is_poc_mode and not poc_flag_set:
+        _fail(
+            "poc_risk_mode_not_attested",
+            "owner_present_attended_automation is a POC-risk mode; optional_poc_risk_mode must be True",
+        )
+    if poc_flag_set and not is_poc_mode:
+        _fail(
+            "poc_risk_mode_overattested",
+            "optional_poc_risk_mode=True is valid only for owner_present_attended_automation "
+            "(no over-attesting POC-risk on a non-POC mode)",
+        )
+    _validate_non_claims(envelope.get("non_claims"), "live_access_envelope")
+
+
+# --- slice 3b: Live Observation (minimization boundary; no projection yet) ---
+_ALLOWED_LIVE_OBSERVATION_KEYS = frozenset(f.name for f in fields(LiveObservation))
+_ALLOWED_OBSERVED_ENTITY_TYPES = frozenset(v.value for v in EntityType)
+_PERSON_ENTITY_TYPE_VALUES = frozenset(v.value for v in PERSON_ENTITY_TYPES)
+# A person OBSERVATION is the minimization seam, so it must be minimized:
+# person_data_minimized must be exactly "yes" (reject "no" / "not_applicable").
+_PERSON_OBSERVATION_MINIMIZED_REQUIRED = "yes"
+# Defense-in-depth length cap: named-fields-only blocks a STRUCTURED bag, but a
+# free-text field could still hold a copied profile body; the cap catches GROSS
+# over-capture. Small forbidden content (e.g. an email in a basis field) is NOT
+# fully caught here -- that is the 3c runtime read-time-minimization concern.
+_MAX_OBSERVED_FREETEXT_LEN = 512
+_LENGTH_CAPPED_FREETEXT_FIELDS: tuple[str, ...] = (
+    "observed_display_name",
+    "observed_source_locator",
+    "observed_public_role_or_title_or_none",
+    "observed_location_or_none",
+    "senior_role_or_public_actor_basis_or_none",
+)
+# Visible influence fields are counts / coarse bands only -- NOT in the length-capped
+# free-text list above, and the forbidden-walk catches only secrets (not prose), so
+# the shared count/band guard enforces their shape (cross-vendor review F1).
+_VISIBLE_INFLUENCE_OBSERVATION_FIELDS: tuple[str, ...] = (
+    "visible_follower_count_or_none",
+    "visible_connection_count_band_or_none",
+)
+_REQUIRED_LIVE_OBSERVATION_FIELDS: tuple[str, ...] = (
+    "observation_id",
+    "live_access_id",
+    "run_id",
+    "observed_entity_type",
+    "observed_display_name",
+    "observed_source_surface",
+    "observed_source_locator",
+    "provenance_timestamp",
+    "minimization_rule",
+)
+# The §6.2 minimization boundary: these must be False on every observation. (The
+# record carries no field for the captured content itself -- named-fields-only --
+# so the boundary is structural; the flags are the attested belt-and-suspenders.)
+_MINIMIZATION_BOUNDARY_FLAGS: tuple[str, ...] = (
+    "contact_fields_retained",
+    "network_or_follower_list_retained",
+    "profile_body_captured",
+    "content_captured",
+)
+# Closed-value sets + shapes for the remaining carried fields the gate previously left
+# unchecked (cross-vendor 3c-1 review: carried-but-unchecked content-smuggle paths).
+# The observation is the §6.2 seam, so every carried field is closed-valued, capped,
+# id-shaped, or timestamp-shaped -- none carries free narrative.
+_ALLOWED_OBSERVED_SOURCE_SURFACES = frozenset(v.value for v in SourceSurface)
+_ALLOWED_OBSERVED_MINIMIZATION_RULES = frozenset(v.value for v in MinimizationRule)
+_ALLOWED_PERSON_DATA_MINIMIZED = frozenset(v.value for v in PersonDataMinimized)
+_SAFE_ID_FIELDS: tuple[str, ...] = ("observation_id", "live_access_id", "run_id")
+_MAX_ID_LEN = 128
+_SAFE_ID_RE = re.compile(r"^[A-Za-z0-9._:-]+$")
+# provenance_timestamp is an ISO-8601 UTC instant (e.g. 2026-06-10T00:00:00Z or
+# 2026-06-10T00:00:00+00:00). Both UTC spellings accepted; non-UTC offsets are not.
+_UTC_TIMESTAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|\+00:00)$")
+
+
+def validate_live_observation(observation: Mapping[str, Any]) -> None:
+    # Contract-level validation only: checks ONE observation's shape + minimization
+    # boundary. It does NOT bind the referenced LiveAccessEnvelope (matching
+    # live_access_id / run_id + a validated envelope) -- that posture binding is the
+    # slice-3b-2 mint-path. The observation is NOT safe standalone; this is the shape
+    # gate, not the full posture gate.
+    assert_no_forbidden_output_fields(observation)
+    _reject_unknown_keys(observation, _ALLOWED_LIVE_OBSERVATION_KEYS, "live_observation")
+    _require(observation, _REQUIRED_LIVE_OBSERVATION_FIELDS, "live_observation")
+    if observation.get("schema_version") != LINKEDIN_LIVE_OBSERVATION_SCHEMA_VERSION:
+        _fail(
+            "invalid_schema_version",
+            f"live observation schema_version must be {LINKEDIN_LIVE_OBSERVATION_SCHEMA_VERSION}",
+        )
+    if observation.get("observed_entity_type") not in _ALLOWED_OBSERVED_ENTITY_TYPES:
+        _fail("invalid_observed_entity_type", "observed_entity_type must be a valid EntityType value")
+    # Minimization boundary: every retained/captured flag must be False.
+    for flag in _MINIMIZATION_BOUNDARY_FLAGS:
+        if observation.get(flag) is not False:
+            _fail(
+                f"forbidden_{flag}",
+                f"{flag} must be false on every observation (minimization boundary)",
+            )
+    # Defense-in-depth: free-text fields must not exceed the minimized-signal length
+    # cap (catches a gross over-capture like a copied profile body; small forbidden
+    # content is the 3c runtime concern).
+    for field_name in _LENGTH_CAPPED_FREETEXT_FIELDS:
+        value = observation.get(field_name)
+        if isinstance(value, str) and len(value) > _MAX_OBSERVED_FREETEXT_LEN:
+            _fail(
+                f"oversized_{field_name}",
+                f"{field_name} exceeds the minimized-signal length cap ({_MAX_OBSERVED_FREETEXT_LEN} chars)",
+            )
+    # Visible influence fields: counts / coarse bands only (shared guard; review F1).
+    for field_name in _VISIBLE_INFLUENCE_OBSERVATION_FIELDS:
+        validate_visible_influence_value(field_name, observation.get(field_name))
+    # Closed-value + shape checks on the remaining carried fields (cross-vendor 3c-1
+    # review: enum / id / timestamp fields that were carried but unchecked).
+    if observation.get("observed_source_surface") not in _ALLOWED_OBSERVED_SOURCE_SURFACES:
+        _fail("invalid_observed_source_surface", "observed_source_surface must be a valid SourceSurface value")
+    if observation.get("minimization_rule") not in _ALLOWED_OBSERVED_MINIMIZATION_RULES:
+        _fail("invalid_minimization_rule", "minimization_rule must be a valid MinimizationRule value")
+    if observation.get("person_data_minimized") not in _ALLOWED_PERSON_DATA_MINIMIZED:
+        _fail("invalid_person_data_minimized", "person_data_minimized must be a valid PersonDataMinimized value")
+    for id_field in _SAFE_ID_FIELDS:
+        id_value = observation.get(id_field)
+        if not isinstance(id_value, str) or len(id_value) > _MAX_ID_LEN or not _SAFE_ID_RE.fullmatch(id_value):
+            _fail(
+                f"invalid_{id_field}",
+                f"{id_field} must be a compact safe id (<= {_MAX_ID_LEN} chars; letters, digits, . _ : -)",
+            )
+    provenance_timestamp = observation.get("provenance_timestamp")
+    if not isinstance(provenance_timestamp, str) or not _UTC_TIMESTAMP_RE.fullmatch(provenance_timestamp):
+        _fail(
+            "invalid_provenance_timestamp",
+            "provenance_timestamp must be an ISO-8601 UTC timestamp like 2026-06-10T00:00:00Z or +00:00",
+        )
+    # exclusions carries no content at the gate for ANY caller (the minimizer already
+    # forces it safe; this closes the same path for a direct caller). A future
+    # structured receipt would need its own bounded validation here (v1 review F1).
+    if observation.get("exclusions"):
+        _fail(
+            "invalid_observation_exclusions",
+            "live observation exclusions must be empty (raw exclusion text must not pass the gate)",
+        )
+    # Person observations: the shared public-actor-basis gate + must be minimized.
+    if observation.get("observed_entity_type") in _PERSON_ENTITY_TYPE_VALUES:
+        validate_public_actor_basis(
+            observation.get("senior_role_or_public_actor_basis_or_none"), "person observation"
+        )
+        if observation.get("person_data_minimized") != _PERSON_OBSERVATION_MINIMIZED_REQUIRED:
+            _fail(
+                "person_data_not_minimized",
+                "a person observation is the minimization seam: person_data_minimized must be 'yes' "
+                "(an unminimized person observation must not pass)",
+            )

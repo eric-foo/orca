@@ -25,7 +25,7 @@ explicitly authorizes implementation.
 ## Core Folders
 
 - `docs/decisions/`: accepted or proposed decision records.
-- `docs/product/`: product contracts, Core Spine notes, satellite notes, evidence standards, source maps, proof plans, decision artifacts, memo substrates, evidence appendices, and executive-deck shape drafts.
+- `docs/product/`: product contracts, Core Spine notes, satellite notes, evidence standards, source maps, proof plans, decision artifacts, memo substrates, evidence appendices, and executive-deck shape drafts. Organized by lane subfolders (`core_spine/`, `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`, `product_lead/`, `source_capture_toolbox/`) per `docs/decisions/orca_repo_structure_binding_v0.md`; new product artifacts go in the matching lane. Pre-move paths in historical records resolve via `docs/migration/repo_structure_phase2_consolidation_v0/moved_paths_index.md`.
 - `docs/prompts/`: reusable prompt artifacts and typed prompt families.
 - `docs/research/`: public/source research artifacts, evidence-only lane outputs, synthesis reports, candidate screens, backtestability notes, and rejected-source maps.
 - `docs/review-inputs/`: artifacts prepared for review.

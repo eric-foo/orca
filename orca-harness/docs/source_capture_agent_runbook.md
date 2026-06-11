@@ -18,6 +18,9 @@ The agent may:
 - run Archive.org capture against one explicitly supplied original URL;
 - run Browser Snapshot capture against one explicitly supplied URL that needs
   anonymous browser rendering or screenshot preservation;
+- run CloakBrowser Snapshot capture against one explicitly supplied URL that
+  needs anonymous anti-blocking browser rendering without stored session,
+  profile, proxy, or credential injection;
 - bootstrap a permitted browser session manually into ignored local Playwright
   storage-state JSON;
 - run Authenticated Browser Snapshot capture against one explicitly supplied URL
@@ -34,24 +37,24 @@ The agent must not:
 - discover hidden media, parse galleries, recurse through pages, or run OCR;
 - use methods that do not have an implemented runner in this runbook, including
   password-driven login automation, direct browser profile/cookie import, broad
-  crawler/spider frameworks, proxy behavior, anti-detect behavior, standalone
-  CAPTCHA-solving services, or commercial fetch services;
+  crawler/spider frameworks, proxy behavior, standalone CAPTCHA-solving
+  services, or commercial fetch services;
 - use no-entitlement login bypass, credential misuse, undisclosed session/cookie
   use, or any method Orca would refuse to disclose internally;
 - claim validation, readiness, ECR receipt, Cleaning output, Judgment output,
   buyer proof, or commercial readiness.
 
-If the requested capture needs anonymous browser-rendered content, JavaScript
-rendering, or screenshot preservation for one supplied URL, use the Honest
-Browser Snapshot runner. If it requires login-visible or entitled content, use
-Authenticated Browser Snapshot only when the operator has supplied an allowed
-session mode and a previously bootstrapped local storage-state label. If the
-operator asks for password automation, direct profile/cookie import, credentials
-in flags or environment variables, no-entitlement bypass, anti-detect behavior,
-proxy behavior, or CAPTCHA solving through these existing runners, stop with
-`visible_capture_limitation`. Anti-blocking/CloakBrowser is authorized by the
-source-access tooling decision, but it is not an implemented runner in this
-runbook state.
+If the requested capture needs ordinary anonymous browser-rendered content,
+JavaScript rendering, or screenshot preservation for one supplied URL, use the
+Honest Browser Snapshot runner. If ordinary browser capture is expected to fail
+or has failed because the source blocks ordinary browser/headless capture, use
+the CloakBrowser Snapshot runner for one supplied URL. If it requires
+login-visible or entitled content, use Authenticated Browser Snapshot only when
+the operator has supplied an allowed session mode and a previously bootstrapped
+local storage-state label. If the operator asks for password automation, direct
+profile/cookie import, credentials in flags or environment variables,
+no-entitlement bypass, proxy behavior, or CAPTCHA solving through these existing
+runners, stop with `visible_capture_limitation`.
 
 The agent cannot reliably know browser-rendering or login-wall posture before
 running a byte-preserving adapter. A Direct HTTP, Media / Asset, or Archive.org
@@ -83,6 +86,7 @@ Before running anything, the agent must have:
   - original URL plus optional 14-digit `YYYYMMDDhhmmss` cutoff timestamp for
     Archive.org;
   - ordinary URL for Browser Snapshot;
+  - ordinary URL for CloakBrowser Snapshot;
   - ordinary URL, storage-state label, and allowed session mode for
     Authenticated Browser Snapshot;
 - enough context to set `cutoff_posture` or explain why cutoff posture is
@@ -96,9 +100,10 @@ For the local-file packet runner only, the agent must also have:
 - `source_locator` or `source_locator_unknown_reason`: operator-supplied
   provenance pointer, or a visible reason no stable locator was supplied.
 
-Direct HTTP, Media / Asset, Archive.org, Browser Snapshot, and Authenticated
-Browser Snapshot runners have default source-family labels and URL-derived
-locators; do not ask for local-file-only fields when those runners are used.
+Direct HTTP, Media / Asset, Archive.org, Browser Snapshot, CloakBrowser
+Snapshot, and Authenticated Browser Snapshot runners have default source-family
+labels and URL-derived locators; do not ask for local-file-only fields when
+those runners are used.
 
 For Archive.org, preflight the cutoff timestamp before running. If supplied, it
 must be exactly 14 digits in `YYYYMMDDhhmmss` form. If the operator supplies a
@@ -132,16 +137,146 @@ Use the narrowest runner that matches the supplied input.
 | Original URL plus archive need | `run_source_capture_archive_packet.py` | The operator needs Archive.org availability and maybe snapshot body. |
 | Browser-rendered or screenshot-needed page | `run_source_capture_browser_packet.py` | One supplied URL needs anonymous browser rendering or screenshot preservation. |
 | Login-visible or entitled browser session content | `run_source_capture_browser_session_bootstrap.py`, then `run_source_capture_authenticated_browser_packet.py` | The operator authorizes an allowed manual-login storage-state session. |
-| Reddit pre-commercial anti-blocking capture | not implemented in this runbook state | The owner selected CloakBrowser as the future primary backend; do not simulate it with the honest browser runner. |
+| Anti-blocking browser-rendered page | `run_source_capture_cloakbrowser_packet.py` | One supplied URL needs anonymous CloakBrowser rendering because ordinary browser/headless capture is expected to fail or has failed. |
+| Reddit pre-commercial anti-blocking capture | `run_source_capture_cloakbrowser_packet.py` for one supplied old Reddit/thread URL only | The runner can preserve one supplied browser-visible URL through CloakBrowser; it does not discover Reddit targets, monitor threads, parse/consolidate comments, use credentials, or authorize broad crawling. |
 
 If a supplied URL points directly to a source-meaningful asset, prefer Media /
 Asset. If it points to a page or file whose whole response body is the capture
 target, prefer Direct HTTP. If unclear, stop and ask for the operator's intended
 runner rather than guessing from URL shape.
 
+For Reddit thread JSON, do not treat a cold `.json` URL as the default Direct
+HTTP or browser-navigation target. Current bounded probes show cold `.json`
+requests can return Reddit network-security blocks even when the matching old
+Reddit HTML thread is capturable. The useful JSON shape is a specialized warm
+same-context flow: load the exact old Reddit HTML thread first in CloakBrowser,
+confirm it is not access-blocked, then fetch the same thread's `.json` inside
+that same browser context and preserve both bodies. Use that only when a
+specialized runner or explicitly bounded diagnostic authorizes it; do not use it
+to follow links, discover targets, crawl subreddits, capture users/profiles, or
+monitor threads.
+
+For supplied exact old Reddit thread URLs where current old Reddit HTML is the
+capture target, use the bounded Direct HTTP batch runner first. CloakBrowser is
+the anti-blocking/browser-visible route when Direct HTTP is unsuitable, blocked,
+or explicitly requested; do not skip a working Direct HTTP capture merely
+because CloakBrowser exists.
+
+For bounded old Reddit Direct HTTP batches, prefer the batch runner's
+budget-window cadence over a mechanical fixed delay when running more than a
+tiny smoke list:
+
+```powershell
+python runners/run_reddit_old_http_batch.py `
+  --url-list "<json list of exact old.reddit.com thread URLs>" `
+  --output-root "<scratch output directory>" `
+  --decision-question "<bounded capture question>" `
+  --max-urls 9 `
+  --cadence-mode bounded_jitter `
+  --cadence-window-seconds 900 `
+  --cadence-min-gap-seconds 20 `
+  --cadence-max-gap-seconds 180
+```
+
+This is a bounded low-load schedule, not a stealth or human-impersonation claim.
+The runner records the cadence mode, random seed, planned waits, planned
+offsets, and actual per-slot timestamps in `batch_summary.json`. Keep
+`--max-urls` as the hard ceiling, choose a window that can fit the minimum gap,
+and stop on visible blocks instead of adding retries or proxy/browser fallback
+inside the same runner. Use `--delay-seconds` only when a fixed mechanical
+cadence is intentionally desired.
+
+When a downstream agent needs to read Reddit outputs, generate two local view
+states from the existing JSON artifact instead of feeding the durable artifact
+blindly into context:
+
+```powershell
+python runners/run_reddit_agent_view.py `
+  --input "<reddit_thread_consolidation.json | reddit_candidate_url_intake.json | reddit_graph_frontier_register.json>" `
+  --output-dir "<fresh scratch output directory>"
+```
+
+The runner writes:
+
+- `reddit_agent_view_full.json`: a full copy of the input JSON for audit and
+  fallback.
+- `reddit_agent_view_stripped.json`: an agent-context view that removes repeated
+  packet provenance, per-row receipts, direct author handles, scores,
+  timestamps, generated identifiers, and repeated non-claims while preserving
+  source meaning such as thread/post/comment text, graph shape, candidate
+  values, postures, counts, stop reasons, and promotion-relevant fields.
+- `reddit_agent_view_receipt.md`: a local receipt for the view-generation step.
+
+The stripped view is not a replacement for the durable artifact and is not a
+source-capture, validation, readiness, source-completeness, Data Capture, ECR,
+Cleaning, or Judgment claim. Do not remove strings inside `body_text` merely
+because they look like HTML or CSS; those may be real user content.
+
+Before making stripped views the default read surface for agents, build a local
+A/B probe pack from one or more existing view directories:
+
+```powershell
+python runners/run_reddit_agent_view_ab_probe.py `
+  --view-dir "<directory containing reddit_agent_view_full.json and reddit_agent_view_stripped.json>" `
+  --view-dir "<another view directory, optional>" `
+  --output-dir "<fresh scratch output directory>"
+```
+
+The A/B probe runner verifies that each full/stripped pair describes the same
+Reddit artifact type, then writes paired prompts and a comparison worksheet for
+agent or owner review. It does not call a model, fetch Reddit, evaluate answers,
+choose the default view, promote candidates, or replace the durable artifact.
+Treat its `needs_agent_or_owner_outputs` status as the next human/agent
+comparison step, not as a pass/fail result.
+
+The current Reddit agent read-surface rule is:
+
+- The agent reads the **cleaned view** we prepare upstream (emitted today as
+  `reddit_agent_view_stripped.json`). Cleaning runs AFTER projection, on the
+  projected artifact, and is **content-lossless**: it preserves all substantive
+  content (thread/post/comment text, visible candidate values, bounds/caps/
+  exclusions, stop reasons, selected frontier decisions, parser warnings that
+  affect interpretation, non-claims) and removes only worthless noise (repeated
+  packet provenance, hashes, paths, generated identifiers, score/timestamp
+  cruft, repeated non-claims). The agent gets all the data at a fraction of the
+  token/context cost. It is not an agent toggle between two surfaces; it is the
+  one view we hand over.
+- The verbatim copy (`reddit_agent_view_full.json`) is **provenance/audit only**
+  -- open it for packet/source provenance, raw artifact lineage, exact
+  reconstruction, or any decision that could be confused with promotion,
+  validation, source completeness, fixture admission, commercial readiness, Data
+  Capture handoff, ECR, Cleaning, or Judgment.
+- Because cleaning is content-lossless, dropping any decision-relevant field is a
+  **bug**, not aggressive cleaning (e.g. the caps/exclusions regression caught
+  this session). Guard the retained fields with regression tests, not this rule
+  alone.
+
+This rule began as a three-case local A/B probe and is now framed as a
+content-lossless cleaning step for token/context efficiency. It is a read-surface
+operating rule -- not validation, readiness, source-completeness proof, canonical
+evidence replacement, or a claim that byte reduction proves quality.
+
 Do not chain runners unless the operator explicitly asks for multiple packets.
 For example, do not run Archive.org automatically after Direct HTTP fails unless
 that fallback was requested.
+
+When the operator requests archive fallback for a bounded blocked URL, keep the
+fallback inside the same source unit. For a single blocked URL:
+
+1. preserve the live/current block packet when the runner wrote one;
+2. run Archive.org against the exact supplied URL;
+3. for Reddit thread URLs only, if the exact old/new host has no snapshot,
+   optionally run Archive.org against the same-thread canonical host variant
+   (`old.reddit.com` <-> `www.reddit.com`) without changing subreddit, thread
+   id, slug, or query scope;
+4. report `snapshot_count`, selected snapshot timestamp, whether a snapshot body
+   was preserved, and any `archive_body_not_preserved` or equivalent limitation;
+5. stop.
+
+Do not use archive fallback to broaden into subreddit crawl, source discovery,
+related URLs, user/profile pages, comment links, recommendations, or "more like
+this" surfaces. `snapshot_count=0` is a real fallback result, not permission to
+search wider.
 
 ## Restricted Network Permission Discipline
 
@@ -151,7 +286,8 @@ per-operation network permission before the first attempt. This applies to:
 - Direct HTTP;
 - Media / Asset capture for remote URLs;
 - Archive.org availability/body capture;
-- Browser Snapshot or Authenticated Browser Snapshot against a remote URL.
+- Browser Snapshot or Authenticated Browser Snapshot against a remote URL;
+- CloakBrowser Snapshot against a remote URL.
 
 The local-file packet runner does not need network permission.
 
@@ -160,6 +296,13 @@ refusal, not a source-access result. Do not record that as a source limitation
 or spend a doomed first attempt when the runner is known to require network
 access. Run the same bounded command with per-operation network permission, or
 report an operational blocker if permission is unavailable.
+
+If a packet exists and its preserved response metadata shows an HTTP status such
+as `403 Blocked`, treat that as a source-access outcome rather than a sandbox
+network refusal. Inspect the preserved body enough to distinguish source content
+from an interstitial, but do not infer source meaning from the block page. A
+visible Reddit "network security" block is a hard content-capture failure for
+that method and should route only to an explicitly requested bounded fallback.
 
 Do not request broad standing Python or network permission for source capture.
 The approval request should name the exact runner class and the single bounded
@@ -559,6 +702,96 @@ For the Source Quality State Assembler helper, run:
 
 ```powershell
 python -m pytest -p no:cacheprovider tests/unit/test_source_quality_state_assembler.py tests/contract/test_source_quality_report_skeleton_contract.py
+```
+
+## Direction Change Propagation - Reddit Agent View Default Read Surface
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    After a three-case local A/B probe, Reddit stripped agent views are now the
+    default agent-read surface for semantic thread, Candidate URL Intake, and
+    Graph Frontier reasoning, with full JSON required for audit, provenance,
+    reconstruction, promotion, validation, source-completeness, fixture,
+    commercial, Data Capture, ECR, Cleaning, or Judgment-adjacent decisions.
+  trigger: output_authority
+  controlling_sources_updated:
+    - "orca-harness/docs/source_capture_agent_runbook.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/README.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - ".agents/workflow-overlay/source-loading.md"
+    - "docs/workflows/orca_repo_map_v0.md"
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+  intentionally_not_updated:
+    - path: "AGENTS.md"
+      reason: "Root behavior does not enumerate runner-specific read surfaces."
+    - path: ".agents/workflow-overlay/README.md"
+      reason: "Overlay routing owners are unchanged."
+    - path: ".agents/workflow-overlay/source-of-truth.md"
+      reason: "Source hierarchy is unchanged; the runbook owns the operator rule."
+    - path: ".agents/workflow-overlay/source-loading.md"
+      reason: "Source-pack budgets are unchanged; this is a Reddit runner read-surface rule."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Repo map already routes implementation status to this runbook."
+    - path: "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+      reason: "Data Capture submap already routes safe capture-tool use to this runbook."
+  stale_language_search: >
+    rg -n "Before making stripped views the default|stripped_default_for_agent_context|make_stripped_default|reddit_agent_view_stripped|default agent-read surface|full JSON required"
+    AGENTS.md .agents/workflow-overlay docs/workflows/orca_repo_map_v0.md
+    docs/workflows/data_capture_spine_consolidation_map_v0.md
+    orca-harness/docs/source_capture_agent_runbook.md
+  stale_language_search_result: >
+    Executed on 2026-06-08 after this patch. Hits were confined to the intended
+    Reddit agent-view runbook section and this DCP receipt. No checked downstream
+    surface retained stale language saying stripped views are still undecided as
+    the default agent-read surface.
+  non_claims:
+    - not validation
+    - not readiness
+    - not source completeness proof
+    - not canonical evidence replacement
+    - not Data Capture handoff
+```
+
+## Direction Change Propagation - Agent Read Surface Reframed To Content-Lossless Cleaning
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The Reddit agent read-surface rule is reframed: the agent reads a single
+    CLEANED view we prepare upstream (after projection, on the projected
+    artifact), not a stripped-versus-full toggle. Cleaning is content-lossless --
+    it preserves all substantive content and decision-relevant fields and removes
+    only worthless noise (repeated provenance, hashes, paths, generated ids,
+    score/timestamp cruft, repeated non-claims), giving the agent all the data at
+    a fraction of the token/context cost. The verbatim copy is provenance/audit
+    only. Dropping any decision-relevant field is a bug, not cleaning, and is
+    guarded by regression tests rather than this rule alone.
+  trigger: output_authority
+  controlling_sources_updated:
+    - "orca-harness/docs/source_capture_agent_runbook.md"
+    - "docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md"
+  downstream_surfaces_checked:
+    - "AGENTS.md"
+    - ".agents/workflow-overlay/source-of-truth.md"
+    - "docs/workflows/data_capture_spine_consolidation_map_v0.md"
+  intentionally_not_updated:
+    - path: "orca-harness/source_capture/reddit_agent_view.py"
+      reason: >
+        Code still emits the cleaned view as reddit_agent_view_stripped.json via
+        the _strip_* functions. This reframe changes the read-surface doctrine and
+        docs, not the artifact filenames; a stripped->cleaned code rename is an
+        optional later refactor with reference lock-in, not part of this patch.
+    - path: "AGENTS.md"
+      reason: "Root behavior does not enumerate runner-specific read surfaces."
+  non_claims:
+    - not validation
+    - not readiness
+    - not a code rename
+    - not source completeness proof
+    - not canonical evidence replacement
 ```
 
 ## Direction Change Propagation - Archive Timestamp And Posture Reporting

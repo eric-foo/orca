@@ -1,8 +1,20 @@
 # Orca Product Proof Lead Customer Discovery Prompt v0
 
+> **RETIRED / OFF-TARGET (2026-06-12)**
+> This operating prompt remains hard-gated to the superseded pricing wedge
+> (pricing-first propagation AR-01 flagged it; the consumer-demand
+> ratification of 2026-06-12 made it doubly stale). Do not use it to drive
+> discovery preparation. The live qualification instruments are
+> `docs/product/product_lead/orca_discovery_consumer_demand_target_selection_brief_v0.md`
+> and the buyer-proof packet's Demand-Substrate Hard Gate. A consumer-demand
+> discovery operating prompt is deliberately deferred — authored just-in-time
+> when a discovery prep run is actually commissioned (owner-routed); none
+> exists yet. Retained as history. (Closes the live-misroute half of
+> ORCA-HYGIENE-018.)
+
 ```yaml
 retrieval_header_version: 1
-artifact_role: Full prompt artifact
+artifact_role: Full prompt artifact (retired 2026-06-12 — historical)
 scope: Operating prompt for bounded Orca Product Proof Lead customer-discovery preparation.
 use_when:
   - Preparing Product Proof Lead customer discovery for Orca buyer proof.

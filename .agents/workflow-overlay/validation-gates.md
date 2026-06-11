@@ -167,7 +167,7 @@ Validation must be able to fail. Missing evidence is not a pass.
   buyer-proof, advisory, backtest, fixture, model-run, scoring, memo, deck,
   calibration, architecture, spec, prompt, wrapper, and runbook artifacts must
   classify the claim tier and closeout state using
-  `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` before
+  `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` before
   making proof, readiness, validation, fixture-admission, scoring,
   blind-use-readiness, or judgment-quality claims. Product-Learning evidence
   cannot be reused as Buyer-Proof or Judgment-Quality evidence without the
@@ -201,6 +201,27 @@ Validation must be able to fail. Missing evidence is not a pass.
   owner or participant blind judgment is sealed. If leakage occurs, the
   participant-facing packet is contaminated and must be rebuilt from clean
   pre-cutoff sources before blind use.
+
+## Enforcement Placement
+
+A load-bearing rule that is mechanically checkable at a tool boundary is
+enforced there — a write-time hook plus a portable checker with a `--strict`
+commit/CI mode — rather than carried only as an instruction, which fires only
+when the model attends to it. The checker references the rule's authority and
+never restates it; it is advisory and forward-only by default. Judgment-based
+rules (claim discipline, scope, lifecycle reasoning) stay resident and still
+must actually fire, not merely be present; a substrate enforces shape, never
+truth (cf. the receipt-field provenance gate above). The per-rule
+classification and the owner gate for building each substrate live in
+`docs/decisions/overlay_enforcement_placement_classification_v0.md`.
+
+Active instance: the retrieval-header check
+(`.agents/hooks/check_retrieval_header.py`, EP-06) enforces
+`.agents/workflow-overlay/retrieval-metadata.md` at the write boundary and is
+registered in the repo map's "Active Hooks" note; reuse this pattern for the
+next such rule. Placement decides where a rule is enforced, not whether it is
+correct: a passing check is not validation, readiness, approval, or
+source-of-truth promotion.
 
 ## Future Gates
 
@@ -241,7 +262,7 @@ direction_change_propagation:
       reason: >
         Out of scope and already covered by jb's own evidence/claim discipline;
         Orca must not edit jb authority.
-    - path: docs/product/judgment_spine_evidence_ladder_architecture_v0.md and the JS gate/owner-contract docs
+    - path: docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md and the JS gate/owner-contract docs
       reason: >
         They already encode this discipline for Judgment Spine gates (e.g., the
         no-tools contract Receipt Provenance Boundary). This overlay gate

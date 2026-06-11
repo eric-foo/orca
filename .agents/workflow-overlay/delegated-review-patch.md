@@ -63,6 +63,8 @@ Architect reserves final authority over what is kept and may veto any change it
 judges to add no benefit or net-negative value, even when individually
 defensible.
 
+**Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only via the portable review method (registry id `portable-adversarial-artifact-review-method`), returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a bounded post-patch re-review** before keep — closure-of-findings plus any new blocker/major in the touched delta. Because that recheck is a narrow, near-mechanical verification against the findings' explicit closure conditions rather than open seam-discovery, it runs as a **same-family, different (lower / mechanical-tier) model** (a who-constraint, not a runtime-model recommendation), **not** a cross-family pass. **Cross-family de-correlation is reserved for discovery** (the original full adversarial review) and is **required to claim** the *survives-an-adversarial-review-with-no-new-seam* standard; a bounded same-family recheck does not by itself support that claim. The recheck is CA-adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the portable method's **freshness gate** (hash-compare its `derived_from` pins to live sources; re-derive on mismatch) before bundling, recording the result in the commission. The default package shape is a **self-contained bundle**: the verbatim target attachment(s) plus a guardrail-complete `README` that carries the method, the authority excerpts, and the target's contract, delivered with a **thin-wrapper** chat prompt that points the reviewer at the in-bundle `README` — the wrapper still carries the cross-vendor who-constraint, which must not migrate silently into the bundle. When the reviewer cannot read in-bundle files, fall back to **inlining** the method block in the chat prompt; never ship a wrapper that points at a `README` a repo-blind reviewer cannot open. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
+
 **Citations.** The delegate's citations are neutral in tone — factual source
 evidence, no advocacy or editorializing — but decision-sufficient in substance,
 so the Chief Architect's veto stays informed rather than blind. The delegate's
@@ -70,14 +72,22 @@ argument belongs in the verdict and residual, not the citations. Neutral tone is
 not thinness: thin citations would push the Chief Architect back onto its own
 priors and defeat the de-correlation.
 
-**De-correlation — observable criterion and fallback.** The commission must
-record the author model family and the delegate model family; the lane is
-satisfied only when they differ, and when the Chief Architect authors with an
-Opus-class model the delegate must be a different, non-Opus family. A
-same-family or self pass does not satisfy it. If de-correlation cannot be
-established (for example, no different-family model is available), do not claim
-this lane: fall back to the standard source-read-only review lane plus Chief
-Architect self-review, and record the limitation.
+**De-correlation — observable criterion and fallback.** "Family" here means
+**vendor / model lineage** (e.g., Claude vs GPT), **not tier**. **Vendor** = the upstream model
+developer/provider (e.g., Anthropic, OpenAI) — **not** the hosting platform, API
+reseller, deployment surface, or wrapper/fine-tune owner; **unknown or undisclosed
+lineage cannot satisfy the cross-vendor (discovery) bar** and falls to the
+same-vendor/sanity tier. The commission
+must record the author vendor and the delegate vendor; the **cross-vendor
+discovery** bar is satisfied only when they **differ**. A same-vendor delegate —
+**even a different or lower tier** (e.g., an Opus author with a Sonnet delegate)
+— does **not** satisfy cross-vendor de-correlation; it is the **same-vendor
+verification/sanity tier** (see the two-bar rule in
+`.agents/workflow-overlay/review-lanes.md`), not a discovery pass. A self pass
+never satisfies it. If a cross-vendor delegate cannot be established, do not
+claim the discovery (no-new-seam) bar: use the same-vendor sanity tier, or fall
+back to source-read-only review plus Chief Architect self-review, and record the
+limitation.
 
 This is a who-constraint recorded in the commission, not a model-quality
 recommendation and not runtime model routing. It does not belong in review
@@ -134,12 +144,27 @@ delegated_review_patch_overlay_interface:
     ownership: operator_and_commission   # NOT Orca review-lane authority; review-lane model-neutrality preserved
     rungs: author -> de_correlated_controller -> cheap_executor
     de_correlation_criterion: >
-      author model family != delegate model family, recorded in the commission;
-      an Opus-class author requires a non-Opus delegate. A who-constraint only.
+      family = vendor / model lineage (Claude vs GPT), NOT tier. Vendor = the
+      upstream model developer/provider, NOT hosting platform / API reseller /
+      wrapper or fine-tune owner; unknown or undisclosed lineage cannot satisfy
+      cross-vendor. Cross-vendor de-correlation (author vendor != delegate vendor,
+      recorded in the commission) is the DISCOVERY bar, required to claim the
+      no-new-seam standard. A same-vendor delegate (typically a different/lower
+      tier, Opus -> Sonnet) may only claim bounded verification/sanity, never
+      discovery/no-new-seam. A who-constraint only.
     concrete_model_ids: none_bound_in_overlay   # operator/tooling decision; the overlay does not prescribe, rank, or imply runtime models
     fallback: >
       if no different-family model is available, do not claim this lane; fall
       back to source-read-only review + CA self-review and record the limitation.
+  access_modes:
+    values: [repo, no_repo]   # default repo; operator/commission access constraint, NOT model routing
+    no_repo: >
+      delegate advisory-only via portable-adversarial-artifact-review-method (returns findings, not a diff);
+      CA applies the patch; REQUIRED post-patch re-review before keep, BOUNDED to closure-of-findings + new
+      blocker/major in the touched delta and run by a SAME-VENDOR different/lower (mechanical-tier) model, NOT
+      cross-vendor (the recheck is verification, not discovery); cross-vendor de-correlation is reserved for the
+      discovery pass and is required to claim the no-new-seam standard; review target shipped as a
+      hash-confirmable verbatim attachment; assembler/CA runs the portable-method freshness gate pre-bundle and records the result. Default package shape: a self-contained bundle (verbatim target attachment(s) + a guardrail-complete README carrying the method/authority/contract) delivered with a thin-wrapper chat prompt pointing at the in-bundle README; the wrapper still carries the cross-vendor who-constraint; inline the method in chat when the reviewer cannot read in-bundle files.
   preflight_schema:
     - orca_start_preflight (.agents/workflow-overlay/source-loading.md)
     - Required Preflight Fields (.agents/workflow-overlay/prompt-orchestration.md)
@@ -236,4 +261,123 @@ direction_change_propagation:
     - not a mandatory or machine-routable review lane
     - not runtime model routing
     - not jb authority import
+```
+
+```yaml
+# no_repo access mode added 2026-06-08, after a de-correlated cross-family no-repo review + bounded recheck (5/5 prior findings closed) and CA adjudication.
+direction_change_propagation:
+  doctrine_changed: >
+    The provisional Delegated Review-and-Patch convention gains a no_repo access mode: a repo-blind
+    de-correlated delegate runs advisory-only (portable method), returns findings not a diff, the CA
+    applies the patch, and a required de-correlated post-patch re-review restores patch-time
+    de-correlation before keep. Review-side de-correlation, CA adjudication, protected paths, and the
+    strict-claim boundary are unchanged.
+  trigger: review_authority
+  related_triggers: [workflow_authority, output_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md
+  downstream_surfaces_checked:
+    - .agents/workflow-overlay/review-lanes.md          # UPDATED: lane line now distinguishes repo (delegate patches) vs no_repo (delegate read-only/advisory, CA patches)
+    - .agents/workflow-overlay/prompt-orchestration.md  # checked, no change: no_repo review prompts use existing paste-ready-chat + the registered portable-method template; deep-thinking-first, model-neutrality, findings-first already apply
+    - AGENTS.md                                         # checked, no change: the existing delegated-review-and-patch pointer (line 48) covers the new mode
+  intentionally_not_updated:
+    - path: docs/decisions/adversarial_review_routing_policy_v0.md
+      reason: routing-policy tiers declined by owner (Pile 3); the no_repo mode stands alone
+    - path: .agents/workflow-overlay/safety-rules.md
+      reason: protected-path set unchanged; the no_repo delegate edits nothing
+    - path: .agents/workflow-overlay/validation-gates.md
+      reason: advisory findings create no validation or strict claim
+  stale_language_search: >
+    grep 'NOT a source-read-only review lane|unified diff|patches the target' over review-lanes.md,
+    delegated-review-patch.md, AGENTS.md. Result: review-lanes line updated for the two modes; the
+    'unified diff' delegate_return is repo-mode-specific and the no_repo subsection states the
+    findings-return, so no other language was made stale.
+  non_claims:
+    - not validation
+    - not readiness
+    - not a bound, mandatory, or machine-routable review lane (the convention stays provisional)
+    - not runtime model routing (access is an operator/commission constraint)
+```
+
+```yaml
+# Bounded recheck actor refined 2026-06-09 (CA decision): same-family lower/mechanical-tier, not cross-family.
+direction_change_propagation:
+  doctrine_changed: >
+    no_repo post-patch re-review refined: the REQUIRED post-patch re-review is now a BOUNDED closure +
+    blast-radius recheck run by a SAME-FAMILY different/lower (mechanical-tier) model, not a cross-family
+    de-correlated pass. A bounded recheck verifies a known patch against explicit closure conditions
+    (near-mechanical) rather than discovering unknown seams, so cross-family de-correlation — whose value is
+    in discovery — is reserved for the discovery (full adversarial) pass and for claiming the
+    survives-an-adversarial-review-with-no-new-seam standard. Amends the 2026-06-08 no_repo entry's
+    "de-correlated post-patch re-review" to this bounded same-family recheck. CA adjudication, review-side
+    de-correlation, protected paths, the freshness gate, and the strict-claim boundary are unchanged.
+    who-constraint only; not a runtime-model recommendation.
+  trigger: review_authority
+  related_triggers: [workflow_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md
+  downstream_surfaces_checked:
+    - .agents/workflow-overlay/review-lanes.md
+    - AGENTS.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/review-lanes.md
+      reason: >
+        the no_repo lane line distinguishes repo vs no_repo by who-patches (delegate read-only/advisory,
+        CA patches); the recheck-actor tier is owned here and needs no lane-line change.
+    - path: .agents/workflow-overlay/delegated-review-patch.md (model_ladder block)
+      reason: >
+        the executor rung already defines a cheap same-family tier; the bounded recheck reuses that concept
+        rather than adding a rung.
+  non_claims:
+    - not validation
+    - not readiness
+    - not a bound, mandatory, or machine-routable review lane (the convention stays provisional)
+    - not runtime model routing (same-family/lower-tier is a who-constraint)
+```
+
+```yaml
+# no_repo package shape bound 2026-06-10 (CA decision): self-contained bundle + thin-wrapper, with inline fallback.
+direction_change_propagation:
+  doctrine_changed: >
+    The no_repo access mode now binds a default PACKAGE SHAPE: a self-contained bundle (the
+    hash-confirmable verbatim target attachment(s) plus a guardrail-complete README carrying the
+    method, authority excerpts, and contract) delivered with a thin-wrapper chat prompt that points
+    the repo-blind reviewer at the in-bundle README. The thin wrapper still carries the cross-vendor
+    who-constraint (it must not migrate silently into the bundle), and when the reviewer cannot read
+    in-bundle files the method is inlined in chat instead. Review-side de-correlation, CA adjudication,
+    the verbatim-hash-attachment + freshness-gate requirements, and the strict-claim boundary are unchanged.
+  trigger: review_authority
+  related_triggers: [output_authority, workflow_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md
+  downstream_surfaces_checked:
+    - path: docs/prompts/templates/portable/adversarial_artifact_review_portable_method_v0.md
+      note: >
+        "How to use" softened from "paste the block" to "deliver verbatim -- pasted or as the bundle
+        README; shape bound in delegated-review-patch.md". Prose only; the distilled PORTABLE METHOD
+        block and its derived_from pins are unchanged, so no consumer re-pin is owed.
+    - path: docs/prompts/templates/wrappers/thin_wrapper_v0.md
+      note: >
+        the "read & execute the README in the attached bundle" wrapper is a thin-wrapper variant,
+        owned by prompt-orchestration. NOT edited here -- flagged for that lane if a registered
+        no_repo wrapper variant is wanted.
+    - path: .agents/workflow-overlay/review-lanes.md
+      note: the repo-vs-no_repo lane line (who-patches) is unchanged; the package shape is owned here.
+  intentionally_not_updated:
+    - path: workflow-delegated-review-patch (the reusable kernel skill)
+      reason: >
+        the kernel owns invariants and the commission/adjudication contract, NOT a concrete
+        packaging/delivery shape (it states the overlay owns output destinations and "hardcodes none
+        of them"). Encoding a package shape there would break its boundary and portability, and it is
+        an installed/user-level skill out of edit-bounds without a deployment turn. The shape is an
+        overlay binding; the skill is unchanged.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        model-neutrality, findings-first defaults, and preflight fields are unchanged; the thin-wrapper
+        shape composes with the existing paste-ready-chat rendering rather than forking it.
+  non_claims:
+    - not validation
+    - not readiness
+    - not a bound, mandatory, or machine-routable review lane (the convention stays provisional)
+    - not runtime model routing (access mode and package shape are operator/commission constraints)
 ```

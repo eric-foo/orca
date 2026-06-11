@@ -7,7 +7,7 @@ Default to the smallest complete intervention: solve the actual request complete
 Every changed line must trace to the user request or required validation.
 Preserve real failure visibility; never create fake success paths.
 For non-trivial changes, define and run relevant verification or state why it was not run.
-Before reporting work as committed, written, pushed, or otherwise persisted, verify the durable target with a fresh read and show the verifying read's actual output for that lifecycle claim. Report only observed facts: never state a SHA, count, status, write, or check you did not observe. If verification fails, report the mismatch and stop. Sandbox escalation requires per-operation approval and must never become a standing rule.
+Before reporting work as committed, written, pushed, or otherwise persisted, verify the durable target with a fresh read and show the verifying read's actual output for that lifecycle claim. Report only observed facts: never state a SHA, count, status, write, or check you did not observe. Absence and build-state are claims, not defaults: a doc that says something is missing, deferred, superseded, or done is a secondary report, not an observation of that state -- when such a claim is load-bearing and cheaply checkable, confirm it against the primary source (the code, commits, repo map, or owning lane) before reporting it. If verification fails, report the mismatch and stop. Sandbox escalation requires per-operation approval and must never become a standing rule.
 
 ## Smallest Complete Intervention
 
@@ -19,10 +19,31 @@ coherent, non-fragile completion.
 abstractions, broad rewrites, extra workflow ceremony, or nice-to-have
 improvements.
 
+When two candidate paths both satisfy the current request under this rule,
+prefer the one with materially lower downstream lock-in -- the durable data,
+schema, interface, or workflow shape that would be irreversible, costly to
+roll back, or costly to maintain. Take the higher-lock-in path only when a
+benefit necessary to the current request outweighs that structural cost; if
+so, pause and surface the tradeoff for a decision before proceeding. This
+narrows the choice among already-complete paths only; it never authorizes
+speculative cleanup, future-proofing, or broader scope.
+
 Whenever the user or instructions say **"smallest complete X"** -- including
 phrases like **smallest complete fix, patch, edit, rewrite, refactor, review,
 or answer** -- interpret it as **X performed under the Smallest complete
 intervention rule above.**
+
+## Mini God Tier
+
+Whenever the user or instructions say **"mini god tier"** (including "god tier
+but small"), interpret it as the owner-invoked capability-target lens bound in
+`docs/decisions/orca_mini_god_tier_doctrine_v0.md`: target most of the maximal
+capability's value at a fraction of its cost and speed, with the foregone
+limitations named and consciously accepted, never quietly dropped. Only the
+owner sets this bar; it never authorizes agent-initiated scope expansion, and
+every intervention toward it remains governed by the Smallest Complete
+Intervention rule above. It is a design lens, not a claim tier: the label
+asserts no validation or readiness.
 
 ## Orca Project Instructions
 

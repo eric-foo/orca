@@ -12,12 +12,18 @@ dependencies = [
 browser = [
   "playwright>=1.44,<2",
 ]
+cloakbrowser = [
+  "cloakbrowser>=0.3.31,<0.4",
+]
 
 [tool.setuptools]
 py-modules = ["harness_utils"]
 
 [tool.setuptools.packages.find]
 include = [
+  "ecr",
+  "capture_spine",
+  "capture_spine.*",
   "runners",
   "schemas",
   "scoring",
@@ -28,4 +34,4 @@ include = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -p no:cacheprovider"

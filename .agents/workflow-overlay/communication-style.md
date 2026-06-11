@@ -96,6 +96,22 @@ Use this order for sequencing decisions:
 3. Next action.
 4. What remains blocked.
 
+## Owner-Run Command Blocks
+
+(Added 2026-06-12, owner word: commands handed to the owner must be usable
+"from anywhere".) When an agent hands the owner a command block to run
+themselves — any guard-gated human step, such as landing a PR via
+`.github/scripts/merge-when-green.ps1` or operating on guard-protected paths —
+the block must be runnable from any directory:
+
+- Use absolute paths for every script and file in the block; never a
+  repo-relative path on its own.
+- Pass explicit repo/target flags (for example `--repo owner/name`) rather
+  than relying on the current working directory to imply them.
+- If a command genuinely requires a specific working directory, make the
+  block self-contained by starting it with an explicit
+  `cd "<absolute path>"` line.
+
 ## Chief Architect Review Consumption
 
 When an Orca Chief Architect or CA-facing handoff consumes one or more review
@@ -134,6 +150,8 @@ review_summary:
   status: completed
   report_path: docs/review-outputs/example_adversarial_review_v0.md
   recommendation: accept | accept_with_friction | patch_before_acceptance | reject | blocked
+  reviewed_by: claude-opus-4.8     # model+version that performed the review; operator/CA-supplied; "unrecorded" if not; never fabricated; observed record, not a recommendation
+  authored_by: claude-opus-4.8     # model+version that authored the reviewed artifact; same-vs-cross is computed by relating the two
   summary: "One sentence describing the review result."
   findings_count: 0
   blocking_findings: []
@@ -160,6 +178,8 @@ review_summary:
   status: failed
   review_location: chat_only_current_thread
   recommendation: blocked
+  reviewed_by: unrecorded
+  authored_by: unrecorded
   summary: "Failed to write required report to docs/review-outputs/example_adversarial_review_v0.md."
   findings_count: 0
   blocking_findings: []
@@ -167,6 +187,17 @@ review_summary:
   prior_findings_remediated: []
   next_action: "Resolve the report write failure, then rerun the review-report prompt."
 ```
+
+`reviewed_by` and `authored_by` record the model+version that performed the
+review and that authored the reviewed artifact (for example `claude-opus-4.8`,
+`gpt-5.5`), set by the operator/CA on the durable record; each value is
+`unrecorded` when the identity was not supplied and is never fabricated. Both
+are present on every review summary. They are observed provenance records only
+and do not recommend, rank, or select a runtime model (see
+`.agents/workflow-overlay/review-lanes.md` Review Doctrine, the model-neutrality
+bullet). Same-family-vs-cross-family is computed by relating the two and is
+measured only when both carry real values; a present `unrecorded` value is a
+visible measurement gap, not success.
 
 Do not include these fields in Orca adversarial review summaries:
 

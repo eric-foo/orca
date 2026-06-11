@@ -1,5 +1,24 @@
 # Orca ICP Wedge — Pricing-First Direction (Un-Flip) v0
 
+> **SUPERSEDED AS FIRST-PROOF WEDGE (2026-06-12)**
+> The first-proof wedge moves to beauty consumer-demand
+> (`docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md`,
+> owner-co-ratified 2026-06-12). Pricing-first is RETAINED as (a) an engine
+> application reachable from the same spine and (b) the two RETRO SaaS dev
+> cases as cross-vertical method anchors. The original (c) — default re-entry
+> candidate on a beauty-wedge kill — was WITHDRAWN the same day by owner word
+> ("we cant call any wind for that"); on kill, re-entry re-forms toward the
+> harder / more-profitable buyer-ladder doors (fund screen, PE/FO diligence),
+> owner-decided. The SUGGESTED pricing-as-sensitivity-read block below remains a
+> non-frozen historical suggestion inside a superseded record. This record's
+> open `direction_change_propagation_blocker` is closed by supersession
+> EXCEPT the two discovery instruments (propagation AR-01), whose
+> realignment transferred to the consumer-demand cascade: the
+> target-selection brief was superseded by
+> `docs/product/product_lead/orca_discovery_consumer_demand_target_selection_brief_v0.md`
+> and the customer-discovery prompt is queued for a prompt-orchestration
+> lane (ORCA-HYGIENE-018).
+
 ```yaml
 retrieval_header_version: 1
 artifact_role: Decision record
@@ -11,6 +30,7 @@ use_when:
 authority_boundary: retrieval_only
 supersedes:
   - docs/decisions/orca_icp_wedge_convergence_break_in_first_v0.md
+superseded_by: docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md
 open_next:
   - docs/research/orca_icp_redo_evidence_targets_v0.md
   - docs/research/orca_wedge_alternatives_register_v0.md
@@ -178,6 +198,52 @@ reread scope (AR-03), copy-paste DCP prose (AR-04). Full reports:
 
 These refine the direction record; they do not change the pricing-first
 direction. Still not validation / WTP / readiness / ICP-proven.
+
+## SUGGESTED — Pricing-as-Sensitivity-Read framing (NOT FROZEN; pending product-lead)
+
+Status: `SUGGESTED_PENDING_PRODUCT_LEAD` — owner working-direction recorded
+2026-06-09; decision-prep only. Not adjudicated, not frozen, and not a change to
+the locked pricing-first direction above.
+
+What the pricing product actually is (refinement of "decision INPUT, not a
+monitoring feed"):
+
+- The deliverable is a price-SENSITIVITY / reaction read, NOT competitor
+  price-CHANGE tracking. Tracking competitor price moves is commodity ("anyone
+  can do that") — it is the stimulus, not the product.
+- Stimulus (clean / public / dated): the competitor price or packaging move —
+  the x-axis of the read, not the deliverable.
+- Response (the differentiated, harder half): the public reaction to that move on
+  forums / social / reviews (complaint volume, sentiment swing, switching/churn
+  chatter, backlash).
+- The read pairs stimulus with response across three axes — across a competitor's
+  own move history (time), across competitors (cross-section), and the buyer's own
+  customers — to graph reaction-to-an-X%-price-change (sensitivity / anchoring).
+- Market-level asset: the same read is reusable across every player in a market (a
+  later commercial-frame / trust-conflict question, not now).
+- It stays a decision INPUT; it is NOT a private-margin elasticity number
+  (consistent with the locked Decision above) and NOT a monitoring feed.
+
+Substrate consequence (sharpens "The crux test" and AR-S2): the sensitivity read
+moves onto the demand-side substrate (forums/social) — partly the same
+biased/polluted substrate flagged for the break-in wedge — so the open
+decide-vs-confirm question HARDENS: not "did they use the competitor price" (easy)
+but "can public signal carry a DECISION-GRADE sensitivity read" (hard). It stays
+better-anchored than break-in because the price move is a clean, dated event to
+measure reactions against. The decide-vs-confirm method-validation cases should be
+scored on this sensitivity read off real price-move events, not on
+price-as-used-input.
+
+Displacement-read reframing (corrects the break-in characterization): the
+competitor-displacement read is "why am I NOT occupying competitor Y's customer X"
+(winnability / switching-barrier / fit-gap) — NOT "why are customers leaving"
+(churn-cause). Different read, possibly cleaner (competitive-positioning)
+substrate than the review-only substrate the demotion was scored against; the
+displacement method-validation case should be scored on this winnability framing.
+
+Non-claims for this SUGGESTED block: not adjudicated, not frozen, not validation,
+not WTP, not readiness, not a change to the locked pricing-first direction;
+pending product-lead freeze.
 
 ## Non-claims
 

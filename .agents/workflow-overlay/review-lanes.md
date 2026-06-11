@@ -26,7 +26,7 @@ authority_boundary: retrieval_only
 - Patch-queue review: read-only review that produces ordered patch units. Applying those patches requires a separate patch or integration execution assignment.
 - Patch or integration execution: applies accepted documentation patches inside Orca and reports changed files plus validation.
 - Skill adoption review: deferred until a later turn authorizes adoption or shadow validation.
-- Delegated review-and-patch (provisional, opt-in): a distinct Chief Architect-commissioned bounded-executor convention for hardening high-stakes authored artifacts, defined in `.agents/workflow-overlay/delegated-review-patch.md`. It is NOT a source-read-only review lane and NOT machine-routable; the reviewer-read-only rule and the review-lane model-neutrality below are unchanged.
+- Delegated review-and-patch (provisional, opt-in): a distinct Chief Architect-commissioned bounded-executor convention for hardening high-stakes authored artifacts, defined in `.agents/workflow-overlay/delegated-review-patch.md`. It is NOT one of the source-read-only review lanes and NOT machine-routable; in its default `repo` access mode the delegate patches the named target, while in its `no_repo` access mode the delegate is read-only/advisory (returns findings; the CA applies the patch, with a required de-correlated post-patch re-review) — the convention still owns it either way. The reviewer-read-only rule and the review-lane model-neutrality below are unchanged.
 
 ## Review Doctrine
 
@@ -44,6 +44,28 @@ routing, and Chief Architect consumption rules.
   be maximally adversarial about material decision-relevant failure modes. This
   does not widen the target; it means the reviewer should not soften or skip a
   material failure mode merely because remediation would be awkward.
+- For intent-bearing review targets -- artifacts whose correctness is judged by
+  fitness to an upstream goal (proofs, fixtures, calibration gates, plans,
+  operating structures, runbooks, product-proof artifacts) rather than by
+  internal or technical consistency alone -- the decision criteria the review
+  applies should be anchored to a bound `fitness_reference`: a stated goal plus
+  an observable success signal, pointer-preferred (cite the controlling upstream
+  contract, decision, or gate that already carries the signal; write compact
+  prose only when none exists). The fitness reference is an added alignment axis
+  the reviewer must also attack -- the reviewer asks whether the goal and signal
+  are themselves right -- never a pass-if-matches bar. It does not narrow the
+  commission-bound adversarial posture and creates no approval, validation, or
+  readiness.
+- If an intent-bearing target arrives with no bound fitness reference, the
+  review names the gap (`no checkable success bar bound`) as a finding rather
+  than silently inventing the goal. This is review-side back-pressure, not new
+  verdict authority, and it stays findings-first.
+- The fitness-reference rule applies to adversarial artifact review. Code or
+  implementation review is not extended here; its fitness bar (spec, tests,
+  ground-truth substrate) is governed separately. The authoring home for the
+  goal and success signal is framing/scoping (reuse `workflow-goal-framing`
+  output); this doctrine routes that output and does not relocate or fork it.
+  Owning decision: `docs/decisions/work_unit_fitness_reference_v0.md`.
 - Review lanes emit findings by default. Formal verdicts, severity taxonomies,
   blocked/ready status, validation pass/fail claims, approval, readiness,
   mandatory remediation, and executor-ready patch queues are strict-shaped
@@ -78,6 +100,41 @@ routing, and Chief Architect consumption rules.
   authority, output mode, destination, and prompt-template target. Runtime
   model choice is outside Orca review-lane authority and remains an
   operator/tooling decision.
+- Review outputs record two provenance fields, operator/tooling-supplied and
+  set by the operator/CA on the durable review record (including when ingesting
+  a no-repo or portable reviewer's returned findings -- the reviewer is not
+  required to self-emit them): `reviewed_by` (the model and version that
+  performed the review) and `authored_by` (the model and version that authored
+  the artifact under review), for example `claude-opus-4.8`, `gpt-5.5`. Each is
+  a required (present) field on new or materially touched review outputs (not
+  backfilled); its value is `unrecorded` when the identity was not supplied, and
+  it is never fabricated. These are factual provenance records -- the
+  ordinary-review analogue of the delegated-review-patch actor/model-family
+  receipt -- and must never be used to select, recommend, rank, or imply a
+  runtime model; the model-neutrality rule above is unchanged.
+- The purpose of `reviewed_by` / `authored_by` is to make reviewer attribution
+  and same-family-vs-cross-family coverage measurable. Same-vs-cross is computed
+  by relating the two families, so it is measured only when both fields carry
+  real values: a present `unrecorded` value satisfies the schema but records a
+  visible measurement gap, not a captured measurement, and is never treated as
+  success. The measurement is realized only when tooling actually populates the
+  real values.
+- **Two-bar de-correlation (review tier; family = vendor).** A **cross-vendor**
+  delegate (different vendor / model lineage, e.g., Claude <-> GPT; vendor =
+  upstream developer/provider, not host / reseller / wrapper) is the **discovery**
+  bar, required to claim the no-new-seam standard for a full or doctrine-surface
+  pass. A **same-vendor** delegate (typically a lower/mechanical tier, e.g.,
+  Opus -> Sonnet) is the **bounded sanity / verification** tier: it **may only
+  claim bounded verification/sanity, never discovery / no-new-seam** -- appropriate
+  for a bounded authored change or a post-patch recheck, run **advisory** (findings
+  adjudicated by the CA). Tier is not family; the de-correlation definition is
+  owned by `.agents/workflow-overlay/delegated-review-patch.md`. **When the
+  same-vendor bar is chosen, the review record must record `de_correlation_bar`**
+  (`cross_vendor_discovery` | `same_vendor_sanity` | `self_fallback`) **plus, for
+  `same_vendor_sanity`, a `same_vendor_rationale`** (why the cross-vendor bar was
+  not needed: e.g., bounded change; no doctrine/seam surface; no no-new-seam
+  claim) -- recorded alongside `reviewed_by` / `authored_by` so a missing
+  justification is mechanically detectable.
 
 ## Template Retrieval Binding
 
@@ -148,3 +205,61 @@ prompt-orchestration work.
 - Runtime model recommendations for review lanes: forbidden. Template target
   retrieval is allowed only as prompt-shaping guidance.
 - Prompt output contracts are bound in `.agents/workflow-overlay/prompt-orchestration.md`.
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Review outputs now record two required (present), model-neutral provenance fields -- reviewed_by and
+    authored_by (the reviewing model+version and the reviewed-artifact author model+version) -- set by the
+    operator/CA on the durable record, value unrecorded allowed (a visible measurement gap, never fabricated,
+    never a success path), forward-only. Same-family-vs-cross-family is computed by relating the two.
+    Observed records, not model routing/recommendation; review-lane model-neutrality is unchanged.
+  trigger: review_authority
+  related_triggers: [output_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/review-lanes.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/workflow-overlay/communication-style.md
+  downstream_surfaces_checked:
+    - {path: docs/prompts/templates/portable/adversarial_artifact_review_portable_method_v0.md, note: pin-only re-pin of the review-lanes derived_from hash; distilled method body unchanged}
+    - {path: .agents/workflow-overlay/validation-gates.md, note: F4 single-source decision; no duplicate enforcement gate added}
+  intentionally_not_updated:
+    - {path: .agents/workflow-overlay/validation-gates.md, reason: F4 single-source; the Review Doctrine here is read by every Orca agent, so no duplicate gate was added}
+    - {path: .agents/workflow-overlay/retrieval-metadata.md, reason: review-output fields, not universal durable-artifact header fields}
+    - {path: .agents/workflow-overlay/delegated-review-patch.md, reason: its actor/model-family receipt already records author and controller families; these are the consistent ordinary-review analogue}
+    - {path: docs/decisions/adversarial_review_routing_policy_v0.md, reason: routing tiers declined (Pile 3); this records measurement, not routing}
+  stale_language_search: >
+    reviewed_by / authored_by are net-new field names; no prior overlay text stated review outputs do not
+    record reviewer/author identity, so no language was made stale, and the model-neutrality rule is
+    unchanged and explicitly reconciled in the new bullets.
+  non_claims:
+    - not validation
+    - not readiness
+    - not model routing/recommendation
+    - not a kept change until committed and the same-family post-patch blast-radius re-review resolves
+```
+
+## Direction Change Propagation — De-correlation Family = Vendor (Two-Bar)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    De-correlation "family" is now defined as VENDOR / model lineage (Claude vs GPT), NOT tier.
+    Cross-VENDOR is the discovery bar (required to claim the no-new-seam standard for full or
+    doctrine-surface passes); a SAME-VENDOR lower/mechanical-tier delegate (e.g., Opus -> Sonnet)
+    is the bounded sanity/verification tier, run advisory. The same-vendor tier is generalized
+    beyond the no_repo post-patch recheck to any bounded authored change. When the same-vendor
+    bar is chosen, the review record must state why cross-vendor was not needed. Owner-decided 2026-06-10.
+  trigger: review_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md  # de_correlation_criterion + de-correlation paragraph + no_repo wording -> vendor
+    - .agents/workflow-overlay/review-lanes.md            # two-bar rule + same-vendor justification requirement
+  downstream_surfaces_checked:
+    - {path: .agents/workflow-overlay/prompt-orchestration.md, note: model-neutrality unchanged; no edit}
+  non_claims:
+    - CROSS-VENDOR review resolved (GPT-5.5 Thinking / OpenAI: 1 major + 2 minor refinements accepted + applied -- vendor-key definition, same-vendor claim-ceiling, named de_correlation_bar field); not a kept change until the same-vendor bounded post-patch recheck resolves AND it is committed
+    - resolves the prior internal contradiction (de_correlation_criterion "Opus->non-Opus" vs no_repo "same-family lower-tier"); family is now unambiguously vendor
+    - not model routing/recommendation; a who-constraint only
+```

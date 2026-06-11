@@ -35,19 +35,27 @@ stale_if:
 | --- | --- | --- |
 | Know the north-star / what "good judgment" means here | `judgment_spine_thesis_v0.md` | research |
 | Find the case inventory + per-case artifact status | `manifest_v0.md` | research |
-| Run or plan a case through gates JSG-01→JSG-10 | `docs/product/judgment_quality_promotion_operating_model_v0.md` (conductor) | product |
-| Know who owns a gate + its required receipts | `docs/product/judgment_spine_gate_ownership_map_v0.md` | product |
-| Know what a run/artifact can **claim** (tiers, closeout states, caps) | `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` | product |
-| Apply the JSG-08 reveal/calibration receipt | `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` | product |
+| Run or plan a case through gates JSG-01→JSG-10 | `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` (conductor) | product |
+| Know who owns a gate + its required receipts | `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` | product |
+| Know what a run/artifact can **claim** (tiers, closeout states, caps) | `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` | product |
+| Apply the JSG-08 reveal/calibration receipt | `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` | product |
 | Work from the harness spec (schemas, scorer, runner, probe) | `harness/v0_14/index.md` | research |
 | Understand no-tools isolation for JSG-04/05/06 | `harness/v0_14/contestant_no_tools_execution_contract_v0.md` | research |
+| Know what machinery is built vs a named gap (build-state) | `judgment_spine_machinery_build_state_gap_map_v0.md` | research |
+| Read the SP-5 finalization-receipt contract | `sp5_finalization_receipt_spec_v0.md` | research |
 
-## Current Reality Snapshot (as of v0 — verify each against its owner)
+## Current Reality Snapshot (as of v0, refreshed 2026-06-09 — verify each against its owner)
 
 - **Conductor exists and is test-worthy, not proven** — it routes/verifies receipts and computes nothing (→ conductor non-claims).
 - **By-hand cap is in force:** there is no contestant-execution runner, so JSG-04/05/06 run by-hand and a run **caps at product-learning** (→ conductor, Seam 3).
-- **JSG-01 is `indeterminate_until_authored`:** no ECR field schema exists yet for source-identity/inspectability/timing, and Judgment-authority (AR-01) finalization is unstaffed (→ conductor, JSG-01 row).
+- **JSG-01 stays FROZEN (`indeterminate_until_authored`)** — for narrower reasons than v0 stated. The ECR SP-1/2/3/6 derivers **are built** (`orca-harness/ecr/deriver.py`: timing / inspectability / identity / source-visibility postures off the `SourceCapturePacket`; they bind no `EvidenceUnit` and make no JSG-01 claim). AR-01 (who finalizes `pre_decision_status`) is **resolved** — distinct cross-family act, operator-for-now (→ `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`). What still gates an unfreeze: the **SP-5 finalizer mechanism built** + a **case packet carrying the derived fields** (ECR slice-2). (→ conductor JSG-01 row, **now corrected to match** — derivers built, AR-01 resolved; commit `d2cac45`.)
 - **Current cases are pre-cutoff** and cap at qualitative / product-learning; none is a scoreable fixture. Which cases exist → manifest (the inventory owner); what each can claim → evidence ladder. (This map does not list cases — that would inherit the manifest's drift.)
+- **Judgment-quality lane — where we are / next** (orientation, refreshed 2026-06-10; verify against the lane records, which own the detail):
+  - *Tier:* capped at **product-learning** (by-hand); "almost judgment-quality" is a proximity description, **not** a minted tier → `ideal_judgment_quality_run_and_current_position_v0.md`.
+  - *Settled this lane:* AR-01 staffing, option C → `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`; ground-truth-before-absence/build-state kernel rule → `docs/decisions/ground_truth_check_before_absence_or_build_state_claims_v0.md`; conductor hardened to Round-18 (F5 fix); gate predicates exercised mechanically checkable → `conductor_per_gate_predicate_exercise_canoo_walmart_v0.md`; the SP-5 A2 finalization-receipt **spec** authored + reviewed, then the **finalizer half built** (`a37f896`, cross-family-reviewed; binding + a receipt-carrying packet remain) → `sp5_finalization_receipt_spec_v0.md` + `judgment_spine_machinery_build_state_gap_map_v0.md`; the review-tier de-correlation doctrine (family=vendor + two-bar) cross-vendor-reviewed + landed (`.agents/workflow-overlay/delegated-review-patch.md` + `review-lanes.md`); the conductor JSG-01 build-state corrected (derivers built, AR-01 resolved) + same-vendor blast-radius checked.
+  - *Design tail complete* (SP-5 spec, review-tier doctrine, conductor correction all landed). **Next is owner-owned:** the **invest-vs-bank / authorize-a-real-run** decision (Step 4), informed by the build-state gap map → `judgment_spine_machinery_build_state_gap_map_v0.md`. Gated/deferred (need implementation authorization): the JSG-01 `EvidenceUnit` binding (ECR slice-2), the contestant-execution / authorized-live-execution path, and the case-finder. (The **SP-5 finalizer half is now built** — `orca-harness/schemas/finalization_models.py`, `a37f896` — but JSG-01 stays FROZEN until a case packet carries a `FinalizationReceipt` and the binding lands.)
+  - *JQ gap (named build work):* authorized live blind-judgment execution under isolation + JSG-01 `EvidenceUnit` binding + case-finder. (Scoring, the memorization-probe runner, and now the **SP-5 finalizer half** are **built** — see `judgment_spine_machinery_build_state_gap_map_v0.md`.)
+  - *Product-learning exam (2026-06-11, harness-side):* a cross-vendor blind exam ran on a decide-vs-confirm repricing subject + an anonymized re-skin (`orca-harness/cases/product_learning/inoreader_repricing_2019_v0/` + `feedhaven_repricing_2019_anon_v0/`); 3 clean contestants scored. Honest findings — **some walked back by cross-family review** — live in that case dir's `cross_vendor_blind_run_findings_v0.md`, not here. Live threads: the scored band floor (3 vs 4) is **contested/unresolved** (next is an *architecture pass*: surface the band-input definitions, re-author, re-harden); anonymizing a famous case did **not** defeat strong recognizers (confirms case-selection-not-anonymization). The lane adopted a **claim-lifecycle discipline** (confidence-labels + kill-criteria; no finding drives a durable action until de-correlation-hardened) — a **hypothesis**, not doctrine.
 
 ## Areas (each → one owner; summaries are locational, never evaluative)
 
@@ -64,22 +72,22 @@ stale_if:
 ### Conductor — how a case walks the gates
 - summary: Sequences JSG-01→JSG-10, checks each gate's receipt, routes between them. Holds routing/lifecycle only.
 - status: working operating model; the **path toward** judgment-quality evidence, not proof of it.
-- pointer: `docs/product/judgment_quality_promotion_operating_model_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md` (product).
 
 ### Gate ownership
 - summary: Who owns each gate, its required receipts, and gate dependencies.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_gate_ownership_map_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_gate_ownership_map_v0.md` (product).
 
 ### Evidence ladder — what a run can claim
 - summary: Claim tiers (product_learning / buyer_proof / judgment_quality), closeout states, weakest-cleared-gate + sub-floor caps.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_evidence_ladder_architecture_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` (product).
 
 ### JSG-08 reveal / calibration owner contract
 - summary: The reveal/calibration receipt shape and its satisfaction states the conductor reads at JSG-08.
 - status: controlling doctrine.
-- pointer: `docs/product/judgment_spine_reveal_calibration_owner_contract_v0.md` (product).
+- pointer: `docs/product/judgment_spine/judgment_spine_reveal_calibration_owner_contract_v0.md` (product).
 
 ### Harness v0.14 spec (+ no-tools isolation)
 - summary: Phase-1 code-readiness spec — schemas, action bands, scorer, runner contracts, probe; the no-tools contract owns JSG-04/05/06 isolation.

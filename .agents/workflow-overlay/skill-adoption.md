@@ -144,12 +144,24 @@ authority-claiming local skills. Acceptance is a LOCAL FREEZE only: it does not
 deploy, activate, or make the skill resolver-visible; that remains a separate
 skill-governance action under the Protected Skill Boundary.
 
-- `orca-product-lead` — accepted/frozen 2026-06-08.
+- `orca-product-lead` — accepted/frozen 2026-06-08; refreshed + re-frozen
+  2026-06-12 (owner-authorized skill-edit: thesis/wedge citations re-routed
+  through the repo-map product-anchor rows after the consumer-demand
+  ratification; both copies verified identical; closes ORCA-HYGIENE-019).
   - Source path: `.agents/skills/orca-product-lead/SKILL.md` (Orca-local).
-  - Source sha256: `368ED9AC08F27A640777BDBB643779DD43D71D5D4E4DD2A3EDDA61FEA0C7BA47`
-    (working-tree bytes; updated 2026-06-08 when the frontmatter description was
-    shortened to fix Claude Code slash-command registration; supersedes 42EF7C2D
-    and the at-acceptance hash 2B011CE8; reread-required if the file changes).
+  - Source sha256: `C8DEAA4DDEC94321ED47BA879D0C85269CACFEEE8D733B3634AB1A1C792634A3`
+    (re-pinned 2026-06-12; prior frozen sha
+    `42EF7C2DCE667CFA09EA6F3F8CE369C7F55D7721D131692CB06C11152E908BB5`)
+    (working-tree bytes; updated at deployment 2026-06-08 when the status text was
+    added; supersedes the at-acceptance hash 2B011CE8; reread-required if the file
+    changes).
+    (eol note 2026-06-12, post origin/main merge: the merge-conflict checkout
+    rematerialized both copies with CRLF working-tree line endings, so on-disk
+    Get-FileHash now reads
+    `C5D02D04E6E0C17A6468689D918E7CAB235AF45472C62D8DD3661E31E7D0ACD4`; git
+    content is unchanged — index blob `9b5b57e` on both copies, identical to the
+    re-pinned LF source. Either byte hash verifies the same frozen content
+    depending on checkout eol; the eol-stable identity is the git blob.)
   - Scope: prepares — does not freeze, run outreach, produce, or build — any Orca
     product decision (value proposition, offer, ICP / first-proof wedge,
     buyer-proof design, positioning / packaging, deliverable shape, pull / kill /

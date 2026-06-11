@@ -1,0 +1,23 @@
+# Harness scratch consolidation snippet (Phase-2 package; owner-applied).
+# Merge into orca-harness/pyproject.toml AFTER the other lane's dirty
+# pyproject.toml changes are committed. Consolidates pytest noise under one
+# _-prefixed scratch home so `ls orca-harness` stops paying ~50% noise tax.
+#
+# [tool.pytest.ini_options]  -> add/extend these keys:
+#
+#   cache_dir = "_scratch/pytest_cache"
+#   addopts = "--basetemp=_scratch/pytest_tmp"   # append to any existing addopts
+#
+# Notes:
+# - "pytest-cache-files-*" dirs are created by `uv run` copies of the pytest
+#   cache; cache_dir above redirects them too (they follow pytest's cache_dir).
+# - Existing pytest_run_*/pytest_tmp*/pytest-cache-files-* dirs at the harness
+#   top level become dead after this lands; delete at will (regenerate under
+#   _scratch/). They are already gitignored; this is a navigation-noise fix.
+# - Add to repo .gitignore: orca-harness/_scratch/
+# - repo-structure.yaml already excludes _-prefixed dirs from placement
+#   evaluation, so _scratch/ needs no map change.
+
+[tool.pytest.ini_options]
+cache_dir = "_scratch/pytest_cache"
+addopts = "--basetemp=_scratch/pytest_tmp"
