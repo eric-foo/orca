@@ -88,6 +88,9 @@ inbox:
   max_age_days: 30                    # advisory hygiene signal only
 
 # Trees never evaluated for placement (config, VCS, worktrees, other repos).
+# Linked worktrees live OUTSIDE the repo in the sibling container
+# ../orca-worktrees/ (convention, 2026-06-11; git worktree list is the truth);
+# .codex/worktrees/ is the codex-managed in-repo exception.
 excluded:
   - .git
   - .claude
