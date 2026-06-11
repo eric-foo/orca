@@ -108,6 +108,35 @@ amendments the same day:
   charter segment, offer-hypothesis wedge statement, and the live discovery
   brief carry the US-market qualifier.
 
+## Owner Decision Record — Second Addendum (2026-06-12, post-rollout)
+
+- **Batch-1 execution gate.** Owner words: "cant run batch 1 till judgement
+  is fixed and proven to be anti leak etc". Effect: execution of the batch-1
+  beauty cases (ledger cases 3-6) is gated on the judgment-spine harness
+  being hardened and proven anti-leak (zero-spoiler isolation, no-tools
+  discipline, recognition machinery) to the owner's satisfaction — that
+  proving work belongs to the judgment-spine lane. Any future batch-1
+  execution commission must cite this gate. This supersedes the product
+  lane's same-day "run batch-1 next" recommendation; the bottleneck is the
+  anti-leak proof, not case execution.
+- **Probe Stage-1 outcome (report received in-thread).** The ask-3 commission
+  resolved on `consumer-demand-probe` @ `0a7af17` as a thin read-only
+  reconciliation: spec-v2 Stage 1 was already `STAGE1_COMPLETE — CONDITIONAL
+  PASS` (2026-06-10; non-blind, product_learning; observed, not
+  re-adjudicated), a Stage-2 pair was already selected and SEALED from the
+  lane's own ledger (pair identity known only via the v0 report — the sealed
+  lock was deliberately not opened), and the 2026-06-12 posture recheck was
+  clean (no backtest spec amendment implied). The commissioning prompt is
+  marked consumed. Open owner decisions routed here: (a) the 2026-06-12
+  candidate pool's role versus the sealed Pair A/B (the pool contains
+  neither sealed brand; its natural consumer is a backtest batch, not the
+  probe); (b) whether ask-3 plus the conditional pass authorizes standing up
+  the downstream-retrieval tooling (capture/Armory lane) and proceeding
+  toward Stage-2 execution — and whether the batch-1 anti-leak gate above
+  also applies to probe Stage-2 blind execution (owner's call to fold in or
+  not). The reporting session is outcome-exposed and cannot serve as a blind
+  contestant on the exposed subjects.
+
 ## Readiness In One Line
 
 The consistency sweep found **nothing that blocks asks 1-2**: no subordinate

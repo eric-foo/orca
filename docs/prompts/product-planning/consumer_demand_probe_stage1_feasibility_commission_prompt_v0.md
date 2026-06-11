@@ -1,5 +1,18 @@
 # Consumer-Demand Durability Probe — Stage-1 Feasibility Commission Prompt v0
 
+> **CONSUMED (2026-06-12)**
+> Executed same day on `consumer-demand-probe`. Intake found the lane already
+> past this commission's premises: a committed v0 report records spec-v2
+> Stage 1 as `STAGE1_COMPLETE — CONDITIONAL PASS` (2026-06-10; non-blind,
+> product_learning) and a Stage-2 pair already selected and SEALED from the
+> lane's own ledger (not the 2026-06-12 candidate pool). Per owner
+> disposition the commission resolved as a thin read-only reconciliation +
+> posture note (`consumer-demand-probe` @ `0a7af17`, local-only commit, not
+> pushed). stale_if #2 fired — this prompt is consumed and retained as
+> history. The open owner decisions it surfaced are recorded in
+> `docs/decisions/orca_consumer_demand_ratification_decision_memo_v0.md`
+> (second addendum).
+
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product-planning lane prompt (probe-lane Stage-1 commission)
