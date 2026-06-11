@@ -307,6 +307,51 @@ The owner has **ratified the JSG-01 source-side ECR field schema**, completing t
 
 **Still reserved / NOT ratified here — JSG-01 stays FROZEN:** the field **derivers** (computing each value from a packet — implementation, post-ratification); the **SP-5 finalizer mechanism**; **D2**; **materiality** (downstream); the **full ECR/Evidence Unit field architecture** and **canonical object name**; **JSG-01 unfreeze**. Declaring the schema lifts the conductor's "no ECR field schema" blocker, but JSG-01 clears no case until the derivers and finalizer are built and a case packet carries the fields.
 
+### Evidence Candidate Record consolidation — JSG-01-scoped EvidenceUnit binding contract RATIFIED
+
+The owner has **ratified the JSG-01-scoped EvidenceUnit binding contract**
+(owner word in-thread 2026-06-12), opening the reserved packet→EvidenceUnit
+binding **for exactly the JSG-01 read surface and nothing broader**: the minimal
+composition object that binds, by key (reference-never-merge), the four ratified
+derived source-side postures (SP-1/2/3/6) and the current `FinalizationReceipt`
+read onto one case-packet evidence unit.
+
+**Ratified (the binding contract):**
+- **`Jsg01EvidenceBinding`** — three durable keys (`evidence_id`, `packet_id`,
+  `evidence_slice_id`). An **assembly-authored key assertion** (the slice whose
+  preserved bytes carry the evidence unit's content), never a selector over the
+  strongest posture. No posture, content, or derived value is stored on it.
+- **A pure composer** (`compose_jsg01_evidence_record`) that re-derives the four
+  postures fresh (re-derive-not-migrate), carries them verbatim — full per-slice
+  SP-2/SP-3 vectors with bound-row selection by exact key; **no sibling
+  promotion; failing siblings stay visible** — carries the SP-5 validate-only
+  consumer's verdict verbatim (BLOCKED carried as a named state, never repaired),
+  blocks on key mismatch (`Jsg01BindingError`), and computes **no aggregate
+  verdict** (combining subpredicates stays the FROZEN conductor's job).
+- **Durable-vs-derived split:** only the binding keys and the receipts (records
+  of acts) are durable; everything else re-derives; any materialized snapshot
+  carries re-derivation authority.
+- **Module home:** a new sibling package `orca-harness/evidence_binding/` —
+  deliberately outside `ecr/` so every "binds no `EvidenceUnit`" disclaimer
+  there stays true.
+
+**Design basis (committed with this ratification):**
+`docs/product/ecr/ecr_consolidation_v0_jsg01_evidence_unit_binding_slice_plan_v0.md`
+(`FECCA1DF…`; delegated cross-vendor review-and-patch by GPT-5/OpenAI — 2 major
++ 1 minor, all patched — home-model adjudicated 2026-06-12, all reviewer changes
+kept) + the delegated review report
+`docs/review-outputs/adversarial-artifact-reviews/ecr_jsg01_evidence_unit_binding_plan_delegated_adversarial_artifact_review_patch_v0.md`
+(`1E8EB59C…`).
+
+**Explicitly NOT ratified here — JSG-01 stays FROZEN:** the **full ECR/Evidence
+Unit field architecture**; the **canonical object name** (`Jsg01*` are working
+names); **D2** and the corroborated SP-6 tier; **SP-4 / final-value policing**;
+any conductor edit; the **JSG-01 unfreeze**. Per the plan's DRP-01 hardening,
+the **unfreeze act** — not this ratification — must state how the frozen
+conductor row's D2 wording is consumed: either D2 remains a named blocker, or
+the owner records that decision-C's determinate residual behavior is acceptable
+for the unfreeze boundary.
+
 Future Evidence Candidate Record / Evidence Unit consolidation should answer:
 
 - whether Evidence Candidate Record is the final canonical object name or a
@@ -498,6 +543,46 @@ direction_change_propagation:
     - "not the SP-6 deriver (implementation, post-amendment); records the contract amendment only"
     - "not JSG-01 unfreeze, readiness, or validation"
     - "not D2 / the corroborated tier (still deferred)"
+```
+
+### ECR consolidation v0 — JSG-01-scoped EvidenceUnit binding contract ratified
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: "The reserved packet->EvidenceUnit binding is OPENED and RATIFIED for exactly the JSG-01 read surface: a three-key Jsg01EvidenceBinding (evidence_id / packet_id / evidence_slice_id; assembly-authored key assertion, never a posture selector) plus a pure no-aggregate-verdict composer that re-derives SP-1/2/3/6 fresh, carries full per-slice vectors with bound-row selection by exact key (no sibling promotion; failing siblings stay visible), and carries the SP-5 validate-only consumer's verdict verbatim (BLOCKED carried, never repaired); binding keys + receipts durable, everything else re-derived; module home orca-harness/evidence_binding/. The full ECR/Evidence Unit field architecture, the canonical object name, D2/the corroborated tier, SP-4 value policing, and the JSG-01 unfreeze remain reserved; the unfreeze act must state how the frozen conductor row's D2 wording is consumed. Owner-ratified 2026-06-12."
+  trigger: architecture_doctrine
+  related_triggers: [lifecycle_boundary]
+  controlling_sources_updated:
+    - "docs/product/core_spine/core_spine_v0_data_and_cleaning_spine_boundary_v0.md"
+  design_basis:
+    - path: "docs/product/ecr/ecr_consolidation_v0_jsg01_evidence_unit_binding_slice_plan_v0.md"
+      sha256: "FECCA1DFA0AFD8583A9B3B6FD138FED3937C70DD7D2584D5B34D0F5CABCB62E9"
+      status: "committed with this ratification; delegated cross-vendor review-and-patch (GPT-5 / OpenAI, repo access); home-model adjudicated 2026-06-12 (all reviewer changes kept)"
+    - path: "docs/review-outputs/adversarial-artifact-reviews/ecr_jsg01_evidence_unit_binding_plan_delegated_adversarial_artifact_review_patch_v0.md"
+      sha256: "1E8EB59C624C6C80300A10C48F622B6448C7C61BB1C4E77F673E16241E61986D"
+      status: "committed with this ratification (controller report + home-model adjudication record)"
+  upstream_dependency:
+    - "ECR derivers built (orca-harness/ecr/); SP-5 model + validate-only consumer committed a37f896; SP-5 producer acting half committed aeedae9 (cross-vendor reviewed + adjudicated)."
+  owner_decisions:
+    - "Ratify the JSG-01-scoped binding contract as adjudicated (owner word in-thread 2026-06-12); the build proceeds under the existing bounded ECR CA commission."
+    - "D2-wording consumption deliberately deferred to the unfreeze act (plan DRP-01): either D2 stays a named blocker, or the owner records decision-C's determinate residual behavior as acceptable for the unfreeze boundary."
+  downstream_surfaces_checked:
+    - "docs/workflows/ecr_spine_submap_v0.md"  # UPDATED with this ratification: deferred line now records the JSG-01-scoped binding as ratified (build in flight); the full EU schema stays reserved
+    - ".agents/workflow-overlay/safety-rules.md"  # checked, NO edit: the separate packet->EvidenceUnit gate is satisfied by this dated owner decision, not by changing the rule
+    - "docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md"  # FROZEN conductor; NOT edited; coordination by re-courier (the slice-D unfreeze memo)
+    - "docs/research/judgment-spine/judgment_spine_machinery_build_state_gap_map_v0.md"  # build-state map; its binding row updates when the build LANDS (build-state, not ratification state)
+  intentionally_not_updated:
+    - path: "docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md"
+      reason: "JSG-01 conductor is FROZEN; its row is amended only inside the owner's dated unfreeze act."
+    - path: "docs/workflows/orca_repo_map_v0.md"
+      reason: "Navigational and coordinator-owned; routes ECR detail through the submap, which was updated."
+  stale_language_search: "rg -n 'Evidence Unit binding' docs/workflows/ecr_spine_submap_v0.md docs/research/judgment-spine/ — submap deferred line updated with this ratification; gap-map binding row intentionally updates at build landing."
+  non_claims:
+    - "not the full ECR/Evidence Unit field architecture or the canonical object name"
+    - "not D2 or the corroborated tier"
+    - "not JSG-01 unfreeze (JSG-01 stays FROZEN; the unfreeze act owns the conductor row's D2-wording consumption)"
+    - "not validation, readiness, or judgment-quality evidence"
+    - "not the build itself (authorized by the owner word; performed and reviewed separately)"
 ```
 
 ## Non-Claims
