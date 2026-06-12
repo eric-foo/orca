@@ -153,7 +153,7 @@ decision_object_v0:
     org_decision:
     org_decision_timestamp:
     divergence_from_recommendation:
-  updates: []                  # optional mid-flight re-seals; each is its own sealed call scored against its own information_set_ref; never an edit
+  updates: []                  # optional mid-flight re-seals before the relevant outcome/resolution signal is known; each is its own sealed call scored against its own information_set_ref; never an edit or replacement of an earlier scoreable call
   resolution:
     outcome_record:            # what happened, recorded against resolution_criteria
     score:                     # mechanical application of the pre-specified criteria
@@ -228,12 +228,15 @@ How the firewall survives a human and an outcome in the loop:
   call, not the contestant using the outcome, but the same rule applies: the
   evidence is quarantined *as judgment evidence* while remaining fully valid
   *as adoption evidence*.
-- **Adoption evidence is the existing buyer-proof surface.** A qualified
-  decision owner using an Orca recommendation in a live allocation decision,
-  with readback, is literally the ladder's `buyer_proof` typical surface. No
-  new promotion path is needed: assisted-mode evidence promotes through the
-  existing product-proof gates (`.agents/workflow-overlay/product-proof.md`),
-  with pull-versus-praise and trust-objection classification unchanged.
+- **Adoption evidence routes through the existing buyer-proof surface.** A
+  qualified decision owner using an Orca recommendation in a live allocation
+  decision, with readback, is a `buyer_proof` typical surface, but it is not
+  buyer proof until the complete buyer-proof receipt is satisfied. No new
+  promotion path is needed: assisted-mode evidence promotes only through the
+  existing product-proof gates (`.agents/workflow-overlay/product-proof.md`) and
+  the ladder's buyer-proof receipt, including the memo/evidence appendix,
+  readback or use signal, trust state, pull-versus-praise classification, and
+  commercial-next-step signal where claimed.
 - **Mode is declared at intake, not after.** Post-hoc mode assignment would be
   a cherry-pick channel (disclose-and-count only the calls that look good).
   The pre-declared decision ledger and report-all rule close it.
@@ -358,10 +361,11 @@ This architecture mints **no** tier, closeout state, or ladder vocabulary.
   surface, which is permanently non-gate-clearing per the pre-sale execution
   evidence-tier policy — so the cap is structural, not a formality.
 - **Assisted route:** adoption evidence classifies under the existing
-  `buyer_proof` receipts and product-proof gates when the decision owner is a
-  qualified external buyer in a live allocation decision; otherwise it is
-  product-learning. Its sealed pre-disclosure call contributes influenced-path
-  calibration at product-learning only.
+  `buyer_proof` receipts and product-proof gates only when the decision owner is
+  a qualified external buyer in a live allocation decision and the complete
+  buyer-proof receipt is satisfied; otherwise it is product-learning. Its sealed
+  pre-disclosure call contributes influenced-path calibration at
+  product-learning only.
 - **Routed-out (ladder owner enacts, nothing here clears anything):** a future
   **prospective gate family** — requirements sketch: pre-registered decision
   ledger; seal receipts with hash + timestamp + sealing-actor separation;
@@ -487,8 +491,11 @@ is constructed ahead of the thing that would tell us it is wrong.
   counterparty + owner decision to disclose. Unlocks B2/B3. Adoption evidence
   flows to the existing buyer-proof path. Sequencing rationale: disclosure is
   irreversible per decision; shadow-first preserves the clean comparator while
-  trust is being earned, and the shadow record is itself the disclosure
-  artifact ("here is what we sealed before you decided, and how it resolved").
+  trust is being earned, and the resolved shadow record is a post-resolution
+  trust artifact ("here is what we sealed before you decided, and how it
+  resolved"). That presentation does not populate the original shadow decision's
+  assisted-mode `disclosure` fields, retroactively reclassify its evidence, or
+  turn it into a buyer-proof receipt.
 - **Phase 4 — Integration/writeback (out of scope).** Separate authorization,
   separate governance; named here only so its exclusion is visible.
 
@@ -559,6 +566,8 @@ batch-1 ledger (pre-declared list, report-all, dated-amendment-only).
   addendum (applied here as by-hand discipline per its PROPOSED status).
 - Does not create the near-half plan, the signal-reliability ledger, or the
   lesson library; N7 is a pending interface, not a binding.
+- Post-resolution presentation of shadow records does not retroactively convert
+  shadow evidence into assisted evidence or buyer proof.
 - Not validation, readiness, acceptance, buyer proof, or judgment-quality
   evidence; this artifact's own evidence state is classified below.
 
