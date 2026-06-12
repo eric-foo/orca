@@ -25,14 +25,17 @@ Accepted 2026-06-09 (owner sign-off, eric-foo); amended 2026-06-09 to record the
   are **not available** on this repository — it is private on a free plan, and GitHub returns HTTP
   403 ("Upgrade to GitHub Pro or make this repository public") for both classic branch protection
   and rulesets. They are **not applied**.
-- **Interim (owner-selected):** keep CI plus a *merge-when-green* flow under **structure B**
-  (Decision item 7): agents prep green PRs but do **not** self-merge — a human/authorized action
-  lands to `main`. This is now enforced by the enforcement lane's protected-action guard (it blocks
-  an agent's `gh pr merge` → `main`), not discipline alone — and **now durable on `main`** (the guard + its PreToolUse registration landed
-  via PR #15; verified tracked + registered on `origin/main`, so a fresh clone is protected — see
-  Decision item 7's liveness note). The server-side hard gate (items 2 and 4)
-  is the deferred target end-state, unblocked only by a GitHub Pro/Team upgrade or making the repo
-  public.
+- **Interim (owner-selected):** keep CI plus a *merge-when-green* flow under **structure B′**
+  (Decision item 7): agents prep green PRs, and may **self-merge their own PR only when the
+  protected-action guard confirms it is `mergeStateStatus == CLEAN` + all CI checks green + carries
+  the opt-in `agent-automerge` label**; every other state (non-CLEAN, pending/failing checks, no
+  label, missing/ambiguous PR number, the `gh api .../merge` form, foreign repo, or any lookup
+  error/timeout) **fails closed to a human merge**, and the guard prints the repo-scoped manual
+  command to run. This is enforced by the enforcement lane's protected-action guard, not discipline
+  alone (the guard + its PreToolUse registration are durable on `main`; the guard's prior
+  block-all-merges form landed via PR #15 — this amendment relaxes it to the CLEAN-gated form, owner-ratified 2026-06-12). The server-side hard gate (items 2 and 4) is the
+  deferred target end-state, unblocked only by a GitHub Pro/Team upgrade or making the repo public —
+  and remains the only **harness-agnostic** gate (this guard is Claude-Code-scoped).
 
 This record does not assert that any server-side gate is active. It is not.
 
@@ -55,8 +58,9 @@ This record does not assert that any server-side gate is active. It is not.
    Status). When enabled it requires:
    - the `orca-harness-tests` status check to pass;
    - a pull request before merging (`required_approving_review_count: 0`; under this *server-gated
-     target* a solo lane could self-merge once green — but the current interim uses structure B
-     (item 7), where a human lands to `main`);
+     target* a solo lane could self-merge once green — the current interim (structure B′, item 7)
+     approximates this locally: the guard allows an agent self-merge only on a CLEAN + CI-green +
+     `agent-automerge`-labeled PR, and a human lands every other case);
    - `strict: false` (a branch need not be up-to-date with `main` before merging);
    - `enforce_admins: false` (the owner retains an emergency override).
 3. **Per-lane PR flow.** Each lane branches off `main`, works in its own branch/worktree, and opens
@@ -70,31 +74,41 @@ This record does not assert that any server-side gate is active. It is not.
 6. **Rebase cadence.** Each lane keeps its branch reasonably current with `main` (rebase or merge
    `main`) to limit semantic drift before merging. When the hard gate is enabled it will use
    `strict: false`, so this stays a lane responsibility rather than a server requirement.
-7. **Interim enforcement — structure B (merge-when-green, human-landed).** Until a server-side gate
-   is available, agents **prepare** green PRs — push their own lane branch, open the PR, confirm the
-   `orca-harness-tests` check is green — but do **not** self-merge to `main`. A **human or otherwise
-   authorized action lands the PR to `main`**, and only when green. This is now **enforced**, not
-   discipline alone: the enforcement lane's protected-action guard
-   (`.agents/hooks/guard_protected_actions.py`) blocks an agent's `gh pr merge` → `main`, push to
-   `main`, and force-push, while allowing a benign lane-branch push — so the human is the gate on the
-   one irreversible step. **Liveness (durable on `main`):** this guard enforcement is **durable on `main`** — the guard and its
-   `.claude/settings.json` PreToolUse registration landed via PR #15 and are **verified tracked +
-   registered on `origin/main`**, so a fresh clone, another machine, or CI is protected, not just this
-   working tree. The git-lifecycle protection (`gh pr merge` / push-to-`main` / force / destructive —
-   EP-03) is portable and durable on every clone; the external-path protection (EP-01) is tuned to a
-   machine's layout and stays per-machine, so other clones adjust their own externals. So the doctrine
-   now reads: *structure-B merge protection is durable on `main`; external-path protection is
-   per-machine.* (This closes the lane-health detector's machine-local flag: A — durable-on-main —
-   landed.) **Harness scope:** the protection above is **Claude-Code-scoped** — the guard is a
-   `.claude/settings.json` `PreToolUse` hook matching Claude Code tools, so "a fresh clone is
-   protected" holds for **Claude Code sessions**. A non-Claude-Code harness (e.g. Codex) on a fresh
-   clone is **not** guard-blocked until the same scripts are wired into its own config; the only
-   **harness-agnostic, unbypassable** gate remains the deferred server-side branch protection (items 2
-   and 4). **This supersedes the earlier "a solo lane self-merges once CI is green"
-   wording**, written before the guard existed. The helper `.github/scripts/merge-when-green.ps1` is
-   the **human's** green-check-then-merge tool (run it to verify green and land); agents must **not**
-   use it to self-merge — it wraps `gh pr merge`, so an agent running it would bypass the guard, which
-   structure B forbids.
+7. **Interim enforcement — structure B′ (guard-verified CLEAN self-merge; else human-landed).** Until
+   a server-side gate is available, agents **prepare** green PRs — push their own lane branch, open the
+   PR, confirm the `orca-harness-tests` check is green. An agent **may self-merge its own PR** with a
+   direct `gh pr merge <N>`, but **only when the protected-action guard
+   (`.agents/hooks/guard_protected_actions.py`) confirms the PR is `mergeStateStatus == CLEAN`, every
+   CI check has completed green, and it carries the opt-in `agent-automerge` label.** Every other case
+   — a non-CLEAN state (`UNSTABLE` / `BLOCKED` / `BEHIND` / `DIRTY` / `DRAFT` / `UNKNOWN` / …), pending
+   or failing checks, an empty check set, a missing/ambiguous PR number, the no-arg form, the
+   lower-level `gh api .../merge` form, a foreign `--repo`, or any lookup error/timeout — **fails
+   closed**: the guard blocks (exit 2) and prints the repo-scoped manual command
+   (`gh pr merge <N> --squash --delete-branch --repo eric-foo/orca`) for a human to run from anywhere.
+   Push to `main`, force-push, and destructive `reset --hard` / `clean` stay hard-blocked; a benign
+   lane-branch push stays allowed. **Why CLEAN + green + label, not bare CLEAN:** on this repo branch
+   protection is 403-blocked, so no check is *required* and an empty/early check set can read `CLEAN`
+   before CI even starts — requiring the rollup present-and-green (plus an explicit opt-in label)
+   closes that false-green race and makes self-merge a deliberate, auditable act. The **opt-in label
+   is the agent's deliberate marker**; one-time setup `gh label create agent-automerge --repo
+   eric-foo/orca` makes it applyable, and absent the label nothing auto-merges. **Liveness (durable on
+   `main`):** the guard and its `.claude/settings.json` PreToolUse registration are **durable on
+   `main`** — they landed via PR #15 (then in block-all-merges form) and are verified tracked +
+   registered on `origin/main`; this amendment relaxes the guard to the CLEAN-gated form, and **a human
+   lands this amendment's own PR**, because the pre-amendment guard blocks all `gh pr merge`. The
+   git-lifecycle protection (EP-03) is portable and durable on every clone; external-path protection
+   (EP-01) stays per-machine. **Harness scope:** the guard is a `.claude/settings.json` `PreToolUse`
+   hook matching Claude Code tools, so this protection — and the CLEAN self-merge allowance — holds for
+   **Claude Code sessions only**. A non-Claude-Code harness (e.g. Codex) is **not** guard-gated until
+   the same script is wired into its own config; the only **harness-agnostic, unbypassable** gate
+   remains the deferred server-side branch protection (items 2 and 4). **This supersedes the earlier
+   structure-B "agents do not self-merge; a human lands every merge" wording** (and the still-earlier
+   target "a solo lane self-merges once CI is green"): self-merge is now allowed but **narrowly,
+   guard-verified, and fail-closed**. The helper `.github/scripts/merge-when-green.ps1` remains the
+   **human's** check-then-merge tool; agents must **not** use it to self-merge — it wraps `gh pr merge`
+   inside a script subprocess the PreToolUse guard does **not** see (hooks fire on the agent's direct
+   tool call, not on grandchild processes), so running it would **bypass the CLEAN/label
+   verification**. Agents self-merge only via a direct `gh pr merge <N>`, which the guard inspects.
 8. **Lane-isolation integrity — early detection, not a hard gate.** Lane isolation (the AGENTS.md
    rule, PR #9) is a *judgment* rule, so its integrity mechanism is **early detection**, not another
    hard block. A read-only detector, `.github/scripts/lane-health-check.ps1` (PR #11), surfaces drift
@@ -445,4 +459,87 @@ direction_change_propagation:
     - not validation or readiness
     - does not claim any non-Claude-Code harness is protected; states the opposite until wired
     - the harness-agnostic gate (server-side branch protection) remains deferred / 403-blocked
+```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Relaxes structure B to structure B' (owner-ratified 2026-06-12): an agent MAY self-merge its own
+    PR via a direct `gh pr merge <N>`, but ONLY when the protected-action guard confirms the PR is
+    mergeStateStatus == CLEAN, every CI check has completed green, and it carries the opt-in
+    `agent-automerge` label. Every other state, the no-arg/ambiguous form, the `gh api .../merge`
+    form, a foreign `--repo`, or any lookup error/timeout FAILS CLOSED to a human merge, and the guard
+    prints the repo-scoped manual command. This supersedes the prior structure-B "agents do not
+    self-merge; a human lands every merge" wording and acts on the 2026-06-09 owner flag in the EP
+    classification record ("if you intend agent self-merge-when-green, relax the gh pr merge block").
+    The bar is CLEAN + green + label (not bare CLEAN) because, with branch protection 403-blocked, no
+    check is required and an empty/early check set can read CLEAN before CI starts; the rollup-green +
+    label requirements close that false-green race. EP-01 protected paths and EP-03 push-to-main /
+    force-push / destructive-clean are UNCHANGED. The guard stays Claude-Code-scoped; the
+    harness-agnostic server-side gate remains the deferred end-state.
+  trigger: workflow_authority
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - docs/decisions/dev_workflow_ci_branch_protection_doctrine_v0.md
+    - .agents/hooks/guard_protected_actions.py
+    - AGENTS.md
+    - .agents/workflow-overlay/safety-rules.md
+  downstream_surfaces_checked:
+    - docs/decisions/overlay_enforcement_placement_classification_v0.md
+    - .claude/settings.json
+    - .github/scripts/merge-when-green.ps1
+    - .github/scripts/lane-health-check.ps1
+  intentionally_not_updated:
+    - path: .claude/settings.json
+      reason: >
+        The guard's PreToolUse registration and matcher are unchanged; the behavior change is wholly
+        inside the guard script. The `ask` rule `Bash/PowerShell(gh pr*)` is left in place as an
+        interactive-mode belt-and-suspenders (the human is still prompted in interactive mode; the
+        guard is the auto-mode enforcement). The `git commit` ask->allow owner hand-edit is a separate
+        classifier-bound change, not this lane's.
+    - path: .github/scripts/merge-when-green.ps1
+      reason: >
+        Still the human's check-then-merge tool; re-scoped in item 7 prose (it wraps `gh pr merge`
+        inside a script subprocess the PreToolUse guard does not see, so agents must not use it to
+        self-merge), but its content is unchanged.
+    - path: .github/scripts/lane-health-check.ps1
+      reason: >
+        The machine-local-enforcement detector is unaffected; the guard remains tracked on origin/main.
+    - path: docs/decisions/overlay_enforcement_placement_classification_v0.md
+      reason: >
+        The enforcement lane owns the guard's EP record and records this guard change there directly
+        (see its 2026-06-12 Update section); this doctrine references that record rather than the
+        reverse. (Listed here as a checked downstream surface, not unchanged — it IS updated, in its
+        own lane section.)
+  verification: >
+    Guard `--selftest` 46/46 PASS, exit 0 (CLEAN+green+label -> allow; no-label / non-CLEAN / pending /
+    empty-checkset / BLOCKED / unknown-PR / lookup-raises / no-number / gh-api-form / foreign-repo ->
+    block; merge-allowed + push-to-main -> block; all pre-existing EP-01 and EP-03 push/force/
+    destructive/benign cases unchanged). Live payload render: `gh pr merge` (no number) and the gh-api
+    form both exit 2 with the repo-scoped manual command in stderr; `git status` exits 0. CI re-runs
+    the orca-harness suite on this PR.
+  stale_language_search: >
+    grep -rin -E "self-merge|self-merges|human-gated|human-land|do not .*self|structure b"
+    AGENTS.md .agents/workflow-overlay
+    docs/decisions/dev_workflow_ci_branch_protection_doctrine_v0.md
+    docs/decisions/overlay_enforcement_placement_classification_v0.md
+    (run 2026-06-12 in the guard-clean-self-merge worktree off origin/main @ b463c3c)
+  stale_language_search_result: >
+    Executed 2026-06-12. All LIVE surfaces now carry the conditional CLEAN self-merge: AGENTS.md line
+    60 (kernel landing clause), safety-rules.md line 25, the doctrine Status interim bullet, Decision
+    item 2's server-gated-target parenthetical, and Decision item 7. The remaining "structure B" /
+    "human lands every merge" / "agents do not self-merge" hits are the historical DCP receipts above
+    (append-only records of prior states, correctly not edited) and the EP record's 2026-06-09 owner
+    flag (now acted upon and recorded in that record's 2026-06-12 Update). No live surface still
+    asserts that agents never self-merge to main.
+  non_claims:
+    - not validation, readiness, or acceptance of any lane's content
+    - CLEAN + green + label is a CI-and-mergeability signal, NOT a human diff-review; main is not
+      deployed and a bad merge is reversible by a follow-up PR
+    - EP-01 protected paths and EP-03 push/force/destructive blocks are unchanged
+    - the guard is Claude-Code-scoped; a non-Claude-Code harness is neither blocked nor granted
+      self-merge until wired
+    - not durable on main until this amendment's own PR is landed by a human (the pre-amendment guard
+      blocks the agent from self-merging it)
 ```

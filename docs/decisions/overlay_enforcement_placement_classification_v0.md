@@ -245,6 +245,57 @@ wired, or installed. No overlay rule changed (placement is not authority), so
 **no `direction_change_propagation` receipt is owed**. Not validation,
 readiness, or approval; recording a deferred proposal, nothing more.
 
+## Update — 2026-06-12: guard relaxed to CLEAN-gated agent self-merge (fail-closed + opt-in label)
+
+A behavioral change to the EP-03 guard, **adjudicated and recorded here because
+this record is the guard's owning surface** (the 2026-06-09 "guard re-placed"
+update established that), under explicit owner authorization (proceed-with-
+conditions, 2026-06-12). This **acts on the owner flag** raised in that earlier
+update — *"if you intend agent self-merge-when-green, relax the gh pr merge
+block."* The owner intends it, with conditions:
+
+- The guard had **hard-blocked all** `gh pr merge` (the human landed every
+  merge). It now **conditionally allows** a direct `gh pr merge <N>` self-merge
+  **only** when a single repo-scoped `gh pr view` lookup confirms the PR is
+  `mergeStateStatus == CLEAN`, every `statusCheckRollup` entry is completed-green,
+  and it carries the opt-in `agent-automerge` label.
+- **Fail-closed is the deliberate exception to the guard's fail-open default.**
+  The merge-authorization path blocks (exit 2) on any lookup error, timeout
+  (the `gh` call is self-limited to `GH_TIMEOUT=6s`, below the hook's own 10s
+  budget, so the guard returns its own block before any harness timeout-kill —
+  which the Claude Code docs do not specify as fail-open or fail-closed), JSON
+  parse failure, non-CLEAN state, empty/non-green check set, missing label,
+  missing/ambiguous PR number, the no-arg form, the `gh api .../merge` form, or a
+  foreign `--repo`. The guard's outer fail-OPEN is preserved for the non-merge
+  paths (a guard bug must not brick all of the agent's tools); only the merge
+  path fails closed.
+- The block message **always prints the repo-scoped manual command**
+  (`gh pr merge <N> --squash --delete-branch --repo eric-foo/orca`) so a human
+  can land from any directory.
+- **Classification: PARTIAL → still substrate-appropriate.** `mergeStateStatus`,
+  check conclusions, and label presence are deterministic API shape the guard can
+  verify at the tool boundary; the *judgment* of removing the human from the
+  irreversible step is the owner's, exercised once here (PLACEMENT IS NOT
+  AUTHORITY — the guard checks the mergeability *shape*, it does not assert the
+  diff is correct). **EP-01 and EP-03 push-to-main / force-push / destructive-
+  clean are UNCHANGED.**
+- **Why CLEAN + green + label, not bare CLEAN:** branch protection is 403-blocked,
+  so no check is *required* and an empty/early check set can read CLEAN before CI
+  starts; requiring the rollup present-and-green plus an explicit opt-in label
+  closes that false-green race and keeps self-merge deliberate and auditable.
+
+**Verified this session:** `--selftest` 46/46 PASS (exit 0), including the new
+allow/fail-closed merge cases and all pre-existing EP-01/EP-03 cases; live
+payload render of the block message + manual command (exit 2) and a benign allow
+(exit 0). The doctrine carries the `direction_change_propagation` receipt and the
+downstream-surface reconciliation (AGENTS.md kernel clause, `safety-rules.md`,
+`.claude/settings.json` scope); **a human lands the PR**, because the pre-
+amendment guard blocks the agent from self-merging its own guard-change PR. This
+record's EP-01..EP-33 classification table is the point-in-time inventory it
+declares itself to be and is unchanged; this update records a behavior change to
+an already-built substrate, not a new EP handle. Advisory record — not
+validation, readiness, or approval.
+
 ## Current Task Receipt
 
 ```yaml

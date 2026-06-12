@@ -6,12 +6,18 @@ must never take unattended:
 
   EP-01  writes/edits into protected external roots (jb, agent-workflow, and the
          user-level plugin/skill caches) — corrupting another repo/tooling.
-  EP-03  irreversible / main-affecting git: blocks landing a PR to main
-         (`gh pr merge`), direct push to main, force-push, and bare/ambiguous
-         push, plus `reset --hard` / `clean` — via Bash OR PowerShell. ALLOWS an
-         explicit non-main, non-force lane push (`git push -u origin <lane>`) so
-         lanes can prep PRs under the per-lane PR flow; a human / explicitly
-         authorized action lands the PR to main.
+  EP-03  irreversible / main-affecting git: blocks direct push to main,
+         force-push, and bare/ambiguous push, plus `reset --hard` / `clean` — via
+         Bash OR PowerShell. ALLOWS an explicit non-main, non-force lane push
+         (`git push -u origin <lane>`) so lanes can prep PRs under the per-lane PR
+         flow.
+         Landing a PR to main (`gh pr merge <N>`) is CONDITIONALLY allowed: the
+         guard queries the PR and allows the merge ONLY when it is mergeStateStatus
+         == CLEAN, every CI check has completed green, and it carries the opt-in
+         `agent-automerge` label. Any other state, a missing/ambiguous PR number,
+         the lower-level `gh api .../merge` form, or any lookup error/timeout
+         FAILS CLOSED (blocks) — and the block message prints the repo-scoped
+         manual `gh pr merge ... --repo` command a human can run from anywhere.
 
 This fires in ALL permission modes, including auto-accept / bypassPermissions,
 which is the point: `ask`/`deny` permission rules need a human and go inert in
@@ -32,15 +38,32 @@ is NOT blocked. Only the irreversible / main-affecting few are blocked.
 Authorized exceptions: run the action yourself, or temporarily remove this hook.
 
 Contract: reads the PreToolUse JSON on stdin; exit 2 + stderr = BLOCK; exit 0 =
-allow. On any internal error it fails OPEN (exit 0) to avoid bricking the agent.
+allow. On any internal error the NON-merge paths fail OPEN (exit 0) to avoid
+bricking the agent. The merge-authorization path is the deliberate exception: it
+fails CLOSED (block) on any lookup error, timeout, parse failure, or non-CLEAN
+state, because an erroneous ALLOW there would land unattended code on main. Its
+`gh` lookup is self-limited to GH_TIMEOUT (< the hook's own timeout) so the guard
+returns its own block before any harness-level timeout-kill could fail open.
 """
 import json
 import os
 import re
+import subprocess
 import sys
 
 HOME = os.path.expanduser("~")
 REPO_SLUG = "eric-foo/orca"
+
+# Opt-in label a PR must carry before the guard will allow an agent self-merge.
+# A PR without it never auto-merges (safe default). One-time repo setup to make
+# the label applyable: `gh label create agent-automerge --repo eric-foo/orca`.
+AUTOMERGE_LABEL = "agent-automerge"
+# Self-imposed ceiling on the PR-state `gh` call, kept below the hook's own
+# settings.json timeout so we fail CLOSED in-script rather than relying on the
+# harness's (unspecified) timeout-kill behavior.
+GH_TIMEOUT = 6
+# statusCheckRollup conclusions that count as "green" for a completed check.
+_OK_CONCLUSIONS = {"SUCCESS", "NEUTRAL", "SKIPPED"}
 
 
 def _norm(p):
@@ -92,8 +115,12 @@ _GIT_PREFIX = r"\bgit\b(?:\s+-C\s+\S+|\s+-c\s+\S+|\s+--?\S+)*\s+"
 _RESET_HARD = re.compile(_GIT_PREFIX + r"reset\b[^&|;]*--hard\b", re.I)
 _CLEAN = re.compile(_GIT_PREFIX + r"clean\b", re.I)
 _PUSH = re.compile(_GIT_PREFIX + r"push\b(.*)$", re.I)
-_GH_PR_MERGE = re.compile(r"\bgh\s+pr\s+merge\b", re.I)
+_GH_PR_MERGE = re.compile(r"\bgh\s+pr\s+merge\b(.*)$", re.I)
 _GH_API_MERGE = re.compile(r"\bgh\s+api\b.*?(?:pulls?/\d+/merge|/merges)\b", re.I)
+# `--repo owner/name` / `-R owner/name` on a merge: the guard only ever queries
+# REPO_SLUG, so a merge explicitly aimed at a different repo cannot be verified
+# here and must fail closed (never auto-allowed on this guard's authority).
+_REPO_FLAG = re.compile(r"(?:--repo|-R)[=\s]+(\S+)", re.I)
 _FORCE = re.compile(r"--force(?:-with-lease)?\b|(?:^|\s)-[A-Za-z]*f[A-Za-z]*\b", re.I)
 _SEP = re.compile(r"&&|\|\||[;\n|]")
 # Drop quoted args before matching, so a *mention* of a dangerous command inside
@@ -122,15 +149,113 @@ def _push_block_reason(rest):
     return None
 
 
-def _shell_block_reason(cmd):
-    """Return an EP-03 block reason for a shell command, or None to allow."""
+# --- EP-03: conditional `gh pr merge` (CLEAN self-merge) -------------------
+def _parse_pr_ref(rest):
+    """`rest` = text after `gh pr merge`. Return an explicit PR number string, or
+    None. Accepts a bare integer or a `.../pull/<n>` URL; a branch name or no
+    argument returns None — auto-merge requires an explicit number, so the guard
+    never guesses which PR is being landed (and a no-arg merge fails closed)."""
+    for t in (rest or "").split():
+        if t.startswith("-"):
+            continue
+        if t.isdigit():
+            return t
+        m = re.search(r"/pull/(\d+)", t)
+        if m:
+            return m.group(1)
+    return None
+
+
+def _check_ok(c):
+    """True iff a single statusCheckRollup entry is completed-green."""
+    if not isinstance(c, dict):
+        return False
+    if c.get("conclusion") is not None or c.get("__typename") == "CheckRun":
+        return (c.get("status") == "COMPLETED"
+                and str(c.get("conclusion") or "").upper() in _OK_CONCLUSIONS)
+    if c.get("state") is not None:  # legacy commit StatusContext
+        return str(c.get("state")).upper() == "SUCCESS"
+    return False
+
+
+def _query_pr_state(pr):
+    """Real PR-state lookup: ONE repo-scoped `gh` call, self-timed below the hook
+    budget. Returns the parsed JSON dict, or None on any non-zero exit (the caller
+    wraps this in try/except and treats every failure as a CLOSED block)."""
+    out = subprocess.run(
+        ["gh", "pr", "view", str(pr), "--repo", REPO_SLUG,
+         "--json", "number,mergeStateStatus,statusCheckRollup,labels"],
+        capture_output=True, text=True, timeout=GH_TIMEOUT,
+    )
+    if out.returncode != 0:
+        return None
+    return json.loads(out.stdout or "")
+
+
+def _merge_decision(pr_ref, lookup):
+    """Decide one `gh pr merge` segment. Return None to ALLOW, else a block reason.
+
+    FAIL CLOSED: a missing/ambiguous PR number, any lookup error or timeout, a
+    non-CLEAN mergeStateStatus, an empty/non-green check set, or a missing opt-in
+    label all block. Only an explicit, CLEAN, all-checks-green, `agent-automerge`-
+    labeled PR is allowed to self-merge."""
+    if not pr_ref:
+        return ("EP-03 merge blocked - needs an explicit PR number "
+                "(`gh pr merge <N>`); a no-arg / branch-name merge fails closed")
+    try:
+        state = lookup(pr_ref)
+    except Exception:
+        state = None
+    if not state:
+        return ("EP-03 merge blocked - PR %s mergeability lookup failed "
+                "(fail-closed)" % pr_ref)
+    mss = state.get("mergeStateStatus")
+    if mss != "CLEAN":
+        return ("EP-03 merge blocked - PR %s mergeStateStatus=%s, not CLEAN"
+                % (pr_ref, mss or "?"))
+    rollup = state.get("statusCheckRollup") or []
+    if not rollup:
+        return ("EP-03 merge blocked - PR %s reports no CI checks yet "
+                "(fail-closed against the empty-checkset race)" % pr_ref)
+    if not all(_check_ok(c) for c in rollup):
+        return ("EP-03 merge blocked - PR %s has non-green or pending checks"
+                % pr_ref)
+    labels = {(l or {}).get("name") for l in (state.get("labels") or [])}
+    if AUTOMERGE_LABEL not in labels:
+        return ("EP-03 merge blocked - PR %s missing opt-in label '%s'"
+                % (pr_ref, AUTOMERGE_LABEL))
+    return None  # CLEAN + all checks green + opt-in label → allow self-merge
+
+
+def _shell_block_reason(cmd, lookup=None):
+    """Return an EP-03 block reason for a shell command, or None to allow.
+
+    `lookup` is the PR-state fetcher (injected so --selftest stays offline);
+    defaults to the real `gh` query."""
+    if lookup is None:
+        lookup = _query_pr_state
     cmd = _QUOTED.sub(" ", cmd or "")
     for seg in _SEP.split(cmd):
         seg = seg.strip()
         if not seg:
             continue
-        if _GH_PR_MERGE.search(seg) or _GH_API_MERGE.search(seg):
-            return "EP-03 land-to-main (PR merge): %s" % seg[:160]
+        if _GH_API_MERGE.search(seg):
+            # The low-level API PUT bypasses gh's own pre-merge mergeability
+            # re-check, so it is never auto-allowed — always human/manual.
+            return ("EP-03 merge blocked - `gh api .../merge` form is always "
+                    "manual: %s" % seg[:160])
+        m = _GH_PR_MERGE.search(seg)
+        if m:
+            rest = m.group(1)
+            rflag = _REPO_FLAG.search(rest)
+            if rflag and rflag.group(1).lower() != REPO_SLUG.lower():
+                return ("EP-03 merge blocked - targets a different repo (%s); "
+                        "this guard only authorizes %s"
+                        % (rflag.group(1), REPO_SLUG))
+            why = _merge_decision(_parse_pr_ref(rest), lookup)
+            if why:
+                return why
+            continue  # CLEAN+green+labeled self-merge — allow; scan other segs
         if _RESET_HARD.search(seg):
             return "EP-03 destructive (git reset --hard): %s" % seg[:160]
         if _CLEAN.search(seg):
@@ -143,8 +268,10 @@ def _shell_block_reason(cmd):
     return None
 
 
-def decide(tool_name, tool_input):
-    """Pure decision. Returns (block: bool, reason: str)."""
+def decide(tool_name, tool_input, lookup=None):
+    """Decision. Returns (block: bool, reason: str). EP-01 (write paths) is pure;
+    the EP-03 merge path may consult `lookup` (the PR-state fetcher, injected in
+    tests, real `gh` query in production)."""
     tool_input = tool_input or {}
     if tool_name in WRITE_TOOLS:
         target = (tool_input.get("file_path")
@@ -154,7 +281,7 @@ def decide(tool_name, tool_input):
         if hit:
             return True, "EP-01 protected-path write: %s (under %s)" % (target, hit)
     elif tool_name in SHELL_TOOLS:
-        reason = _shell_block_reason(tool_input.get("command", "") or "")
+        reason = _shell_block_reason(tool_input.get("command", "") or "", lookup)
         if reason:
             return True, reason
     return False, ""
@@ -165,21 +292,61 @@ _BLOCK_MSG = (
     "Reason: %s\n"
     "%s"
     "Authority: .agents/workflow-overlay/safety-rules.md + dev-workflow doctrine "
-    "(no unattended land-to-main / push-to-main / force-push / destructive-clean, "
-    "and no edits to jb/external/installed skills, unless explicitly authorized). "
-    "Fires in all modes incl. auto.\n"
-    "Authorized exception: run it yourself (e.g. a human lands the PR), or remove "
+    "(push-to-main / force-push / destructive-clean are blocked, and edits to "
+    "jb/external/installed skills, unless explicitly authorized; `gh pr merge <N>` "
+    "self-merge is allowed ONLY for a CLEAN + CI-green + '" + AUTOMERGE_LABEL +
+    "'-labeled PR). Fires in all modes incl. auto.\n"
+    "Authorized exception: a human lands the PR with the command above, or remove "
     "this hook. An explicit lane push `git push -u origin <lane>` is allowed."
 )
 
 # --- selftest ---------------------------------------------------------------
 def _selftest():
     j = lambda *a: os.path.join(HOME, *a)
+
+    # Fake PR-state lookups so the merge logic is tested deterministically and
+    # OFFLINE (no `gh`, no network). Each case may pass its own lookup; cases
+    # that omit one default to `_fake` (irrelevant for non-merge cases).
+    _green = {"__typename": "CheckRun", "status": "COMPLETED", "conclusion": "SUCCESS"}
+    _pending = {"__typename": "CheckRun", "status": "IN_PROGRESS", "conclusion": None}
+    _FAKE = {
+        "100": {"mergeStateStatus": "CLEAN", "statusCheckRollup": [_green],
+                "labels": [{"name": AUTOMERGE_LABEL}]},              # the one ALLOW shape
+        "101": {"mergeStateStatus": "CLEAN", "statusCheckRollup": [_green],
+                "labels": []},                                       # CLEAN+green, no label
+        "102": {"mergeStateStatus": "UNSTABLE", "statusCheckRollup": [_green],
+                "labels": [{"name": AUTOMERGE_LABEL}]},              # not CLEAN
+        "103": {"mergeStateStatus": "CLEAN", "statusCheckRollup": [_pending],
+                "labels": [{"name": AUTOMERGE_LABEL}]},              # a check still pending
+        "104": {"mergeStateStatus": "CLEAN", "statusCheckRollup": [],
+                "labels": [{"name": AUTOMERGE_LABEL}]},              # empty-checkset race
+        "105": {"mergeStateStatus": "BLOCKED", "statusCheckRollup": [_green],
+                "labels": [{"name": AUTOMERGE_LABEL}]},              # review/required-check block
+    }
+    _fake = lambda pr: _FAKE.get(str(pr))            # unknown PR -> None -> fail closed
+
+    def _raises(pr):                                 # lookup error -> fail closed
+        raise RuntimeError("simulated gh/network failure")
+
     cases = [
-        # EP-03 block: land-to-main
-        ("Bash", {"command": "gh pr merge 9 --squash"}, True),
-        ("PowerShell", {"command": "gh pr merge"}, True),
-        ("Bash", {"command": "gh api -X PUT repos/eric-foo/orca/pulls/9/merge"}, True),
+        # EP-03 conditional merge — the new behavior (lookup injected):
+        ("Bash", {"command": "gh pr merge 100 --squash"}, False, _fake),                 # CLEAN+green+label -> ALLOW
+        ("PowerShell", {"command": "gh pr merge 100 --squash --delete-branch"}, False, _fake),
+        ("Bash", {"command": "gh pr merge https://github.com/eric-foo/orca/pull/100"}, False, _fake),  # URL form -> ALLOW
+        ("Bash", {"command": "gh pr merge 101"}, True, _fake),                            # missing opt-in label
+        ("Bash", {"command": "gh pr merge 102"}, True, _fake),                            # not CLEAN (UNSTABLE)
+        ("Bash", {"command": "gh pr merge 103"}, True, _fake),                            # pending check
+        ("Bash", {"command": "gh pr merge 104"}, True, _fake),                            # empty checkset
+        ("Bash", {"command": "gh pr merge 105"}, True, _fake),                            # BLOCKED
+        ("Bash", {"command": "gh pr merge 999"}, True, _fake),                            # unknown PR -> lookup None
+        ("Bash", {"command": "gh pr merge 100"}, True, _raises),                          # lookup raises -> fail closed
+        ("PowerShell", {"command": "gh pr merge"}, True, _fake),                          # no explicit PR number
+        ("Bash", {"command": "gh pr merge 9 --squash"}, True, _fake),                     # 9 not in fake -> fail closed
+        ("Bash", {"command": "gh api -X PUT repos/eric-foo/orca/pulls/9/merge"}, True, _fake),  # api form always manual
+        ("Bash", {"command": "gh pr merge 100 --repo eric-foo/orca --squash"}, False, _fake),  # explicit own-repo -> ALLOW
+        ("Bash", {"command": "gh pr merge 100 --repo someone/else"}, True, _fake),        # foreign repo -> fail closed
+        ("Bash", {"command": "gh pr merge 100 -R other/repo"}, True, _fake),              # foreign repo (-R) -> fail closed
+        ("Bash", {"command": "gh pr merge 100 && git push origin main"}, True, _fake),    # merge ALLOWED, push-to-main still blocks
         # EP-03 block: push to main / force / bare / HEAD
         ("Bash", {"command": "git push origin main"}, True),
         ("Bash", {"command": "git push origin HEAD:main"}, True),
@@ -197,7 +364,7 @@ def _selftest():
         ("Write", {"file_path": j("Desktop", "projects", "jb nonrepo", "x.md")}, True),
         ("Edit", {"file_path": j("Desktop", "projects", "agent-workflow", "p.md")}, True),
         ("Write", {"file_path": j(".claude", "skills", "evil", "SKILL.md")}, True),
-        # ALLOW: lane push (the per-lane PR flow) — the key new behavior
+        # ALLOW: lane push (the per-lane PR flow)
         ("Bash", {"command": "git push -u origin ecr-sp3-timing-deriver-slice1"}, False),
         ("Bash", {"command": "git push origin my-lane"}, False),
         ("Bash", {"command": "git push origin HEAD:my-lane"}, False),
@@ -216,8 +383,9 @@ def _selftest():
         ("Read", {"file_path": j("Desktop", "projects", "jb", "x.md")}, False),
     ]
     ok = True
-    for i, (tn, ti, expect) in enumerate(cases, 1):
-        got, reason = decide(tn, ti)
+    for i, (tn, ti, expect, *rest) in enumerate(cases, 1):
+        lookup = rest[0] if rest else _fake
+        got, reason = decide(tn, ti, lookup=lookup)
         status = "PASS" if got == expect else "FAIL"
         if got != expect:
             ok = False
@@ -238,11 +406,13 @@ def main():
         sys.exit(0)
     if block:
         hint = ""
-        if "land-to-main (PR merge)" in reason:
-            pr_m = re.search(r"\bpr\s+merge\s+(\d+)", reason, re.I)
+        if "EP-03 merge blocked" in reason:
+            pr_m = re.search(r"PR (\d+)", reason)
             pr_ref = pr_m.group(1) if pr_m else "<PR#>"
+            # Repo-scoped + absolute: a human can paste this in any PowerShell
+            # window from any directory to land the PR.
             hint = (
-                "  → Merge manually (PowerShell / terminal):\n"
+                "  -> To land it manually (PowerShell, from any directory):\n"
                 "    gh pr merge %s --squash --delete-branch --repo %s\n"
             ) % (pr_ref, REPO_SLUG)
         sys.stderr.write(_BLOCK_MSG % (reason, hint) + "\n")
