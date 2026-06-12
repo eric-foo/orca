@@ -15,11 +15,13 @@ rank, or route runtime model choice.
 
 Structure:
 
-- `_generic/`: fallback templates for ordinary reasoning or synthesis prompts.
-- `shared/`: reusable Orca behavior contracts included by other templates.
+- `shared/`: reusable Orca behavior contracts and preflight defaults included by other templates.
 - `research/`: evidence-only research and evidence-synthesis prompt templates.
 - `review/`: read-only artifact review templates.
 - `wrappers/`: thin-wrapper templates for launching existing prompt artifacts.
+- `portable/`: self-contained method templates for repo-agnostic reviewers.
+
+Note: model-target templates (`_generic/`) were retired 2026-06-13 (unused; owner decision).
 
 Do not add implementation, runtime, package, test, scraping, or automation
 templates while Orca remains docs-first.

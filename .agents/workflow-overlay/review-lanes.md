@@ -138,10 +138,12 @@ routing, and Chief Architect consumption rules.
 
 ## Template Retrieval Binding
 
-Orca no longer binds executor or reviewer lanes to runtime model identifiers.
+Orca does not bind executor or reviewer lanes to runtime model identifiers.
 Prompt authors may retrieve templates by registry ID from
 `.agents/workflow-overlay/template-registry.md`, but a template target is prompt
 posture only. It does not select, rank, recommend, or require the runtime model.
+Model-target templates (`_generic/`) were retired 2026-06-13 (unused; owner decision);
+only model-neutral templates remain registered.
 
 ```yaml
 template_retrieval_binding:
@@ -150,10 +152,6 @@ template_retrieval_binding:
   template_ids_authority: registry_registered_templates
   template_ids:
     shared-behavior-contract: model-neutral template include
-    generic-gpt55: GPT-5.5 prompt posture
-    generic-claude-sonnet46: Claude Sonnet 4.6 prompt posture
-    generic-claude-opus47: Claude Opus 4.7 prompt posture
-    generic-claude-opus: Claude Opus legacy prompt posture
     research-evidence-lane-o3: o3 / o3-deep-research prompt posture
     research-synthesis-gpt55: GPT-5.5 prompt posture
     adversarial-artifact-review: model-neutral review template
@@ -166,13 +164,11 @@ template_retrieval_binding:
   conflict_rule: use the highest listed source that explicitly selects a prompt template target, without expanding source-changing authority or runtime model choice.
 ```
 
-Template retrieval may support language such as "use the Opus 4.7-style
-adversarial review template" or "adapt this for the Sonnet 4.6 prompt posture."
-It must not produce language such as "run this on Opus", "recommended model",
-or "reviewer model". It does not create implementation permission,
-prompt-routing authority, validation success, executor-ready instructions, or
-a paste-ready handoff. Executor-ready prompts and routed handoffs remain
-prompt-orchestration work.
+Template retrieval does not produce language such as "run this on [model]",
+"recommended model", or "reviewer model". It does not create implementation
+permission, prompt-routing authority, validation success, executor-ready
+instructions, or a paste-ready handoff. Executor-ready prompts and routed
+handoffs remain prompt-orchestration work.
 
 ## Rules
 
