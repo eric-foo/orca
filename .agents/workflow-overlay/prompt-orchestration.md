@@ -122,9 +122,9 @@ The active Orca template registry is
 `.agents/workflow-overlay/template-registry.md`.
 
 The registry binds template kinds, template targets, output modes, and template
-paths for Orca. A template target may be model-named because the prompt shape is
-different for different receivers, but it is not runtime model routing. Check
-the registry before using any generic prompt-orchestration template.
+paths for Orca. Template targets are prompt-shaping labels only; they are not
+runtime model routing. Check the registry before using any generic
+prompt-orchestration template.
 
 ## Supported Prompt Families
 
@@ -305,12 +305,11 @@ YAML summary defined in `.agents/workflow-overlay/communication-style.md`, with
 `report_path` pointing to the written report and listing the core summary,
 findings, and next action.
 
-### Template Retrieval Versus Model Routing
+### No Runtime Model Routing
 
-Prompt authors may select registered templates such as `generic-gpt55`,
-`generic-claude-sonnet46`, or `generic-claude-opus47` when the user asks for a
-GPT-, Sonnet-, or Opus-style prompt. This retrieves prompt structure and
-prompting posture only.
+Review prompts, wrappers, and handoffs must not recommend, prescribe, rank, or
+imply runtime model choice. Template retrieval never claims a prompt will run
+on a particular model.
 
 Template retrieval must not:
 
@@ -319,12 +318,6 @@ Template retrieval must not:
 - rank models;
 - bind reviewer or executor selection;
 - create implementation, validation, readiness, or lifecycle authority.
-
-When a user names a model family as shorthand for style, interpret it as a
-template target unless the user explicitly asks to route execution. If the
-requested template target is missing from the registry or its file does not
-exist, report the missing template target instead of substituting runtime model
-routing.
 
 If the required durable report cannot be written after `review-report` is
 selected, do not treat the YAML as a substitute artifact. Return a failed
@@ -339,7 +332,11 @@ Every repo-aware Orca prompt must include or reference the
 `orca_start_preflight` receipt owned by
 `.agents/workflow-overlay/source-loading.md`. Prompt authors may record the
 fields in that receipt or in adjacent preflight prose, but the prompt must make
-the start state checkable.
+the start state checkable. Repo-constant fields (workspace path, required reads,
+external source boundary, retrieval header defaults) may be referenced via
+`docs/prompts/templates/shared/orca_preflight_defaults_v0.md` instead of
+restated; required per-prompt deltas listed in that artifact must still be
+stated explicitly in every prompt that references it.
 
 Every repo-aware Orca prompt must state:
 
@@ -466,7 +463,7 @@ Before using a generated Orca prompt, apply these gates:
    (c) include `minimum_closure_condition` and `next_authorized_action` for actionable findings; define closure conditions as required end states, not implementation instructions;
    (d) label optional hardening optional and non-required; exclude `patch_queue_entry` unless the lane is patch-queue or patch/integration execution;
    (e) preserve Chief Architect consumption order for CA-facing reviews; do not add a synthesis lane;
-   (f) do not recommend, prescribe, rank, or imply a runtime model; treat model-named template targets as template retrieval only;
+   (f) do not recommend, prescribe, rank, or imply a runtime model;
    (g) for intent-bearing targets, anchor decision criteria to a bound fitness reference or require the review to name its absence as `no checkable success bar bound`;
    (h) record `reviewed_by` and `authored_by` on every new or materially touched review output — operator/CA-supplied, `unrecorded` allowed, never fabricated; a present `unrecorded` value is a visible measurement gap, not a captured measurement.
 12. Doctrine propagation satisfied: prompt, handoff, wrapper, review,
@@ -539,8 +536,8 @@ direction_change_propagation:
         is an unrelated historical rg pattern in a prior receipt.
     - path: docs/prompts/templates/_generic/
       reason: >
-        Model-style template targets; they reference prompt-orchestrator template
-        use, not the hand-draft/routing rule, and are unaffected.
+        Model-target templates retired 2026-06-13 (unused; owner decision); no
+        longer a live surface. Prior receipt preserved for history only.
   stale_language_search: >
     rg -i -n "prompt-orchestrator|hand-draft|hand-drafted|route through" .agents docs AGENTS.md
     (run 2026-06-09 on main @ cc93187 in the worktree)
@@ -557,3 +554,71 @@ direction_change_propagation:
     - not implementation authorization
     - not source promotion
 ```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Model-target template retrieval retired (unused; no-runtime-model-routing
+    rules retained and tightened); preflight defaults artifact
+    (docs/prompts/templates/shared/orca_preflight_defaults_v0.md) blessed for
+    referencing repo-constant preflight fields, with required per-prompt deltas
+    still mandatory in every referencing prompt.
+  trigger: workflow_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/workflow-overlay/template-registry.md
+    - .agents/workflow-overlay/review-lanes.md
+    - docs/prompts/templates/shared/orca_preflight_defaults_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/safety-rules.md
+    - .agents/workflow-overlay/artifact-roles.md
+    - docs/prompts/templates/README.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        No model-target retrieval rule lives in AGENTS.md; the overlay-routing
+        trigger is unchanged; no edit needed.
+    - path: .agents/workflow-overlay/README.md
+      reason: >
+        The overlay index names template-registry.md as the template owner;
+        retirement lives there; no index restatement needed.
+    - path: .agents/workflow-overlay/source-of-truth.md
+      reason: >
+        Source hierarchy and propagation mechanics are unchanged; no model-target
+        retrieval rule lives here.
+    - path: .agents/workflow-overlay/safety-rules.md
+      reason: >
+        No model-target retrieval or _generic path referenced here; unaffected.
+    - path: .agents/workflow-overlay/artifact-roles.md
+      reason: >
+        No model-target retrieval or _generic path referenced here; unaffected.
+    - path: docs/prompts/templates/README.md
+      reason: >
+        Updated in 1e to remove _generic reference and note retirement; no
+        further change needed.
+  stale_language_search: >
+    rg -i -n "generic-gpt|generic-claude|model-named template|template target" .agents docs AGENTS.md
+    (run 2026-06-13 post-edit in worktree orca-template-retire-wt)
+  stale_language_search_result: >
+    Executed 2026-06-13. Live-overlay hits: template-registry.md and
+    review-lanes.md and prompt-orchestration.md carry "template target" as
+    allowed model-neutral terminology (prompt-shaping label, not routing) —
+    these are the no-routing rules themselves, not stale doctrine.
+    Non-live hits: docs/prompts/product-planning/ (1 hit — historical template
+    basis note in a prior authored prompt, not a routing instruction);
+    docs/research/judgment-spine/ (1 hit — research artifact with explicit
+    "not a runtime model claim" disclaimer); docs/review-outputs/ (multiple
+    hits — historical review records citing prior template IDs, archives only).
+    No live-doctrine surface retains an instruction that routes agents to a
+    model-target template or implies runtime model selection.
+  non_claims:
+    - not validation
+    - not readiness
+    - not source promotion
+    - not implementation authorization
+```
+
+Older receipts archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.
