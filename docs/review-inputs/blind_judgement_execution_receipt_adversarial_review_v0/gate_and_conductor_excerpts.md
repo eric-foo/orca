@@ -8,7 +8,7 @@ use_when:
   - Reviewing the blind-judgment execution-receipt spec without repo access.
 authority_boundary: retrieval_only
 open_next:
-  - blind_judgement_execution_receipt_spec_v0.md
+  - docs/review-inputs/blind_judgement_execution_receipt_adversarial_review_v0/blind_judgement_execution_receipt_spec_v0.md
 stale_if:
   - The review completes, or the conductor / gate-ownership map changes the excerpted text.
 ```

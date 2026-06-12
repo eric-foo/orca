@@ -9,7 +9,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - finalization_models.py
-  - sp5_finalization_receipt_spec_v0.md
+  - docs/review-inputs/sp5_finalizer_build_adversarial_code_review_v0/sp5_finalization_receipt_spec_v0.md
 stale_if:
   - The review completes and findings are adjudicated, or finalization_models.py changes.
 ```

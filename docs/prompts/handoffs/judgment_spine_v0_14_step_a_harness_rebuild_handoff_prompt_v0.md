@@ -13,7 +13,7 @@ open_next:
   - docs/research/judgment-spine/harness/v0_14/index.md
   - docs/research/judgment-spine/harness/v0_14/action_band_mapping_table_numbers.md
   - docs/research/judgment-spine/harness/v0_14/pydantic_schema_reference.md
-  - docs/hygiene/precompact_orca_judgment_tr_casetext_ledger_v0.md
+  - docs/hygiene/precompact_orca_judgment_tr_casetext_ledger_v0.md # nonresolving: precompact packet, never committed
 stale_if:
   - v0.14 mapping constants, scorer formulas, or schema reference are superseded.
   - The TR/Casetext adjudicated labels or quarantine disposition are reopened.
