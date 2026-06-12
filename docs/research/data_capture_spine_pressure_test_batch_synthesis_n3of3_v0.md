@@ -10,8 +10,8 @@ use_when:
   - Preparing, but not making, the patchable-vs-architecture-threatening and source-access-method planning decisions.
 authority_boundary: retrieval_only
 open_next:
-  - slot1_mi_CAPTURE_operator_workfile.md
-  - slot2_teal_CAPTURE_operator_workfile.md
+  - slot1_mi_CAPTURE_operator_workfile.md # nonresolving: operator workfile, never committed
+  - slot2_teal_CAPTURE_operator_workfile.md # nonresolving: operator workfile, never committed
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_slot3_combined_handoff_v0.md
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_slot3_reddit_capture_session_v0.md
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_slot3_wso_capture_session_v0.md

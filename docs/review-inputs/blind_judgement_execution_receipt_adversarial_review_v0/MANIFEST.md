@@ -8,7 +8,7 @@ use_when:
   - Sending the blind-judgment execution-receipt spec for a no-repo cross-vendor adversarial review.
 authority_boundary: retrieval_only
 open_next:
-  - blind_judgement_execution_receipt_spec_v0.md
+  - docs/review-inputs/blind_judgement_execution_receipt_adversarial_review_v0/blind_judgement_execution_receipt_spec_v0.md
 stale_if:
   - The review completes and findings are adjudicated, or the spec changes.
 ```

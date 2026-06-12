@@ -10,8 +10,8 @@ use_when:
   - Preparing the eventual (post-slot-3) commissioner batch verdict and patchable-vs-architecture classification.
 authority_boundary: retrieval_only
 open_next:
-  - slot1_mi_CAPTURE_operator_workfile.md
-  - slot2_teal_CAPTURE_operator_workfile.md
+  - slot1_mi_CAPTURE_operator_workfile.md # nonresolving: operator workfile, never committed
+  - slot2_teal_CAPTURE_operator_workfile.md # nonresolving: operator workfile, never committed
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md
   - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
 stale_if:

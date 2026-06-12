@@ -14,7 +14,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/source_capture_playbook_v0.md
-  - docs/decisions/source_capture_archive_snapshot_typed_timing_decision_v0.md
+  - docs/decisions/source_capture_archive_snapshot_typed_timing_decision_v0.md # nonresolving: pending on unmerged lane
 stale_if:
   - The archive_org adapter changes build_cdx_availability_url / select_snapshot signatures.
   - The owner changes the capture risk posture (entitlement hard line) these specs hold.

@@ -14,7 +14,7 @@ open_next:
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_execution_authorization_v0.md
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md
   - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
-  - slot2_teal_CAPTURE_operator_workfile.md
+  - slot2_teal_CAPTURE_operator_workfile.md # nonresolving: operator workfile, never committed
 stale_if:
   - A later owner decision rejects or supersedes the Slot 1 source boundary.
   - A later M&I/BIWS verbatim, raw HTML, screenshot, or archive-content recapture supersedes this paraphrase-limited capture.

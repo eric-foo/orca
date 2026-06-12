@@ -10,7 +10,7 @@ use_when:
   - Preventing docs-only hygiene acceptance from being upgraded into runtime, scoring, validation, product-proof, or judgment-quality claims.
 authority_boundary: retrieval_only
 open_next:
-  - docs/prompts/hygiene-queue/precompact_canoo_walmart_fixture_handoff_v0.md
+  - docs/prompts/hygiene-queue/precompact_canoo_walmart_fixture_handoff_v0.md # nonresolving: precompact packet, never committed
   - docs/research/judgment-spine/harness/v0_14/fixtures/canoo_walmart_2022_v0_14/fixture_authoring_receipt_v0.md
   - docs/review-outputs/adversarial-artifact-reviews/canoo_walmart_v0_14_fixture_hygiene_post_patch_adversarial_recheck_v0.md
 input_hashes:

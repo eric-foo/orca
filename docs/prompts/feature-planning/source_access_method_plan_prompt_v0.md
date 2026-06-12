@@ -11,7 +11,7 @@ open_next:
   - docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md
   - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
   - docs/product/data_capture_spine/data_capture_spine_pressure_test_commissioning_plan_v0.md
-  - docs/_inbox/data_capture_pressure_test_subagent_outputs_2026_05_28/README.md
+  - docs/_inbox/data_capture_pressure_test_subagent_outputs_2026_05_28/README.md # nonresolving: ambiguous reference
 stale_if:
   - The source-access boundary decision is amended or superseded.
   - The obligation contract is materially revised.
