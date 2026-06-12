@@ -24,6 +24,37 @@ labeling_rubric_version: v0_14
 leakage_audit:
   known_fame_risk: medium_fame_named_brand
   memorization_probe_required: true
+  use_for_blind_contestant_exposure: yes  # owner-authorized 2026-06-13; clears ONLY the R6 leak gate
+  blind_exposure_clearance:
+    status: cleared
+    authorized_by: owner (in-thread, 2026-06-13)
+    finding_closed: >-
+      R6-AR-01 -- contestant-visible market-response/reaction framing in
+      capability_constraints and the permitted_assumptions reaction line, both packets.
+    de_correlation_bar: cross_vendor_discovery
+    evidence_basis: >-
+      GPT-5 (OpenAI, via Codex) independently re-scanned the paired packets and found
+      R6-AR-01 still open at b463c3c; the same cross-vendor delegate then authored the
+      bounded de-leak (capability_constraints + the permitted_assumptions reaction line,
+      identical in both arms) and attested closure; the home model (Claude, CA)
+      adversarially adjudicated and independently verified the diff -- byte-identity = 1
+      hunk (org-motion block only), leak-concept sweep clean except the deliberately
+      retained line-41 pre-announcement premise, bounded scope, org-motion block intact.
+    limitation: >-
+      No separate post-patch independent third-vendor re-scan was run. The final
+      leak-clear attestation rests on the cross-vendor patch author (GPT-5) plus home
+      adjudication/verification (Claude) plus the concept sweep -- the patch author's
+      own 2-line edit is the one non-independent sliver (mechanically grep-verifiable).
+      The owner judged a further full cross-vendor cycle disproportionate at
+      product-learning N=1, accepting the residual shared-blindspot risk.
+    scope_note: >-
+      Clears ONLY the R6 leakage gate (packets are leak-clear for blind contestant
+      exposure). Does NOT freeze the fixture, resolve the option_value second-label,
+      ratify the conductor v1, or authorize Phase 6 -- the owner STOP before blind
+      judgments still stands.
+    patched_packet_blobs:
+      participant_packet_baseline.md: c0566790c890
+      participant_packet_augmented.md: 20a70d441178
   spoiler_inventory: >-
     Named real brand and a real event. All post-cutoff material is a spoiler and must
     be withheld from the isolated contestant; the specific post-cutoff taxonomy is held
