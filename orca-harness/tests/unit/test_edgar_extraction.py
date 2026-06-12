@@ -118,6 +118,50 @@ def test_grammatical_total_of_is_full_time_not_total_basis():
     assert out.basis == "full_time"  # the qualifier on the noun, NOT the grammatical "a total of"
 
 
+# ---- paired dual-period total construction: "N1 and N2 <noun>" -> N1 is the current period ----
+
+def test_paired_dual_year_takes_current_year_first_number():
+    out = extract_employee_count(
+        "As of June 30, 2025 and 2024, we had approximately 57,000 and 62,000 employees worldwide."
+    )
+    assert out.found is True
+    assert out.count_int == 57000  # the FIRST number = current period, NOT the prior-year 62,000
+    assert out.quality == "approximate"
+    assert "62,000" in out.alternates
+
+
+def test_paired_dual_year_outranks_functional_subset_distractor():
+    # EL-style: a scoped "1,100 employees engaged in R&D" must NOT make the dual-year total ambiguous
+    out = extract_employee_count(
+        "We had approximately 1,100 employees engaged in research and development. "
+        "As of June 30, 2025 and 2024, we had approximately 57,000 and 62,000 employees worldwide."
+    )
+    assert out.found is True
+    assert out.count_int == 57000
+    assert {"1,100", "62,000"} <= set(out.alternates)
+
+
+def test_paired_full_time_dual_year_keeps_basis():
+    out = extract_employee_count(
+        "As of fiscal 2025 and 2024, we had 12,000 and 11,500 full-time employees."
+    )
+    assert out.found is True
+    assert out.count_int == 12000
+    assert out.basis == "full_time"
+
+
+def test_paired_range_between_is_not_treated_as_dual_year():
+    # a range "between N and M employees" is not a dual-period total -> v0 must not take the low end
+    out = extract_employee_count("We had between 5,000 and 6,000 full-time employees.")
+    assert out.found is True
+    assert out.count_int == 6000  # the general matcher's 6,000, not the paired low-end 5,000
+
+
+def test_paired_requires_an_employee_noun():
+    # two numbers joined by 'and' before a NON-employee noun is not a headcount
+    assert extract_employee_count("As of 2025 and 2024, we had 5,000 and 4,000 stores.").found is False
+
+
 # ---- honest not-found ----
 
 def test_no_match_is_not_found():

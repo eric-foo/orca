@@ -5,7 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from runners.run_edgar_headcount import EdgarHeadcountRunFailure, main, run_edgar_headcount_capture
+from runners.run_edgar_headcount import (
+    EdgarHeadcountRunFailure,
+    main,
+    run_edgar_headcount_capture,
+    run_edgar_headcount_history_capture,
+)
 from source_capture.adapters.direct_http import DirectHttpCaptureSuccess
 from source_capture.company_aggregate.observation_log import read_observation_log
 
@@ -114,6 +119,100 @@ def test_second_run_appends_to_the_log_and_collapses_identical(tmp_path):
 def test_discovery_failure_raises_run_failure(tmp_path):
     with pytest.raises(EdgarHeadcountRunFailure) as excinfo:
         _run(tmp_path, fetch=_StubFetch(submissions=NO_10K))
+    assert excinfo.value.code == "discovery_failed"
+
+
+# ---- multi-period history capture: the organizational-movement series (offline) ----
+
+SUBMISSIONS_MULTIYEAR = {
+    "filings": {
+        "recent": {
+            "form": ["10-K", "10-Q", "10-K", "10-K"],
+            "accessionNumber": ["acc-2021", "acc-q", "acc-2023", "acc-2022"],
+            "primaryDocument": ["fy2021.htm", "q.htm", "fy2023.htm", "fy2022.htm"],
+            "reportDate": ["2021-09-25", "2023-06-30", "2023-09-30", "2022-09-24"],
+            "filingDate": ["2021-10-29", "2023-07-15", "2023-11-03", "2022-10-28"],
+        },
+        "files": [],
+    },
+}
+# one distinct headcount per fiscal year -> a real trend the projection must surface in order
+FILINGS_BY_DOC = {
+    "fy2021.htm": b"<html>... As of fiscal year-end we had approximately 154,000 full-time employees ...</html>",
+    "fy2022.htm": b"<html>... As of fiscal year-end we had approximately 164,000 full-time employees ...</html>",
+    "fy2023.htm": b"<html>... As of fiscal year-end we had approximately 161,000 full-time employees ...</html>",
+}
+
+
+class _MultiYearStubFetch:
+    """Submissions URL -> the multi-year JSON; each Archives doc URL -> that year's filing body."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def __call__(self, *, url, timeout_seconds, max_bytes, user_agent):
+        self.calls.append(url)
+        if "data.sec.gov/submissions" in url:
+            return _ok(url, json.dumps(SUBMISSIONS_MULTIYEAR).encode("utf-8"))
+        for doc, body in FILINGS_BY_DOC.items():
+            if doc in url:
+                return _ok(url, body)
+        raise AssertionError(f"unexpected fetch url: {url}")
+
+
+def test_history_capture_yields_multi_year_movement_series(tmp_path):
+    stub = _MultiYearStubFetch()
+    result = run_edgar_headcount_history_capture(
+        cik="320193",
+        user_agent=UA,
+        packet_output_directory=tmp_path / "pkts",
+        observation_log_path=tmp_path / "log.yaml",
+        decision_question="organizational movement: headcount trajectory",
+        fetch=stub,
+    )
+
+    # three 10-Ks captured (the 10-Q ignored); each its own packet, all appended to one log
+    assert len(result.observations) == 3
+    assert len(read_observation_log(tmp_path / "log.yaml")) == 3
+    assert len({d for d in result.packet_output_directories}) == 3  # no packet collisions
+
+    # the projection is a single filer-level UNRESOLVED lane with an ordered, multi-point trend
+    assert len(result.projections) == 1
+    projection = result.projections[0]
+    assert projection.resolution_state == "unresolved"
+    assert projection.entity_key is None
+    points = projection.points
+    assert [p.period_of_report for p in points] == ["2021-09-25", "2022-09-24", "2023-09-30"]
+    # the movement signal: 154k -> 164k -> 161k, oldest to newest
+    assert [p.employee_count_int for p in points] == [154000, 164000, 161000]
+
+
+def test_history_capture_limit_keeps_most_recent(tmp_path):
+    result = run_edgar_headcount_history_capture(
+        cik="320193",
+        user_agent=UA,
+        packet_output_directory=tmp_path / "pkts",
+        observation_log_path=tmp_path / "log.yaml",
+        decision_question="organizational movement",
+        limit=2,
+        fetch=_MultiYearStubFetch(),
+    )
+    points = result.projections[0].points
+    # only the two most recent fiscal years captured
+    assert [p.period_of_report for p in points] == ["2022-09-24", "2023-09-30"]
+    assert [p.employee_count_int for p in points] == [164000, 161000]
+
+
+def test_history_capture_no_10k_raises(tmp_path):
+    with pytest.raises(EdgarHeadcountRunFailure) as excinfo:
+        run_edgar_headcount_history_capture(
+            cik="320193",
+            user_agent=UA,
+            packet_output_directory=tmp_path / "pkts",
+            observation_log_path=tmp_path / "log.yaml",
+            decision_question="organizational movement",
+            fetch=_StubFetch(submissions=NO_10K),
+        )
     assert excinfo.value.code == "discovery_failed"
 
 

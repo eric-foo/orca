@@ -89,11 +89,12 @@ class EdgarDiscoveryFailure:
 EdgarDiscoveryResult = EdgarDiscoverySuccess | EdgarDiscoveryFailure
 
 
-def select_latest_filing(submissions: Mapping, *, form_type: str = DEFAULT_DISCOVERY_FORM) -> dict | None:
-    """Pure: pick the latest ``form_type`` row from a parsed submissions dict (or None).
+def _parse_form_rows(submissions: Mapping, form_type: str) -> list[dict]:
+    """Pure: every well-formed ``form_type`` row in ``filings.recent`` (unordered).
 
-    'Latest' = max ``filingDate`` (ISO dates sort lexically), tie-broken by accession. Rows
-    missing a primary document are skipped (not fetchable)."""
+    Durable filing facts must be well-formed (F-04): a blank / None / non-date value must NOT be
+    coerced into a stringified ``"None"`` that would pass the observation key's non-blank check
+    downstream. A malformed or unaligned row is skipped here, not silently stringified."""
     recent = (((submissions or {}).get("filings") or {}).get("recent")) or {}
     forms = recent.get("form") or []
     accessions = recent.get("accessionNumber") or []
@@ -111,9 +112,6 @@ def select_latest_filing(submissions: Mapping, *, form_type: str = DEFAULT_DISCO
         accession = accessions[index]
         report_date = report_dates[index]
         filing_date = filing_dates[index]
-        # Durable filing facts must be well-formed (F-04): a blank / None / non-date value must NOT
-        # be coerced into a stringified "None" that would pass the observation key's non-blank
-        # check downstream. A malformed row is skipped, not silently stringified.
         if not _is_nonblank_str(primary) or not _is_nonblank_str(accession):
             continue
         if not _is_iso_date(report_date) or not _is_iso_date(filing_date):
@@ -127,28 +125,54 @@ def select_latest_filing(submissions: Mapping, *, form_type: str = DEFAULT_DISCO
                 "form_type": form,
             }
         )
+    return rows
 
+
+def _sort_rows_chronological(rows: list[dict]) -> list[dict]:
+    """Oldest -> newest by ``(filing_date, accession)`` (ISO dates sort lexically; stable)."""
+    return sorted(rows, key=lambda row: (str(row["filing_date"]), str(row["accession_number"])))
+
+
+def select_latest_filing(submissions: Mapping, *, form_type: str = DEFAULT_DISCOVERY_FORM) -> dict | None:
+    """Pure: pick the latest ``form_type`` row from a parsed submissions dict (or None).
+
+    'Latest' = max ``filingDate`` (ISO dates sort lexically), tie-broken by accession. Rows
+    missing a primary document or a well-formed durable fact are skipped (F-04)."""
+    rows = _parse_form_rows(submissions, form_type)
     if not rows:
         return None
-    return sorted(rows, key=lambda row: (str(row["filing_date"]), str(row["accession_number"])))[-1]
+    return _sort_rows_chronological(rows)[-1]
 
 
-def discover_filing(
+def select_filing_history(
+    submissions: Mapping, *, form_type: str = DEFAULT_DISCOVERY_FORM, limit: int | None = None
+) -> list[dict]:
+    """Pure: all well-formed ``form_type`` rows in ``filings.recent``, oldest -> newest.
+
+    This is the movement-signal core: one row per filing period, so a downstream fold yields a
+    multi-period headcount series rather than a single snapshot. ``limit`` keeps only the most
+    recent N rows (``None`` = full recent history; ``0`` = none). v0 reads ``filings.recent`` only
+    -- older filings in ``filings.files[]`` shards are not consulted (the recent-only limitation),
+    so the realised lookback depth is bounded by how far ``recent`` reaches for that filer."""
+    if limit is not None and limit < 0:
+        raise ValueError(f"limit must be >= 0 or None; got {limit!r}")
+    rows = _sort_rows_chronological(_parse_form_rows(submissions, form_type))
+    if limit is not None:
+        rows = rows[-limit:] if limit else []
+    return rows
+
+
+def _fetch_submissions(
+    cik_padded: str,
     *,
-    cik: str,
+    url: str,
     user_agent: str,
-    form_type: str = DEFAULT_DISCOVERY_FORM,
-    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
-    max_bytes: int = EDGAR_SUBMISSIONS_MAX_BYTES,
-    fetch: EdgarHttpFetch = fetch_direct_http_capture,
-) -> EdgarDiscoveryResult:
-    """Find the latest ``form_type`` filing for ``cik`` via the SEC submissions API."""
-    cik_padded = _normalize_cik(cik)
-    agent = _require_nonblank("user_agent", user_agent)
-    form = _require_nonblank("form_type", form_type)
-    url = f"{EDGAR_SUBMISSIONS_BASE}/CIK{cik_padded}.json"
-
-    result = fetch(url=url, timeout_seconds=timeout_seconds, max_bytes=max_bytes, user_agent=agent)
+    timeout_seconds: float,
+    max_bytes: int,
+    fetch: EdgarHttpFetch,
+) -> dict | EdgarDiscoveryFailure:
+    """Fetch + decode the submissions JSON, or a typed failure (shared by latest + history)."""
+    result = fetch(url=url, timeout_seconds=timeout_seconds, max_bytes=max_bytes, user_agent=user_agent)
 
     if isinstance(result, DirectHttpCaptureFailure):
         return EdgarDiscoveryFailure(
@@ -187,17 +211,10 @@ def discover_filing(
             failure_kind=EdgarDiscoveryFailureKind.MALFORMED_SUBMISSIONS,
             message="submissions body did not decode to a JSON object",
         )
+    return submissions
 
-    row = select_latest_filing(submissions, form_type=form)
-    if row is None:
-        return EdgarDiscoveryFailure(
-            cik=cik_padded,
-            submissions_url=url,
-            failure_kind=EdgarDiscoveryFailureKind.NO_MATCHING_FILING,
-            message=f"no {form!r} filing found in filings.recent for CIK {cik_padded}",
-            limitation_notes=[_RECENT_LIMITATION],
-        )
 
+def _success_from_row(cik_padded: str, row: dict, url: str) -> EdgarDiscoverySuccess:
     return EdgarDiscoverySuccess(
         cik=cik_padded,
         accession_number=str(row["accession_number"]),
@@ -208,6 +225,77 @@ def discover_filing(
         submissions_url=url,
         limitation_notes=[_RECENT_LIMITATION],
     )
+
+
+def _no_matching_filing_failure(cik_padded: str, url: str, form: str) -> EdgarDiscoveryFailure:
+    return EdgarDiscoveryFailure(
+        cik=cik_padded,
+        submissions_url=url,
+        failure_kind=EdgarDiscoveryFailureKind.NO_MATCHING_FILING,
+        message=f"no {form!r} filing found in filings.recent for CIK {cik_padded}",
+        limitation_notes=[_RECENT_LIMITATION],
+    )
+
+
+def discover_filing(
+    *,
+    cik: str,
+    user_agent: str,
+    form_type: str = DEFAULT_DISCOVERY_FORM,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+    max_bytes: int = EDGAR_SUBMISSIONS_MAX_BYTES,
+    fetch: EdgarHttpFetch = fetch_direct_http_capture,
+) -> EdgarDiscoveryResult:
+    """Find the latest ``form_type`` filing for ``cik`` via the SEC submissions API."""
+    cik_padded = _normalize_cik(cik)
+    agent = _require_nonblank("user_agent", user_agent)
+    form = _require_nonblank("form_type", form_type)
+    url = f"{EDGAR_SUBMISSIONS_BASE}/CIK{cik_padded}.json"
+
+    submissions = _fetch_submissions(
+        cik_padded, url=url, user_agent=agent, timeout_seconds=timeout_seconds, max_bytes=max_bytes, fetch=fetch
+    )
+    if isinstance(submissions, EdgarDiscoveryFailure):
+        return submissions
+
+    row = select_latest_filing(submissions, form_type=form)
+    if row is None:
+        return _no_matching_filing_failure(cik_padded, url, form)
+    return _success_from_row(cik_padded, row, url)
+
+
+def discover_filing_history(
+    *,
+    cik: str,
+    user_agent: str,
+    form_type: str = DEFAULT_DISCOVERY_FORM,
+    limit: int | None = None,
+    timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
+    max_bytes: int = EDGAR_SUBMISSIONS_MAX_BYTES,
+    fetch: EdgarHttpFetch = fetch_direct_http_capture,
+) -> list[EdgarDiscoverySuccess] | EdgarDiscoveryFailure:
+    """Find the ``form_type`` filing *history* for ``cik`` (oldest -> newest) via the submissions API.
+
+    The multi-period companion to ``discover_filing``: returns one ``EdgarDiscoverySuccess`` per
+    well-formed filing in ``filings.recent`` (capped to the most recent ``limit`` when given), so the
+    capture loop can build a headcount *trend* for an organizational-movement read. An operational
+    failure (network / non-2xx / malformed body) or no matching filing returns a single typed
+    ``EdgarDiscoveryFailure`` -- the caller distinguishes the list (success) from the failure."""
+    cik_padded = _normalize_cik(cik)
+    agent = _require_nonblank("user_agent", user_agent)
+    form = _require_nonblank("form_type", form_type)
+    url = f"{EDGAR_SUBMISSIONS_BASE}/CIK{cik_padded}.json"
+
+    submissions = _fetch_submissions(
+        cik_padded, url=url, user_agent=agent, timeout_seconds=timeout_seconds, max_bytes=max_bytes, fetch=fetch
+    )
+    if isinstance(submissions, EdgarDiscoveryFailure):
+        return submissions
+
+    rows = select_filing_history(submissions, form_type=form, limit=limit)
+    if not rows:
+        return _no_matching_filing_failure(cik_padded, url, form)
+    return [_success_from_row(cik_padded, row, url) for row in rows]
 
 
 def _normalize_cik(cik: str) -> str:

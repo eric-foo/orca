@@ -14,6 +14,8 @@ from source_capture.adapters.edgar_discovery import (
     EdgarDiscoveryFailureKind,
     EdgarDiscoverySuccess,
     discover_filing,
+    discover_filing_history,
+    select_filing_history,
     select_latest_filing,
 )
 
@@ -176,3 +178,90 @@ def test_discover_filing_non_2xx_is_typed():
 def test_discover_filing_bad_cik_raises():
     with pytest.raises(ValueError, match="cik"):
         discover_filing(cik="not-a-cik", user_agent=UA, fetch=_StubFetch(None))
+
+
+# ---- select_filing_history: the multi-period (movement) selection core (offline) ----
+
+def test_history_returns_all_10ks_oldest_first():
+    subs = _recent(
+        ["10-K", "10-Q", "10-K", "10-K"],
+        ["a-2021", "q", "a-2023", "a-2022"],
+        ["2021.htm", "q.htm", "2023.htm", "2022.htm"],
+        ["2021-09-25", "2023-06-30", "2023-09-30", "2022-09-24"],
+        ["2021-10-29", "2023-07-15", "2023-11-03", "2022-10-28"],
+    )
+    rows = select_filing_history(subs)
+    # oldest -> newest, the 10-Q excluded
+    assert [r["period_of_report"] for r in rows] == ["2021-09-25", "2022-09-24", "2023-09-30"]
+    assert [r["accession_number"] for r in rows] == ["a-2021", "a-2022", "a-2023"]
+
+
+def test_history_limit_keeps_most_recent_n():
+    subs = _recent(
+        ["10-K", "10-K", "10-K"],
+        ["a-2021", "a-2022", "a-2023"],
+        ["2021.htm", "2022.htm", "2023.htm"],
+        ["2021-09-25", "2022-09-24", "2023-09-30"],
+        ["2021-10-29", "2022-10-28", "2023-11-03"],
+    )
+    assert [r["accession_number"] for r in select_filing_history(subs, limit=2)] == ["a-2022", "a-2023"]
+
+
+def test_history_limit_zero_is_empty():
+    subs = _recent(["10-K"], ["a"], ["a.htm"], ["2023-09-30"], ["2023-11-03"])
+    assert select_filing_history(subs, limit=0) == []
+
+
+def test_history_negative_limit_raises():
+    subs = _recent(["10-K"], ["a"], ["a.htm"], ["2023-09-30"], ["2023-11-03"])
+    with pytest.raises(ValueError, match="limit"):
+        select_filing_history(subs, limit=-1)
+
+
+def test_history_skips_malformed_rows_f04():
+    # the 2022 row has a None reportDate -> skipped (F-04); the valid 2023 row survives
+    subs = _recent(
+        ["10-K", "10-K"],
+        ["bad", "good"],
+        ["bad.htm", "good.htm"],
+        [None, "2023-09-30"],
+        ["2022-11-01", "2023-11-03"],
+    )
+    assert [r["accession_number"] for r in select_filing_history(subs)] == ["good"]
+
+
+def test_history_empty_when_no_matching_form():
+    subs = _recent(["10-Q"], ["q"], ["q.htm"], ["2023-06-30"], ["2023-07-15"])
+    assert select_filing_history(subs) == []
+
+
+# ---- discover_filing_history with a stubbed transport (offline) ----
+
+def test_discover_history_returns_successes_oldest_first():
+    subs = _recent(
+        ["10-K", "10-K"],
+        ["a-2022", "a-2023"],
+        ["2022.htm", "2023.htm"],
+        ["2022-09-24", "2023-09-30"],
+        ["2022-10-28", "2023-11-03"],
+    )
+    out = discover_filing_history(cik="320193", user_agent=UA, fetch=_StubFetch(_ok("u", json.dumps(subs).encode("utf-8"))))
+    assert isinstance(out, list)
+    assert [d.period_of_report for d in out] == ["2022-09-24", "2023-09-30"]
+    assert all(isinstance(d, EdgarDiscoverySuccess) and d.cik == "0000320193" for d in out)
+
+
+def test_discover_history_no_10k_is_typed_failure():
+    subs = _recent(["10-Q"], ["q"], ["q.htm"], ["2023-06-30"], ["2023-07-15"])
+    out = discover_filing_history(cik="320193", user_agent=UA, fetch=_StubFetch(_ok("u", json.dumps(subs).encode("utf-8"))))
+    assert isinstance(out, EdgarDiscoveryFailure)
+    assert out.failure_kind is EdgarDiscoveryFailureKind.NO_MATCHING_FILING
+
+
+def test_discover_history_network_failure_is_typed():
+    failure = DirectHttpCaptureFailure(
+        requested_url="u", failure_kind=DirectHttpCaptureFailureKind.NETWORK_ERROR, message="boom"
+    )
+    out = discover_filing_history(cik="320193", user_agent=UA, fetch=_StubFetch(failure))
+    assert isinstance(out, EdgarDiscoveryFailure)
+    assert out.failure_kind is EdgarDiscoveryFailureKind.SUBMISSIONS_FETCH_FAILED

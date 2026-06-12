@@ -59,6 +59,39 @@ bounded same-vendor recheck (`ALL_CLOSED_NO_NEW_ISSUES`). Record:
 validation / readiness / source-of-truth promotion; the EDGAR-first series remains a
 filer-level UNRESOLVED trend until the entity spine resolves it.
 
+### Multi-period capability + paired-period extraction + 10-K-only doctrine (2026-06-13)
+
+Extends the built slice (owner-directed: "organizational movement … hunt the headcount").
+All capture-side; the Layer-2b projection already folds N observations into an ordered series,
+so there is **no projection change**.
+
+- **Multi-period capture (organizational movement).** `select_filing_history` /
+  `discover_filing_history` return the full recent 10-K history (oldest→newest, optional
+  `limit`); `run_edgar_headcount_history_capture` captures→derives→appends each filing and
+  projects once → a per-filer headcount *trend*. The single-latest entrypoint is unchanged.
+- **Paired-period extraction (review follow-up).** Recognize the dual-period total construction
+  `"<N1> and <N2> <employee-noun>"` (e.g. EL's "57,000 and 62,000 employees worldwide" for
+  FY2025/2024) → take **N1** (current period) as the primary total, ranked above incidental
+  subset counts; N2 + subsets → alternates. A range ("between N and M") is excluded. Recovers
+  large filers that state two years in one sentence without regressing single-total filers.
+- **Doctrine: 10-K-only for v0.** A live 10-Q probe showed 10-Qs omit the workforce-total
+  disclosure → honest misses (EL), or worse an incidental count wrongly accepted as a total
+  (ELF 10-Q ≈100 vs ≈849 real). Headcount is a **10-K Item-1** signal; finer-than-annual cadence
+  needs a different provider (LinkedIn/jobs), not 10-Qs. v0 is only safe where a genuine total
+  exists.
+- **Live coverage evidence (owner-attended, real SEC data, two public beauty filers).** ELF
+  FY2016–2026 full-time trajectory **249 → 849** (clean growth); EL FY2020–2025 recovered
+  **1/6 → 5/6** years after the paired fix, contraction to **≈57,000** visible, with the
+  full-time→total basis change at 2020→2021 honestly flagged. **Zero wrong values.** N1=current
+  confirmed by cross-filing consistency (a year's current value reappears as the next filing's
+  prior value).
+- **Validation:** `125 passed` (orca-harness/.venv) — 120 prior + 5 paired-period guards + the
+  multi-period history tests.
+- **Residual (recorded, not silently dropped):** EL FY2024 still an honest miss (ambiguous);
+  ELF FY2020 miss; cross-year comparability still NOT asserted (basis drift is *flagged*, not
+  resolved). Still not validation / readiness / source-of-truth promotion; the series remains a
+  filer-level UNRESOLVED trend until the entity spine resolves it.
+
 ## Owner Refinements (2026-06-12)
 
 Owner input received after this scope was first written. These **sharpen

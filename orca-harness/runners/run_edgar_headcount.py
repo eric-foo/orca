@@ -28,6 +28,7 @@ from source_capture.adapters.edgar_discovery import (
     EdgarDiscoveryFailure,
     EdgarDiscoverySuccess,
     discover_filing,
+    discover_filing_history,
 )
 from source_capture.adapters.edgar_filings import EdgarFilingFailure, EdgarHttpFetch, fetch_edgar_filing
 from source_capture.company_aggregate.edgar_derivation import (
@@ -57,24 +58,29 @@ class EdgarHeadcountRunResult:
     projections: list[CompanyHeadcountProjection] = field(default_factory=list)
 
 
-def run_edgar_headcount_capture(
+@dataclass(frozen=True)
+class EdgarHeadcountHistoryRunResult:
+    """The multi-period result: parallel per-filing discoveries/packets/observations + one projection."""
+
+    discoveries: list[EdgarDiscoverySuccess]
+    packet_output_directories: list[str]
+    observations: list[EdgarHeadcountObservation]
+    projections: list[CompanyHeadcountProjection] = field(default_factory=list)
+
+
+def _capture_one(
+    discovery: EdgarDiscoverySuccess,
     *,
-    cik: str,
     user_agent: str,
     packet_output_directory: Path,
     observation_log_path: Path,
     decision_question: str,
-    form_type: str = DEFAULT_DISCOVERY_FORM,
-    resolution_map: ResolutionMap = DEFAULT_RESOLUTION_MAP,
-    fetch: EdgarHttpFetch = fetch_direct_http_capture,
-) -> EdgarHeadcountRunResult:
-    """Run the full capture->derive->append->project pipeline for one CIK's latest filing."""
-    discovery = discover_filing(cik=cik, user_agent=user_agent, form_type=form_type, fetch=fetch)
-    if isinstance(discovery, EdgarDiscoveryFailure):
-        raise EdgarHeadcountRunFailure(
-            "discovery_failed", f"{discovery.failure_kind}: {discovery.message}"
-        )
+    fetch: EdgarHttpFetch,
+) -> tuple[EdgarHeadcountObservation, str]:
+    """Fetch one discovered filing -> packet -> derive -> append. Returns (observation, packet_dir).
 
+    Raises ``EdgarHeadcountRunFailure('filing_fetch_failed')`` on a typed fetch failure. Shared by
+    the single-latest and history runners so both capture a filing identically."""
     filing = fetch_edgar_filing(
         cik=discovery.cik,
         accession_number=discovery.accession_number,
@@ -99,13 +105,102 @@ def run_edgar_headcount_capture(
         filing_date=discovery.filing_date,
     )
     append_observation(observation, log_path=observation_log_path)
+    return observation, str(write_result.output_directory)
+
+
+def run_edgar_headcount_capture(
+    *,
+    cik: str,
+    user_agent: str,
+    packet_output_directory: Path,
+    observation_log_path: Path,
+    decision_question: str,
+    form_type: str = DEFAULT_DISCOVERY_FORM,
+    resolution_map: ResolutionMap = DEFAULT_RESOLUTION_MAP,
+    fetch: EdgarHttpFetch = fetch_direct_http_capture,
+) -> EdgarHeadcountRunResult:
+    """Run the full capture->derive->append->project pipeline for one CIK's latest filing."""
+    discovery = discover_filing(cik=cik, user_agent=user_agent, form_type=form_type, fetch=fetch)
+    if isinstance(discovery, EdgarDiscoveryFailure):
+        raise EdgarHeadcountRunFailure(
+            "discovery_failed", f"{discovery.failure_kind}: {discovery.message}"
+        )
+
+    observation, packet_dir = _capture_one(
+        discovery,
+        user_agent=user_agent,
+        packet_output_directory=packet_output_directory,
+        observation_log_path=observation_log_path,
+        decision_question=decision_question,
+        fetch=fetch,
+    )
     projections = project_company_headcount(
         read_observation_log(observation_log_path), resolution_map=resolution_map
     )
     return EdgarHeadcountRunResult(
         discovery=discovery,
-        packet_output_directory=str(write_result.output_directory),
+        packet_output_directory=packet_dir,
         observation=observation,
+        projections=projections,
+    )
+
+
+def run_edgar_headcount_history_capture(
+    *,
+    cik: str,
+    user_agent: str,
+    packet_output_directory: Path,
+    observation_log_path: Path,
+    decision_question: str,
+    form_type: str = DEFAULT_DISCOVERY_FORM,
+    limit: int | None = None,
+    resolution_map: ResolutionMap = DEFAULT_RESOLUTION_MAP,
+    fetch: EdgarHttpFetch = fetch_direct_http_capture,
+) -> EdgarHeadcountHistoryRunResult:
+    """Capture a CIK's 10-K *history* (oldest->newest) into a multi-period headcount series.
+
+    The organizational-movement entrypoint: discover every recent ``form_type`` filing (capped to
+    the most recent ``limit`` when given), capture+derive+append each into the same observation log,
+    then fold the log into a version-pinned projection once. Each filing is written to its own
+    ``packet_output_directory/<accession>`` subdirectory so packets never collide. The projection
+    yields one ordered point per fiscal period -- the trend a consumer reads as headcount movement.
+
+    Cross-year comparability is NOT asserted here (the projection's standing non-claim): a raw
+    year-over-year delta may reflect basis drift, an acquisition, or a restatement, not only organic
+    movement. Per-point ``measurement_basis`` + ``value_quality`` are preserved so a consumer can see
+    where a delta crosses a basis change. EDGAR cadence is annual, so this is year-over-year movement,
+    not intra-year momentum."""
+    discoveries = discover_filing_history(
+        cik=cik, user_agent=user_agent, form_type=form_type, limit=limit, fetch=fetch
+    )
+    if isinstance(discoveries, EdgarDiscoveryFailure):
+        raise EdgarHeadcountRunFailure(
+            "discovery_failed", f"{discoveries.failure_kind}: {discoveries.message}"
+        )
+
+    discovered: list[EdgarDiscoverySuccess] = []
+    packet_dirs: list[str] = []
+    observations: list[EdgarHeadcountObservation] = []
+    for discovery in discoveries:
+        observation, packet_dir = _capture_one(
+            discovery,
+            user_agent=user_agent,
+            packet_output_directory=Path(packet_output_directory) / discovery.accession_number,
+            observation_log_path=observation_log_path,
+            decision_question=decision_question,
+            fetch=fetch,
+        )
+        discovered.append(discovery)
+        packet_dirs.append(packet_dir)
+        observations.append(observation)
+
+    projections = project_company_headcount(
+        read_observation_log(observation_log_path), resolution_map=resolution_map
+    )
+    return EdgarHeadcountHistoryRunResult(
+        discoveries=discovered,
+        packet_output_directories=packet_dirs,
+        observations=observations,
         projections=projections,
     )
 

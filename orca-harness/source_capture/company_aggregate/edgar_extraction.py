@@ -63,6 +63,22 @@ _PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Paired dual-period total construction (review follow-up): "<N1> and <N2> <employee-noun>", as in
+# "As of June 30, 2025 and 2024, we had approximately 57,000 and 62,000 employees worldwide." The
+# FIRST number is the current period's total (the second is the prior year). v0 captures N1 and
+# ranks it above incidental counts, so a dual-year sentence reads as one clean total, not ambiguity.
+# A range ("between N and M employees") is NOT a dual-period total and is excluded (_RANGE_CUE).
+_PAIRED_PATTERN = re.compile(
+    rf"(?P<approx>{_APPROX}\s+)?"
+    rf"(?P<n1>{_NUMBER})\s+and\s+"
+    rf"(?P<n2>{_NUMBER})\s+"
+    rf"(?P<between>(?:{_QUALIFIER}\s+){{0,2}})"
+    rf"(?P<noun>{_NOUN})",
+    re.IGNORECASE,
+)
+_RANGE_CUE = re.compile(r"\b(?:between|from)\s+$", re.IGNORECASE)
+_PAIRED_PRIORITY = 10  # a recognized dual-period total outranks any single basis priority (0-3)
+
 # Basis detection, highest priority first (full_time_equivalent must precede full_time since the
 # former contains the latter). Each value is a member of observation.MEASUREMENT_BASIS_VALUES.
 # Detection runs over the MATCHED qualifier+noun only (F-02), never a pre-count window.
@@ -101,6 +117,8 @@ RULESET_SHA256 = sha256_text(
     "|".join(
         [
             _PATTERN.pattern,
+            f"paired:{_PAIRED_PATTERN.pattern}",
+            f"range:{_RANGE_CUE.pattern}",
             *(f"{name}:{rule.pattern}" for name, _p, rule in _BASIS_RULES),
             f"possession:{_POSSESSION_CUE.pattern}",
             f"event:{_EVENT_VERB.pattern}",
@@ -134,13 +152,52 @@ def extract_employee_count(text: str) -> EmployeeCountExtraction:
         return _not_found("empty filing text")
 
     candidates: list[_Candidate] = []
+
+    # Paired dual-period total first: "<N1> and <N2> <noun>" -> N1 is the current-period total,
+    # ranked above incidental counts (review follow-up). N2 + any subset counts fall to alternates.
+    for pmatch in _PAIRED_PATTERN.finditer(text):
+        raw = pmatch.group("n1")
+        try:
+            count_int = int(raw.replace(",", ""))
+        except ValueError:
+            continue
+        if _RANGE_CUE.search(text[max(0, pmatch.start("n1") - 12) : pmatch.start("n1")]):
+            continue  # "between N and M employees" is a range, not a dual-period total
+        if not _is_workforce_total_context(
+            text,
+            count_start=pmatch.start("n1"),
+            noun_end=pmatch.end("noun"),
+            between=pmatch.group("between"),
+            noun=pmatch.group("noun"),
+        ):
+            continue
+        basis, _basis_priority = _detect_basis(pmatch.group("between"), pmatch.group("noun"))
+        candidates.append(
+            _Candidate(
+                count_int=count_int,
+                raw=raw,
+                approx=bool(pmatch.group("approx")),
+                basis=basis,
+                priority=_PAIRED_PRIORITY,
+                start=pmatch.start("n1"),
+                end=pmatch.end("noun"),
+                matched=pmatch.group(0),
+            )
+        )
+
     for match in _PATTERN.finditer(text):
         raw = match.group("count")
         try:
             count_int = int(raw.replace(",", ""))
         except ValueError:
             continue
-        if not _is_workforce_total_context(text, match):
+        if not _is_workforce_total_context(
+            text,
+            count_start=match.start("count"),
+            noun_end=match.end("noun"),
+            between=match.group("between"),
+            noun=match.group("noun"),
+        ):
             continue  # event / scoped / un-cued count -> honest miss, never a guessed KNOWN (F-01)
         basis, priority = _detect_basis(match.group("between"), match.group("noun"))
         candidates.append(
@@ -230,20 +287,22 @@ class _Candidate:
     matched: str
 
 
-def _is_workforce_total_context(text: str, match: re.Match[str]) -> bool:
+def _is_workforce_total_context(
+    text: str, *, count_start: int, noun_end: int, between: str, noun: str
+) -> bool:
     """True only when the matched count reads as a workforce TOTAL (F-01).
 
     Reject event counts (an event verb just before the number) and scoped counts (a segment /
     region / benefit-plan phrase just after the noun). Then require a positive workforce signal:
-    a workforce qualifier / FTE noun, or a possession/as-of cue in the preceding clause."""
-    count_start = match.start("count")
+    a workforce qualifier / FTE noun, or a possession/as-of cue in the preceding clause. Takes
+    primitives (not a Match) so the single and paired matchers share one gate."""
     immediate_before = text[max(0, count_start - 25) : count_start]
     if _EVENT_VERB.search(immediate_before):
         return False
-    after_noun = text[match.end("noun") : match.end("noun") + 30]
+    after_noun = text[noun_end : noun_end + 30]
     if _SCOPING.search(after_noun):
         return False
-    if _has_workforce_qualifier(match.group("between"), match.group("noun")):
+    if _has_workforce_qualifier(between, noun):
         return True
     preceding = text[max(0, count_start - 90) : count_start]
     return bool(_POSSESSION_CUE.search(preceding))
