@@ -137,6 +137,54 @@ amendments the same day:
   not). The reporting session is outcome-exposed and cannot serve as a blind
   contestant on the exposed subjects.
 
+## Owner Decision Record — Third Addendum (2026-06-12, gap-series adjudications + lane commissions)
+
+- **Record homes bound (gap DB-4).** Owner word: "lets do that."
+  Candidate-scan outputs → `docs/research/` (prefix
+  `orca_discovery_candidate_scan_`); proof-batch notes →
+  `docs/product/product_lead/orca_proof_batch_<n>_notes_v0.md`; the backtest
+  candidate pool is never a slot source. Bound in the brief + charter
+  (commit `cd064ca`). Subfolders deferred until volume justifies (owner
+  asked "should we subfolder?"; lane recommended flat until ~5 files).
+- **Commercial frame: free-first rejected.** Owner words: "i honestly dont
+  agree with free first too, especially this kind of product. would be up to
+  how good my sales is though of course." Effect: paid-first fixed-scope
+  sprint stands; price band, sprint scope, and the stall rule N are
+  delegated to a commissioned pricing lane ("we will... need to prompt out
+  another lane too for this. pricing. put 3 into that too"). Public web
+  research for that lane is owner-authorized by that commissioning word.
+- **Gate paper-check commissioned out.** Owner words: "okay lets do that...
+  let's prompt out for this." The Demand-Substrate Hard Gate dress
+  rehearsal (gaps BP-2 + DB-2) runs in a commissioned outcome-aware lane;
+  this lane adjudicates.
+- **Scanning lane commissioned.** Owner pipeline (verbatim structure,
+  2026-06-12): vertical/venue discovery → scanning/candidate finding →
+  capture → candidate recording → cleaning/integrity → evidence packaging
+  for judgment. Owner: venue discovery exists (venue card set + screen
+  ledgers), capture + candidate recording exist, judgment/cleaning/packaging
+  developing; scanning is the gap — "prompt out for scanning so it feeds
+  into capture perhaps and ingests from vertical venue / discovery."
+- **Buy-side primary, supply-side supplement.** Owner word: "we'll focus on
+  mostly buy-side probably with *some* supply side to supplement (e.g.
+  organisational movement)." The demand-read taxonomy
+  (`docs/product/product_lead/orca_demand_read_taxonomy_v0.md`, PROPOSED)
+  fleshes the read grammar — convergence/divergence reads, wind-caller
+  identification and calibration, pricing refinement (complaint-volume
+  anti-trigger / price-rerouting signal / event-triggered pricing family) —
+  and awaits owner adjudication.
+- **This thread holds as adjudicator.** Owner words: "okay all the other
+  lanes, prompt out. this lane will be held here just for adjudicating
+  their input." Commission prompts authored 2026-06-12:
+  `docs/prompts/product-planning/consumer_demand_scanning_lane_commission_prompt_v0.md`,
+  `docs/prompts/product-planning/demand_substrate_gate_paper_check_commission_prompt_v0.md`,
+  `docs/prompts/product-planning/consumer_demand_pricing_commercial_frame_commission_prompt_v0.md`.
+- **Landing dependency.** PR #25 merged before these commits; everything
+  from `2815bcd` onward is local to the post-merge
+  `ecr-sp3-timing-deriver-slice1`. The batch must land on `main` via a
+  fresh small branch + PR before the dispatched lanes (which branch off
+  `main`) can see the prompts and their pinned sources — each prompt
+  carries a `BLOCKED_STALE_BASE` gate for exactly this.
+
 ## Readiness In One Line
 
 The consistency sweep found **nothing that blocks asks 1-2**: no subordinate

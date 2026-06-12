@@ -38,9 +38,12 @@ stale_if:
 target-selection brief as the live instrument. Prepared 2026-06-11 by the
 ICP / product-direction lane. The companion instrument —
 `docs/prompts/product-planning/orca_product_proof_lead_customer_discovery_prompt_v0.md`
-— is OUTSIDE the product lane's write scope (prompt artifact) and is queued
-for a prompt-orchestration lane (ORCA-HYGIENE-018); until realigned it
-remains pricing-gated and must not drive consumer-demand discovery.
+— is OUTSIDE the product lane's write scope (prompt artifact). Corrected
+2026-06-12 (gap DB-5): ORCA-HYGIENE-018 was resolved by RETIRING that prompt
+outright (RETIRED / OFF-TARGET banner, 2026-06-12), not by realigning it. No
+live discovery operating prompt exists; when the owner opens outreach, a
+consumer-demand successor must be commissioned through prompt orchestration
+before any discovery runs.
 
 Dated note (2026-06-12, owner ask-1 amendment): the capture risk posture is
 measured ToS risk accepted / absurd-level rejected (the owner's example:
@@ -76,6 +79,16 @@ US-market per the thesis geography doctrine (2026-06-12); non-US candidates
 route to the owner or defer (mirroring the candidate-pool handoff
 obligations). Candidate companies are not buyers, leads, prospects, or
 clients; trust posture is `unknown` until qualification.
+
+Record homes (bound 2026-06-12, gap DB-4, owner word): candidate-scan
+outputs are research artifacts and live in `docs/research/` (filename prefix
+`orca_discovery_candidate_scan_`); a slot fills only from such a dated scan
+doc. The backtest candidate pool
+(`docs/product/core_spine/consumer_demand_candidate_pool_handoff_v0.md`) is
+outcome-bearing backtest material and is NEVER a slot source. Near-miss,
+hold, and disqualification records from the stop rules go to the proof-batch
+notes home (`docs/product/product_lead/orca_proof_batch_<n>_notes_v0.md`,
+per the charter).
 
 ## Qualification Objectives (first contact, when outreach is ever opened)
 

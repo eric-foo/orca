@@ -11,8 +11,8 @@ authority_boundary: retrieval_only
 open_next:
   - .agents/workflow-overlay/product-proof.md
   - docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md     # current wedge authority (supersedes pricing-first)
-  - docs/product/orca_product_lead_first_icp_wedge_decision_v0.md  # superseded — historical
-  - docs/product/orca_buyer_proof_packet_v0.md
+  - docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md  # superseded — historical (path updated 2026-06-12; phase-2 migration)
+  - docs/product/product_lead/orca_buyer_proof_packet_v0.md  # path updated 2026-06-12 (phase-2 migration); owns the Demand-Substrate Hard Gate
   - docs/decisions/orca_product_thesis_consumer_demand_v0.md      # controlling thesis (supersedes turn_08; ratified 2026-06-12)
 input_hashes:
   - path: docs/decisions/turn_08_product_thesis_v0.md
@@ -186,6 +186,14 @@ An executive-grade decision deck may be produced only after the memo and evidenc
 
 The Product Proof Lead or designated operator produces the proof memo and, only if justified, the executive deck. The proof artifact should fit a bounded manual session under the accepted scope. If it materially exceeds that scope, classify the result as consulting-risk evidence and record it in the batch notes.
 
+Proof-record home (bound 2026-06-12, gap DB-4, owner word): batch notes —
+including readback records, near-misses, disqualifications, and
+consulting-risk classifications — live at `docs/product/product_lead/` as
+`orca_proof_batch_<n>_notes_v0.md` (one file per proof batch;
+product_learning tier; retrieval-headered). Candidate-scan outputs are
+research artifacts in `docs/research/` per the discovery brief's slot-fill
+rule; they are inputs to slot selection, never proof records.
+
 Core/satellite/bespoke boundary:
 
 - Core is the repeatable decision spine.
@@ -276,7 +284,8 @@ Customer discovery may proceed as docs-first product-fit testing under this char
 First memo production may proceed only for a named qualified buyer with a live
 30-90 day consumer-demand allocation trigger (families per the first proof
 lane), using the manual proof artifact in
-`docs/product/orca_buyer_proof_packet_v0.md`. Executive deck production may
+`docs/product/product_lead/orca_buyer_proof_packet_v0.md` (path updated
+2026-06-12). Executive deck production may
 proceed only after the memo and evidence appendix pass the same gates and the
 deck is tied to a qualified live decision use.
 
