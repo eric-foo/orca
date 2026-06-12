@@ -4,10 +4,10 @@ decision_question: At the cutoff, how aggressively should Beauty Pie restructure
 decision_date_or_cutoff: 2023-02-28
 role_frame: Founder/CEO and commercial leadership of Beauty Pie, a UK factory-direct membership beauty brand, deciding how aggressively to restructure membership pricing on pre-cutoff public evidence only.
 authority_constraints: Full founder-led pricing and membership-structure authority; the binding constraint is reversibility and member trust, not authority.
-capability_constraints: Can ship any membership/pricing structure immediately; decides on pre-cutoff evidence, before any market response to the decision is observable.
+capability_constraints: Can ship any membership/pricing structure immediately; decides on evidence available on or before the 2023-02-28 cutoff.
 permitted_assumptions:
   - Treat the packet as pre-cutoff only (on or before 2023-02-28).
-  - Distinguish a pre-existing base rate from a reaction to this specific move.
+  - Distinguish general membership/subscription base rates from evidence specific to Beauty Pie's pre-cutoff situation.
   - Treat the prices, tiers, and monthly spending limits in the evidence as real.
   - Judge only on this packet; produce a single blind judgement from it alone.
 information_boundary: Decide using only the evidence in this packet. Do not use, recall, or look up any outside or later knowledge about this company or this decision; base the judgement solely on the packet.
