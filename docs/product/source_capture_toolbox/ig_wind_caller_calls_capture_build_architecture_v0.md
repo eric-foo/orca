@@ -4,9 +4,10 @@ artifact_role: build architecture decision/plan (non-authorizing; planning-only)
 scope: >
   Target build architecture for operationalizing IG wind-caller CALLS self-capture
   (per-item post + reel caption + engagement) on attended, logged-in, ≤5 public-figure
-  accounts. Decides how to COMPOSE the already-built authenticated-browser capability
-  plus the small IG-specific delta, names the few genuinely-architectural choices, maps
-  authorization, and gates the build on the H5 cadence probe. Downstream of the IG
+  accounts. Decides how to COMPOSE the existing authenticated-browser primitives
+  plus the bounded IG-specific delta, names the few genuinely-architectural choices,
+  separates implemented capability from owner-confirmation gaps, and gates the first
+  build shape on the H5 cadence probe. Downstream of the IG
   capture-feasibility recon.
 use_when:
   - Scoping or authorizing the IG calls-capture build.
@@ -25,13 +26,15 @@ status: PLANNING_DRAFT — pre-scoping; not a build authorization
 
 # IG Wind-Caller Calls-Capture — Build Architecture (v0, planning)
 
-## Headline: this is mostly COMPOSE + a small delta, not a net-new build
+## Headline: compose existing primitives + a bounded IG delta
 
 A 3-lens architecture pass (read-only subagents) + home-model verification against primary
-source found the **authenticated-browser capability already exists, is tested, reviewed, and
-authorized.** The IG work composes it; it does **not** build an auth capability from scratch. This
-**corrects** the recon's earlier build-lane finding (which inspected only the anonymous
-`cloakbrowser_snapshot.py` and overstated the gap — see the recon doc's dated correction).
+source found the **single-URL authenticated-browser primitives already exist, are tested/reviewed,
+and have bounded build authority.** The IG work composes those primitives, but the multi-item
+person-level loop, IG reel response-read, and retention/cadence application remain owner-confirmation
+deltas before build. This **narrows** the recon's earlier build-lane finding (which inspected only
+the anonymous `cloakbrowser_snapshot.py` and overstated the gap — see the recon doc's dated
+correction) without treating the full IG loop as already authorized.
 
 ## What already exists (verified, with paths)
 
@@ -42,37 +45,37 @@ authorized.** The IG work composes it; it does **not** build an auth capability 
 | Interactive login | `runners/run_source_capture_browser_session_bootstrap.py` | `headless=False` + human `input()` — the **owner** enters credentials; the agent never does. |
 | Capture→packet | `runners/run_source_capture_authenticated_browser_packet.py` | Loads session → captures one URL → Source Capture Packet; generic login-wall limitation detector; non-claims forbid credential/cookie/storage-state capture; records `access_posture` with `session_mode` (not the secret). |
 | Cadence governor | `orca-harness/source_capture/cadence.py` | `build_cadence_plan(mode="bounded_jitter", window/min_gap/max_gap/seed)` → per-item variable waits; deterministic-per-seed for auditability. Already driven item-by-item in the Reddit batch runner. |
-| Tests + review + authorization | `tests/unit/test_source_capture_authenticated_browser_snapshot.py`; `docs/review-outputs/source_capture_authenticated_browser_snapshot_adversarial_code_review_v0.md` (+ post-patch recheck); `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md` (1st-tranche #5 honest/authenticated browser; 2nd-tranche #7 owner-named source adapters). |
+| Tests + review + build-authority basis | `tests/unit/test_source_capture_authenticated_browser_snapshot.py`; `docs/review-outputs/source_capture_authenticated_browser_snapshot_adversarial_code_review_v0.md` (+ post-patch recheck); `docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md` (1st-tranche #5 honest/authenticated browser; 2nd-tranche #7 owner-named source adapters). |
 
 ## The IG delta (what is net-new)
 
 - **D1 — Multi-item capture loop (NEW runner).** Grid scroll-enumerate (`/p/` + `/reel/` permalinks; reuse the scroll mechanics) → per-item visit → packet, with `cadence.py` `bounded_jitter` between items. The existing runner is single-URL; this is a bounded multi-item runner that *composes* it.
 - **D2 — IG extraction (parser).** Caption from the rendered DOM node (the meta truncates ~59–86%); engagement (likes/comments/date/`#ad` sponsorship) from `og:description`/DOM. Parser-over-retrieved-HTML is explicitly allowed by the authorization; cross-check the DOM caption against the meta prefix, flag mismatch, never silently truncate.
-- **D3 — Reel view/play count via WARM SAME-CONTEXT JSON.** Not in the page DOM; in the media GraphQL JSON. This is **not a new method** — it is the **authorized Reddit "load page in-context, then read its own JSON" enrichment pattern** (build-authorization, Anti-Blocking/Reddit-ordering amendment) applied to IG. Needs a response-read hook the current adapter lacks.
+- **D3 — Reel view/play count via WARM SAME-CONTEXT JSON.** Not in the page DOM; in the media GraphQL JSON. The closest precedent is the Reddit "load page in-context, then read its own JSON" enrichment pattern, but applying that pattern to IG media GraphQL responses is an **owner-confirmation delta**, not an authorization-scope ruling. Needs a response-read hook the current adapter lacks.
 - **D4 — IG block signature.** Extend the generic login-wall detector with IG markers (login-modal / `challenge` / 429-interstitial).
 
 ## Genuinely-architectural choices (small)
 
 - **A1 — Loop home.** RECOMMEND a **new runner** composing the existing single-URL adapter N times (lowest lock-in; the adapter stays single-purpose) over a new multi-item adapter. Low stakes; reversible.
-- **A2 — The one real fork (H5-gated).** The anti-detect path (`cloakbrowser_snapshot`, no session) and the session path (`browser_snapshot`, no anti-detect) are **separate**; neither does **session + anti-detect together**. If plain authenticated-headless survives the H5 cadence probe → no merge (small). If IG flags it → we need a combined session+cloak capability (**bigger lift, higher lock-in**). **Do not pre-decide; the H5 probe decides it.**
-- **A3 — Reel-JSON method scope.** Covered by the existing warm-same-context-JSON authorization (above); confirm with owner only because it reads the page's own API responses.
+- **A2 — The one real fork (H5-gated, not scale-proven).** The anti-detect path (`cloakbrowser_snapshot`, no session) and the session path (`browser_snapshot`, no anti-detect) are **separate**; neither does **session + anti-detect together**. If plain authenticated-headless survives the H5 cadence probe → build the smaller path first, while carrying H5's over-time/multi-account residual. If IG flags it → owner chooses between a combined session+cloak capability (**bigger lift, higher lock-in**) or stopping/de-scoping. **Do not pre-decide; H5 gates the first build shape but does not prove at-scale sustainability.**
+- **A3 — Reel-JSON method scope.** Treat the Reddit warm-same-context-JSON pattern as precedent only. Owner confirmation is required before an IG media GraphQL response-read becomes build scope.
 
-## Doctrine: NOT doctrine-touching
+## Doctrine / boundary call: secret-handling is not the new doctrine question
 
-The "no-secret/anonymous" property was a per-adapter property of `cloakbrowser_snapshot`/`direct_http`, never repo-wide doctrine. The authenticated session store is an **already-authorized, already-reviewed** exception with explicit secret confinement (authorization 2nd-tranche invariant: "credentials, tokens, cookies, and storage-state never enter the packet … live in local ignored config only"; runner non-claims say the same). No new owner doctrine decision is needed for secret-handling.
+The "no-secret/anonymous" property was a per-adapter property of `cloakbrowser_snapshot`/`direct_http`, never repo-wide doctrine. The authenticated session store is an **already-authorized, already-reviewed** exception with explicit secret confinement (authorization 2nd-tranche invariant: "credentials, tokens, cookies, and storage-state never enter the packet … live in local ignored config only"; runner non-claims say the same). Secret-handling itself does not need a new doctrine decision. The separate boundary question is whether a routine, attended, multi-item, person-level IG capture loop stays inside the wind-caller carve-out and the source-access tooling authorization; that is why the owner-confirmation deltas below remain prerequisites.
 
 ## Authorization map (what's covered vs to confirm)
 
-- **Covered:** authenticated browser snapshot on an owner-named source (1st-tranche #5 + 2nd-tranche #7) + the wind-caller carve-out (the person-level permission, ≤5 public-figure accounts, attended, human-mimicking, internal-only).
-- **To confirm with owner before build:** (i) the **multi-item loop framed as a bounded capture unit** — one named account = the bound, NOT broad/site-wide walking (mirrors the authorized Reddit "bounded unit = subreddit/thread-family" language); (ii) the **reel media boundary** — we capture caption text + engagement counts, NOT video bytes; (iii) the carve-out's required **retention/purge horizon** must be owner-set **before the first durable session** (currently open — a prerequisite, not a code task).
+- **Covered:** the existing single-URL authenticated browser snapshot and local session-store mechanics (1st-tranche #5 + 2nd-tranche #7), plus the wind-caller carve-out's permission for internal, attended, human-mimicking, ≤5-account public-figure calibration capture.
+- **To confirm with owner before build:** (i) the **multi-item loop framed as a bounded capture unit** — one named account = the bound, NOT broad/site-wide walking, and not permission for full-history or repeated-over-time capture beyond the carve-out's no-mass/no-scheduled-crawler constraints; (ii) the **IG media GraphQL / reel response-read boundary** — caption text + engagement counts are in scope only if owner accepts the warm-same-context analogy for IG, and video bytes remain out; (iii) the carve-out's required **retention/purge horizon** must be owner-set **before the first durable session** (currently open — a prerequisite, not a code task).
 
 ## H5 gate (the build's premise — run before scaling)
 
-Bounded ~20–30-item slice on ONE already-authorized account at full `bounded_jitter` cadence, BEFORE any full-account walk. Abort signal = login-wall modal / IG `challenge` / HTTP 429 / `access_blocked`. Pass = sample completes clean, captions non-empty, engagement parsed. This **also resolves A2** (plain-headless suffices vs need session+anti-detect). Goal: do not build the full walk then discover cadence fails.
+Bounded ~20–30-item slice on ONE owner-confirmed account at full `bounded_jitter` cadence, BEFORE any full-account walk. Abort signal = login-wall modal / IG `challenge` / HTTP 429 / `access_blocked`. Pass = sample completes clean, captions non-empty, engagement parsed. This **gates A2 for the first build shape** (plain-headless first vs stop/escalate to session+anti-detect), but it does **not** prove repeated, over-time, multi-account sustainability. Goal: do not build the full walk then discover cadence fails.
 
 ## Cadence governor (reuse `cadence.py`)
 
-`bounded_jitter`: inter-item ~8–45 s jitter; inject a long 90–180 s pause every ~5–9 items; randomize visit order; **per-session ≤40 items; ≤2 sessions / ≤60 items per day; ≤5 accounts total**; deterministic-per-seed for auditability; **no scheduler entrypoint** (operator launches each attended run).
+`bounded_jitter`: inter-item ~8–45 s jitter; inject a long 90–180 s pause every ~5–9 items; randomize visit order; **per-session ≤40 items; ≤2 sessions / ≤60 items per day; ≤5 accounts total**; deterministic-per-seed for auditability; **no scheduler entrypoint** (operator launches each attended run). These are planning ceilings, not entitlement to exhaust every account: one account with N posts implies one grid walk + N item visits, so the owner-confirmed H5 result and stop-on-block behavior govern how far any attended run proceeds.
 
 ## Record boundary
 
@@ -82,10 +85,10 @@ Per-item → **Source Capture Packets** via the existing `write_local_source_cap
 
 1. `workflow-implementation-scoping` over D1–D4 + A1 (read-only route; STEP-*).
 2. Owner confirms the three authorization deltas + sets the retention horizon.
-3. **H5 gate probe** (bounded) → resolves A2.
+3. **H5 gate probe** (bounded) → gates the first A2 build shape; at-scale sustainability remains a residual until exercised.
 4. Bounded build authorization → build the delta → full offline contract suite green before any green claim.
 
 ## Non-claims
 
-Planning draft. Not a build authorization, not validation/readiness, not a doctrine change, not an authorization-scope ruling (the owner adjudicates the three deltas), not ECR/Cleaning/Judgment design. The existing-capability claims are verified against primary source at the paths cited; the authorization mapping is an advisory reading of the cited decision, not an owner ruling.
+Planning draft. Not a build authorization, not validation/readiness, not a doctrine change, not an authorization-scope ruling (the owner adjudicates the three deltas), not at-scale or multi-account-over-time proof, not ECR/Cleaning/Judgment design. The existing primitive claims are verified against primary source at the paths cited; the authorization mapping is an advisory reading of the cited decision, carve-out, and recon residuals, not an owner ruling.
 ```
