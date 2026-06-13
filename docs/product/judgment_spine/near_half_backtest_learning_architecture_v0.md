@@ -17,7 +17,7 @@ use_when:
   - Checking what a lesson may claim and the firewall/cherry-pick guards on carrying it.
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/judgment_spine/near_half_signal_reliability_ledger_v0.md
+  - docs/product/judgment_spine/near_half_signal_reliability_ledger_v0.md  # nonresolving: forward-reference; lands via PR #54 (step 1), pinned at promotion (see depends_on)
   - docs/product/judgment_spine/prospective_decision_loop_target_architecture_v0.md
   - docs/decisions/judgment_spine_backtest_batch1_ledger_declaration_v0.md
 branch_or_commit: near-half-architecture-v0 off origin/main @ ea2c79b
