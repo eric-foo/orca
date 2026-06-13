@@ -149,8 +149,9 @@ called at cutoff against what actually happened — misses included.
 Carried from thesis v0 and sharpened for the demand substrate:
 
 - Not a social-listening dashboard, trend feed, monitoring service, data
-  broker, scraping commodity, or report factory. No sold or externally published
-  person-level dossiers or outreach lists; org-level signals only. (Internal
+  broker, scraping commodity, or report factory. No person-level dossiers in any
+  sold or externally published surface, and no outreach lists at all; org-level
+  signals only. (Internal
   wind-caller calibration is the bounded exception per
   `docs/decisions/wind_caller_calibration_carveout_v0.md`, 2026-06-13 — internal
   only, ≤5 public-figure accounts; the external/product boundary here is unchanged.)
