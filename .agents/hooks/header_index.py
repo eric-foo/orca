@@ -10,9 +10,13 @@ WHAT THIS DOES
 
   --health   Whole-repo advisory. Counts (and with --verbose lists) two classes:
                MISSING-HEADER  durable, non-exempt .md files with no header
-               ORPHAN          header-bearing .md whose repo-relative path does
-                               NOT appear as a substring in the repo map or any
-                               submap under docs/workflows/.
+               ORPHAN          header-bearing .md whose CONTAINING FOLDER is not
+                               map-covered per C3 semantics (dir appears as a
+                               substring in any map/submap line, or any map line
+                               says "not retrieval-indexed") AND the folder is
+                               not C3-exempt (_inbox/_scratch).  A file whose
+                               folder IS map-covered is NOT an orphan even if
+                               the individual file path is not named in the map.
              Exit 0 always (advisory, not a gate).
 
   --health --oneline
@@ -105,6 +109,31 @@ try:
 except Exception as _crh_err:
     _CRH_AVAILABLE = False
     _CRH_ERR = _crh_err
+
+
+def _import_check_map_links():
+    """Import check_map_links from the same hooks directory (for C3 folder-coverage)."""
+    import importlib.util
+    hooks_dir = Path(__file__).resolve().parent
+    spec = importlib.util.spec_from_file_location(
+        "check_map_links",
+        hooks_dir / "check_map_links.py",
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+try:
+    _cml = _import_check_map_links()
+    _dir_is_covered = _cml.dir_is_covered
+    _dir_is_exempt_coverage = _cml.dir_is_exempt_coverage
+    _collect_map_files = _cml.collect_map_files
+    _load_map_text_cml = _cml.load_map_text
+    _CML_AVAILABLE = True
+except Exception as _cml_err:
+    _CML_AVAILABLE = False
+    _CML_ERR = _cml_err
 
 
 # ---------------------------------------------------------------------------
@@ -222,11 +251,19 @@ def has_retrieval_header(relposix: str, root: Path) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Repo map / submap loading (mirrors check_map_links approach)
+# Repo map / submap loading (delegates to check_map_links canonical source)
 # ---------------------------------------------------------------------------
 
 def load_map_text(root: Path) -> str:
-    """Concatenate repo map + any submap text for orphan substring checks."""
+    """Concatenate repo map + any submap text.
+
+    Delegates to check_map_links.collect_map_files + check_map_links.load_map_text
+    when available (canonical C3 source), otherwise falls back to local logic.
+    """
+    if _CML_AVAILABLE:
+        map_files = _collect_map_files(root)
+        return _load_map_text_cml(map_files)
+    # Fallback: local logic (used only when check_map_links import failed)
     parts: list[str] = []
     map_path = root / "docs" / "workflows" / "orca_repo_map_v0.md"
     if map_path.exists():
@@ -250,17 +287,46 @@ def load_map_text(root: Path) -> str:
     return "\n".join(parts)
 
 
-def is_orphan(relposix: str, map_text: str) -> bool:
-    """True if relposix does NOT appear as a substring in map_text.
+def is_folder_orphan(relposix: str, map_text: str) -> bool:
+    """True if relposix's containing folder is NOT map-covered per C3 semantics.
 
-    Mirrors the C1/ORPHAN logic from check_map_links: a path is map-reachable
-    if it or any enclosing path prefix appears as a substring on any map line.
+    A file is a folder-orphan when ALL of these hold:
+      1. Its containing folder is not C3-exempt (_inbox / _scratch).
+      2. Its containing folder does NOT appear as a substring in any map line,
+         AND no map line contains "not retrieval-indexed".
+
+    This aligns with check_map_links C3: coverage is FOLDER-LEVEL, not
+    individual-file-level.  A file whose folder IS map-covered is NOT an
+    orphan even if its exact path is not named in the map.
+
+    Delegates to check_map_links.dir_is_covered / dir_is_exempt_coverage when
+    available; falls back to inline logic when the import failed.
 
     Pure function (testable).
     """
-    if not map_text:
+    # Derive containing folder (POSIX)
+    parts = relposix.rsplit("/", 1)
+    folder = parts[0] if len(parts) == 2 else ""
+
+    # Check C3 exemption
+    if _CML_AVAILABLE:
+        if _dir_is_exempt_coverage(folder):
+            return False
+        if not map_text:
+            return True
+        return not _dir_is_covered(folder, map_text)
+    else:
+        # Inline fallback (should rarely trigger)
+        if folder.startswith("docs/_inbox") or "_scratch" in folder:
+            return False
+        if not map_text:
+            return True
+        for line in map_text.splitlines():
+            if folder and folder in line:
+                return False
+            if "not retrieval-indexed" in line.lower():
+                return False
         return True
-    return relposix not in map_text
 
 
 # ---------------------------------------------------------------------------
@@ -271,8 +337,8 @@ def health_scan(root: Path) -> tuple[list[str], list[str]]:
     """Return (missing_headers, orphans) lists of relpaths.
 
     missing_headers: durable in-scope .md files with no valid retrieval header.
-    orphans: durable in-scope .md files WITH a valid header but NOT appearing
-             as a substring in any map/submap file.
+    orphans: durable in-scope .md files WITH a valid header whose CONTAINING
+             FOLDER is not map-covered per C3 semantics (and not C3-exempt).
     """
     map_text = load_map_text(root)
     all_mds = walk_durable_mds(root)
@@ -283,8 +349,8 @@ def health_scan(root: Path) -> tuple[list[str], list[str]]:
         if problems:
             missing.append(relposix)
         else:
-            # Has a valid header — check map reachability
-            if is_orphan(relposix, map_text):
+            # Has a valid header — check folder-level map coverage (C3 semantics)
+            if is_folder_orphan(relposix, map_text):
                 orphans.append(relposix)
     return missing, orphans
 
@@ -349,7 +415,7 @@ def run_health(root: Path, verbose: bool = False, oneline: bool = False) -> int:
     # Full health report
     print("header_index --health (whole-repo advisory, exit 0)")
     print("  MISSING-HEADER: %d  (durable in-scope .md with no valid header)" % len(missing))
-    print("  ORPHAN:         %d  (header-bearing .md not substring-found in map/submaps)" % len(orphans))
+    print("  ORPHAN:         %d  (header-bearing .md in folder not map-covered per C3)" % len(orphans))
     print()
     if verbose:
         if missing:
@@ -457,13 +523,15 @@ def run_strict(root: Path, cli_base: str | None = None) -> int:
                 "MISSING-HEADER: %s -- %s" % (relposix, "; ".join(problems))
             )
         else:
-            # Header present — check orphan
-            if is_orphan(relposix, map_text):
+            # Header present — check folder-level map coverage (C3 semantics)
+            if is_folder_orphan(relposix, map_text):
+                folder = relposix.rsplit("/", 1)[0] if "/" in relposix else ""
                 findings.append(
-                    "ORPHAN: %s -- header present but path not found as "
-                    "substring in repo map or any submap under docs/workflows/. "
-                    "Add an entry to docs/workflows/orca_repo_map_v0.md or a submap."
-                    % relposix
+                    "ORPHAN: %s -- header present but containing folder (%s) "
+                    "is not map-covered per C3 semantics. "
+                    "Add a map entry for folder %s in "
+                    "docs/workflows/orca_repo_map_v0.md or a submap."
+                    % (relposix, folder, folder)
                 )
 
     if findings:
@@ -541,22 +609,51 @@ def selftest() -> int:
             ok = False
         print("%s  %s" % (status, label))
 
-    # --- is_orphan ---
+    # --- is_folder_orphan (C3 folder-coverage semantics) ---
+    # map_text contains folder-level entries; individual file paths need not appear.
     print()
-    print("--- is_orphan ---")
-    map_text_sample = "| `docs/decisions/foo_v0.md` | Some role |\n| `docs/workflows/bar_v0.md` | Another |\n"
+    print("--- is_folder_orphan ---")
+    # Map text mentions 'docs/decisions' and 'docs/workflows' as folder-level entries
+    map_text_sample = (
+        "| `docs/decisions/` | Decision records. |\n"
+        "| `docs/workflows/` | Workflow overlays. |\n"
+    )
+    # Map text with 'not retrieval-indexed' exemption line
+    map_text_nri = "docs/some/unmapped/folder: not retrieval-indexed\n"
+    # Map text that does NOT cover docs/prompts/reviews
+    map_text_no_pr = "| `docs/decisions/` | Decision records. |\n"
     orphan_cases = [
-        ("present in map",    "docs/decisions/foo_v0.md", map_text_sample, False),
-        ("not in map",        "docs/decisions/baz_v0.md", map_text_sample, True),
-        ("empty map text",    "docs/decisions/foo_v0.md", "", True),
-        ("substring match",   "docs/workflows/bar_v0.md", map_text_sample, False),
+        # Folder 'docs/decisions' IS in map -> not orphan (even if file path not named)
+        ("folder covered, file not named",
+         "docs/decisions/baz_v0.md", map_text_sample, False),
+        # Folder 'docs/decisions' IS in map -> not orphan
+        ("folder covered, file also present",
+         "docs/decisions/foo_v0.md", map_text_sample, False),
+        # Folder 'docs/prompts/reviews' NOT in map -> orphan
+        ("folder not covered",
+         "docs/prompts/reviews/bar_v0.md", map_text_no_pr, True),
+        # Empty map text -> orphan
+        ("empty map text",
+         "docs/decisions/foo_v0.md", "", True),
+        # 'not retrieval-indexed' line exempts everything
+        ("not retrieval-indexed line",
+         "docs/some/unmapped/folder/file_v0.md", map_text_nri, False),
+        # docs/_inbox is C3-exempt -> not orphan
+        ("_inbox exempt",
+         "docs/_inbox/foo.md", map_text_no_pr, False),
+        # _scratch is C3-exempt -> not orphan
+        ("_scratch exempt",
+         "docs/_scratch/foo.md", map_text_no_pr, False),
+        # docs/workflows IS in map -> not orphan
+        ("docs/workflows covered",
+         "docs/workflows/orca_repo_map_v0.md", map_text_sample, False),
     ]
     for label, relposix, mt, expected in orphan_cases:
-        got = is_orphan(relposix, mt)
+        got = is_folder_orphan(relposix, mt)
         status = "PASS" if got == expected else "FAIL"
         if got != expected:
             ok = False
-        print("%s  %-40s  expect=%s got=%s" % (status, label, expected, got))
+        print("%s  %-52s  expect=%s got=%s" % (status, label, expected, got))
 
     # --- resolve_base_ref ---
     print()
