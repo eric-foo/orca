@@ -2,12 +2,12 @@
 """Online source-capture front-door reminder (advisory, never blocks).
 
 WHAT THIS DOES
-  When an agent reaches for a generic online tool (`WebSearch`, `WebFetch`) it
-  injects a one-shot, non-blocking reminder: if the intent is to *capture or
-  preserve a source as evidence* for an Orca decision, the sanctioned path is the
-  Source Capture Armory runbook, not a free-form fetch/crawl. The *rule* — what
-  the front door covers, the evidence-only scope, and the runner discipline — is
-  owned by:
+  On a generic online-tool event (`WebSearch`, `WebFetch`), it attaches a
+  one-shot, non-blocking reminder to Claude's context alongside the tool result:
+  if the intent is to *capture or preserve a source as evidence* for an Orca
+  decision, the sanctioned path is the Source Capture Armory runbook, not a
+  free-form fetch/crawl. The *rule* — what the front door covers, the
+  evidence-only scope, and the runner discipline — is owned by:
 
       .agents/workflow-overlay/source-loading.md   (-> "Online Source-Capture Front Door")
       orca-harness/docs/source_capture_agent_runbook.md   (the runner manual)
@@ -34,7 +34,7 @@ SCOPE (low-noise by design)
     source capture regardless of tool; the hook is the precise, low-false-positive
     arm of it.
   - Never blocks. PreToolUse returns exit 0 with an `additionalContext` note and
-    no permission decision.
+    no permission decision; Claude receives the note alongside the tool result.
   - Fails OPEN on any error, so a bug here can never stop a tool call.
 
 MODES
@@ -65,8 +65,8 @@ WATCHED_TOOLS = ("WebSearch", "WebFetch")
 def note_for(tool_name: str) -> str:
     """The advisory reminder injected before a watched online tool runs."""
     return (
-        "Source-capture front door (advisory, not blocking): you are about to use "
-        f"`{tool_name}`. If the intent is to CAPTURE OR PRESERVE a source as "
+        "Source-capture front door (advisory, not blocking): this tool call used "
+        f"`{tool_name}`. If the intent was to CAPTURE OR PRESERVE a source as "
         "evidence for an Orca decision, the sanctioned path is the Source Capture "
         f"Armory runbook ({RUNBOOK}): a bounded runner over an explicitly supplied "
         "input, preserving a provenance packet, with no broad search/crawl and no "

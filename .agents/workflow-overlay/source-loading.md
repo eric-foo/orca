@@ -78,8 +78,9 @@ path for source-capture evidence; the runbook runners are.
 The boundary substrate for this rule is an advisory, non-blocking PreToolUse hook
 on `WebSearch`/`WebFetch` (`.agents/hooks/check_source_capture_front_door.py`),
 placed per `.agents/workflow-overlay/validation-gates.md` ("Enforcement
-Placement"). The hook reminds; it never blocks a call and never authorizes a
-capture. Having the runners installed and runnable is equipment, not
+Placement"). The hook attaches an `additionalContext` reminder alongside the tool
+result; it never blocks a call and never authorizes a capture. Having the
+runners installed and runnable is equipment, not
 authorization: live capture still needs explicitly supplied operator inputs and,
 in a restricted sandbox, per-operation network permission. This rule is not
 validation, readiness, source-access authorization, or a source-access-boundary

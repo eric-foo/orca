@@ -172,12 +172,13 @@ then restart the session (hooks load at session start).
 python .agents/hooks/check_source_capture_front_door.py --hook
 ```
 
-Before a generic online tool runs, it injects a non-blocking advisory: if the
-intent is to capture/preserve a source as evidence, the sanctioned path is the
-Source Capture Armory runbook (`orca-harness/docs/source_capture_agent_runbook.md`),
-not a free-form fetch/crawl; ordinary non-evidence lookups proceed untouched. It
-fires only for `WebSearch`/`WebFetch`, never blocks, fails OPEN, and references
-the rule authority (`.agents/workflow-overlay/source-loading.md` -> "Online
+On a generic online tool call, it attaches a non-blocking advisory to Claude
+context alongside the tool result: if the intent is to capture/preserve a source
+as evidence, the sanctioned path is the Source Capture Armory runbook
+(`orca-harness/docs/source_capture_agent_runbook.md`), not a free-form
+fetch/crawl; ordinary non-evidence lookups proceed untouched. It fires only for
+`WebSearch`/`WebFetch`, never blocks, fails OPEN, and references the rule
+authority (`.agents/workflow-overlay/source-loading.md` -> "Online
 Source-Capture Front Door") rather than restating it.
 
 ```
