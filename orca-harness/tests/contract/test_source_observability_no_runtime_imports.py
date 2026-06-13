@@ -13,8 +13,11 @@ FORBIDDEN_IMPORT_ROOTS = {
     "scrapy",
     "selenium",
     "socket",
-    "urllib",
 }
+# `urllib` is stdlib: `urllib.parse` is pure URL string parsing (no acquisition) and
+# is allowed at this layer; only its network surfaces are forbidden. Kept in sync
+# with tests/contract/test_source_capture_packet_no_runtime_imports.py.
+FORBIDDEN_URLLIB_SUBMODULES = {"request", "error"}
 
 
 def test_source_observability_helper_has_no_runtime_acquisition_imports() -> None:
@@ -26,11 +29,32 @@ def test_source_observability_helper_has_no_runtime_acquisition_imports() -> Non
     assert target_paths, "source_observability helper package must exist"
 
     for path in target_paths:
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imported_roots = {alias.name.split(".")[0] for alias in node.names}
-                assert not imported_roots & FORBIDDEN_IMPORT_ROOTS, f"Forbidden import in {path}"
-            if isinstance(node, ast.ImportFrom) and node.module:
-                imported_root = node.module.split(".")[0]
-                assert imported_root not in FORBIDDEN_IMPORT_ROOTS, f"Forbidden import in {path}"
+        assert not _forbidden_import_roots(path), f"Forbidden import in {path}"
+
+
+def _forbidden_import_roots(path: Path) -> set[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    forbidden: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                parts = alias.name.split(".")
+                if parts[0] in FORBIDDEN_IMPORT_ROOTS:
+                    forbidden.add(parts[0])
+                elif parts[0] == "urllib" and len(parts) > 1 and parts[1] in FORBIDDEN_URLLIB_SUBMODULES:
+                    forbidden.add(f"urllib.{parts[1]}")
+        if isinstance(node, ast.ImportFrom) and node.module:
+            parts = node.module.split(".")
+            if parts[0] in FORBIDDEN_IMPORT_ROOTS:
+                forbidden.add(parts[0])
+            elif parts[0] == "urllib":
+                if len(parts) > 1:
+                    if parts[1] in FORBIDDEN_URLLIB_SUBMODULES:
+                        forbidden.add(f"urllib.{parts[1]}")
+                else:
+                    forbidden.update(
+                        f"urllib.{alias.name}"
+                        for alias in node.names
+                        if alias.name in FORBIDDEN_URLLIB_SUBMODULES
+                    )
+    return forbidden
