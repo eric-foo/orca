@@ -106,19 +106,23 @@ held_lesson:
     body. This is mechanically checkable, so per ENFORCEMENT PLACEMENT /
     CLASSIFY-SUBSTRATE-FIRST it belongs in a substrate (fixture schema + checker),
     not (only) a resident model instruction.
-  decision_node: UNDECIDED — this is the architectural call. Candidates:
-    (a) data-capture binding node:capture-packet-emit (the moment a capture is
-        promoted), or
-    (b) a new fixture-construction / evidence-binding node (the moment a capture
-        is wired in as proof for a specific claim — arguably the true site of the
-        miss, since the error was not at the grab but at the claim-binding).
+  decision_node: the CLAIM-BINDING step (not the grab). Verified site (this
+    session): the owner-ratified evidence_binding layer — Jsg01EvidenceBinding in
+    orca-harness/evidence_binding/models.py, where an EvidenceUnit is bound to the
+    slice whose preserved bytes carry its content. NOT data-capture
+    node:capture-packet-emit (a clean grab of a non-supporting page passes there).
+    Exact node id (e.g. node:evidence-claim-binding) is the architecture pass's to
+    name.
   placement_candidate: by EFFICIENCY RANK this is a silent/catastrophic-loss
-    class, which ranks toward CORE rather than a buried satellite; but
-    substrate-first says prefer the code/schema check over resident budget. Net
-    candidate: a harness schema/checker (orca-harness-code binding) with at most a
-    thin pointer in the judgment/data-capture lane. The encode lands in
-    case_models.py — the SAME file as the open FacilitatorLedger model-drift
-    blocker — so the encode and the harness-model reconciliation are one lane.
+    class; substrate-first prefers a deterministic code check over resident budget.
+    CORRECTION (verified this session, supersedes this record's first draft): the
+    encode does NOT land in case_models.py. Its home is the evidence_binding layer.
+    Jsg01EvidenceBinding is owner-ratified "reference-never-merge: three keys, no
+    content/derived value stored on it (do not relax without owner auth)", so the
+    quoted supporting span must be a SEPARATE keyed claim-support assertion +
+    deterministic checker, NOT a field on the binding. No verifier exists yet.
+    Because this is the evidence_binding layer (a different file), L2's encode is
+    DECOUPLED from the FacilitatorLedger drift in case_models.py.
   verification_pair: under-case (a source bound to a claim whose facts are absent
     from the body) -> check FAILS / binding blocked; over-edge (claim facts
     present as a quoted span in the body) -> passes.
@@ -142,8 +146,9 @@ held_lesson:
   a different artifact class that may already have a home (the judgment-quality
   operating-model surface). The pass decides homes; this record does not.
 - The **distillation folder scope** (cross-spine home vs judgment-lane sub-area).
-- The **harness-model reconciliation** (FacilitatorLedger in case_models.py) that
-  L2's encode shares a lane with.
+- The **harness-model reconciliation** (FacilitatorLedger in case_models.py): a
+  SEPARATE lane (a different file from L2's evidence_binding home) — Phase-6, NOT
+  coupled to L2's encode (corrected from this record's first draft).
 
 ## Other session observations (noted, NOT distilled here)
 
