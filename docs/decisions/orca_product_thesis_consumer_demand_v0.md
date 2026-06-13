@@ -90,11 +90,26 @@ rewritten — consistent with this record's amendment rule).
   vs short-horizon **Move**.
 - **Transient gets equal billing** with durable as a read (owner: transient
   spikes are still capital-allocation decisions and occur more often than durable
-  shifts; a durable-only product serves too thin a slice). **Guardrail:**
-  transient reads carry an explicit **decay-timing confidence**, currently low,
-  capping the action ceiling until a decay-curve capability exists (forward
-  capability, likely earned from historical analogues). Equal billing on the
-  read; claim-honest billing on the claim ("built to" vs "proven at").
+  shifts; a durable-only product serves too thin a slice).
+- **Calling sequence (dissolves the decay-timing problem).** The read opens
+  **transient** and acts in-window (buy or avoid); durability is then **observed
+  via monitoring, not predicted**, and **earned** as an upgrade when persistence
+  holds. There is no decay curve to forecast; the earlier decay-timing-confidence
+  guardrail is superseded by observe-don't-predict. Durable stays claim-honest
+  (built-to; proven only once monitored persistence confirms it).
+- **Billing shape & the never-a-feed invariant.** Monitoring is recurring →
+  **retainer / upgraded billing**, but only as **recurring decisions**; every
+  output is a calibrated decision with an action ceiling, **never a feed**. (A
+  feed trips the buyer-proof "monitoring-only pull" kill *and* is what would make
+  Orca social listening — same activity, opposite product.) The monitored
+  outcomes are also the calibration data that earns the judgment moat.
+- **Differentiation floor.** The mechanical layers (costly-behavior primitive,
+  org-motion fusion, entity resolution) genuinely beat a social listener's inputs
+  but are *replicable features* — a survivable fallback business, not a moat. The
+  durable, uncopyable differentiator is the calibrated **judgment + outcome
+  memory**: don't sell the plumbing, sell the calibrated decision. This
+  reinforces the Strategic Center (judgment over a hostile substrate, not access
+  to data); it is a positioning hypothesis, not a validated claim.
 - **Identifying manufactured demand is decision-critical in its own right**
   (owner) — the integrity axis is the contamination check that protects both real
   reads, not merely an avoid filter.

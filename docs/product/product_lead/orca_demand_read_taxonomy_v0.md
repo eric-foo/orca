@@ -53,12 +53,13 @@ states result — **durable** (commit, long horizon), **transient** (move, short
 horizon, time-boxed to the decay window), **manufactured** (discount / avoid) —
 and the action ceiling is matched to the demand's lifespan. Transient gets
 **equal billing** with durable as a read (owner call: spikes are still
-capital-allocation decisions and occur more often than durable shifts), but
-carries an explicit **decay-timing confidence** that is currently low and caps
-its ceiling until a decay-curve capability exists (lane guardrail on the owner's
-equal-billing call). The layers and read types below are restructured to this
-model; the controlling thesis is amended by dated pointer (see the propagation
-receipt at the end).
+capital-allocation decisions and occur more often than durable shifts). The
+decay-timing problem is **dissolved** by the calling sequence (new section
+below): open transient and act in-window, then **observe** persistence via
+monitoring and **earn** the upgrade to durable — no decay curve to predict. The
+recurring monitoring is **decision-linked retainer billing**, never a feed. The
+layers and read types below are restructured to this model; the controlling
+thesis is amended by dated pointer (see the propagation receipt at the end).
 
 ## The Function In One Sentence
 
@@ -137,12 +138,13 @@ on the table.
   will normalize (a viral surge, a time-limited dupe wave, a seasonal pop). It is
   **equal billing** with the durable read (owner call, 2026-06-14): it is still a
   capital-allocation decision and these occur more often than durable shifts.
-  **But** its ceiling is capped by **decay-timing confidence**, currently low:
-  calling a spike is two claims — *it's real* AND *it decays in ~N weeks* — and
-  the decay-curve capability does not yet exist, so the read stays claim-honest
-  (built-to, not proven-at) until it does. Anti-trap: a transient spike can look
-  identical to durable convergence in the moment; only the lifespan assessment
-  separates them.
+  The action is **in-window** (buy or avoid now); durability is then **observed
+  via monitoring, not predicted** (see Calling Sequence below) — which *dissolves*
+  the decay-timing problem rather than capping claims against it. The read stays
+  claim-honest (built-to, not proven-at): durable is only *called* once monitored
+  persistence confirms it. Anti-trap: a transient spike can look identical to
+  durable convergence in the moment; only observed persistence — not an upfront
+  guess — separates them.
 - **Manufactured-demand read** (fake / amplified → *discount / avoid*): demand
   that is not real — promotion-engagement mismatch, astroturf, coordinated/bot
   amplification, dupe-wave distortion. Acting on someone else's manufactured
@@ -175,6 +177,40 @@ disagrees with IG), a quality attack where marketing is loudest (Reddit attackin
 quality under a promo push) — is *evidence you use to classify* a candidate as
 transient or manufactured. It is no longer synonymous with "hollow"; it is how
 you tell real-but-fading from fake.
+
+## Calling Sequence & Billing Shape (2026-06-14, owner)
+
+The reads relate over time, and that sequence is the product motion:
+
+1. **First call = transient (the conservative default).** Durable is the
+   over-claimable label — anything can be *asserted* durable — so the read never
+   opens there. It opens transient and **acts in-window** (buy: ride the spike;
+   or avoid: a spike not worth committing to). The action is immediate; it does
+   not wait on the monitor.
+2. **Then monitor momentum.** Durability is **observed, not predicted** — this
+   *dissolves* the decay-timing problem (no decay curve to forecast at t=0). The
+   spike either decays (exit, as called) or its momentum persists.
+3. **Earn the upgrade to durable.** When monitored persistence holds past the
+   trigger, the call upgrades transient → durable (commit, long horizon).
+   Durable is the *earned* state, confirmed by observed momentum — never the
+   opening assertion.
+
+**Billing shape:** monitoring is recurring, so it carries **retainer potential
+(upgraded billing)** — but only as **recurring decisions**, never a feed. This is
+load-bearing: the buyer-proof packet names monitoring-only / dashboard-only pull
+as a **kill signal**, and a feed is also what would make Orca social listening.
+Same activity, opposite product; the line is the invariant below.
+
+**The invariant (never a feed):** every output is a **calibrated decision with an
+action ceiling** — never a stream of mentions. This single rule keeps the
+retainer off the kill signal *and* keeps Orca out of the social-listening
+category.
+
+**The loop compounds:** every monitored case (decayed-as-called or
+upgraded-to-durable) is a dated, labeled outcome — the same outcome-memory the
+wind-caller calibration ledger collects. The retainer is therefore also the
+**calibration-data source** that earns the judgment moat over time. The moat is
+built, not assumed.
 
 ## Pricing Refinement (PROPOSED final take on the owner's question)
 

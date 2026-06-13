@@ -284,17 +284,26 @@ with durable (owner: spikes are still capital-allocation decisions and occur mor
 often). Divergence becomes a **technique, not a verdict**. Identifying
 manufactured demand is **decision-critical in its own right** (owner).
 
-**Lane guardrail (baked in unless owner rejects):** transient reads carry an
-explicit **decay-timing confidence**, currently low, capping the transient action
-ceiling until a decay-curve capability exists (likely earned from historical
-analogues, like wind-caller calibration). Equal billing on the *read*; earned,
-claim-honest billing on the *claim* (built-to vs proven-at).
+**Refined 2026-06-14 (owner) — the calling sequence dissolves the decay-timing
+problem:** the read opens **transient** and acts in-window (buy or avoid), then
+**observes** persistence via monitoring and **earns** the upgrade to durable — no
+decay curve to predict; the earlier decay-timing-confidence guardrail is
+superseded by observe-don't-predict. The recurring monitoring is **decision-linked
+retainer billing** (upgraded billing), never a feed — every output is a calibrated
+decision with an action ceiling, which keeps the retainer off the buyer-proof
+"monitoring-only pull" kill and out of the social-listening category. Monitored
+outcomes are also the calibration data that earns the judgment moat.
 
-**Status:** executed into the taxonomy (dated amendment) and propagated to the
-controlling thesis (dated amendment). **Open for owner:** confirm or reject the
-decay-timing-confidence guardrail. Q1 and Q2 below now inherit the horizon
-dimension (rerouting is usually transient; a wind-caller's value splits by whether
-they call durable shifts or spikes).
+**Differentiation floor (owner insight):** the mechanical layers (costly-behavior
+primitive, org-motion fusion, entity resolution) beat a social listener's inputs
+but are replicable features — a survivable fallback business, not a moat. Judgment
++ outcome memory is the uncopyable differentiator and the category-definer; don't
+sell the plumbing.
+
+**Status:** executed into the taxonomy (Calling Sequence section + read types) and
+propagated to the controlling thesis (dated amendment). Q1 and Q2 below inherit
+the horizon dimension (rerouting is usually transient; a wind-caller's value
+splits by whether they call durable shifts or spikes). Nothing pending on Q0.
 
 ### Q1 — Pricing-signal refinement
 
