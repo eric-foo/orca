@@ -56,13 +56,14 @@ one else has the judgment.
 | **"Climbing Influence Tiers"** (ICWSM'24) | TikTok tier structure | TikTok + YT-Shorts | No | likes; 5,000 creators stratified Nano→Mega | unconfirmed (research) | free (hydrate) |
 | **YouNiverse** (EPFL, ICWSM'21) | method training/calibration | YouTube | **Yes** (weekly, ~2.8 yr) but →Sep 2019 | weekly subs+views deltas + per-video likes/comments | **CC BY 4.0 — commercial-clear** | free (~112 GB) |
 | **TubeCensus** (ICWSM'26) | post-2022 subscriber-trajectory panel | YouTube | **Yes** (subscriber snapshots 2006–2023) | **subscribers only** (no engagement) | **CC BY 4.0 — commercial-clear** | free (~16 GB; `pip install tubecensus`) |
+| **TikTok-200K** (lingbow, HF) | TikTok early-velocity validation | TikTok | **partial** (daily 0–30d, ~5.5 mo: Jun–Dec 2024) | plays/likes/comments/shares/saves; only **1,872 creators** | **CC-BY-NC — research-only** | free (HF) |
 
 **The 3-step proof plan:**
 1. **Discriminability backtest** — Global-YT-Trending (real visibility trajectory) + ksb2043 (IG; label outcomes by looking creators up *now*) → does early signal sort durable from transient, beating the "hottest-now" baseline. *(Caveat: Global-YT-Trending is trending-list **presence**, a proxy for durable momentum, not organic follower trajectory — defensible, but a proxy, and YouTube not your core surface. It proves the **method**.)*
 2. **Quality classifier** — develop "what high-quality engagement looks like" on the snapshot sets (TikTok-10M / tarekmasryo).
 3. **Trajectory + quality-over-time** — **forward-build** (the moat). No one sells it *open*; the closest, Tubular Labs, is ToS-locked against redistribution (see vendors below).
 
-**Additionally surfaced (2026-06-13 scout pass, NOT yet fetch-verified — leads for a next pass, not menu entries):** TikTok-200K (lingbow, HF; daily engagement sub-tables, CC-BY-NC) · BlueTempNet (Bluesky, 1-yr temporal) · Patreon creator-economy panel (ICWSM'22; patron-count trajectories, contact-author) · Traackr (multi-platform vendor, ~$32–55k/yr) · 400-creator IG 12-yr panel (Bertaglia'24, blocked by CrowdTangle's 2024 shutdown).
+**Scout leads — now fetch-verified (2026-06-13):** **TikTok-200K** → promoted to the table above (research-only; closest open TikTok longitudinal, but ~5.5-mo window + only 1,872 creators). **Traackr** → added to vendors (redistribution-locked, like Tubular). **Dropped:** BlueTempNet (no content-engagement signal — follow/feed-join only — + IEEE-DataPort paywall) · Patreon-ICWSM'22 (paper-only, no data released) · Bertaglia'24 IG 12-yr panel (data not deposited, account list unpublished, CrowdTangle killed Aug-2024 → irreproducible).
 
 ## Do we need a capture farm? No — forward capture is buyable / outsourceable
 
@@ -79,6 +80,7 @@ TikTok's Research API is **research-only (no commercial use)** — which is exac
 | **Apify** | scrape-infra to **build your own** forward trajectory | build-your-own | commercial platform; ToS risk on operator | from ~$1.70 / 1k |
 | **HypeAuditor** | current authenticity audit (a possible input) | n/a | sales-led | ~$3k/yr+ |
 | **Tubular Labs** | early-velocity engagement (views/eng at days 1/2/3/7/30 post-upload), multi-platform, same-creator | Yes (multi-yr, longitudinal) | **NOT redistributable** — API ToS forbids resale/syndication/3rd-party use; validation/internal only or bespoke license | sales-gated, not public (~$27.5k/yr median, Vendr) |
+| **Traackr** | 2.5-yr rolling panel, 7M+ creators; ER + fake-follower + paid/organic split | Yes (rolling 2.5 yr) | **NOT redistributable** — ToS §2.1 bans resale/sublicense/derivative product; internal only | sales-gated, not public (~$25–55k/yr est.) |
 
 - **Buy/outsource forward** (Exolyt/Pentos prospective · Bright Data current · Apify build-your-own), **or** self-capture *modestly* (sentinel+zoom + a few **genuinely-independent** accounts at human rate).
 - A **simulated-independence farm** is only a question at *exhaustive + high-frequency self-capture* — and even there the answer is "pay a vendor," not "build a farm." The line stays: genuinely-independent accounts = fine; proxy-puppets-faking-independence = no.
@@ -86,7 +88,7 @@ TikTok's Research API is **research-only (no commercial use)** — which is exac
 ## License split (the load-bearing buy-time gotcha)
 
 - **Commercial-clear (use for anything that ships):** Global-YT-Trending (CC BY) · tarekmasryo (CC BY) · **YouNiverse (CC BY)** · **TubeCensus (CC BY)** · Bright Data · Exolyt/Pentos (commercial-positioned — confirm ToS in writing).
-- **Research-only / redistribution-restricted (validation/learning only, or get written commercial terms):** ksb2043 · TikTok Research API · TikTok-10M ("other" → treat as research-only) · **Tubular Labs (API ToS forbids redistribution/resale — internal validation only without a bespoke license)**.
+- **Research-only / redistribution-restricted (validation/learning only, or get written commercial terms):** ksb2043 · TikTok Research API · TikTok-10M ("other" → treat as research-only) · **TikTok-200K (CC-BY-NC — non-commercial)** · **Tubular Labs & Traackr (vendor ToS forbids redistribution/resale — internal validation only without a bespoke license)**.
 - **Rule:** prove/develop on commercial-clear data for the shippable product; treat research-only sets as validation only. Get any commercial license **in writing** before relying on it.
 - **ksb2043 access:** a Google Form (to Seungbae Kim, UCLA) that requires agreeing to *research/education only* → it is a research/validation corpus, not commercial product data, unless commercial terms are cleared separately.
 
@@ -99,6 +101,7 @@ TikTok's Research API is **research-only (no commercial use)** — which is exac
 - [YouNiverse (Zenodo 4650046)](https://zenodo.org/records/4650046) · [code](https://github.com/epfl-dlab/YouNiverse) · [paper](https://arxiv.org/abs/2012.10378)
 - [TubeCensus (Zenodo 18267682)](https://zenodo.org/records/18267682) · [paper](https://arxiv.org/abs/2605.06999) · [code](https://github.com/blast-cu/tubecensus)
 - [Tubular Intelligence](https://tubularlabs.com/products/tubular-intelligence/) · [API ToS — no redistribution](https://tubularlabs.com/tubular-labs-online-api-terms-of-service/)
+- [TikTok-200K (HF, lingbow)](https://huggingface.co/datasets/lingbow/tiktok-video-engagement-200k) · [Traackr](https://www.traackr.com/influencer-marketing-software) · [Traackr ToS — no redistribution](https://www.traackr.com/legal/terms-of-service)
 - [TikTok Research API](https://developers.tiktok.com/products/research-api/) · [Research Tools ToS (commercial prohibited)](https://www.tiktok.com/legal/page/global/terms-of-service-research-api/en)
 - [Exolyt pricing](https://exolyt.com/pricing) · [Pentos](https://pentos.co) · [Bright Data TikTok influencers](https://brightdata.com/products/datasets/tiktok/influencers) · [Apify TikTok scraper](https://apify.com/clockworks/tiktok-scraper) · [Social Blade dev](https://socialblade.com/developers) · [CreatorDB Data API](https://creatordb.app/dataapi/)
 
