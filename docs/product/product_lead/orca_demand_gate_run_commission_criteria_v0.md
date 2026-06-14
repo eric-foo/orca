@@ -70,7 +70,13 @@ The scan must carry enough for the gate-run to be decidable:
   absence).
 
 If a required input is missing, the gate-run returns **insufficient-input**
-(not a fail) and names what the scan must add — it does not guess.
+(not a fail) and names what the scan must add — it does not guess. **Seam 2
+(present-but-ungradeable vs fail):** a costly-behavior claim that is *present but
+lacks the provenance / gradeability fields* needed to assess it (attributability
+to buyer actions, direction + rough magnitude, corroborability) returns
+**insufficient-input** — the scan must add provenance — **not** a fail. `fail` is
+reserved for when gradeability *can* be assessed and the floor is genuinely not
+met (Stage B step 2).
 
 ## Stage B — Gate-Run (procedure)
 
@@ -96,12 +102,21 @@ this order. Each step is a judgment, not a number.
    manufactured/coordinated (e.g., the only costly signal sits inside the same
    coordinated layer divergence flags), divergence **defeats the floor** → FAIL
    or hold, not merely a lower ceiling.
-4. **Verb-tier the ceiling.** The independent-origin count tiers the action
-   ceiling, not a binary pass: **one** independent origin (or laundered copies of
-   one) → **hold / low-commitment** ceiling; **≥2 converging independent origins**
-   → **material-action eligible** (act, phase, narrow, or a costly/committing
-   defend). Org-motion corroboration may raise confidence but does not raise the
-   origin count.
+4. **Verb-tier the ceiling, then check source-coverage admissibility.** The
+   independent-origin count tiers the action ceiling, not a binary pass: **one**
+   independent origin (or laundered copies of one) → **hold / low-commitment**
+   ceiling; **≥2 converging independent origins** → **material-action candidate**
+   (act, phase, narrow, or a costly/committing defend). Material-action
+   eligibility **additionally requires source-coverage admissibility**: those ≥2
+   converging origins must **span ≥2 of the three required demand-source families**
+   (review-surface / forums-community / search-interest), and ≥2 of those families
+   must be **sourced**. Today only forums/community is sourced, so the material
+   tier is **inadmissible** — every gate-run caps at hold regardless of
+   within-family lineage count (origin starvation, consciously accepted). A
+   material-ceiling cap by coverage is a **ceiling cap, not a fail or
+   insufficient-input**. Org-motion corroboration may raise confidence but does
+   not raise the origin count. (Owner-ratified 2026-06-14; model:
+   `docs/product/product_lead/orca_demand_gate_required_source_coverage_admissibility_v0.md`.)
 5. **Owner + consequence check.** A gate-run that clears the floor still requires
    the brief's other objectives for a slot to be live: a **named decision owner**
    and a **concrete allocation consequence**. Their absence is a hold/disqualify
@@ -113,8 +128,10 @@ Every gate-run yields **exactly one** determinate verdict with a one-line basis
 citing the deciding step:
 
 - **`admit @ <ceiling>`** — floor cleared, not defeated; ceiling set by the
-  origin count (`hold/low-commitment` on one origin, `material-action eligible`
-  on ≥2 converging independent origins), and a named owner + consequence present.
+  origin count **and source-coverage admissibility** (`hold/low-commitment` on one
+  origin, **or** whenever fewer than 2 required demand families are sourced;
+  `material-action eligible` only on ≥2 converging independent origins spanning ≥2
+  sourced required demand families), and a named owner + consequence present.
 - **`hold`** — floor cleared but capped (single origin, or owner/consequence not
   yet confirmed), or divergence caps without defeating.
 - **`fail`** — floor not cleared (no gradeable costly-behavior instance, or no

@@ -429,7 +429,10 @@ Use these before broad product architecture or CA setup:
 | --- | --- |
 | `docs/decisions/orca_product_thesis_consumer_demand_v0.md` | Orca thesis (consumer-demand decision intelligence, beauty first; owner-ratified 2026-06-12; supersedes `docs/decisions/turn_08_product_thesis_v0.md`), value proposition, strategic center, product boundary. |
 | `docs/product/product_lead/orca_offer_hypothesis_v0.md` | Offer hypothesis, buyer-facing language, first proof offer, ICP boundary. |
-| `docs/product/product_lead/orca_buyer_proof_packet_v0.md` | First buyer-proof packet, proof gates, pull signals, kill/graduation criteria. |
+| `docs/product/product_lead/orca_buyer_proof_packet_v0.md` | First buyer-proof packet, proof gates, pull signals, kill/graduation criteria; carries the live Demand-Substrate Hard Gate. |
+| `docs/product/product_lead/orca_demand_gate_required_source_coverage_admissibility_v0.md` | Demand-Substrate Hard Gate **source-coverage admissibility** model (owner-ratified 2026-06-14): required demand-family set, Seam-1 resolution, material-action-only coverage gating (≥2-of-3 sourced + cross-family convergence), origin-starvation, hard-walled backtest carve-out, Seam-2. |
+| `docs/product/product_lead/orca_demand_gate_run_commission_criteria_v0.md` | Gate-run commission criteria: scan → gate-run → filled-slot shape with a determinate admit/hold/fail/insufficient-input verdict. Qualitative; not a scoring engine. |
+| `docs/product/product_lead/orca_discovery_consumer_demand_target_selection_brief_v0.md` | Live consumer-demand discovery target-selection instrument: blank slots, qualification objectives, slot-tier guidance, stop rules. |
 | `docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md` | Current first-proof ICP wedge (beauty operator door; owner co-ratified 2026-06-12; supersedes pricing-first) and decision-family focus. |
 | `docs/product/product_lead/orca_product_proof_lead_charter_v0.md` | Product proof lead role and proof execution boundary. |
 | `docs/product/product_lead/orca_claim_defense_doctrine_v0.md` | Operative external-claims policy (owner-signed 2026-06-11): built-to vs proven-at, per-tier wording table, debunking triage. Read before any externally visible sentence about Orca's judgment evidence. |

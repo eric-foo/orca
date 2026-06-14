@@ -200,6 +200,16 @@ integrity rule instead of a venue allowlist:
   capped at hold / low-commitment**; **≥2 converging independent origins** are
   required before any material or irreversible commitment. A single clean origin
   is therefore a **ceiling cap, not an automatic gate failure**.
+- **Source-coverage admissibility (material tier).** The ≥2 converging
+  independent origins required for material action must additionally **span ≥2 of
+  the three required demand-source families** (review-surface / forums-community /
+  search-interest), and ≥2 of those families must be **sourced** — two
+  de-correlated lineages inside a single family cap at hold, not material. With
+  only forums/community sourced today, the material tier is **inadmissible for
+  every candidate** (origin starvation, consciously accepted); the gate stays
+  productive at hold. Insufficient coverage is a **ceiling cap** (not a fail, not
+  insufficient-input). Owner-ratified 2026-06-14; full model:
+  `docs/product/product_lead/orca_demand_gate_required_source_coverage_admissibility_v0.md`.
 
 ## Evidence Mode And Source Boundary
 
@@ -224,8 +234,10 @@ Geography: US-market first proof per the thesis geography doctrine
 
 A qualified target must pass the Demand-Substrate Hard Gate above (enough
 effectively-independent demand-venue origins for the commitment claimed — one
-origin caps at hold/low-commitment, ≥2 converging independent origins for
-material action; a gradeable costly-behavior instance clearing the floor;
+origin caps at hold/low-commitment, ≥2 converging independent origins
+spanning ≥2 sourced demand-source families for material action
+(source-coverage admissibility, 2026-06-14); a gradeable costly-behavior
+instance clearing the floor;
 integrity labels applicable) and have a named decision owner who can identify a
 concrete inventory, retail-commitment, launch-budget, backlash/churn, or
 delayed-capture consequence.
@@ -258,8 +270,9 @@ Disqualifiers:
   route outside the capture lane's current bindings or only at absurd risk level
   — route expansion is a capture-lane decision, not a per-candidate stretch). A
   single independent origin is **not** a gate failure: it is admissible but caps
-  the read at hold / low-commitment (≥2 converging independent origins are
-  required for material action).
+  the read at hold / low-commitment (≥2 converging independent origins
+  spanning ≥2 sourced demand-source families are required for material action —
+  source-coverage admissibility).
 - Buyer wants only generic research, source volume, dashboard access, trend
   feeds, or a market-monitoring feed.
 - Buyer requires private/internal data or automated collection before a manual public-signal memo can be useful.

@@ -73,8 +73,13 @@ a separately authorized candidate-scan lane.
 | T6 | `UNFILLED - requires authorized candidate scan` | — | — | — | — | — | empty |
 
 Slot-tier guidance: **1 independent demand-venue origin → hold / low-commitment
-ceiling; ≥2 converging independent origins → material-action eligible**
-(org-motion / retail presence = corroboration, not counted toward origins).
+ceiling; ≥2 converging independent origins spanning ≥2 sourced required
+demand-source families → material-action eligible** (org-motion / retail presence
+= corroboration, not counted toward origins). Source-coverage admissibility
+(owner-ratified 2026-06-14): with only forums/community sourced today,
+material-action eligibility is unreachable — slots cap at hold (origin
+starvation, consciously accepted). See
+`docs/product/product_lead/orca_demand_gate_required_source_coverage_admissibility_v0.md`.
 
 Slot-fill rule: a slot may be filled only from a dated, provenance-noted
 candidate scan produced by an authorized lane; no slot is filled from memory,
@@ -108,9 +113,12 @@ Demand-Substrate Hard Gate and disqualifiers control on any conflict.
    enough effectively-independent **demand-venue origins** visible for the
    intended **commitment** (laundered copies / shared-origination siblings
    collapse to one; **org-motion including retail presence is corroboration, not
-   a demand family**), a gradeable costly-behavior instance present, integrity
-   labels applicable, no route outside the capture lane's current bindings
-   required (and no absurd-risk route at any time).
+   a demand family**; **material-action eligibility additionally requires ≥2
+   converging origins spanning ≥2 _sourced_ required demand-source families —
+   source-coverage admissibility, owner-ratified 2026-06-14**), a gradeable
+   costly-behavior instance present, integrity labels applicable, no route outside
+   the capture lane's current bindings required (and no absurd-risk route at any
+   time).
 4. Classify public-signal trust state (`trust_open` / `trust_objection` /
    `trust_refusal`) per `.agents/workflow-overlay/product-proof.md`; only
    categorical `trust_refusal` disqualifies.
