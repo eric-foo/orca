@@ -1,0 +1,125 @@
+name: auto-merge
+
+# Lands clean + green lane PRs that opt in via the `agent-automerge` label, without
+# the human merge step — within this repo's reality that native auto-merge and
+# branch protection are 403-blocked (private repo on a free plan). See
+# docs/decisions/dev_workflow_ci_branch_protection_doctrine_v0.md (item 7, the
+# 2026-06-14 structure-B amendment).
+#
+# The interactive-agent EP-03 gate (.agents/hooks/guard_protected_actions.py) is
+# UNCHANGED: it already allows the agent to `gh pr merge` only a CLEAN + green +
+# `agent-automerge`-labeled PR, in-session. THIS workflow is the UNATTENDED
+# extension of that structure-B′ self-merge — a separate, code-enforced actor that
+# runs in Actions (not through the PreToolUse hook) and lands the same opt-in PRs
+# overnight / with no session, under the guardrails below. Same label, one merge
+# actor or the other lands it first.
+#
+# Conflict-prevention guardrails (the contract the owner asked for):
+#   1. opt-in    — PR must carry the `agent-automerge` label.
+#   2. no conflict — mergeable == MERGEABLE (GitHub recomputes this vs CURRENT main,
+#                    so it self-corrects across serial merges; this is the class the
+#                    #83/#87 stacked-squash conflict fell into).
+#   3. green     — the `orca-harness-tests` CI check is SUCCESS and nothing is
+#                  failing or still pending.
+#   4. up-to-date — behind_by == 0 vs main, so two independently-green branches
+#                   cannot break main when combined. (This guard is stricter than
+#                   the in-session self-merge path, which checks CLEAN but not
+#                   up-to-date.)
+#   5. serialize — merge AT MOST ONE PR per run, then exit. The next CI completion
+#                  or the cron backstop handles the next, so GitHub fully recomputes
+#                  mergeability between merges (there is no native merge queue here).
+#   6. squash + delete branch (the repo default).
+#
+# Honest limitation: a bot merge via GITHUB_TOKEN does NOT re-trigger the push:main
+# CI run (GitHub's no-recursion rule), so main-CI is not a redundant post-merge
+# backstop for bot-landed commits. The PR's own green check plus guardrail 4 stand
+# in for that.
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+  schedule:
+    - cron: "0 */3 * * *"   # sparse backstop; the primary path is CI-completion
+  workflow_dispatch:
+
+permissions:
+  contents: write          # repo default is read-only; this workflow opts up to
+  pull-requests: write     # least-privilege write for merge + branch delete.
+
+concurrency:
+  group: auto-merge        # never run two mergers at once
+  cancel-in-progress: false
+
+jobs:
+  auto-merge:
+    # On a CI-completion trigger, only proceed if that CI run was green.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      CI_CHECK: orca-harness-tests
+      AUTOMERGE_LABEL: agent-automerge
+    steps:
+      - name: Merge one eligible auto-merge PR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Open PRs that opted in via the label. Filtering in jq (not via
+          # `gh pr list --label`) means a missing label yields an empty set
+          # instead of an error.
+          mapfile -t prs < <(gh pr list --repo "$REPO" --state open --json number,labels \
+            | jq -r --arg lbl "$AUTOMERGE_LABEL" '.[] | select(any(.labels[]?; .name==$lbl)) | .number')
+
+          if [ "${#prs[@]}" -eq 0 ]; then
+            echo "No open PRs carry the '$AUTOMERGE_LABEL' label. Nothing to do."
+            exit 0
+          fi
+
+          for n in "${prs[@]}"; do
+            echo "::group::Evaluating PR #$n"
+            data=$(gh pr view "$n" --repo "$REPO" \
+              --json isDraft,mergeable,headRefName,baseRefName,statusCheckRollup)
+
+            is_draft=$(jq -r '.isDraft' <<<"$data")
+            mergeable=$(jq -r '.mergeable' <<<"$data")
+            head=$(jq -r '.headRefName' <<<"$data")
+            base=$(jq -r '.baseRefName' <<<"$data")
+
+            # Only land lane PRs that target main, and never a draft.
+            if [ "$base" != "main" ]; then echo "skip: base is '$base', not main"; echo "::endgroup::"; continue; fi
+            if [ "$is_draft" = "true" ]; then echo "skip: draft"; echo "::endgroup::"; continue; fi
+
+            # Guard 2 — no textual conflict (recomputed vs current main).
+            if [ "$mergeable" != "MERGEABLE" ]; then
+              echo "skip: mergeable=$mergeable (conflict, or still computing)"; echo "::endgroup::"; continue
+            fi
+
+            # Guard 3 — green: every check is SUCCESS/NEUTRAL/SKIPPED (and there is
+            # at least one), AND the named CI check passed.
+            all_green=$(jq -r '
+              [ .statusCheckRollup[]?
+                | if has("conclusion") then (.conclusion // "PENDING") else (.state // "PENDING") end ]
+              | (length > 0) and (all(. as $s | (["SUCCESS","NEUTRAL","SKIPPED"] | index($s)) != null))
+            ' <<<"$data")
+            ci_success=$(jq -r --arg c "$CI_CHECK" '
+              [ .statusCheckRollup[]? | select(.name==$c) | .conclusion ] | any(. == "SUCCESS")
+            ' <<<"$data")
+            if [ "$all_green" != "true" ]; then echo "skip: a check is failing or pending"; echo "::endgroup::"; continue; fi
+            if [ "$ci_success" != "true" ]; then echo "skip: CI check '$CI_CHECK' is not SUCCESS"; echo "::endgroup::"; continue; fi
+
+            # Guard 4 — up-to-date with main (behind_by counts commits in main not in head).
+            behind=$(gh api "repos/$REPO/compare/main...$head" --jq '.behind_by')
+            if [ "$behind" != "0" ]; then echo "skip: behind main by $behind commit(s) — rebase to enable"; echo "::endgroup::"; continue; fi
+
+            echo "PR #$n is eligible (labeled, mergeable, green, up-to-date). Merging (squash)."
+            gh pr merge "$n" --repo "$REPO" --squash --delete-branch
+            echo "Merged PR #$n. Stopping — one merge per run for safe serialization."
+            echo "::endgroup::"
+            exit 0
+          done
+
+          echo "No eligible PR this run."
