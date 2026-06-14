@@ -24,6 +24,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Callable, Sequence
+from urllib.parse import urlparse
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -110,6 +111,19 @@ def _capture_one(url: str, *, scroll_passes: int, timeout_seconds: float, viewpo
     )
 
 
+def _profile_handle_from_url(profile_url: str) -> str | None:
+    path_parts = [part for part in urlparse(profile_url).path.split("/") if part]
+    return path_parts[0] if path_parts else None
+
+
+def _has_captured_call_signal(parsed) -> bool:
+    return bool(
+        parsed.caption
+        and parsed.date
+        and (parsed.likes is not None or parsed.comments is not None)
+    )
+
+
 def run_source_capture_ig_calls_packet(
     *,
     profile_url: str,
@@ -134,6 +148,8 @@ def run_source_capture_ig_calls_packet(
 ) -> tuple[int, str]:
     if max_items <= 0:
         raise ValueError("max_items must be greater than zero")
+    if max_items > DEFAULT_MAX_ITEMS:
+        raise ValueError(f"max_items must be no greater than {DEFAULT_MAX_ITEMS} for this bounded runner")
 
     profile = _capture_one(
         profile_url, scroll_passes=profile_scroll_passes, timeout_seconds=timeout_seconds,
@@ -148,7 +164,10 @@ def run_source_capture_ig_calls_packet(
     if block is not None:
         return 3, f"profile access-blocked ({block}); recorded NO-GO, no packet written"
 
-    permalinks = extract_item_permalinks(profile.rendered_dom)[:max_items]
+    permalinks = extract_item_permalinks(
+        profile.rendered_dom,
+        profile_handle=_profile_handle_from_url(profile.final_url or profile.requested_url),
+    )[:max_items]
     if not permalinks:
         return 3, "no /p/ or /reel/ permalinks enumerated from the profile grid"
 
@@ -191,6 +210,23 @@ def run_source_capture_ig_calls_packet(
                                  "message": "no og:description on item page"})
             continue
         parsed = parse_ig_og_description(og)
+        if not _has_captured_call_signal(parsed):
+            item_records.append({
+                "url": item.final_url,
+                "status": "partial_signal",
+                "message": (
+                    "og:description did not contain the minimum call signal "
+                    "(caption, date, and at least one engagement count)"
+                ),
+                "caption": parsed.caption,
+                "likes": parsed.likes,
+                "comments": parsed.comments,
+                "date": parsed.date,
+                "is_ad": parsed.is_ad,
+                "caption_truncated": parsed.truncated,
+                "raw_og": parsed.raw_og,
+            })
+            continue
         item_records.append({
             "url": item.final_url,
             "status": "captured",
@@ -278,12 +314,12 @@ def _write_packet(
     written: list[Path] = []
     try:
         for path, payload in staged:
+            written.append(path)
             path.write_text(
                 json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n",
                 encoding="utf-8",
                 newline="\n",
             )
-            written.append(path)
 
         def _timing(publication) -> PacketTiming:
             return PacketTiming(

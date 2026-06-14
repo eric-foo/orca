@@ -29,8 +29,11 @@ _META_CONTENT_FIRST = (
     r'<meta[^>]+content=["\'](.*?)["\'][^>]*\sproperty=["\']{prop}["\']'
 )
 
-# Permalink hrefs in the rendered grid: /<handle>/p/<shortcode>/ or /<handle>/reel/<shortcode>/
-_PERMALINK_RE = re.compile(r'href=["\'](/[A-Za-z0-9._]+/(?:p|reel)/[A-Za-z0-9_-]+/)["\']')
+# Permalink hrefs in the rendered grid: canonical /p/<shortcode>/ or /reel/<shortcode>/,
+# plus handle-prefixed variants observed in some rendered surfaces.
+_PERMALINK_RE = re.compile(
+    r'href=["\'](?P<path>/(?:(?P<handle>[A-Za-z0-9._]+)/(?:p|reel)|(?:p|reel))/[A-Za-z0-9_-]+/)["\']'
+)
 
 # Post/reel og:description: "<likes> likes, <comments> comments - <handle> on <Mon D, YYYY>: "<caption>". "
 _LIKES_RE = re.compile(r"([\d,]+)\s+likes\b", re.IGNORECASE)
@@ -82,12 +85,16 @@ def extract_meta_content(rendered_dom: str, prop: str) -> str | None:
     return None
 
 
-def extract_item_permalinks(rendered_dom: str) -> list[str]:
+def extract_item_permalinks(rendered_dom: str, *, profile_handle: str | None = None) -> list[str]:
     """Enumerate /p/ and /reel/ permalinks from the rendered grid, deduped, order-preserving, as absolute URLs."""
+    normalized_handle = profile_handle.casefold() if profile_handle else None
     seen: set[str] = set()
     out: list[str] = []
     for match in _PERMALINK_RE.finditer(rendered_dom):
-        path = match.group(1)
+        handle = match.group("handle")
+        if normalized_handle and handle and handle.casefold() != normalized_handle:
+            continue
+        path = match.group("path")
         if path not in seen:
             seen.add(path)
             out.append(f"{_INSTAGRAM_ORIGIN}{path}")

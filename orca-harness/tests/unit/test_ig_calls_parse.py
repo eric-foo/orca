@@ -40,13 +40,25 @@ def test_extract_meta_content_both_attribute_orders_and_unescaping() -> None:
 
 def test_extract_item_permalinks_dedupes_and_filters_non_items() -> None:
     grid = (
+        '<a href="/p/CANON/">canonical post</a>'
+        '<a href="/reel/CANONREEL/">canonical reel</a>'
         '<a href="/hyram/p/C-JRfLayO96/">a</a>'
         '<a href="/hyram/reel/C_yOnGJylAQ/">b</a>'
         '<a href="/hyram/p/C-JRfLayO96/">dup</a>'
+        '<a href="/otheruser/p/SHOULD_SKIP/">other handle</a>'
         '<a href="/explore/">x</a>'
         '<a href="/hyram/">profile</a>'
     )
     assert extract_item_permalinks(grid) == [
+        "https://www.instagram.com/p/CANON/",
+        "https://www.instagram.com/reel/CANONREEL/",
+        "https://www.instagram.com/hyram/p/C-JRfLayO96/",
+        "https://www.instagram.com/hyram/reel/C_yOnGJylAQ/",
+        "https://www.instagram.com/otheruser/p/SHOULD_SKIP/",
+    ]
+    assert extract_item_permalinks(grid, profile_handle="hyram") == [
+        "https://www.instagram.com/p/CANON/",
+        "https://www.instagram.com/reel/CANONREEL/",
         "https://www.instagram.com/hyram/p/C-JRfLayO96/",
         "https://www.instagram.com/hyram/reel/C_yOnGJylAQ/",
     ]

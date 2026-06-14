@@ -58,6 +58,7 @@ _REEL_DOM = (
     'content="1,047 likes, 43 comments - hyram on September 11, 2024: &quot;#ad sponsored thing&quot;. ">'
 )
 _NO_OG_DOM = "<html><body>no meta description here</body></html>"
+_GARBLED_OG_DOM = '<meta property="og:description" content="Instagram photos and videos">'
 
 
 def _route_fake(url: str) -> BrowserSnapshotSuccess:
@@ -67,6 +68,12 @@ def _route_fake(url: str) -> BrowserSnapshotSuccess:
         return _success(requested_url=url, rendered_dom=_REEL_DOM)
     if "/p/CCC/" in url:
         return _success(requested_url=url, rendered_dom=_NO_OG_DOM)
+    return _success(requested_url=url, rendered_dom=_PROFILE_DOM)
+
+
+def _route_garbled(url: str) -> BrowserSnapshotSuccess:
+    if "/p/AAA/" in url:
+        return _success(requested_url=url, rendered_dom=_GARBLED_OG_DOM)
     return _success(requested_url=url, rendered_dom=_PROFILE_DOM)
 
 
@@ -126,6 +133,41 @@ def test_ig_calls_runner_respects_item_cap(scratch_dir: Path, monkeypatch: pytes
     manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
     call_slices = [s for s in manifest["source_slices"] if s["slice_id"].startswith("ig_call_")]
     assert len(call_slices) == 2  # capped at max_items, not all 3 enumerated
+
+
+def test_ig_calls_runner_rejects_item_cap_above_bounded_default(scratch_dir: Path) -> None:
+    with pytest.raises(ValueError, match="max_items must be no greater than"):
+        run_source_capture_ig_calls_packet(
+            profile_url=PROFILE_URL,
+            output_directory=scratch_dir / "packet",
+            decision_question="q",
+            max_items=ig_runner.DEFAULT_MAX_ITEMS + 1,
+            sleep_fn=lambda _s: None,
+        )
+
+
+def test_ig_calls_runner_does_not_mark_garbled_og_as_captured(
+    scratch_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(ig_runner, "fetch_browser_snapshot_capture", lambda **kw: _route_garbled(kw["url"]))
+    output_dir = scratch_dir / "packet"
+
+    exit_code, _ = run_source_capture_ig_calls_packet(
+        profile_url=PROFILE_URL,
+        output_directory=output_dir,
+        decision_question="q",
+        max_items=1,
+        cadence_random_seed=1,
+        sleep_fn=lambda _s: None,
+    )
+
+    assert exit_code == 0
+    manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert any("partial_capture: 0/1" in lim for lim in manifest["limitations"])
+    raw = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in (output_dir / "raw").iterdir() if p.suffix == ".json"}
+    item = next(v for k, v in raw.items() if "ig_call_01" in k)
+    assert item["status"] == "partial_signal"
+    assert "minimum call signal" in item["message"]
 
 
 def test_ig_calls_runner_returns_nogo_when_profile_redirects_to_login(
