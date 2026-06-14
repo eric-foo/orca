@@ -191,9 +191,13 @@ Concretely:
 
 Price time-series capture records the following as separate, named,
 first-class observable facts per observation (per `SourceCaptureSlice`).
-Each is carried as a `VisibleFact` so `unknown_with_reason` /
-`unavailable_by_source` / `not_attempted` / `not_applicable` ride on status.
-Silent omission is not allowed (obligation contract rule, reused).
+Each is carried as a `VisibleFact`, so its status is a `VisibleFactStatus`
+(`known` / `unknown_with_reason` / `not_attempted` / `not_applicable`) with a
+reason. Where the source does not expose a field, the field's fact status is
+`unknown_with_reason` (or `not_applicable`) and the capture **obligation** for
+that field is discharged as `unavailable_by_source` — an obligation-discharge
+state, not a `VisibleFactStatus`, never written as a fact's status. Silent
+omission is not allowed (obligation contract rule, reused).
 
 ### Core Price Fields (per observation, per variant/SKU)
 

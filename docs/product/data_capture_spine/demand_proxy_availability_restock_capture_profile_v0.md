@@ -185,9 +185,13 @@ Concretely:
 
 Availability/restock capture records the following as separate, named,
 first-class observable facts per observation (per `SourceCaptureSlice`) at
-**variant granularity**. Each is carried as a `VisibleFact` so
-`unknown_with_reason` / `unavailable_by_source` / `not_attempted` /
-`not_applicable` ride on status. Silent omission is not allowed.
+**variant granularity**. Each is carried as a `VisibleFact`, so its status is a
+`VisibleFactStatus` (`known` / `unknown_with_reason` / `not_attempted` /
+`not_applicable`) with a reason. Where the source does not expose a field, the
+field's fact status is `unknown_with_reason` (or `not_applicable`) and the
+capture **obligation** for that field is discharged as `unavailable_by_source` —
+an obligation-discharge state, not a `VisibleFactStatus`, never written as a
+fact's status. Silent omission is not allowed.
 
 ### Core Stock State Fields (per variant, per observation)
 
@@ -373,8 +377,32 @@ series to be honest; an undisclosed gap masquerades as "no stock change."
   constrained supply or marketing theater cannot be determined at capture
   time; the flag-don't-conclude discipline applies.
 - Capture does not decide admissibility for any backtest or cutoff window.
-- Availability capture is one proxy in the Demand-Substrate Hard Gate's
-  required multi-venue fusion; it cannot carry a demand read on its own.
+- Availability capture is one proxy: on its own it cannot support a material
+  demand commitment. Per the commitment-tiered Demand-Substrate Hard Gate, a
+  single origin authorizes only low-commitment, reversible responses; any
+  material or irreversible commitment requires ≥2 independent origins that
+  converge (a second family is not required at the floor but raises the
+  ceiling). See `orca_buyer_proof_packet_v0.md` (AR-02, AR-06).
+
+---
+
+## Series-Diff Application (Lane 1 Element 3)
+
+Stock-state changes across the ordered availability series are recorded using
+**Lane 1 Element 3 (series-level recapture-diff)** — consumed, not re-derived
+(see `capture_envelope_durability_delta_spec_v0.md` §Element 3). For one
+`series_id`, the series-diff records the observed stock-state change events —
+`in_stock` ↔ `out_of_stock`, `low_stock` onset, `waitlist_open` /
+`waitlist_closed`, `backorder`, `discontinued`, and restock — with the existing
+evidence anchors (`PreservedFile.sha256` divergence and/or the source-visible
+label change), and `tamper_deletion_visibility` recording whether a delisting /
+relisting / back-dated change was source-visibly marked, inferred from hash/value
+divergence only, or `cannot_assess`. This is what prevents an **un-sampled gap**
+from being read as "stock did not change": absence of an observed change event
+within a cadence gap is recorded as un-observed, never as no-change. The
+series-diff records observed differences only; whether a change is genuine
+scarcity, restock strategy, or manipulation is a downstream Judgment call
+(INV-1).
 
 ---
 
@@ -391,7 +419,7 @@ lifecycle:
   lane_1_consumed:
     spec: docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
     pr: "#93"
-    elements_consumed: [1, 2, 4, 5]
+    elements_consumed: [1, 2, 3, 4, 5]
     temporal_regime: forward-only (all venue classes; NO retroactive-native addendum)
     cold_start_cap: inherent-limit, absolute and unconditional (Lane 1 Element 5 consumed verbatim)
   deconfliction_status: low overlap with existing surfaces (generic fidelity/recapture only); variant-granularity, flag-don't-conclude, and restock-signal capture are genuinely new
