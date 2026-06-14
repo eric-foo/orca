@@ -44,13 +44,9 @@ explicit reference-load and apply wording when method order matters.
 
 Repo-aware prompts, wrappers, handoffs, review prompts, patch prompts, and
 reruns must include `.agents/workflow-overlay/decision-routing.md` when the
-task is substantial, ambiguous, cross-thread, delegated, doctrine-changing,
-review/patch-affecting, infrastructure-building, or messy-worktree sensitive.
-Use the router before planning or delegation, and include both an allowed next
-move and a disallowed next move.
-
-Do not add decision-routing ceremony for narrow clear edits, mechanical
-formatting, direct command answers, or already-scoped implementation steps.
+task matches that file's trigger conditions. Run the router before planning or
+delegation, and include both an allowed next move and a disallowed next move.
+Skip it under that file's bypass conditions.
 
 ## Output Discipline
 
