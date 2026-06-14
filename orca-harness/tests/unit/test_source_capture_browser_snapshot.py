@@ -218,6 +218,43 @@ def test_fetch_browser_snapshot_capture_rejects_embedded_credentials_url() -> No
         )
 
 
+def _ok_engine() -> _FakeBrowserEngine:
+    return _FakeBrowserEngine(
+        _FakeEngineResult(
+            final_url="https://example.com/source",
+            title=None,
+            rendered_dom="<html><body>ok</body></html>",
+            visible_text="ok",
+            screenshot_png=b"\x89PNG\r\n\x1a\nbrowser",
+        )
+    )
+
+
+def test_fetch_browser_snapshot_capture_threads_scroll_params_to_engine() -> None:
+    engine = _ok_engine()
+    fetch_browser_snapshot_capture(
+        url="https://example.com/source", scroll_passes=3, scroll_step_px=500, engine=engine
+    )
+    assert engine.capture_kwargs is not None
+    assert engine.capture_kwargs["scroll_passes"] == 3
+    assert engine.capture_kwargs["scroll_step_px"] == 500
+
+
+def test_fetch_browser_snapshot_capture_scroll_defaults_to_zero_preserving_single_url_contract() -> None:
+    engine = _ok_engine()
+    fetch_browser_snapshot_capture(url="https://example.com/source", engine=engine)
+    assert engine.capture_kwargs is not None
+    assert engine.capture_kwargs["scroll_passes"] == 0
+    assert engine.capture_kwargs["scroll_step_px"] == 0
+
+
+def test_fetch_browser_snapshot_capture_rejects_negative_scroll() -> None:
+    with pytest.raises(ValueError, match="scroll_passes must be zero or greater"):
+        fetch_browser_snapshot_capture(url="https://example.com/source", scroll_passes=-1, engine=_ok_engine())
+    with pytest.raises(ValueError, match="scroll_step_px must be zero or greater"):
+        fetch_browser_snapshot_capture(url="https://example.com/source", scroll_step_px=-5, engine=_ok_engine())
+
+
 def test_browser_snapshot_runner_writes_packet_with_four_artifacts(
     scratch_dir: Path,
     monkeypatch: pytest.MonkeyPatch,
