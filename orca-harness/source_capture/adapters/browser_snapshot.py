@@ -15,6 +15,12 @@ DEFAULT_VIEWPORT_WIDTH = 1280
 DEFAULT_VIEWPORT_HEIGHT = 720
 DEFAULT_MAX_ARTIFACT_BYTES = 5_000_000
 ALLOWED_WAIT_UNTIL = {"commit", "domcontentloaded", "load", "networkidle"}
+# Pause after each scroll-to-bottom pass so lazy-loaded (infinite-scroll / "load
+# more") content can fetch and render before the next pass or the capture.
+_SCROLL_PASS_SETTLE_MS = 2000
+# Safety cap so an infinite-scroll page (whose scrollHeight keeps growing) cannot
+# loop unbounded even if a caller passes a very large scroll_passes.
+_MAX_SCROLL_PASSES = 40
 
 
 class BrowserSnapshotFailureKind(StrEnum):
@@ -69,6 +75,8 @@ class BrowserSnapshotEngine(Protocol):
         viewport_width: int,
         viewport_height: int,
         storage_state_path: Path | None = None,
+        scroll_passes: int = 0,
+        scroll_step_px: int = 0,
     ) -> BrowserSnapshotEngineResult:
         ...
 
@@ -82,6 +90,8 @@ def fetch_browser_snapshot_capture(
     viewport_height: int = DEFAULT_VIEWPORT_HEIGHT,
     max_artifact_bytes: int = DEFAULT_MAX_ARTIFACT_BYTES,
     storage_state_path: Path | None = None,
+    scroll_passes: int = 0,
+    scroll_step_px: int = 0,
     engine: BrowserSnapshotEngine | None = None,
 ) -> BrowserSnapshotResult:
     normalized_url = _validate_http_url(url)
@@ -89,6 +99,10 @@ def fetch_browser_snapshot_capture(
     _validate_positive_int("viewport_width", viewport_width)
     _validate_positive_int("viewport_height", viewport_height)
     _validate_positive_int("max_artifact_bytes", max_artifact_bytes)
+    if scroll_passes < 0:
+        raise ValueError("scroll_passes must be zero or greater")
+    if scroll_step_px < 0:
+        raise ValueError("scroll_step_px must be zero or greater")
     if wait_until not in ALLOWED_WAIT_UNTIL:
         allowed = ", ".join(sorted(ALLOWED_WAIT_UNTIL))
         raise ValueError(f"wait_until must be one of: {allowed}")
@@ -102,6 +116,8 @@ def fetch_browser_snapshot_capture(
             viewport_width=viewport_width,
             viewport_height=viewport_height,
             storage_state_path=storage_state_path,
+            scroll_passes=scroll_passes,
+            scroll_step_px=scroll_step_px,
         )
     except _BrowserSnapshotDependencyUnavailable as exc:
         return BrowserSnapshotFailure(
@@ -199,6 +215,8 @@ class _PlaywrightBrowserSnapshotEngine:
         viewport_width: int,
         viewport_height: int,
         storage_state_path: Path | None = None,
+        scroll_passes: int = 0,
+        scroll_step_px: int = 0,
     ) -> BrowserSnapshotEngineResult:
         try:
             sync_api = import_module("playwright.sync_api")
@@ -231,6 +249,19 @@ class _PlaywrightBrowserSnapshotEngine:
                 try:
                     page = context.new_page()
                     page.goto(url, wait_until=wait_until, timeout=timeout_ms)
+                    if scroll_step_px > 0:
+                        position = 0
+                        for _ in range(_MAX_SCROLL_PASSES):
+                            height = page.evaluate("() => document.body.scrollHeight")
+                            if position >= height:
+                                break
+                            position += scroll_step_px
+                            page.evaluate("(y) => window.scrollTo(0, y)", position)
+                            page.wait_for_timeout(_SCROLL_PASS_SETTLE_MS)
+                    elif scroll_passes > 0:
+                        for _ in range(min(scroll_passes, _MAX_SCROLL_PASSES)):
+                            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                            page.wait_for_timeout(_SCROLL_PASS_SETTLE_MS)
                     rendered_dom = page.content()
                     warning_notes: list[str] = []
                     try:
