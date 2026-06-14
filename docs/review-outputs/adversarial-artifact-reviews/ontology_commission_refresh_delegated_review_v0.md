@@ -6,7 +6,7 @@ artifact_role: Delegated adversarial artifact review-and-patch report
 scope: >
   Repo-mode cross-vendor review-and-patch hardening pass for
   docs/prompts/product-planning/orca_ontology_backbone_architecture_pass_commission_prompt_v0.md.
-authority_boundary: decision_input_only
+authority_boundary: retrieval_only
 reviewed_by: gpt-5 (OpenAI/Codex)
 authored_by: claude-opus-4.8
 de_correlation_bar: cross_vendor_discovery
