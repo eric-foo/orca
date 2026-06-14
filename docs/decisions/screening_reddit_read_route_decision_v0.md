@@ -5,7 +5,7 @@ scope: >
   Records the Main-CA decision on how screening agents obtain Reddit reads, given the 2026-06-12
   tooling discovery that the WebFetch tool blocks reddit.com for screening agents while the
   capture-harness HTTP runners reach it fine (recon receipts). Adopts a layered route — snippets
-  default / wire the capture runner as a bounded screening-read service / operator-manual fallback —
+  default / wire the capture adapter (fetch_direct_http_capture, not the packet runner) as a bounded screening-read service / operator-manual fallback —
   and specifies the bounded service contract the wiring must honor. Decision only; the wiring is a
   separate authorized capture-lane build turn.
 use_when:
@@ -52,8 +52,8 @@ the capture runner. So the only mechanized Reddit path for screening *is* the ca
 1. **DEFAULT — snippets-only.** Screening agents take Reddit origination signal from search snippets
    only. Already encoded in the Walker Equipment Kit (KNOWN WALLS: "reddit.com … snippet-mine only,
    and record what you needed so the orchestrator can route it"). This is the floor; no change needed.
-2. **DURABLE REAL-READ — wire the capture runner as a bounded screening-read service.** When a screen
-   needs real Reddit reads, its orchestrator invokes the capture runner under this contract:
+2. **DURABLE REAL-READ — wire the capture *adapter* (`fetch_direct_http_capture`), not the packet runner, as a bounded screening-read service.** When a screen
+   needs real Reddit reads, its orchestrator invokes the **adapter** `fetch_direct_http_capture` — *not* the packet runner `run_source_capture_http_packet`, which always writes a `SourceCapturePacket` into the ECR pipeline and would violate "screening read, not a capture run" (assumption-gate finding, 2026-06-12; `run_source_capture_http_packet.py:112` always `stage_and_write_packet`) — under this contract:
    - **logged-out public reads only** (no logins, no entitled-account use for screening);
    - **per-screen bounded** — starts and stops with the screen; **no standing service, crawler,
      scheduler, or monitor**;
@@ -72,7 +72,7 @@ These are non-exclusive layers (graceful degradation), not a single all-in commi
 
 The wiring is a **separate authorized capture-lane build turn**. This decision authorizes no build,
 no fetch, no service stand-up. The commission's boundaries bind that future turn: **no new
-fetch/search infrastructure** (it wires the existing runner), **no standing crawler**, **no
+fetch/search infrastructure** (it wires the existing adapter `fetch_direct_http_capture`), **no standing crawler**, **no
 entitlement bypass**.
 
 The one structural line the build must hold: the service stays **per-screen-bounded and

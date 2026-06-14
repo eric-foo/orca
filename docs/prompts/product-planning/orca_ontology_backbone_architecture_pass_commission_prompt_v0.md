@@ -55,6 +55,14 @@ commitments, and the lane must design all four:
    (Vertical, Brand, Venue, WindCaller, Observation, Case, Outcome, Memo, …).
 2. **Links** — typed relationships between object types (WindCaller —made→
    Call —graded-by→ Outcome; Observation —from→ Venue —supports→ Read).
+   Two links the demand-gate independence work requires (added 2026-06-13):
+   **`Observation —derived_from→ Observation`** (the provenance/laundering edge
+   — two observations on one `derived_from` chain are NOT independent; this is
+   the de-correlation mechanism behind the Demand-Substrate Hard Gate's
+   independent-venue requirement) and
+   **`Observation —diverges_from→ Observation`** (cross-layer disagreement — the
+   integrity / astroturf-tell signal, preserved as signal, never averaged away).
+   The lane finalizes the roster; these enter as candidate links, not frozen.
 3. **Actions** — the governed state transitions that are the ONLY sanctioned
    ways an object changes state, each with its precondition/gate (Case.seal
    requires a pre-declared ledger row; Slot.fill requires a dated scan doc;
@@ -144,7 +152,7 @@ Domain-defining (Layer 1 inputs):
 - `docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md` — `42787638E6185D4A` — the wedge (which entities matter first).
 - `docs/product/product_lead/orca_demand_read_taxonomy_v0.md` — `BC478D890419B2B6` — the read grammar (Read, TrendVector, WindCaller, layers); PROPOSED, so treat its types as PROPOSED-strength inputs.
 - `docs/product/core_spine/beauty_venue_card_set_v0.md` — `65E22CDAE5EDE781` — the best-engineered existing object type (Venue) + the kernel survival terms to steal.
-- `docs/product/product_lead/orca_buyer_proof_packet_v0.md` — `732C65BEBFC31DA1` — Demand-Substrate Hard Gate (an action gate to encode), Memo/Case semantics.
+- `docs/product/product_lead/orca_buyer_proof_packet_v0.md` — `732C65BEBFC31DA1` — Demand-Substrate Hard Gate (an action gate to encode — its independence semantics rest on the `derived_from` link, its divergence/astroturf detection on `diverges_from`; added 2026-06-13), Memo/Case semantics.
 - `docs/product/core_spine/consumer_demand_candidate_pool_handoff_v0.md` — `19009D43A7C29858` — an existing Case/Candidate schema.
 
 Workflow-layer (Layer 2 MAP targets — READ-ONLY, never edit):
