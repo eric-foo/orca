@@ -28,8 +28,9 @@ disambiguation); not validation/readiness. Evidence + caveats: `ig_r_probe_resul
 **IG logged-out reads are PACE-limited, not volume-limited.** Operate at **~2.5–4s between reads,
 never sub-2s bursts**, in bounded attended sessions. At that pace the probe read **≥176 requests/
 session with zero walls**; the true at-pace ceiling is being measured (preliminary: no volume cap
-seen yet). The throttle that a fast burst trips is a **soft, IP-wide login-redirect that decays in
-minutes** — not a ban. **Neither proxies/IP-rotation nor a sessioned/logged-in runtime is
+seen yet). The throttle that a fast burst trips is a **soft, IP-wide login-redirect that is STICKY
+once tripped** — it persisted **≥12 min** under gentle periodic probing (which likely sustained it);
+full recovery needs a longer **fully-quiet** cooldown (>12 min, unmeasured) — not a ban. **Neither proxies/IP-rotation nor a sessioned/logged-in runtime is
 warranted**; pace discipline is the whole mitigation.
 
 ## For the monitoring-policy lane (Consumer A)
@@ -57,10 +58,10 @@ warranted**; pace discipline is the whole mitigation.
 |---|---|
 | Limit is pace, not volume | **Measured** (run1 176 clean @≥2s vs run2 wall @sub-2s) |
 | Safe pace ~2.5–4s | **Adopted** (owner) — margin above the ~2s trip |
-| Onset = soft, IP-wide, login-redirect, decays | **Measured** (disambiguation: 2 creators walled, 1 recovered) |
+| Onset = soft, IP-wide, login-redirect; **sticky ≥12 min** | **Measured** (disambig + endurance warm-up: persisted ≥12 min under probing; occasional 1-read slip-through) |
 | Neither proxies nor sessions | **Decided** |
 | Burst (6h/12h) safe | **Inferred** (run waived — owner: safe) |
-| At-pace daily-volume ceiling | **PENDING** (endurance run in flight) |
+| At-pace daily-volume ceiling | **STILL PENDING** — endurance run aborted (`ip_not_recovered`); needs a long fully-quiet cooldown first |
 | Exact pace threshold (1s? burst-shape?) | Deferred (perma-block contingency) |
 
 ## Non-claims
