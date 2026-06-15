@@ -39,7 +39,7 @@ internationally, and was still an established Sephora brand at its 2025 five-yea
 
 | Axis | Result |
 | --- | --- |
-| **Verdict (transient)** | **Correct-given-evidence, but outcome differed.** The demand was durable, so the label was wrong about the world — but the packet carried no persistence signal to observe, so transient-as-floor was the method-faithful call. The epistemic state ("I have not seen persistence") was accurate. |
+| **Calling-sequence faithfulness (transient)** | **PASS — transient is the only compliant t=0 call; not graded against the outcome.** Per the Calling Sequence, durable is earned via observed post-trigger persistence; a single t=0 read has no such window, so transient is forced by the grammar (C3), not a prediction that can be right or wrong about the world. The read defaulted transient and did not over-claim durable. The earlier "wrong about the world" framing is **retracted as a category error** — see the grading rubric (`docs/product/judgment_spine/judgment_spine_demand_read_grading_rubric_v0.md`) and the Owner refinement below. |
 | **Ceiling (hold)** | **Appropriate given the evidence** — driven by a real evidence gap (1 placement-only independent origin, no persistence, live ops-execution risk), not by misreading present evidence. Not "too conservative" (no missed lift signal). Honest cost: it left the real upside on the table. |
 | **Evidence-defensibility** | **PASS — no missed ≤cutoff lift signal.** Every signal handled correctly (first-party floor, Nordstrom placement-only, sold-out ambiguity, SCM ops-risk). The upside was real but not yet visible at the cutoff. |
 | **C4 quality** | **High — named the real driver.** The actual move was justified post-cutoff by exactly what C4 said to look for: independent retail demand at scale (Sephora sell-through) + sustained scaling (persistence) + closing the ops gap. |
@@ -52,10 +52,12 @@ internationally, and was still an established Sephora brand at its 2025 five-yea
   call that ran against the outcome at every ambiguous fork — strong evidence that the
   transient-default and C1/C2 gating do real epistemic work rather than rationalizing a known
   result. Tell-audit genuinely clean; C4 calibrated to the real driver.
-- **NOT earned (outcome-accuracy):** the headline call (TRANSIENT / HOLD) was **wrong about the
-  world** — the demand was durable and the broad move won. The method optimizes for "defensible
-  given evidence," not "right about the future"; this case is a clean example of the two coming
-  apart.
+- **NOT demonstrated (predictive accuracy):** a single t=0 read **cannot** demonstrate prediction —
+  the persistence verdict is forced to transient by the grammar (C3) and is **not graded against the
+  outcome at all** (grading it would be a category error; see the grading rubric). What a single read
+  demonstrates is calling- and action-discipline, not foresight about the future. The realized-durable
+  outcome is what the **monitoring step** — absent from a backtest — would have upgraded; it is **not**
+  evidence the transient call was wrong.
 - **Named structural limitation (now demonstrated, not theoretical):** the method's conservatism
   **misses upside on genuinely under-evidenced winners** — a young brand pre-catalyst, judged on
   thin ≤cutoff evidence, gets capped at hold even when it is about to break out. Here the decisive
