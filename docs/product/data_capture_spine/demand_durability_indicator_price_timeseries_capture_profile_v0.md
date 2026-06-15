@@ -1,18 +1,18 @@
-# Demand Proxy — Price Time-Series Capture Profile v0
+# Demand-Durability Indicator — Price Time-Series Capture Profile v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Product-method spec (demand proxy capture profile — price time-series)
+artifact_role: Product-method spec (demand-durability indicator capture profile — price time-series)
 scope: >
-  Capture profile for the price time-series demand-durability proxy. Specifies
+  Capture profile for the price time-series demand-durability indicator. Specifies
   WHAT is captured (list price, effective/sale price, promo mechanism as
   separate fields), pinning facts, temporal regime, cold-start doctrine, and
   deconfliction note against the existing price_payload_extraction.py surface.
   Design + spec only; no contract hardening, no implementation.
 use_when:
   - Specifying or reviewing commissioned price time-series captures for
-    demand-durability proxy purposes.
-  - Checking how price-proxy capture facts sit on top of the existing Capture
+    demand-durability indicator purposes.
+  - Checking how price-indicator capture facts sit on top of the existing Capture
     Envelope (models.py + obligation contract).
   - Consuming the forward-only regime or cold-start inherent-limit cap for
     price time-series.
@@ -33,11 +33,11 @@ stale_if:
     non-SPA sources in a way that overlaps this profile's scope.
 downstream_consumers:
   - Future commissioned price time-series capture sessions operating under this profile.
-  - demand_proxy_availability_restock_capture_profile_v0.md (sibling proxy profile).
+  - demand_durability_indicator_availability_restock_capture_profile_v0.md (sibling indicator profile).
 ```
 
 - Status: `CAPTURE_PROFILE_DRAFT_V0`
-- Artifact type: Product-method spec (demand proxy capture profile), not an
+- Artifact type: Product-method spec (demand-durability indicator capture profile), not an
   envelope authority, contract amendment, or implementation authorization
 - Implementation authorized: no
 - Contract hardening authorized: no (owner-gated, out of scope)
@@ -58,7 +58,7 @@ orca_start_preflight:
   overlay_read: yes
   source_pack: S3 (target deepening — Lane 1 delta spec + models.py + obligation contract + price_payload_extraction.py)
   edit_permission: docs-write
-  target_scope: new product-method spec for price time-series demand proxy capture
+  target_scope: new product-method spec for price time-series demand-durability indicator capture
   dirty_state_checked: yes (fresh worktree off origin/main; HEAD 8e54aad)
   blocked_if_missing: Lane 1 envelope-delta spec readable at worktree path (confirmed)
 ```
@@ -67,7 +67,7 @@ orca_start_preflight:
 
 ## What This Is (And Is Not)
 
-This is a **capture profile** for the price time-series demand-durability proxy.
+This is a **capture profile** for the price time-series demand-durability indicator.
 It specifies what must be captured, how pinning works, which temporal regime
 applies, and how the cold-start gap is treated — all as observed facts and
 capture doctrine, never as weights, scores, or judgments.
@@ -181,7 +181,7 @@ Concretely:
 - The temporal regime and cold-start cap classify *coverage extent*, not *demand
   durability*. "Durable versus hollow" is a downstream Judgment read.
 - Costly-behavior semantics (buyer pressure, sellouts, restock, switching) are
-  NOT in scope for price capture: price is a supply-side proxy, not a
+  NOT in scope for price capture: price is a supply-side indicator, not a
   costly-behavior signal on its own. INV-1 forbids injecting demand assessment
   into the capture layer.
 
@@ -321,7 +321,7 @@ forward-only regime applies.
 
 ## Temporal Regime: Forward-Only (Consumed from Lane 1 Element 5)
 
-The price time-series proxy is **forward-only** for all non-Amazon venues.
+The price time-series indicator is **forward-only** for all non-Amazon venues.
 
 **What this means, consumed directly from Lane 1 Element 5:**
 
@@ -377,7 +377,7 @@ required for the series to be honest.
 - Whether the captured promo mechanism is material, temporary, or structurally
   load-bearing for a demand read is Judgment's call.
 - Capture does not decide admissibility for any backtest or cutoff window.
-- Price capture is one proxy; it is not a standalone costly-behavior signal
+- Price capture is one indicator; it is not a standalone costly-behavior signal
   (buyer pull, sellout, restock pressure) and must not be used as such.
 
 ---
@@ -389,8 +389,8 @@ lifecycle:
   status: CAPTURE_PROFILE_DRAFT_V0
   authored_at: "2026-06-14"
   authored_by: "Claude Sonnet 4.6 (claude-sonnet-4-6)"
-  lane_branch: capture-proxy-price-availability
-  worktree: .claude/worktrees/capture-proxy-price-availability
+  lane_branch: capture-indicator-price-availability
+  worktree: .claude/worktrees/capture-indicator-price-availability
   pr_base: main
   lane_1_consumed:
     spec: docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
@@ -417,4 +417,4 @@ design, or commercial-readiness evidence.
 
 It is a design+spec profile that cites the existing Capture Envelope of record
 and the Lane 1 envelope-delta, and specifies the capture facts and doctrine
-for price time-series demand-durability proxy capture.
+for price time-series demand-durability indicator capture.

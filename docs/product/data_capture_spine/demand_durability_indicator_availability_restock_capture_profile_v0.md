@@ -1,18 +1,18 @@
-# Demand Proxy — Availability / Restock Capture Profile v0
+# Demand-Durability Indicator — Availability / Restock Capture Profile v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Product-method spec (demand proxy capture profile — availability/restock)
+artifact_role: Product-method spec (demand-durability indicator capture profile — availability/restock)
 scope: >
-  Capture profile for the availability/restock demand-durability proxy. Specifies
+  Capture profile for the availability/restock demand-durability indicator. Specifies
   WHAT is captured (in-stock / out-of-stock / waitlist state at variant granularity,
   and restock/backorder signals), the flag-don't-conclude discipline, temporal
   regime, cold-start doctrine, and deconfliction note against existing capture
   surfaces. Design + spec only; no contract hardening, no implementation.
 use_when:
   - Specifying or reviewing commissioned availability/restock captures for
-    demand-durability proxy purposes.
-  - Checking how availability-proxy capture facts sit on top of the existing
+    demand-durability indicator purposes.
+  - Checking how availability-indicator capture facts sit on top of the existing
     Capture Envelope (models.py + obligation contract).
   - Consuming the forward-only regime or cold-start inherent-limit cap for
     availability/restock.
@@ -21,7 +21,7 @@ open_next:
   - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md   # Lane 1 envelope-delta (Element 1–5 consumed here)
   - orca-harness/source_capture/models.py                                            # Capture Envelope of record (schema)
   - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
-  - docs/product/data_capture_spine/demand_proxy_price_timeseries_capture_profile_v0.md  # Sibling proxy profile (pinning + cold-start shared doctrine)
+  - docs/product/data_capture_spine/demand_durability_indicator_price_timeseries_capture_profile_v0.md  # Sibling indicator profile (pinning + cold-start shared doctrine)
 stale_if:
   - The Lane 1 envelope-delta spec is superseded by an owner decision that amends
     Element 1 (pinning), Element 2 (cold-start marker), Element 4 (cadence), or
@@ -33,11 +33,11 @@ stale_if:
     capture or classifies deliberate scarcity-theater separately at capture time.
 downstream_consumers:
   - Future commissioned availability/restock capture sessions operating under this profile.
-  - demand_proxy_price_timeseries_capture_profile_v0.md (sibling proxy profile).
+  - demand_durability_indicator_price_timeseries_capture_profile_v0.md (sibling indicator profile).
 ```
 
 - Status: `CAPTURE_PROFILE_DRAFT_V0`
-- Artifact type: Product-method spec (demand proxy capture profile), not an
+- Artifact type: Product-method spec (demand-durability indicator capture profile), not an
   envelope authority, contract amendment, or implementation authorization
 - Implementation authorized: no
 - Contract hardening authorized: no (owner-gated, out of scope)
@@ -58,7 +58,7 @@ orca_start_preflight:
   overlay_read: yes
   source_pack: S3 (target deepening — Lane 1 delta spec + models.py + obligation contract + sibling price profile)
   edit_permission: docs-write
-  target_scope: new product-method spec for availability/restock demand proxy capture
+  target_scope: new product-method spec for availability/restock demand-durability indicator capture
   dirty_state_checked: yes (fresh worktree off origin/main; HEAD 8e54aad)
   blocked_if_missing: Lane 1 envelope-delta spec readable at worktree path (confirmed)
 ```
@@ -68,7 +68,7 @@ orca_start_preflight:
 ## What This Is (And Is Not)
 
 This is a **capture profile** for the availability/restock demand-durability
-proxy. It specifies what must be captured (in-stock / out-of-stock / waitlist
+indicator. It specifies what must be captured (in-stock / out-of-stock / waitlist
 state at variant granularity), the flag-don't-conclude discipline, the
 temporal regime, and how the cold-start gap is treated — all as observed
 facts and capture doctrine, never as weights, scores, or judgments.
@@ -125,7 +125,7 @@ For any commissioned capture of a product page, the existing fidelity
 obligations would incidentally preserve visible stock indicators if the
 operator captures them. However, the obligation contract does not name
 availability state, variant-level stock status, waitlist signals, or restock
-notices as first-class proxy capture facts. It does not require variant-level
+notices as first-class indicator capture facts. It does not require variant-level
 granularity, a flag-don't-conclude discipline, or series-level coverage of
 stock state changes.
 
@@ -314,7 +314,7 @@ reproduced here as the application of that element to availability capture:
 
 ## Temporal Regime: Forward-Only (Consumed from Lane 1 Element 5)
 
-The availability/restock proxy is **forward-only** for all venue classes
+The availability/restock indicator is **forward-only** for all venue classes
 in scope. There is no retroactive source for any venue.
 
 **What this means, consumed directly from Lane 1 Element 5:**
@@ -381,7 +381,7 @@ series to be honest; an undisclosed gap masquerades as "no stock change."
   constrained supply or marketing theater cannot be determined at capture
   time; the flag-don't-conclude discipline applies.
 - Capture does not decide admissibility for any backtest or cutoff window.
-- Availability capture is one proxy: on its own it cannot support a material
+- Availability capture is one indicator: on its own it cannot support a material
   demand commitment. Per the commitment-tiered Demand-Substrate Hard Gate, a
   single origin authorizes only low-commitment, reversible responses; any
   material or irreversible commitment requires ≥2 independent origins that
@@ -417,8 +417,8 @@ lifecycle:
   status: CAPTURE_PROFILE_DRAFT_V0
   authored_at: "2026-06-14"
   authored_by: "Claude Sonnet 4.6 (claude-sonnet-4-6)"
-  lane_branch: capture-proxy-price-availability
-  worktree: .claude/worktrees/capture-proxy-price-availability
+  lane_branch: capture-indicator-price-availability
+  worktree: .claude/worktrees/capture-indicator-price-availability
   pr_base: main
   lane_1_consumed:
     spec: docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
@@ -445,4 +445,4 @@ design, or commercial-readiness evidence.
 
 It is a design+spec profile that cites the existing Capture Envelope of record
 and the Lane 1 envelope-delta, and specifies the capture facts and doctrine
-for availability/restock demand-durability proxy capture.
+for availability/restock demand-durability indicator capture.

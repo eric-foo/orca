@@ -1,10 +1,10 @@
-# Demand Proxy — Review Velocity / Corpus Capture Profile v0
+# Demand-Durability Indicator — Review Velocity / Corpus Capture Profile v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Product-method spec (demand-proxy capture profile)
+artifact_role: Product-method spec (demand-indicator capture profile)
 scope: >
-  Capture profile for the review velocity / corpus demand-durability proxy.
+  Capture profile for the review velocity / corpus demand-durability indicator.
   Specifies what the capture lane must record and what limits must be made
   visible when review surfaces are commissioned for a Decision Frame. Design+spec
   only. Does not authorize sourcing, implementation, contract hardening, or
@@ -30,7 +30,7 @@ stale_if:
 ```
 
 - Status: `CAPTURE_PROFILE_DRAFT_V0`
-- Artifact type: Product-method spec (demand-proxy capture profile)
+- Artifact type: Product-method spec (demand-indicator capture profile)
 - Implementation authorized: no
 - Feature planning authorized: no
 - Runtime / source-system design authorized: no
@@ -370,8 +370,8 @@ must satisfy when a source is authorized.
 lifecycle_verification:
   authored_by: Claude Sonnet 4.6 (claude-sonnet-4-6)
   authored_date: 2026-06-14
-  worktree: .claude/worktrees/capture-proxy-search-review
-  branch: capture-proxy-search-review
+  worktree: .claude/worktrees/capture-indicator-search-review
+  branch: capture-indicator-search-review
   base: origin/main
   pr_target: main
   sources_cited:
