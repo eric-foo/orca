@@ -13,7 +13,7 @@ use_when:
   - Adjudicating whether to adopt the Orca ontology as the repo's semantic backbone.
   - Locating the proposed object roster, links, action gates, ID grammar, and binding plan.
 authority_boundary: retrieval_only
-status: PROPOSED_2026-06-15_XVENDOR_REVIEW_APPLIED_AWAITING_OWNER_ADJUDICATION
+status: OWNER_ADJUDICATED_2026-06-15 — ADOPT core (15 of 18 names); Buyer + Org RESERVED (names held, deferred); AWAITING_MERGE_TO_MAIN
 commission: docs/prompts/product-planning/orca_ontology_backbone_architecture_pass_commission_prompt_v0.md
 base: origin/main @ 953af7ea (frozen); freshness gate PASSED (8/8 sha-pins + LIVE grammar verified)
 adjudication_route: ICP / product-direction lane adjudicates; owner signs adoption and any folder/router binding.
@@ -181,8 +181,8 @@ AR-01 residual for `Memo` / `EvidenceUnit`). Gates are **actions**, not types (�
 | 13 | **Outcome** | The realized result a Reading/Call/Case is graded against (calibration target). | — | case ledger / calibration |
 | 14 | **CapturePacket** | A write-once, hash-pinned source-capture packet — the raw provenance an Observation derives from. | manifest_version, cutoff_posture | `orca-harness/source_capture/models.py` |
 | 15 | **EvidenceUnit** | A cleaned evidence unit (IPF standard) bound at the Cleaning/Judgment boundary. | claim_tier | IPF foundation + evidence ladder |
-| 16 | **Buyer** | *(added 2026-06-15)* The qualified customer a `Memo` serves — the ICP entity (e.g. a beauty operator) who owns the live `DecisionEvent`. Was implicit in the Hard Gate precondition. | qualification_status | icp/wedge + offer hypothesis |
-| 17 | **Org** | *(added 2026-06-15)* The company / parent behind a `Brand`; the unit org-motion (hiring, headcount, retail presence) attaches to. Distinct from `Brand` (a consumer label). | (org-motion signals) | G4 org-motion cards (candidate pool) |
+| 16 | **Buyer** *(RESERVED 2026-06-15)* | *(name reserved — adoption deferred; no dedicated landed backing yet, §3)* The qualified customer a `Memo` serves — the ICP entity (e.g. a beauty operator) who owns the live `DecisionEvent`. Was implicit in the Hard Gate precondition. | qualification_status | icp/wedge + offer hypothesis (indirect) |
+| 17 | **Org** *(RESERVED 2026-06-15)* | *(name reserved — adoption deferred; no dedicated landed backing yet, §3)* The company / parent behind a `Brand`; the unit org-motion (hiring, headcount, retail presence) attaches to. Distinct from `Brand` (a consumer label). | (org-motion signals) | G4 org-motion cards (corroboration data, not an Org-object definition) |
 
 ### 2.3 Link map (typed relationships)
 
@@ -435,6 +435,17 @@ Stolen from the venue card set, the proven antidote to ontology rot:
   receipt-gated evidence-ladder outcome, never type-minted (rule added at §2.2/§2.4);
   `Memo` / `EvidenceUnit` rows keep the field as the *carried* tier, not an intrinsic value —
   no per-row rewrite needed.
+- **2026-06-15 (owner adjudication: ADOPT core / RESERVE Buyer + Org).** Owner adjudicated the
+  PROPOSED backbone: **adopt the 15-name core** (rows 1–15) as the repo naming / relationship /
+  ID authority, and **RESERVE `Buyer` (16) and `Org` (17)** — names held, adoption deferred —
+  because both lack a *dedicated landed backing artifact* (their pointers are indirect: Buyer →
+  icp/wedge + an *offer hypothesis*; Org → G4 org-motion *corroboration cards*, not an Org-object
+  definition). Reserving (not dropping) keeps the names available under the cap (15 adopted + 2
+  reserved + 1 open = 18); either is adopted later by dated amendment once a real backing artifact
+  lands. Links that depend on a reserved object (`Memo —serves→ Buyer`, `Buyer —owns→
+  DecisionEvent`, `Brand` parent-resolution `→ Org`) are **reserved with it** — provisional until
+  the object is adopted. Status → `OWNER_ADJUDICATED … AWAITING_MERGE_TO_MAIN`; the merge to `main`
+  (which makes adoption live) remains the human gate.
 
 ---
 
