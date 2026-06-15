@@ -1,0 +1,11 @@
+evidence_id: E9
+source_id: E9
+source: "privatepacks.com/pages/how-it-works-2023 — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T09:51:03Z"
+retrieval_timestamp: "2026-06-15T13:50:11Z"
+hash: e5df8ca7b3faaf8e10fb50833dad30389e9931d643b5ea8ab340ebf65745f859
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T09:51:03Z is before the 2025-05-01 decision cutoff."
+summary: "Product education and tutorial page as of late April 2025, capturing how Private Packs was communicating product use to consumers at the cutoff-proximate date."

@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: "kinderbeauty.com homepage — Wayback Machine snapshot 2023-02-27"
+source_type: archive_org_wayback
+timestamp: "2023-02-27T11:55:14Z"
+retrieval_timestamp: "2026-06-15T12:32:13Z"
+hash: 45309ab72b0ce41f4eff0548fe50d0f1634ae89cf949eeaeb3c8d123a7439bbf
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-27T11:55:14Z is before the 2023-03-01 decision cutoff."
+summary: Cutoff-proximate homepage capture of the Kinder Beauty DTC storefront showing brand presentation, subscription offer framing, featured messaging, and overall storefront state two days before the decision date.

@@ -1,0 +1,73 @@
+case_id: joahbeauty_cvs_kill_2024_v0
+batch_id: product_learning
+case_family: beauty_mass_retail_channel_strategy
+decision_shape: conflict_escalate
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: weak
+  evidence_independence: correlated
+  reversibility_feasibility: low
+  reversibility_cost: high
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: medium
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      CVS channel evidence gap: explicitly address the absence of in-store
+      sell-through data in the evidence set and what this gap means for
+      confidence in any channel-exit recommendation.
+    evidence_unit_ids: []
+  - must_address_item_id: MA-02
+    description: >-
+      DTC brand health signals: address what the homepage trajectory (E1-E3) and
+      about page (E4) reveal about brand investment and messaging direction near
+      the cutoff.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+      - E4
+  - must_address_item_id: MA-03
+    description: >-
+      LA pop-up as channel-strategy signal: address what the pop-up retail event
+      page (E7) reveals about where the brand was investing its experiential
+      retail energy beyond the CVS channel.
+    evidence_unit_ids:
+      - E7
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: false
+  known_fame_risk: ""
+  spoiler_inventory: >-
+    Any post-cutoff announcements about Joah Beauty CVS channel exits, brand
+    closures, or Kiss Products distribution changes after 2024-06-01
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: b969d7acc3a8d35ef7efe411c07cf4785261895fa19f37c35cfa6e1b66b41ba8

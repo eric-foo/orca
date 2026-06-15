@@ -1,0 +1,11 @@
+evidence_id: E3
+source_id: E3
+source: "privatepacks.com homepage — Wayback Machine snapshot 2024-05-22"
+source_type: archive_org_wayback
+timestamp: "2024-05-22T20:38:54Z"
+retrieval_timestamp: "2026-06-15T13:44:50Z"
+hash: 53f37f7d8d7400985b8eeeab45c86410e245decf79106875531771b52fd581aa
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-05-22T20:38:54Z is before the 2025-05-01 decision cutoff."
+summary: "Pre-retail-launch DTC homepage baseline (~11 months before cutoff), showing brand positioning before CVS and Target distribution was active."

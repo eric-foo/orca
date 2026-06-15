@@ -1,0 +1,113 @@
+case_id: privatepacks_retail_retreat_v0
+contestant_id: claude_sonnet_isolated_subagent_v0
+run_id: run_001
+model_id: claude-sonnet-4-6
+model_family: anthropic_claude
+model_snapshot_if_available: null
+prompt_hash: 14FB51A0BBCF3CC4DEB08F5160BDD320AFA584E16CCF4B645094818114D87070
+temperature: 1.0
+seed_if_supported: null
+harness_version: v0_14
+judgement_class: escalate
+decision_shape: escalation_required
+recommended_action:
+  ladder_level: 6
+  action_label: CONFLICT_ESCALATE
+  rationale: >-
+    The evidence set consists entirely of DTC website snapshots (E1–E9). These provide
+    metadata-level signals only: that the store-locator (E4) listed active retail partners
+    near the cutoff, that the wholesale page (E5) was maintained as of February 2025, and
+    that the homepage evolved across three snapshot windows (E3 pre-launch, E2 two months
+    post-launch, E1 cutoff-proximate). No evidence unit provides sell-through velocity,
+    reorder signals, retailer feedback, markdown exposure, or any direct indicator of
+    retail channel performance. The summaries in E4 and E5 confirm the retail program
+    was active and presented as such, but cannot distinguish between a program performing
+    adequately and one silently failing. The homepage trajectory (E1–E3) provides no
+    extractable quantitative or directional signal beyond the fact that the brand
+    maintained its DTC site across the period. The structural framing in the packet
+    (8–10 months into a 6–12 month retailer evaluation window, asymmetric downside,
+    high reversibility cost, critical urgency) creates a decision shape where the floor
+    action (at minimum pause retail expansion) and ceiling action (exit immediately) are
+    separated by actions that require velocity data to distinguish. The floor is materially
+    higher than the ceiling that the current evidence can support with any confidence.
+    This is a CONFLICT_ESCALATE condition: the floor derived from structural priors
+    (action 4 at minimum — pause and evaluate) sits at or above the ceiling derivable
+    from the DTC-only evidence (action 3 at best — renegotiate terms), producing a
+    band that crosses and cannot be resolved without in-store data or retailer signals
+    that are outside the evidence set. Human escalation is required before any binding
+    exit or continuation decision is executed.
+contestant_band_claim:
+  claimed_floor: 4
+  claimed_ceiling: 3
+  reasoning: >-
+    Floor: The structural context establishes that Private Packs is 8–10 months into a
+    typical 6–12 month retailer evaluation window (per packet framing), with no positive
+    velocity signal visible in the DTC evidence. The packet explicitly notes below-expectation
+    in-store velocity as the framing premise. Structural priors for a DTC-native brand at
+    this stage of a first mass-retail cycle — without visible sell-through evidence and
+    with the known economics of wholesale margin haircuts, chargeback risk, and markdown
+    exposure — set the minimum defensible action at 4 (pause retail expansion; evaluate
+    at next review). Doing nothing (action 2) would require positive velocity evidence
+    that is absent. Ceiling: The DTC website snapshots provide no basis to recommend
+    exit actions (5, 7, 8) without confirmed poor performance, because the evidence gap
+    (MA-03) means absence of positive velocity data is not confirmation of failure. The
+    highest action the evidence set alone can support is 3 (renegotiate terms or reduce
+    door count), which is a hedge against unconfirmed risk. Because floor (4) exceeds
+    ceiling (3), this is a genuine conflict requiring escalation (action 6).
+  advisory_only: true
+evidence_used:
+  - claim_id: C1
+    claim_text: >-
+      The retail program was active and publicly presented as ongoing near the decision
+      cutoff: the store-locator page listed active retail partners and the wholesale page
+      was maintained, indicating no visible public signal of retail exit or contraction
+      as of late April 2025.
+    claim_role: load_bearing
+    evidence_unit_ids: [E4, E5]
+  - claim_id: C2
+    claim_text: >-
+      The DTC homepage was maintained and the brand continued presenting itself to online
+      visitors across three snapshot windows spanning pre-launch through cutoff-proximate,
+      with no DTC shutdown or visible distress signal visible in the snapshot metadata.
+    claim_role: supporting
+    evidence_unit_ids: [E1, E2, E3]
+  - claim_id: C3
+    claim_text: >-
+      The flagship product page, full catalog, brand story, and education pages were all
+      present and active as of February–April 2025, indicating sustained DTC operational
+      investment through the evidence window.
+    claim_role: contextual
+    evidence_unit_ids: [E6, E7, E8, E9]
+  - claim_id: C4
+    claim_text: >-
+      No evidence unit in the set provides CVS or Target sell-through velocity, reorder
+      signals, buyer communications, inventory turns, or markdown data. All retail-channel
+      inference is indirect and secondary. This evidence gap is the binding constraint
+      on the confidence band and is the direct cause of the CONFLICT_ESCALATE condition.
+    claim_role: load_bearing
+    evidence_unit_ids: []
+  - claim_id: C5
+    claim_text: >-
+      The structural economics described in the packet — 40–60% wholesale margin haircut,
+      chargeback exposure, markdown liability risk at first planogram reset — establish a
+      meaningful asymmetric downside for a small DTC-native brand without confirmed
+      sell-through. At 8–10 months post-launch the brand is inside or at the edge of
+      a typical retailer evaluation window where under-performing brands face delist risk.
+    claim_role: load_bearing
+    evidence_unit_ids: [E4, E5]
+must_address_items_covered:
+  - MA-01
+  - MA-02
+  - MA-03
+load_bearing_assumption:
+  statement: >-
+    The evidence set — consisting solely of DTC website snapshots — does not contain
+    and cannot proxy for actual in-store sell-through velocity, reorder activity, or
+    retailer satisfaction signals. Any recommendation stronger than a pause-and-evaluate
+    (action 4) or weaker than a renegotiation-hedge (action 3) would require data not
+    present in this evidence set. This assumption — that the website snapshot evidence
+    is wholly insufficient to resolve the floor/ceiling conflict — is the single claim
+    on which the CONFLICT_ESCALATE judgement depends.
+  evidence_unit_ids: [E1, E2, E3, E4, E5, E6, E7, E8, E9]
+  would_flip_if_false: true
+advisory_phase_1_fields: {}

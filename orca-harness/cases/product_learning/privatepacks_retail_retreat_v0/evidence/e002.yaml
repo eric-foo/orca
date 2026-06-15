@@ -1,0 +1,11 @@
+evidence_id: E2
+source_id: E2
+source: "privatepacks.com homepage — Wayback Machine snapshot 2024-08-16"
+source_type: archive_org_wayback
+timestamp: "2024-08-16T06:30:59Z"
+retrieval_timestamp: "2026-06-15T13:43:36Z"
+hash: a5c3fb522bae5094bad01969a15130cae8b2b09d18b9c7f84ab75abbe0d580cf
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-08-16T06:30:59Z is before the 2025-05-01 decision cutoff."
+summary: "DTC homepage approximately two months after mid-2024 retail launch, providing a baseline for how the brand framed its DTC presence and retail partnership messaging in the early post-launch window."

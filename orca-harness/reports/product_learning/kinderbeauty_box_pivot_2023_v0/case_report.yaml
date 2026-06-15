@@ -1,0 +1,22 @@
+batch_id: product_learning
+case_id: kinderbeauty_box_pivot_2023_v0
+contestant_results:
+- blocking_failures: 1
+  contestant_id: claude_sonnet_isolated_subagent_v0
+  in_band: true
+  over_band: false
+  overreach_distance: 0
+  run_id: run_001
+  scoring_result_id: 01KV69RP7C2P278W8RM0MGQ8CD
+  under_band: false
+  underreach_distance: 0
+facilitator_ledger_hash: ef2a038975dfe8232e02ddbd780332d9d08501e9e07a5cddbf8573f626917dca
+failure_event_summary:
+  by_severity:
+    blocking: 1
+  by_type:
+    evidence_id_missing: 1
+  total: 1
+generated_at: '2026-06-15T18:47:39Z'
+mapping_table_version: v0_14_mvp
+non_claim_notice: plumbing works only; not judgment quality

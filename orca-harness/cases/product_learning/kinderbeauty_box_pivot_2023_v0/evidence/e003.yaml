@@ -1,0 +1,11 @@
+evidence_id: E3
+source_id: E3
+source: "kinderbeauty.com homepage — Wayback Machine snapshot 2022-02-27"
+source_type: archive_org_wayback
+timestamp: "2022-02-27T11:12:07Z"
+retrieval_timestamp: "2026-06-15T12:34:18Z"
+hash: 31a8498bd86f6af0ce92988fa31c5298c686add57922c225a9d248f439f2edd0
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2022-02-27T11:12:07Z is before the 2023-03-01 decision cutoff."
+summary: Homepage capture of the Kinder Beauty DTC storefront approximately one year before the decision cutoff, providing the earliest longitudinal reference point in the packet for evaluating changes to subscription structure, pricing, and offer framing across the observable window.

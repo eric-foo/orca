@@ -1,0 +1,11 @@
+evidence_id: E10
+source_id: E10
+source: "kinderbeauty.com/collections/bestsellers — featured products, 2023-02-05"
+source_type: archive_org_wayback
+timestamp: "2023-02-05T21:46:37Z"
+retrieval_timestamp: "2026-06-15T13:13:56Z"
+hash: 832d3c099dd12d189da4bc9f9087c39ac201be0f14281463c278a4b56769e03a
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-05T21:46:37Z is before the 2023-03-01 decision cutoff."
+summary: Capture of the Kinder Beauty featured bestsellers collection page showing which individual products and brands the storefront promotes as top performers available for direct purchase outside the subscription box, providing signal on the brand's a-la-carte retail layer alongside the subscription offering.

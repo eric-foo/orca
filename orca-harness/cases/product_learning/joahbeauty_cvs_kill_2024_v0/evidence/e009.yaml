@@ -1,0 +1,11 @@
+evidence_id: E9
+source_id: E9
+source: "www.joahbeauty.com/pages/contact — Wayback Machine snapshot 2024-05-20"
+source_type: archive_org_wayback
+timestamp: "2024-05-20T12:47:05Z"
+retrieval_timestamp: "2026-06-15T13:46:40Z"
+hash: 31f2dbed203883abc0cc38f512ecf750c5a32d92f1d6e21a845403dc058792fb
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-05-20T12:47:05Z is before the 2024-06-01 decision cutoff."
+summary: "Contact and customer support page at the cutoff-proximate date, showing how Joah Beauty routes consumer inquiries and what channels are surfaced for support."

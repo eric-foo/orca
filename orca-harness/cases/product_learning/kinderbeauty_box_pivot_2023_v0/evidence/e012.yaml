@@ -1,0 +1,11 @@
+evidence_id: E12
+source_id: E12
+source: "kinderbeauty.com/pages/april-2022-box — example monthly box page, 2023-02-01"
+source_type: archive_org_wayback
+timestamp: "2023-02-01T16:55:32Z"
+retrieval_timestamp: "2026-06-15T13:14:46Z"
+hash: b33c015f423b624ca3ab6f0d51209afcd9aca80c6fb8cf8dd0970d8fae78ce8e
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-01T16:55:32Z is before the 2023-03-01 decision cutoff."
+summary: Capture of the Kinder Beauty April 2022 box contents page, retrieved in February 2023, showing the products, brands, and stated retail value claims for a historical monthly box and providing a reference point for evaluating how box curation, product mix, and value proposition have been presented to subscribers in practice.

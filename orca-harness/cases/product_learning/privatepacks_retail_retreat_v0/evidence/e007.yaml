@@ -1,0 +1,11 @@
+evidence_id: E7
+source_id: E7
+source: "privatepacks.com/collections/all — Wayback Machine snapshot 2025-02-19"
+source_type: archive_org_wayback
+timestamp: "2025-02-19T20:51:38Z"
+retrieval_timestamp: "2026-06-15T13:47:00Z"
+hash: 0bd2893d7e3a4772ebf87ccc778ba88b9b71464063ebb9d6316e1a0d76364847
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-02-19T20:51:38Z is before the 2025-05-01 decision cutoff."
+summary: "Complete visible DTC product catalog as of February 2025, allowing assessment of SKU count, catalog breadth, and product organization."

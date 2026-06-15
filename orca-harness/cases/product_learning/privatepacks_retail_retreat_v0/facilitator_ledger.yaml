@@ -1,0 +1,73 @@
+case_id: privatepacks_retail_retreat_v0
+batch_id: product_learning
+case_family: beauty_dtc_retail_channel_exit
+decision_shape: conflict_escalate
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: correlated
+  reversibility_feasibility: low
+  reversibility_cost: high
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: severe
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: critical
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Retail footprint signals: address what the store-locator (E4) and wholesale
+      page (E5) reveal about the active retail partnership scope, stated partners,
+      and how the brand is presenting its retail availability.
+    evidence_unit_ids:
+      - E4
+      - E5
+  - must_address_item_id: MA-02
+    description: >-
+      DTC brand health trajectory: address what the homepage snapshots (E1-E3)
+      spanning pre-retail-launch through cutoff-proximate reveal about brand
+      investment shifts and DTC channel emphasis over time.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+  - must_address_item_id: MA-03
+    description: >-
+      In-store velocity evidence gap: explicitly address the absence of CVS and
+      Target sell-through data in the evidence set and what this gap means for
+      the confidence band on any retail-exit recommendation.
+    evidence_unit_ids: []
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: false
+  known_fame_risk: ""
+  spoiler_inventory: >-
+    Any post-cutoff announcements about Private Packs retail exits, CVS/Target
+    delist, or brand pivots after 2025-05-01
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: f3e2daf5989eb4565583eca893ce10baf2cf263116a0af6b944792dd41ac09a4

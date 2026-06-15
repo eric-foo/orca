@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "sundots.com homepage — Wayback Machine snapshot 2018-04-01"
+source_type: archive_org_wayback
+timestamp: "2018-04-01T01:14:00Z"
+retrieval_timestamp: "2026-06-15T13:52:39Z"
+hash: e75856036dcc956368753ec48d27937c8c915b27c93295c3e919f5fe00baddc1
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2018-04-01T01:14:00Z is before the 2018-10-01 decision cutoff."
+summary: "Earliest homepage snapshot in the evidence set, captured in early April 2018 approximately six months before the decision cutoff, establishing the baseline brand positioning at the start of the evidence window."

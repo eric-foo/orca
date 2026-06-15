@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "imaginaryauthors.com/collections/all — Wayback Machine snapshot 2024-03-24"
+source_type: archive_org_wayback
+timestamp: "2024-03-24T13:22:49Z"
+retrieval_timestamp: "2026-06-15T14:24:57Z"
+hash: cc135d032817de46c45953a4e706c0d4109e689405da4b7affcb15c7c48c3657
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-03-24T13:22:49Z is before the 2024-08-01 decision cutoff."
+summary: Full catalog page capture showing the complete active DTC product lineup approximately five months before the decision cutoff, providing a count and overview of every SKU then listed alongside basic product metadata including names and pricing.

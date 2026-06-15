@@ -1,0 +1,11 @@
+evidence_id: E2
+source_id: E2
+source: "www.joahbeauty.com homepage — Wayback Machine snapshot 2023-12-14"
+source_type: archive_org_wayback
+timestamp: "2023-12-14T01:53:59Z"
+retrieval_timestamp: "2026-06-15T13:42:02Z"
+hash: 90736cf88dc09ced4f9ac1b75dcf4c6f47f219892f047ca6008bb8c5f2c49211
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-12-14T01:53:59Z is before the 2024-06-01 decision cutoff."
+summary: "Mid-window DTC homepage (~6 months before cutoff) reflecting brand promotional posture and product messaging in the December 2023 period, enabling trend comparison against E1 and E3."

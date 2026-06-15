@@ -1,0 +1,11 @@
+evidence_id: E3
+source_id: E3
+source: "sundots.com homepage — Wayback Machine snapshot 2018-07-10"
+source_type: archive_org_wayback
+timestamp: "2018-07-10T20:31:06Z"
+retrieval_timestamp: "2026-06-15T13:51:33Z"
+hash: f1b5197f7fe25000b08d8e3e48b5a559fdb4ff68314b8beb70f392dbd764ac03
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2018-07-10T20:31:06Z is before the 2018-10-01 decision cutoff."
+summary: "Early-July 2018 Sundots homepage approximately 2.5 months before the decision cutoff, captured during peak summer season for UV-protection relevance."

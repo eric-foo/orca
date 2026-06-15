@@ -1,0 +1,73 @@
+case_id: kinderbeauty_box_pivot_2023_v0
+batch_id: product_learning
+case_family: beauty_dtc_subscription_restructure
+decision_shape: ceiling_trap
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: correlated
+  reversibility_feasibility: medium
+  reversibility_cost: medium
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: medium
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Subscription mechanics and value proposition: address what E4 (bundler),
+      E5 (choose-your-box), and E7 ($16 first-box offer) reveal about the current
+      pricing structure and value proposition, and what pivot options are implied.
+    evidence_unit_ids:
+      - E4
+      - E5
+      - E7
+  - must_address_item_id: MA-02
+    description: >-
+      Churn signal from cancellation mechanics: address what the how-to-cancel
+      page (E6) and customer-help FAQ (E8) reveal about subscriber retention
+      mechanics and the friction or ease of cancellation.
+    evidence_unit_ids:
+      - E6
+      - E8
+  - must_address_item_id: MA-03
+    description: >-
+      Evidence gap for unit economics: explicitly address the absence of
+      subscriber count, monthly recurring revenue, COGS, and churn data, and
+      what this gap means for confidence in any restructuring recommendation.
+    evidence_unit_ids: []
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: false
+  known_fame_risk: ""
+  spoiler_inventory: >-
+    Any post-cutoff announcements about Kinder Beauty subscription changes,
+    business wind-down, or founder communications after 2023-03-01
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: a337fc7095ed15e520e09837d6a77be71986ba5d7a6bbb8881d16a18ad869ffc

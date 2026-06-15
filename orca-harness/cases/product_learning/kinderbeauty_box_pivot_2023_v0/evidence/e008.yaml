@@ -1,0 +1,11 @@
+evidence_id: E8
+source_id: E8
+source: "kinderbeauty.com/pages/customer-help — FAQ/support page, 2023-02-05"
+source_type: archive_org_wayback
+timestamp: "2023-02-05T21:12:16Z"
+retrieval_timestamp: "2026-06-15T13:12:28Z"
+hash: d47c932ef38d5e3b0e50f2f343f381793f9d71b8e96d3d7ff039c53896df883d
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-05T21:12:16Z is before the 2023-03-01 decision cutoff."
+summary: Capture of the Kinder Beauty customer FAQ and support page showing what questions and concerns the brand surfaces as frequently asked, including policies around billing cycles, shipping, box skipping, cancellation, and box contents, providing indirect signal on what friction points subscribers commonly encounter.

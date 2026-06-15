@@ -1,0 +1,11 @@
+evidence_id: E2
+source_id: E2
+source: "sundots.com homepage — Wayback Machine snapshot 2018-08-16"
+source_type: archive_org_wayback
+timestamp: "2018-08-16T13:49:14Z"
+retrieval_timestamp: "2026-06-15T13:50:59Z"
+hash: 6ac006bf7cd759c2e4fb7093b48f365d77ddef22cb76612fcb5813025eb1b3b9
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2018-08-16T13:49:14Z is before the 2018-10-01 decision cutoff."
+summary: "Mid-August 2018 Sundots homepage captured approximately six weeks before the decision cutoff during peak summer, reflecting the brand's messaging posture at the height of seasonal relevance for a UV-protection product."

@@ -1,0 +1,11 @@
+evidence_id: E4
+source_id: E4
+source: "sundots.com homepage — Wayback Machine snapshot 2018-05-08"
+source_type: archive_org_wayback
+timestamp: "2018-05-08T23:49:48Z"
+retrieval_timestamp: "2026-06-15T13:52:19Z"
+hash: 1544d4b028b14cad1ab47e5b4e2666cab552e3d566c9ada2ed71e660a20d31be
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2018-05-08T23:49:48Z is before the 2018-10-01 decision cutoff."
+summary: "Early-May 2018 Sundots homepage approximately five months before the decision cutoff, as the brand was entering its seasonally relevant period."

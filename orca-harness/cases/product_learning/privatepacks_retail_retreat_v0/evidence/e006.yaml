@@ -1,0 +1,11 @@
+evidence_id: E6
+source_id: E6
+source: "privatepacks.com/products/private-packs — Wayback Machine snapshot 2025-03-16"
+source_type: archive_org_wayback
+timestamp: "2025-03-16T03:55:48Z"
+retrieval_timestamp: "2026-06-15T13:46:39Z"
+hash: 2597a9919e067fd9e299f32479af0e61fef74dc95e6b69505add2e4c0c3033fd
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-03-16T03:55:48Z is before the 2025-05-01 decision cutoff."
+summary: "Flagship product detail page as of mid-March 2025, capturing pricing, product description, availability framing, and any retail channel cross-referencing approximately six weeks before the decision cutoff."
