@@ -1,0 +1,11 @@
+evidence_id: E3
+source_id: E3
+source: "saiehello.com homepage — Wayback Machine snapshot 2024-07-14"
+source_type: archive_org_wayback
+timestamp: "2024-07-14T02:27:17Z"
+retrieval_timestamp: "2026-06-15T13:55:08Z"
+hash: 29afbef3cd0ce048af4f18a7a9ea8abe7d5bc505f585b490fe321a3095c922fc
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-07-14T02:27:17Z is before the 2025-06-01 decision cutoff."
+summary: "Homepage snapshot establishing a baseline view of Saie's brand positioning and featured product lineup approximately ten months before the decision cutoff."

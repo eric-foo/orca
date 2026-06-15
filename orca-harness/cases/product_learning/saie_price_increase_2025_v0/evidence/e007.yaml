@@ -1,0 +1,11 @@
+evidence_id: E7
+source_id: E7
+source: "saiehello.com/products/clean-mascara-101 — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T05:08:40Z"
+retrieval_timestamp: "2026-06-15T13:54:29Z"
+hash: e088d95c1c9cfcaddd3c93670b77e19533485987e3a04c8cd3b581dd733bb001
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T05:08:40Z is before the 2025-06-01 decision cutoff."
+summary: "Product detail page for Clean Mascara 101 showing listed price, product copy, and eye-category positioning approximately five weeks before the decision cutoff."

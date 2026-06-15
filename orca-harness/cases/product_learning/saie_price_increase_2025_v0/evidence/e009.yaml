@@ -1,0 +1,11 @@
+evidence_id: E9
+source_id: E9
+source: "saiehello.com/products/blush-n-glow — Wayback Machine snapshot 2025-03-20"
+source_type: archive_org_wayback
+timestamp: "2025-03-20T11:30:04Z"
+retrieval_timestamp: "2026-06-15T13:50:20Z"
+hash: 52cbbedf0825e32b45c99e34ffebfa099e776e82f597fb68208554b4e9946e87
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-03-20T11:30:04Z is before the 2025-06-01 decision cutoff."
+summary: "Product detail page for Blush & Glow showing listed price and product positioning at the earliest individual PDP snapshot in the evidence set, approximately ten weeks before the decision cutoff."

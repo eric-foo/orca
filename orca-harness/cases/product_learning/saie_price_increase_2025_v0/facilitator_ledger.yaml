@@ -1,0 +1,90 @@
+case_id: saie_price_increase_2025_v0
+batch_id: product_learning
+case_family: beauty_dtc_pricing_decide_vs_confirm
+decision_shape: ceiling_trap
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: correlated
+  reversibility_feasibility: medium
+  reversibility_cost: medium
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: medium
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Brand positioning relative to price level: Saie occupies a premium-clean
+      makeup position; address whether the evidence supports raising prices without
+      contradicting that positioning.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+  - must_address_item_id: MA-02
+    description: >-
+      SKU-level price architecture: address whether the individual product PDPs
+      (E6-E10) reveal a consistent pricing tier and what a $1-4 increase would
+      imply for price-tier coherence.
+    evidence_unit_ids:
+      - E4
+      - E5
+      - E6
+      - E7
+      - E8
+      - E9
+      - E10
+  - must_address_item_id: MA-03
+    description: >-
+      Cost structure evidence gap: note that no direct cost, margin, or tariff
+      pass-through data appears in the packet; state what this gap means for
+      confidence in any pricing recommendation.
+    evidence_unit_ids: []
+  - must_address_item_id: MA-04
+    description: >-
+      Homepage trajectory as brand signal: address whether the evolution of
+      homepage messaging from E3 (Jul 2024) to E2 (Nov 2024) to E1 (May 2025)
+      shows any meaningful preparation for or reaction to cost pressure.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: true
+  known_fame_risk: high_fame_clean_makeup_sephora_dtc
+  spoiler_inventory: >-
+    Brand IG/FB community tariff-update posts announcing the price increase;
+    BeautyMatter 2026 tariff-raiser list naming Saie; any post-cutoff brand
+    announcements about pricing
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: b1f21470303ac1e26b27248c168ad503d0e2e3579546ef0d952e70f1880829ef
