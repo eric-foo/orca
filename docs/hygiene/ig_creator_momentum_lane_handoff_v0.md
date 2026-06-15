@@ -1,3 +1,15 @@
+---
+retrieval_header_version: 1
+artifact_role: Cold cross-lane handoff packet (durable continuation artifact; NOT validation/readiness/governance)
+scope: Transfer the IG creator-momentum lane (discover → deep-capture → per-call curves) to a fresh thread after the 2026-06-15 wind-caller capture-cap doctrine propagation landed; remaining work is the storage/scale re-eval and the capture-shape contract.
+use_when:
+  - Continuing the IG creator-momentum lane cold (storage/scale decision A, then the capture-shape contract).
+authority_boundary: retrieval_only
+stale_if:
+  - HEAD moves past the recorded compare-target blobs on the named targets (re-verify per the Load Contract before acting).
+  - The storage/scale decision (A) or the capture-shape contract lands (update the open decisions and next actions).
+---
+
 # Handoff Packet — IG Creator-Momentum Lane
 
 > **REFRESH 2026-06-15 (post-`c4cb7505`).** This packet was first drafted at HEAD `c365dca2`,
