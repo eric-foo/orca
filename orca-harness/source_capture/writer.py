@@ -61,6 +61,18 @@ def write_local_source_capture_packet(
     archive_history_posture: VisibleFact | None = None,
     media_modality_posture: VisibleFact | None = None,
     re_capture_relationship: VisibleFact | None = None,
+    # Demand-durability series facts (Ob.17 Elements 2 & 4). Additive and optional so a
+    # non-durability capture leaves them unset (None) and existing manifests stay valid under
+    # extra="forbid" -- no SOURCE_CAPTURE_MANIFEST_VERSION bump. A demand-durability series sets
+    # series_id on every observation; cold_start_at + pre_coverage_history_posture mark the series
+    # origin (first / cold-start observation); intended_cadence carries the declared
+    # CadencePlan.to_dict() shape. All are observed facts forwarded verbatim, never weights or a
+    # durable-vs-hollow verdict (INV-1). Element 1 pins ride on each SourceCaptureSlice (the caller
+    # builds the slices), so they are not parameters here.
+    series_id: str | None = None,
+    cold_start_at: VisibleFact | None = None,
+    pre_coverage_history_posture: VisibleFact | None = None,
+    intended_cadence: dict[str, object] | None = None,
     source_slices: Sequence[SourceCaptureSlice] | None = None,
     warnings: Sequence[str] | None = None,
     limitations: Sequence[str] | None = None,
@@ -151,6 +163,10 @@ def write_local_source_capture_packet(
         archive_history_posture=archive,
         media_modality_posture=media,
         re_capture_relationship=recapture,
+        series_id=series_id,
+        cold_start_at=cold_start_at,
+        pre_coverage_history_posture=pre_coverage_history_posture,
+        intended_cadence=intended_cadence,
         source_slices=packet_slices,
         preserved_files=preserved_files,
         warnings=packet_warnings,

@@ -18,6 +18,7 @@ from source_capture import (
     not_attempted,
     unknown_with_reason,
 )
+from source_capture.cadence import build_cadence_plan
 from source_capture.cli_support import build_optional_fact
 from source_capture.packet_assembly import stage_and_write_packet, staged_file_id_map
 from source_capture.adapters import DirectHttpCaptureFailure, fetch_direct_http_capture
@@ -60,6 +61,14 @@ def run_source_capture_http_packet(
     limitations: Sequence[str],
     timeout_seconds: float,
     max_bytes: int,
+    session_visibility_pin=None,
+    locale_pin=None,
+    currency_pin=None,
+    variant_pin=None,
+    series_id: str | None = None,
+    cold_start_at=None,
+    pre_coverage_history_posture=None,
+    intended_cadence: dict[str, object] | None = None,
 ) -> tuple[int, str]:
     capture_result = fetch_direct_http_capture(
         url=url,
@@ -121,6 +130,10 @@ def run_source_capture_http_packet(
                 archive_history_posture=archive_posture,
                 media_modality_posture=media_posture,
                 re_capture_relationship=recapture_posture,
+                session_visibility_pin=session_visibility_pin,
+                locale_pin=locale_pin,
+                currency_pin=currency_pin,
+                variant_pin=variant_pin,
                 limitations=packet_limitations,
                 warning_notes=packet_warnings,
                 preserved_file_ids=[
@@ -148,6 +161,10 @@ def run_source_capture_http_packet(
         archive_history_posture=archive_posture,
         media_modality_posture=media_posture,
         re_capture_relationship=recapture_posture,
+        series_id=series_id,
+        cold_start_at=cold_start_at,
+        pre_coverage_history_posture=pre_coverage_history_posture,
+        intended_cadence=intended_cadence,
         warnings=packet_warnings,
         limitations=packet_limitations,
         receipt_summary=(
@@ -196,7 +213,74 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--recapture-relationship-not-applicable-reason", default=None)
     parser.add_argument("--warning", action="append", default=[])
     parser.add_argument("--limitation", action="append", default=[])
+    _add_durability_arguments(parser)
     return parser
+
+
+def _add_durability_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add the optional demand-durability series flags (Ob.17 Elements 1, 2 & 4).
+
+    All flags are optional; when none are supplied the packet's durability fields stay
+    ``None`` (a non-durability capture, back-compat preserved). The four pins and the
+    cold-start / pre-coverage postures are ``VisibleFact``s built by ``build_optional_fact``
+    so an operator can record an honest gap (``unknown_with_reason`` / ``not_applicable``)
+    instead of fabricating a value. ``--series-id`` is a plain identifier. The cadence flags
+    build ``intended_cadence`` from ``cadence.build_cadence_plan(...).to_dict()`` -- the
+    declared (not realized) sampling plan. These are observed facts, never weights or a
+    durable-vs-hollow verdict (INV-1).
+    """
+    group = parser.add_argument_group("demand-durability series (optional)")
+    group.add_argument("--series-id", default=None)
+    # Element 1 pins (ride on the slice). Each pin accepts one of value / unknown / not-applicable.
+    for pin in ("session-visibility-pin", "locale-pin", "currency-pin", "variant-pin"):
+        group.add_argument(f"--{pin}", default=None)
+        group.add_argument(f"--{pin}-unknown-reason", default=None)
+        group.add_argument(f"--{pin}-not-applicable-reason", default=None)
+    # Element 2 series-origin postures (ride on the packet).
+    group.add_argument("--cold-start-at", default=None)
+    group.add_argument("--cold-start-at-unknown-reason", default=None)
+    group.add_argument("--cold-start-at-not-applicable-reason", default=None)
+    group.add_argument("--pre-coverage-history-posture", default=None)
+    group.add_argument("--pre-coverage-history-posture-unknown-reason", default=None)
+    group.add_argument("--pre-coverage-history-posture-not-applicable-reason", default=None)
+    # Element 4 declared cadence (built via cadence.build_cadence_plan).
+    group.add_argument(
+        "--intended-cadence-mode", choices=["fixed", "bounded_jitter"], default=None
+    )
+    group.add_argument("--intended-cadence-slot-count", type=int, default=None)
+    group.add_argument("--intended-cadence-delay-seconds", type=float, default=None)
+    group.add_argument("--intended-cadence-window-seconds", type=float, default=None)
+    group.add_argument("--intended-cadence-min-gap-seconds", type=float, default=None)
+    group.add_argument("--intended-cadence-max-gap-seconds", type=float, default=None)
+    group.add_argument("--intended-cadence-random-seed", type=int, default=None)
+
+
+def _build_intended_cadence(args: argparse.Namespace) -> dict[str, object] | None:
+    """Build the declared ``intended_cadence`` dict from cadence flags, or ``None`` if absent.
+
+    Reuses ``cadence.build_cadence_plan`` so the shape is the canonical
+    ``CadencePlan.to_dict()`` (no invented shape). ``--intended-cadence-mode`` gates the build:
+    without it the field stays ``None``. ``build_cadence_plan`` itself validates slot count and
+    gap/window constraints and raises ``ValueError`` for an incoherent plan.
+    """
+    if args.intended_cadence_mode is None:
+        return None
+    if args.intended_cadence_slot_count is None:
+        raise ValueError("--intended-cadence-slot-count is required when --intended-cadence-mode is set")
+    plan = build_cadence_plan(
+        slot_count=args.intended_cadence_slot_count,
+        mode=args.intended_cadence_mode,
+        delay_seconds=(
+            args.intended_cadence_delay_seconds
+            if args.intended_cadence_delay_seconds is not None
+            else 0.0
+        ),
+        window_seconds=args.intended_cadence_window_seconds,
+        min_gap_seconds=args.intended_cadence_min_gap_seconds,
+        max_gap_seconds=args.intended_cadence_max_gap_seconds,
+        random_seed=args.intended_cadence_random_seed,
+    )
+    return plan.to_dict()
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -248,6 +332,44 @@ def main(argv: Sequence[str] | None = None) -> int:
             limitations=args.limitation,
             timeout_seconds=args.timeout_seconds,
             max_bytes=args.max_bytes,
+            session_visibility_pin=build_optional_fact(
+                label="session visibility pin",
+                value=args.session_visibility_pin,
+                unknown_reason=args.session_visibility_pin_unknown_reason,
+                not_applicable_reason=args.session_visibility_pin_not_applicable_reason,
+            ),
+            locale_pin=build_optional_fact(
+                label="locale pin",
+                value=args.locale_pin,
+                unknown_reason=args.locale_pin_unknown_reason,
+                not_applicable_reason=args.locale_pin_not_applicable_reason,
+            ),
+            currency_pin=build_optional_fact(
+                label="currency pin",
+                value=args.currency_pin,
+                unknown_reason=args.currency_pin_unknown_reason,
+                not_applicable_reason=args.currency_pin_not_applicable_reason,
+            ),
+            variant_pin=build_optional_fact(
+                label="variant pin",
+                value=args.variant_pin,
+                unknown_reason=args.variant_pin_unknown_reason,
+                not_applicable_reason=args.variant_pin_not_applicable_reason,
+            ),
+            series_id=args.series_id,
+            cold_start_at=build_optional_fact(
+                label="cold-start timing",
+                value=args.cold_start_at,
+                unknown_reason=args.cold_start_at_unknown_reason,
+                not_applicable_reason=args.cold_start_at_not_applicable_reason,
+            ),
+            pre_coverage_history_posture=build_optional_fact(
+                label="pre-coverage history posture",
+                value=args.pre_coverage_history_posture,
+                unknown_reason=args.pre_coverage_history_posture_unknown_reason,
+                not_applicable_reason=args.pre_coverage_history_posture_not_applicable_reason,
+            ),
+            intended_cadence=_build_intended_cadence(args),
         )
     except ValueError as exc:
         parser.exit(status=2, message=f"source capture direct HTTP failed: {exc}\n")
