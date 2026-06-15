@@ -31,6 +31,7 @@ from runners.run_source_capture_durability_series import (
     SLOT_UN_OBSERVED,
     build_series_index,
     main as series_main,
+    mark_gap,
     run_slot,
     series_status,
 )
@@ -243,6 +244,112 @@ def test_run_slot_failed_fetch_records_un_observed_gap_not_no_change(scratch_dir
     assert "no change" not in json.dumps(slot).lower()
 
 
+def test_run_slot_systemexit_writer_records_un_observed_gap_not_no_change(scratch_dir: Path) -> None:
+    # Minor 1: the step-2 writer can surface a failure as SystemExit (its CLI main calls
+    # parser.exit) rather than a non-zero return. An injected writer raising SystemExit(3) must be
+    # treated EXACTLY like a non-zero return: the slot is recorded un_observed with
+    # gap_kind=fetch_failed and a non-empty gap_reason -- NEVER observed, never no-change -- and
+    # run_slot must not crash. Isolated from the real-writer fetch-failure test above.
+    series_dir = scratch_dir / "series"
+    # No http_server needed: the injected writer never touches the network.
+    _init_series(series_dir=series_dir, url="http://127.0.0.1:9/unreachable", slot_count=2)
+
+    def _systemexit_writer(_argv: list[str]) -> int:
+        raise SystemExit(3)
+
+    status, slot = run_slot(
+        series_dir=series_dir,
+        slot_index=0,
+        writer_main=_systemexit_writer,
+        now_z="2026-06-15T00:00:00Z",
+    )
+    assert status == SLOT_UN_OBSERVED
+    assert status != SLOT_OBSERVED
+    assert slot["gap_kind"] == "fetch_failed"
+    assert slot["gap_reason"]  # non-empty
+    assert "writer exit 3" in slot["gap_reason"]
+    assert "no_change" not in json.dumps(slot).lower()
+    assert "no change" not in json.dumps(slot).lower()
+
+
+def test_run_slot_rejects_overwrite_of_observed_slot(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: a recorded slot is immutable. Re-running an already-observed slot is refused with a
+    # visible error, and the prior observation record is left unchanged.
+    series_dir = scratch_dir / "series"
+    _init_series(series_dir=series_dir, url=f"{http_server}/sku", slot_count=3)
+
+    status, _slot = run_slot(series_dir=series_dir, slot_index=0, now_z="2026-06-15T00:00:00Z")
+    assert status == SLOT_OBSERVED
+    before = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][0]
+
+    with pytest.raises(ValueError, match="already observed; refusing to overwrite"):
+        run_slot(series_dir=series_dir, slot_index=0, now_z="2026-06-16T00:00:00Z")
+
+    after = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][0]
+    assert after == before  # the recorded slot is unchanged
+
+
+def test_mark_gap_rejects_overwrite_of_observed_slot(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: an already-observed slot cannot be overwritten by mark-gap either. Refused with a
+    # visible error; the prior observation record is left unchanged.
+    series_dir = scratch_dir / "series"
+    _init_series(series_dir=series_dir, url=f"{http_server}/sku", slot_count=3)
+
+    status, _slot = run_slot(series_dir=series_dir, slot_index=0, now_z="2026-06-15T00:00:00Z")
+    assert status == SLOT_OBSERVED
+    before = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][0]
+
+    with pytest.raises(ValueError, match="already observed; refusing to overwrite"):
+        mark_gap(series_dir=series_dir, slot_index=0, reason="too late", now_z="2026-06-16T00:00:00Z")
+
+    after = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][0]
+    assert after == before  # the recorded slot is unchanged
+
+
+def test_run_slot_rejects_overwrite_of_un_observed_gap_slot(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: an un_observed (gap) slot is ALSO immutable. Re-running a slot already marked as a
+    # gap is refused with a visible error; the recorded gap is left unchanged.
+    series_dir = scratch_dir / "series"
+    _init_series(series_dir=series_dir, url=f"{http_server}/sku", slot_count=3)
+
+    mark_gap(series_dir=series_dir, slot_index=1, reason="operator unavailable", now_z="2026-06-15T00:00:00Z")
+    before = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][1]
+
+    with pytest.raises(ValueError, match="already un_observed; refusing to overwrite"):
+        run_slot(series_dir=series_dir, slot_index=1, now_z="2026-06-16T00:00:00Z")
+
+    after = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][1]
+    assert after == before  # the recorded gap is unchanged
+
+
+def test_mark_gap_rejects_overwrite_of_un_observed_gap_slot(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: re-marking an already un_observed (gap) slot is refused with a visible error; the
+    # recorded gap is left unchanged.
+    series_dir = scratch_dir / "series"
+    _init_series(series_dir=series_dir, url=f"{http_server}/sku", slot_count=3)
+
+    mark_gap(series_dir=series_dir, slot_index=1, reason="operator unavailable", now_z="2026-06-15T00:00:00Z")
+    before = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][1]
+
+    with pytest.raises(ValueError, match="already un_observed; refusing to overwrite"):
+        mark_gap(series_dir=series_dir, slot_index=1, reason="different reason", now_z="2026-06-16T00:00:00Z")
+
+    after = json.loads((series_dir / SERIES_INDEX_FILENAME).read_text(encoding="utf-8"))["slots"][1]
+    assert after == before  # the recorded gap is unchanged
+
+
+def test_cli_run_slot_overwrite_exits_non_zero(http_server: str, scratch_dir: Path) -> None:
+    # Major 1 via the CLI: an overwrite attempt surfaces as a VISIBLE non-zero exit (parser.exit
+    # status 2 from the handled ValueError path), not a silent clobber.
+    series_dir = scratch_dir / "series"
+    _init_series(series_dir=series_dir, url=f"{http_server}/sku", slot_count=3)
+    run_slot(series_dir=series_dir, slot_index=0, now_z="2026-06-15T00:00:00Z")
+
+    with pytest.raises(SystemExit) as exc_info:
+        series_main(["run-slot", "--series-dir", str(series_dir), "--slot", "0"])
+    assert exc_info.value.code == 2
+
+
 def test_series_is_bounded_to_slot_count(http_server: str, scratch_dir: Path) -> None:
     # The series is a bounded commissioned unit (Ob.1), not an open crawler: a slot index at or
     # beyond slot_count is rejected -- the runner cannot run unbounded slots.
@@ -289,6 +396,72 @@ def test_build_series_index_requires_at_least_one_url() -> None:
             slot_count=1,
             delay_seconds=0.0,
         )
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\t", "\n  "])
+def test_build_series_index_rejects_blank_decision_frame_ref(blank: str) -> None:
+    # Major 2 (Ob.1): a commissioned series requires a real Decision Frame reference. A blank or
+    # whitespace-only ref is rejected -- the commissioning gate is not satisfied by empty text.
+    with pytest.raises(ValueError, match="non-empty Decision Frame reference and decision question"):
+        build_series_index(
+            series_id="s",
+            urls=["http://example.test/sku"],
+            decision_frame_ref=blank,
+            decision_question="Is demand durable?",
+            cadence_mode="fixed",
+            slot_count=1,
+            delay_seconds=0.0,
+        )
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\t", "\n  "])
+def test_build_series_index_rejects_blank_decision_question(blank: str) -> None:
+    # Major 2 (Ob.1): a commissioned series requires a real decision question. A blank or
+    # whitespace-only question is rejected.
+    with pytest.raises(ValueError, match="non-empty Decision Frame reference and decision question"):
+        build_series_index(
+            series_id="s",
+            urls=["http://example.test/sku"],
+            decision_frame_ref="DF-001",
+            decision_question=blank,
+            cadence_mode="fixed",
+            slot_count=1,
+            delay_seconds=0.0,
+        )
+
+
+def test_cli_init_rejects_blank_decision_question(http_server: str, scratch_dir: Path) -> None:
+    # Major 2 via the CLI: the `init` path constructs the index through build_series_index, so the
+    # single builder-level gate covers the CLI too -- a whitespace decision question surfaces as a
+    # visible non-zero exit (parser.exit status 2 from the handled ValueError path).
+    series_dir = scratch_dir / "series"
+    with pytest.raises(SystemExit) as exc_info:
+        series_main(
+            [
+                "init",
+                "--series-dir",
+                str(series_dir),
+                "--series-id",
+                "test_series_blankq",
+                "--decision-frame-ref",
+                "DF-test-001",
+                "--decision-question",
+                "   ",
+                "--url",
+                f"{http_server}/sku",
+                "--anchor-time",
+                "2026-06-15T00:00:00Z",
+                "--cadence-mode",
+                "fixed",
+                "--slot-count",
+                "2",
+                "--cadence-delay-seconds",
+                "86400.0",
+            ]
+        )
+    assert exc_info.value.code == 2
+    # The gate fired before any series state was written.
+    assert not (series_dir / SERIES_INDEX_FILENAME).exists()
 
 
 def test_init_refuses_to_overwrite_existing_series(http_server: str, scratch_dir: Path) -> None:

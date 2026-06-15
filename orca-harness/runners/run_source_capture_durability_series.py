@@ -149,6 +149,16 @@ def build_series_index(
     if not urls:
         raise ValueError("a demand-durability series requires at least one source URL")
 
+    # Ob.1 commissioning gate: a series is a Decision-Frame-bound commissioned unit, so the
+    # Decision Frame reference and the decision question must be real (non-empty after strip),
+    # never blank/whitespace. This single builder-level check covers both the direct-builder and
+    # the CLI `init` path (which constructs the index here). Input validation only (INV-1).
+    if not str(decision_frame_ref).strip() or not str(decision_question).strip():
+        raise ValueError(
+            "a demand-durability series requires a non-empty Decision Frame reference and "
+            "decision question (Ob.1)"
+        )
+
     plan = build_cadence_plan(
         slot_count=slot_count,
         mode=cadence_mode,
@@ -304,6 +314,14 @@ def run_slot(
     """
     index = _read_index(series_dir)
     slot = _slot_record(index, slot_index)
+    # A recorded slot is immutable: only a still-pending slot may be run. Refusing to
+    # overwrite an already observed/un_observed slot keeps the durable series record honest
+    # (a re-run must not silently clobber a prior observation or gap). State guard only (INV-1).
+    if slot["status"] != SLOT_PENDING:
+        raise ValueError(
+            f"slot {slot_index} is already {slot['status']}; "
+            "refusing to overwrite (a recorded slot is immutable)"
+        )
     cold_start = not _any_slot_observed(index)
     realized_now = now_z or _utc_now_z()
 
@@ -367,6 +385,14 @@ def mark_gap(*, series_dir: Path, slot_index: int, reason: str, now_z: str | Non
     """
     index = _read_index(series_dir)
     slot = _slot_record(index, slot_index)
+    # A recorded slot is immutable: only a still-pending slot may be marked as a gap. Refusing
+    # to overwrite an already observed/un_observed slot keeps the durable series record honest.
+    # State guard only (INV-1).
+    if slot["status"] != SLOT_PENDING:
+        raise ValueError(
+            f"slot {slot_index} is already {slot['status']}; "
+            "refusing to overwrite (a recorded slot is immutable)"
+        )
     slot["status"] = SLOT_UN_OBSERVED
     slot["gap_reason"] = reason
     slot["gap_kind"] = "skipped"
