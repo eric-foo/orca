@@ -6,11 +6,12 @@ artifact_role: probe design / measurement-method spec (non-authorizing; the RUN 
 scope: >
   Design for a bounded, logged-out, self-terminating probe that measures R (safe
   reads/day) and rate-limit-onset behavior for the IG creator-momentum capture
-  path — closing the H5 sustained-cadence-at-scale residual — and decides whether
-  proxies / IP-rotation are warranted. Design only; the live RUN is owner-gated.
+  path — closing the H5 sustained-cadence-at-scale residual — and decides the
+  scaling mitigation if R is insufficient (IP-rotation/proxies vs re-opening the
+  retired sessioned lane). Design only; the live RUN is owner-gated.
 use_when:
   - Scoping or authorizing the H5 / R / rate-limit probe for the IG capture path.
-  - Deciding whether proxies / IP-rotation are warranted (the conditional fork).
+  - Deciding the scaling mitigation if logged-out R is insufficient (proxies/IP-rotation vs re-opening the sessioned lane).
   - Turning the monitoring policy's illustrative R-tunable cadences into sized defaults.
 authority_boundary: retrieval_only
 open_next:
@@ -64,10 +65,11 @@ consequences that shape the whole probe:
   IP's budget. (This is exactly why the carve-out's account cap counts *our
   operating accounts*, not subjects — and why on the logged-out path the binding
   resource is the IP, not the account.)
-- **The proxies question is therefore a division.** Once per-IP R and roster demand
-  are known, IPs-needed ≈ `ceil(roster_demand / per_IP_R)`. Proxies/IP-rotation are
-  warranted **iff** one egress IP cannot carry the roster. Measure the numerator and
-  denominator first; do not build mitigation before measuring the problem.
+- **The mitigation question is therefore a division.** Once per-IP R and roster demand
+  are known, IPs-needed ≈ `ceil(roster_demand / per_IP_R)`. A scaling mitigation —
+  proxies/IP-rotation, *or* re-opening the sessioned lane (a different regime; see the
+  decision rule) — is warranted **iff** one egress IP cannot carry the roster. Measure the
+  numerator and denominator first; do not build mitigation before measuring the problem.
 
 ### What counts as a "read" (two levels — state both)
 - **Invocation level** (what the operator drives): one runner invocation = `1`
@@ -193,14 +195,30 @@ roster_demand (reads/day) ≈ M × [ f_A · d_A + f_B · d_B + f_C · d_C ]
 
 **(All figures illustrative — R is unmeasured; M and the tier mix are owner inputs.)**
 
-## The proxies decision rule (the conditional fork)
-- **per-IP R ≥ roster_demand ⇒ proxies NOT needed.** One egress carries the working
-  roster; record the headroom; revisit only if the roster or cadence grows.
-- **per-IP R < roster_demand ⇒ proxies/IP-rotation WARRANTED.** Estimate IPs ≈
-  `ceil(roster_demand / per_IP_R)`, subject to a follow-up **additivity check** (the
-  optional 2nd-IP phase, or a later probe) because subnet/fingerprint correlation may
-  mean N IPs deliver < N×R. **The proxy BUILD remains separately authorized** — this
-  probe only decides *whether it is warranted*, not how to build it.
+## The scaling-mitigation decision rule (the conditional fork)
+The probe's outcome maps to one of three actions — **not** a proxies yes/no:
+
+1. **per-IP R ≥ roster_demand ⇒ no scaling mitigation needed.** One egress carries the
+   working roster; record the headroom; revisit only if the roster or cadence grows.
+2. **per-IP R < roster_demand ⇒ add IPs (proxies / IP-rotation).** Stays logged-out and
+   carve-out-compliant. Estimate IPs ≈ `ceil(roster_demand / per_IP_R)`, subject to a
+   follow-up **additivity check** (the optional 2nd-IP phase, or a later probe) because
+   subnet/fingerprint correlation may mean N IPs deliver < N×R. The proxy BUILD remains
+   separately authorized.
+3. **per-IP R < roster_demand ⇒ re-open the retired sessioned lane (alternative regime).**
+   The IG findings retired the session/auth lane with an explicit reopen condition —
+   *"re-open only if the H5-scale probe shows logged-out is rate-walled where a session
+   sustains more — a scale question, not a reachability one"* — and **this probe is that
+   H5-scale probe.** A sessioned runtime is keyed to the **account** (not the IP), so it
+   can raise per-account limits and spread load across accounts, **but**: accounts are
+   bannable (logged-out has none to lose), need creation + warming, and login automation
+   raises ToS / detection risk. It also **requires an owner carve-out amendment** — the
+   current drift guard forbids wiring cookies/sessions into a committed runner. Branch 3
+   is a doctrine decision, not a build the probe authorizes.
+
+Branches 2 and 3 are **alternatives for the same trigger** (low logged-out R). Choosing
+between them — IP-rotation cost/fragility vs account ban-risk + ToS + carve-out amendment
+— is an owner decision the probe's R measurement *informs* but does not make.
 
 ## Carve-out conformance checklist (load-bearing)
 Governed by `wind_caller_calibration_carveout_v0.md` as amended 2026-06-15:
