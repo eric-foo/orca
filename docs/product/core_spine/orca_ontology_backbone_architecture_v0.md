@@ -122,7 +122,7 @@ only via the backing map.
 **ID-canonicalization (owner-decided 2026-06-15).** This grammar is the single naming
 authority — producer / harness IDs **conform to it** (so `case:` / `outcome:` are normalized
 to the dotted form, matching `decision:`); the version suffix (`_v0`) is **metadata, not part
-of the ID** (provisional — confirm); and **an ID survives any rename** (the display name
+of the ID** (owner-confirmed 2026-06-15); and **an ID survives any rename** (the display name
 lives in a field; the ID is an opaque, stable handle). Migrating the live harness `*_v0` IDs
 into this grammar is a downstream job owed by the harness lane, not performed by this naming
 decision. (See §6.1, §9.)
@@ -427,7 +427,7 @@ Stolen from the venue card set, the proven antidote to ontology rot:
   ID-canonicalization decided.** The §2.1 grammar is the single naming authority — producer /
   harness IDs **conform to it**, not the reverse; `case:` / `outcome:` examples normalized to
   the dotted grammar (matching `decision:`); the version suffix (`_v0`) is **metadata, not
-  part of the ID** (provisional — owner-leaning, confirm); **IDs are opaque and survive
+  part of the ID** (owner-confirmed 2026-06-15); **IDs are opaque and survive
   rename**. Migrating the live harness `*_v0` IDs into this grammar is a downstream job **owed
   by the harness lane**, not executed by this decision (§2.1, §9). The prior §9 note —
   `derived_from` (origination) authoritative over venue-family for independence — stands.
@@ -554,7 +554,7 @@ refuted "build 5 cards first":
    ledger `*_v0`). Resolution: the §2.1 grammar is the **single authority and producer /
    harness IDs conform to it** — the canonical `brand:` / `venue:` / `case:` are the dotted
    slugs, the live harness `*_v0` case IDs **migrate to them** (a downstream job owed by the
-   harness lane), the `_v0` version suffix is **metadata, not part of the ID** (provisional),
+   harness lane), the `_v0` version suffix is **metadata, not part of the ID** (owner-confirmed),
    and **IDs survive rename**. Still encode here, citing the demand-gate closures:
    **`derived_from` (origination) is authoritative over venue-family** for independence
    counting (the card states the pointer; it mints no new rule).
