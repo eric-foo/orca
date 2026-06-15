@@ -1,0 +1,110 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 1290,
+    "capture_timestamp": "2026-06-15T14:22:51Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 14:22:51 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2Fproducts%2Ftelegrama&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2Fproducts%2Ftelegrama&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2Fproducts%2Ftelegrama&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+  "original_url": "https://imaginaryauthors.com/products/telegrama",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "EZW763FZ54STW3HSTXVREXXDSTEMUO7G",
+    "mime_type": "text/html",
+    "original_url": "https://imaginaryauthors.com/products/telegrama",
+    "snapshot_url": "https://web.archive.org/web/20240304233916/https://imaginaryauthors.com/products/telegrama",
+    "status_code": "200",
+    "timestamp": "20240304233916"
+  },
+  "snapshot_count": 10,
+  "snapshots": [
+    {
+      "digest": "LWTXAUTJPMHUKSGPPHUPUFXGKC2ERLUX",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20220616015327/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20220616015327"
+    },
+    {
+      "digest": "T5BXG3746V27QCE3QM5TXEIR7CRQ4PMS",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20220820043452/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20220820043452"
+    },
+    {
+      "digest": "ZO6CUTNO6LI7BXUQNRYT7IC4JQUECPXT",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20221207153812/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20221207153812"
+    },
+    {
+      "digest": "2JN3CPUMSVXXFW5I4O3OW5IFDLZVFPFI",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230209095553/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230209095553"
+    },
+    {
+      "digest": "7UE6ETETNOQ2D4IQYQ5XCRGT5F2NWFUO",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230227061811/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230227061811"
+    },
+    {
+      "digest": "2ZFCFZD25KJDX6TQ64M6ZYP7W464FTTQ",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230601093232/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230601093232"
+    },
+    {
+      "digest": "WXGS7DPJEKZIN6BLEXEG4XYINOD23HCQ",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230609133628/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230609133628"
+    },
+    {
+      "digest": "KEFFYUM2SJILXG53L5WTICQEDNY36KXK",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230628010723/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230628010723"
+    },
+    {
+      "digest": "R3SYZNS5HEJEN5QC5GKYWCZA4T6BUIYR",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20230927235929/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20230927235929"
+    },
+    {
+      "digest": "EZW763FZ54STW3HSTXVREXXDSTEMUO7G",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/products/telegrama",
+      "snapshot_url": "https://web.archive.org/web/20240304233916/https://imaginaryauthors.com/products/telegrama",
+      "status_code": "200",
+      "timestamp": "20240304233916"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 1113,
+    "capture_timestamp": "2026-06-15T14:15:03Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 14:15:03 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fimaginaryauthors.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240801000000&limit=-10",
+  "original_url": "https://imaginaryauthors.com/",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "PS7JAJOEQHP2OW73VDEWHSATIFO7NPQU",
+    "mime_type": "text/html",
+    "original_url": "https://imaginaryauthors.com/",
+    "snapshot_url": "https://web.archive.org/web/20240717091356/https://imaginaryauthors.com/",
+    "status_code": "200",
+    "timestamp": "20240717091356"
+  },
+  "snapshot_count": 10,
+  "snapshots": [
+    {
+      "digest": "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ",
+      "mime_type": "warc/revisit",
+      "original_url": "http://www.imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240420181213/http://www.imaginaryauthors.com/",
+      "status_code": "-",
+      "timestamp": "20240420181213"
+    },
+    {
+      "digest": "7COGA222QE7V4FH4ZX6WR5GQDLOHMKI4",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240420181215/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240420181215"
+    },
+    {
+      "digest": "UX2ZIAN636DL4JOGVWAROCJGXD636LV6",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240421103443/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240421103443"
+    },
+    {
+      "digest": "G4HDCOUSFKNUBXUEX5LRTIFDAV3UXDZ2",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240521061730/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240521061730"
+    },
+    {
+      "digest": "D3YOYZGRNUIBOTUP6DT5MV45NRULPTTK",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240604091850/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240604091850"
+    },
+    {
+      "digest": "42HY3ORJ2AEVXYIPSDQVISJW4GROZU35",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240606070628/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240606070628"
+    },
+    {
+      "digest": "B7GPL6QHBC2Y4GBUR45Y7TVTNWI2VR3O",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240615222920/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240615222920"
+    },
+    {
+      "digest": "3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ",
+      "mime_type": "text/html",
+      "original_url": "http://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240701150039/http://imaginaryauthors.com/",
+      "status_code": "301",
+      "timestamp": "20240701150039"
+    },
+    {
+      "digest": "AU6VZZCDKEQU352X4FEXLWF3VFF6ODKO",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240710043023/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240710043023"
+    },
+    {
+      "digest": "PS7JAJOEQHP2OW73VDEWHSATIFO7NPQU",
+      "mime_type": "text/html",
+      "original_url": "https://imaginaryauthors.com/",
+      "snapshot_url": "https://web.archive.org/web/20240717091356/https://imaginaryauthors.com/",
+      "status_code": "200",
+      "timestamp": "20240717091356"
+    }
+  ]
+}

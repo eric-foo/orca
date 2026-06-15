@@ -1,0 +1,25 @@
+{
+  "original_url": "https://imaginaryauthors.com/",
+  "selected_snapshot": {
+    "digest": "PS7JAJOEQHP2OW73VDEWHSATIFO7NPQU",
+    "mime_type": "text/html",
+    "original_url": "https://imaginaryauthors.com/",
+    "snapshot_url": "https://web.archive.org/web/20240717091356/https://imaginaryauthors.com/",
+    "status_code": "200",
+    "timestamp": "20240717091356"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 228502,
+    "capture_timestamp": "2026-06-15T14:15:06Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 14:15:05 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240717091356/https://imaginaryauthors.com/",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240717091356/https://imaginaryauthors.com/",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}
