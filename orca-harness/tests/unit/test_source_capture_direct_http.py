@@ -300,3 +300,182 @@ def test_http_runner_returns_0_and_marks_non_2xx_limitation(http_server: str, sc
     manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["access_posture"]["value"].startswith("direct_http access_failed with HTTP 404")
     assert any("access_failed" in item for item in manifest["limitations"])
+
+
+def test_http_runner_sets_demand_durability_series_fields(http_server: str, scratch_dir: Path) -> None:
+    # Step 2 (durability-series writer): a demand-durability capture POPULATES the hardened
+    # additive-optional schema fields as first-class fields -- the Element 1 pins on the slice
+    # and the Element 2/4 series facts on the packet -- NOT in capture_context (the pilot
+    # stopgap). intended_cadence is the declared CadencePlan.to_dict() shape. INV-1: these are
+    # observed facts, never weights or a durable-vs-hollow verdict.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "Is demand for this SKU durable across the series window?",
+            "--output",
+            str(output_dir),
+            "--series-id",
+            "pilot_sdj_bumbum_001",
+            "--session-visibility-pin",
+            "logged_out_public",
+            "--locale-pin",
+            "en-US",
+            "--currency-pin",
+            "USD",
+            "--variant-pin-unknown-reason",
+            "default on-page variant; not pinned to a specific SKU id",
+            "--cold-start-at",
+            "2026-06-15T00:00:00Z",
+            "--pre-coverage-history-posture",
+            "uncovered by construction; series began at first commissioned capture",
+            "--intended-cadence-mode",
+            "fixed",
+            "--intended-cadence-slot-count",
+            "14",
+            "--intended-cadence-delay-seconds",
+            "86400",
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+
+    # Element 2 / 4 series facts ride on the packet as first-class schema fields.
+    assert manifest["series_id"] == "pilot_sdj_bumbum_001"
+    assert manifest["cold_start_at"] == {"status": "known", "value": "2026-06-15T00:00:00Z", "reason": None}
+    assert manifest["pre_coverage_history_posture"]["status"] == "known"
+    assert manifest["pre_coverage_history_posture"]["value"].startswith("uncovered by construction")
+    # intended_cadence is the canonical CadencePlan.to_dict() shape (no invented shape).
+    cadence = manifest["intended_cadence"]
+    assert cadence["mode"] == "fixed"
+    assert cadence["slot_count"] == 14
+    assert cadence["delay_seconds"] == 86400.0
+    assert cadence["planned_offsets_seconds"][0] == 0.0
+    assert cadence["planned_offsets_seconds"][-1] == 1123200.0
+
+    # Element 1 pins ride on the slice (not capture_context).
+    observed_slice = manifest["source_slices"][0]
+    assert observed_slice["session_visibility_pin"] == {"status": "known", "value": "logged_out_public", "reason": None}
+    assert observed_slice["locale_pin"]["value"] == "en-US"
+    assert observed_slice["currency_pin"]["value"] == "USD"
+    assert observed_slice["variant_pin"]["status"] == "unknown_with_reason"
+
+    # The pins did NOT leak into capture_context -- the whole point of step 2.
+    assert manifest["capture_context"]["value"] == "direct HTTP source capture with stdlib urllib"
+
+
+def test_http_runner_rejects_cadence_subflag_without_mode(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: a cadence subflag supplied without --intended-cadence-mode is an incoherent partial
+    # plan. It must fail VISIBLY (non-zero exit, error names the mode requirement) rather than being
+    # silently dropped. --series-id is supplied so the series-identity gate passes and the cadence
+    # gate is what fires.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "Does a cadence subflag without a mode fail visibly?",
+            "--output",
+            str(output_dir),
+            "--series-id",
+            "pilot_partial_cadence_001",
+            "--intended-cadence-slot-count",
+            "14",
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "--intended-cadence-mode" in result.stderr
+    assert not output_dir.exists()
+
+
+def test_http_runner_rejects_durability_field_without_series_id(http_server: str, scratch_dir: Path) -> None:
+    # Major 2: a demand-durability fact supplied without --series-id has no series identity to ride
+    # on. It must fail VISIBLY (non-zero exit, error names the series-id requirement) before the
+    # capture runs, rather than writing facts with no identity.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "Does a durability field without a series id fail visibly?",
+            "--output",
+            str(output_dir),
+            "--locale-pin",
+            "en-GB",
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "--series-id" in result.stderr
+    assert not output_dir.exists()
+
+
+def test_http_runner_leaves_durability_fields_none_for_non_durability_capture(
+    http_server: str, scratch_dir: Path
+) -> None:
+    # Back-compat: a capture that supplies no durability flags leaves every durability field
+    # unset (None) on both the packet and the slice. No manifest_version bump -- the fields are
+    # additive-optional, mirroring the archive_snapshot_time precedent.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "What did the HTTP source return before cutoff?",
+            "--output",
+            str(output_dir),
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    manifest = json.loads((output_dir / "manifest.json").read_text(encoding="utf-8"))
+
+    assert manifest["manifest_version"] == "source_capture_packet_manifest_v1"
+    assert manifest["series_id"] is None
+    assert manifest["cold_start_at"] is None
+    assert manifest["pre_coverage_history_posture"] is None
+    assert manifest["intended_cadence"] is None
+    observed_slice = manifest["source_slices"][0]
+    assert observed_slice["session_visibility_pin"] is None
+    assert observed_slice["locale_pin"] is None
+    assert observed_slice["currency_pin"] is None
+    assert observed_slice["variant_pin"] is None
