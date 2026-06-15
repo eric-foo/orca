@@ -1,0 +1,25 @@
+{
+  "original_url": "https://www.joahbeauty.com/blogs/news",
+  "selected_snapshot": {
+    "digest": "FXUQPUHJJYIZO4FJMJFYCGAQEM3IK5RZ",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/blogs/news",
+    "snapshot_url": "https://web.archive.org/web/20240303000811/https://www.joahbeauty.com/blogs/news",
+    "status_code": "200",
+    "timestamp": "20240303000811"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 152545,
+    "capture_timestamp": "2026-06-15T13:51:01Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 13:51:00 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240303000811/https://www.joahbeauty.com/blogs/news",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240303000811/https://www.joahbeauty.com/blogs/news",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}

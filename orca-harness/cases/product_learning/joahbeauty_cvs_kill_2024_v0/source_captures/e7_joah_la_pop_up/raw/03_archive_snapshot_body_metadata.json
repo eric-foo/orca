@@ -1,0 +1,25 @@
+{
+  "original_url": "https://www.joahbeauty.com/pages/joah-la-pop-up",
+  "selected_snapshot": {
+    "digest": "JSVLIUSVNJJFYN43ORK5KSAL7GE7BANP",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/pages/joah-la-pop-up",
+    "snapshot_url": "https://web.archive.org/web/20240415133307/https://www.joahbeauty.com/pages/joah-la-pop-up",
+    "status_code": "200",
+    "timestamp": "20240415133307"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 158160,
+    "capture_timestamp": "2026-06-15T13:49:46Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 13:49:45 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240415133307/https://www.joahbeauty.com/pages/joah-la-pop-up",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240415133307/https://www.joahbeauty.com/pages/joah-la-pop-up",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 744,
+    "capture_timestamp": "2026-06-15T13:43:26Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 13:43:25 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fpages%2Fabout&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fpages%2Fabout&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fpages%2Fabout&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+  "original_url": "https://www.joahbeauty.com/pages/about",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "S7SGJREDPQXEDGA3K3CEMZAI7NLZIEVM",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/pages/about",
+    "snapshot_url": "https://web.archive.org/web/20240520125707/https://www.joahbeauty.com/pages/about",
+    "status_code": "200",
+    "timestamp": "20240520125707"
+  },
+  "snapshot_count": 6,
+  "snapshots": [
+    {
+      "digest": "T3SB2SJBLBGOYD2D4SU5B7C66ILX7HNO",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20231001212006/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20231001212006"
+    },
+    {
+      "digest": "RN4HEYUTSNWFO2LOKWIBCXDMZ6BYHXKN",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20231011181812/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20231011181812"
+    },
+    {
+      "digest": "IGBNLWO43GMLORVA4VWYZWWFTVQ4YLFU",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20231214015603/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20231214015603"
+    },
+    {
+      "digest": "4UOAT6TV6YWNLA5IH2V2M7F2GDEC5GKN",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20240302235849/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20240302235849"
+    },
+    {
+      "digest": "7BJ4ELCQWK6PCRZ6I3GAOY26DLV46Q63",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20240502215612/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20240502215612"
+    },
+    {
+      "digest": "S7SGJREDPQXEDGA3K3CEMZAI7NLZIEVM",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/pages/about",
+      "snapshot_url": "https://web.archive.org/web/20240520125707/https://www.joahbeauty.com/pages/about",
+      "status_code": "200",
+      "timestamp": "20240520125707"
+    }
+  ]
+}

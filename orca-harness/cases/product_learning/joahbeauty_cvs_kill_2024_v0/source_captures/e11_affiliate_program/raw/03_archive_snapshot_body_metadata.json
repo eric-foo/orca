@@ -1,0 +1,25 @@
+{
+  "original_url": "https://www.joahbeauty.com/pages/affiliate-program",
+  "selected_snapshot": {
+    "digest": "KIDTTPTQUSC7TQ75XW7HENFCVGMJEDJS",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/pages/affiliate-program",
+    "snapshot_url": "https://web.archive.org/web/20240415121551/https://www.joahbeauty.com/pages/affiliate-program",
+    "status_code": "200",
+    "timestamp": "20240415121551"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 363983,
+    "capture_timestamp": "2026-06-15T13:48:31Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 13:48:30 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240415121551/https://www.joahbeauty.com/pages/affiliate-program",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240415121551/https://www.joahbeauty.com/pages/affiliate-program",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}
