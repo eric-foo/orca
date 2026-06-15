@@ -1,0 +1,25 @@
+{
+  "original_url": "https://imaginaryauthors.com/products/whispered-myths",
+  "selected_snapshot": {
+    "digest": "UMV6YQFGJ6LC3UK2WLUZEO4DBP7GAQ2M",
+    "mime_type": "text/html",
+    "original_url": "https://imaginaryauthors.com/products/whispered-myths",
+    "snapshot_url": "https://web.archive.org/web/20240616003927/https://imaginaryauthors.com/products/whispered-myths",
+    "status_code": "200",
+    "timestamp": "20240616003927"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 161809,
+    "capture_timestamp": "2026-06-15T14:20:08Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 14:20:07 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240616003927/https://imaginaryauthors.com/products/whispered-myths",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240616003927/https://imaginaryauthors.com/products/whispered-myths",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}
