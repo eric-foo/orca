@@ -133,6 +133,16 @@ class SourceCaptureSlice(StrictModel):
     archive_history_posture: VisibleFact
     media_modality_posture: VisibleFact
     re_capture_relationship: VisibleFact
+    # Demand-durability pins (Lane 1 Element 1; capture_envelope_durability_delta_spec_v0).
+    # Additive and optional so existing manifests stay valid under extra="forbid": None
+    # means this slice's producer did not set the pin (a non-durability capture, or a
+    # legacy slice). A demand-durability observation sets each as a VisibleFact
+    # (known_fact / unknown_with_reason / not_applicable). These fix comparability across
+    # a series; they are observed facts, never weights or scores (INV-1).
+    session_visibility_pin: VisibleFact | None = None
+    locale_pin: VisibleFact | None = None
+    currency_pin: VisibleFact | None = None
+    variant_pin: VisibleFact | None = None
     limitations: list[str] = Field(default_factory=list)
     warning_notes: list[str] = Field(default_factory=list)
     preserved_file_ids: list[str] = Field(default_factory=list)
@@ -187,6 +197,19 @@ class SourceCapturePacket(StrictModel):
     archive_history_posture: VisibleFact
     media_modality_posture: VisibleFact
     re_capture_relationship: VisibleFact
+    # Demand-durability series facts (Lane 1 Elements 2 & 4; capture_envelope_durability_delta_spec_v0).
+    # Additive and optional (extra="forbid" back-compat): None means this packet is not part
+    # of a tracked durability series, or is legacy. A demand-durability series sets series_id
+    # on every observation; cold_start_at + pre_coverage_history_posture mark the series origin
+    # (set on the first / cold-start observation); intended_cadence carries the declared
+    # CadencePlan.to_dict() shape (a typed CadenceDeclaration model is deferred to avoid coupling
+    # the envelope to cadence.py). Series-diff (Element 3) is deferred — it is a cross-packet
+    # record, not a single-packet field. All are observed facts, never weights (INV-1); whether a
+    # series shows durable vs hollow demand is downstream Judgment.
+    series_id: str | None = None
+    cold_start_at: VisibleFact | None = None
+    pre_coverage_history_posture: VisibleFact | None = None
+    intended_cadence: dict[str, object] | None = None
     source_slices: list[SourceCaptureSlice] = Field(min_length=1)
     preserved_files: list[PreservedFile] = Field(min_length=1)
     warnings: list[str] = Field(default_factory=list)
