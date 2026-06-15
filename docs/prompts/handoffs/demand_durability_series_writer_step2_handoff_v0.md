@@ -42,7 +42,32 @@ authority_boundary: retrieval_only
 - **no-gate-defeat**: anti-bot (honest/anti-blocking UA) is OK; **STOP at any auth / CAPTCHA / Cloudflare *challenge*** and record the limitation. Do not defeat a gate.
 - **schema fields, not `capture_context`**: the pilot stuffed pins in `capture_context` as a stopgap; step 2's whole point is to set the hardened **schema fields**. Do not copy the capture_context-stuffing pattern.
 - **series-diff Element 3 is DEFERRED**: do not build it. It is a cross-packet record needing an extracted-value extractor; when later built it keys change on EXTRACTED values, raw `PreservedFile.sha256` is only a coarse inspect-flag (distillation binding A1c).
-- **authorization**: building the writer is runtime/code work. This packet **scopes; it does not authorize**. The receiver needs explicit bounded build authorization in its own turn (AGENTS.md: implementation/runtime work requires explicit bounded authorization).
+- **authorization**: building the writer is runtime/code work. **Bounded build authorization is GRANTED** (owner, 2026-06-15) — see *Build Authorization* below. Build the step-2 writer without re-requesting authorization, within the bounds; **landing to `main` stays owner-gated**.
+
+## Build Authorization (owner-granted, bounded — 2026-06-15)
+
+The owner granted **bounded build authorization** for this step in this thread
+(2026-06-15), carried via the AGENTS.md accepted-handoff path
+("implementation/runtime work requires explicit bounded authorization in the
+current turn **or accepted handoff**"). The receiving lane is authorized to BUILD
+the demand-durability **series writer** without re-requesting per-turn
+authorization, BOUNDED to:
+
+- **only steps 2 and 3 of the demand-durability rollout** (this step = the writer;
+  step 3 = the cadence runner/scheduler). **NOT** broader capture-spine work — no
+  ECR / Cleaning / Judgment derivers, no source-quality scoring, no other lanes.
+- the Drift Guard above (additive-optional / no manifest bump, INV-1,
+  no-gate-defeat, schema-fields-not-`capture_context`, series-diff Element 3 deferred).
+- build on the lane's own worktree/branch + per-lane PR. **Landing to `main` stays
+  owner-gated** — the receiving lane does not merge to `main` (except self-merging
+  its **own** PR under the protected-action guard's verified exception).
+
+This is a bounded grant for steps 2+3 only; it is **not a standing grant**. It
+**supersedes** the earlier scope-only framing in this packet — specifically the
+"get explicit bounded build authorization" wording in *Exact Next Authorized
+Action* step 2, the *Strict-only blockers* "build authorization not granted" line,
+and any *Do Not Forget* "scopes, does not authorize" reminder: the build is
+authorized within these bounds.
 
 ## Inherited Context (does NOT flow to a new lane)
 
