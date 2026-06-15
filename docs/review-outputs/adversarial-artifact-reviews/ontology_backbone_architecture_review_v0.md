@@ -9,7 +9,7 @@ scope: >
 use_when:
   - Adjudicating the delegated hardening patch before keeping or rejecting it.
   - Checking which ontology-backbone architecture review findings were patched.
-authority_boundary: decision_input_only
+authority_boundary: retrieval_only
 reviewed_by: openai-gpt-5-codex
 authored_by: Anthropic Claude Opus 4.x
 de_correlation_bar: cross_vendor_discovery
