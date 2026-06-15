@@ -1,0 +1,46 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 288,
+    "capture_timestamp": "2026-06-15T13:44:40Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 13:44:39 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fcollections&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fcollections&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fwww.joahbeauty.com%2Fcollections&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20240601000000&limit=-10",
+  "original_url": "https://www.joahbeauty.com/collections",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "ZOZ4U4WTSSVH6HVIZXK73XHYYDM2BOHI",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/collections",
+    "snapshot_url": "https://web.archive.org/web/20240520131758/https://www.joahbeauty.com/collections",
+    "status_code": "200",
+    "timestamp": "20240520131758"
+  },
+  "snapshot_count": 2,
+  "snapshots": [
+    {
+      "digest": "ZJ6UZEORCIXVLEWFGKLP6EMHUGQKTRXY",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/collections",
+      "snapshot_url": "https://web.archive.org/web/20240303002026/https://www.joahbeauty.com/collections",
+      "status_code": "200",
+      "timestamp": "20240303002026"
+    },
+    {
+      "digest": "ZOZ4U4WTSSVH6HVIZXK73XHYYDM2BOHI",
+      "mime_type": "text/html",
+      "original_url": "https://www.joahbeauty.com/collections",
+      "snapshot_url": "https://web.archive.org/web/20240520131758/https://www.joahbeauty.com/collections",
+      "status_code": "200",
+      "timestamp": "20240520131758"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "original_url": "https://www.joahbeauty.com/",
+  "selected_snapshot": {
+    "digest": "P4M5BP2OWXKYXQF2UF2JN3XBYQWL4C4J",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/",
+    "snapshot_url": "https://web.archive.org/web/20231214015359/https://www.joahbeauty.com/",
+    "status_code": "200",
+    "timestamp": "20231214015359"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 400329,
+    "capture_timestamp": "2026-06-15T13:42:02Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 13:42:00 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20231214015359/https://www.joahbeauty.com/",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20231214015359/https://www.joahbeauty.com/",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}

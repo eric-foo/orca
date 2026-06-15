@@ -1,0 +1,25 @@
+{
+  "original_url": "https://www.joahbeauty.com/collections",
+  "selected_snapshot": {
+    "digest": "ZOZ4U4WTSSVH6HVIZXK73XHYYDM2BOHI",
+    "mime_type": "text/html",
+    "original_url": "https://www.joahbeauty.com/collections",
+    "snapshot_url": "https://web.archive.org/web/20240520131758/https://www.joahbeauty.com/collections",
+    "status_code": "200",
+    "timestamp": "20240520131758"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 339494,
+    "capture_timestamp": "2026-06-15T13:44:42Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 13:44:41 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20240520131758/https://www.joahbeauty.com/collections",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20240520131758/https://www.joahbeauty.com/collections",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}
