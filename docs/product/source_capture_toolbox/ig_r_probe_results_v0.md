@@ -36,11 +36,12 @@ throttled at the end and live reads were stopped to let it recover. Not validati
 | **Run 1** (harvested after a crash) | R1+R2 (8–45s → 2–8s gaps) | 143 reads / **~176 modeled IG-requests**, 5 creators, 37 min | **NONE** |
 | **Run 2** (R2→R3) | R2 then R3 (0.5–2s gaps) | 6 invocations / ~84 modeled | **ONSET** `redirected_to_login` on the **first R3 read** (`kayla.ryan1`) |
 | **Disambiguation** (gentle, post-onset) | 6–12s gaps, 1 item | `kayla.ryan1`→**recovered (rc 0)**; `theglownarrative`→**blocked**; `milkydew_`→**blocked** | IP-wide, soft |
+| **Endurance attempt** (later; recovery-gated, 8 creators) | warm-up probes every ~150s | 5 recovery attempts over ~12.7 min — never both-clean (1 lone slip-through @ ~5 min) | **ABORTED `ip_not_recovered`** — at-pace ceiling NOT measured; throttle still active |
 
 ## Finding — the limit is PACE, not volume
 - **Run 1 did 176 modeled requests at ≥2s pace with zero walls; run 2 walled the instant it went sub-2s.** Volume isn't the binding constraint (run 1 = 2× run 2's volume, gentler, clean). **Pace is.**
 - The wall is **IP-wide** (two distinct creators blocked in the disambiguation), **soft** (`kayla` recovered one read → not a ban), and presents as **`redirected_to_login`** (IG's logged-out throttle mechanism — *not* a `429`).
-- Once a sub-2s burst trips it, the throttle **persists for minutes** and walls most reads IP-wide (occasional slip-through), then decays.
+- Once a sub-2s burst trips it, the throttle is **sticky**: it persisted **≥12 min** under gentle periodic probing (every ~150s), with only occasional single-read slip-throughs — the probing itself likely sustained it. Full recovery needs a longer **fully-quiet** cooldown (>12 min, unmeasured). *(Corrects an earlier "decays in minutes" reading — the endurance attempt's recovery gate never cleared.)*
 - Per-creator read cost ≈ **16 modeled IG-requests** (1 profile≈4 + 12 items); call-yield ≈ **~89%** (image-carousel posts whose `og:description` lacks engagement miss the signal — not a block).
 
 ## Report — two consumers (per design Delta 2)
