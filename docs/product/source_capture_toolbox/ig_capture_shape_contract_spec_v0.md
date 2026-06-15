@@ -8,7 +8,7 @@ scope: >
   Stabilizes required behavior, non-goals, the typed-observation contract, acceptance criteria, and the
   scoping handoff. PROPOSED; authorizes NO build.
 use_when:
-  - Scoping or building the IG typed-metric capture field on the source-capture packet.
+  - Scoping the IG typed-metric capture field on the source-capture packet (building it only after the separate explicit owner authorization + manifest-bump gate in Non-goals).
   - Checking what an IG capture must record per metric (value + typed posture + coverage) and why.
 authority_boundary: retrieval_only
 open_next:
@@ -20,7 +20,7 @@ stale_if:
   - The owner overturns the capture-shape (b) decision, the posture enum, or the identity/conflict policy.
   - The backbone's Reframe 1 / rebuild-input-set is amended.
   - The models.py field-add is built (moves this from contract to implemented).
-status: PROPOSED — IG capture-shape contract; instantiates the cross-vendor-reviewed backbone; authorizes no build
+status: PROPOSED — IG capture-shape contract (advisory review AR-01..AR-05 CA-adjudicated + folded); instantiates the cross-vendor-reviewed backbone; authorizes no build
 ```
 
 # IG Capture-Shape Contract — Spec (PROPOSED, v0)
@@ -43,20 +43,28 @@ status: PROPOSED — IG capture-shape contract; instantiates the cross-vendor-re
    observation carries its own typed value and its own posture.
 3. **Value and posture are coupled at write time:** a value is present **iff** posture = `observed`; a
    reason is present **iff** posture ≠ `observed`. A non-observed observation carries no value.
-4. **Typing is packet-recoverable.** Each packet pins the schema version that defines the
-   metric→typed-value mapping and the identity/conflict-policy version, so the typed series rebuilds from
-   the packet alone — **without** consulting any external runtime registry.
+4. **Typing is packet-recoverable via version pinning.** Each packet pins the manifest/registry version
+   (the metric→typed-value mapping) and the identity/conflict-policy version. The typed series then
+   rebuilds from **the packet plus the immutable, packet-pinned versioned registry + identity/conflict-policy
+   definitions** — the backbone's invariant-0 rebuild input set (`packets + versioned registry + versioned
+   id/conflict policy`), **not packets alone**. What is excluded is any **live or mutable external registry
+   lookup**: the pinned versioned definitions are required, immutable rebuild inputs, not a runtime read.
 5. **Identity is the stable numeric id**, never the mutable username; a re-capture of the same entity
    records a typed re-capture relationship.
-6. Each capture declares **which posts / period it claims to cover**, so a post missing from the claimed
-   window is distinguishable from one that was never attempted.
+6. Each capture declares, **at packet level**, **which posts / period it claims to cover** — a claimed
+   post-set or discovery boundary plus the attempted set — so a post inside the claimed boundary but
+   absent (in-window-missing) is distinguishable from one outside it and from one never attempted. (This
+   is a packet-level coverage claim, distinct from the per-metric `coverage_window`; see Interfaces.)
 
 ## Non-goals
 
-- **Authorizes no build.** Editing `orca-harness/source_capture/models.py` is runtime work and is
-  **double-gated**: (1) separate explicit owner authorization, and (2) the v1→v2 breaking `manifest_version`
-  bump must handle persisted-v1-packet read-back per the schema-evolution doctrine (whose read-back
-  mechanism is build-deferred) **or** confirm no v1 packets need to survive. Out of scope here.
+- **Authorizes no build — the whole typed-capture runtime/persistence surface is separately gated, not
+  only `models.py`.** No runtime change is authorized here: not the `models.py` field-add, and not the
+  serializers, capture writers, manifest migration / persisted-v1 read-back, projection rebuild readers,
+  or tests — all are equally gated. The `models.py` field-add is in addition **double-gated**: (1) separate
+  explicit owner authorization, and (2) the v1→v2 breaking `manifest_version` bump must handle
+  persisted-v1-packet read-back per the schema-evolution doctrine (whose read-back mechanism is
+  build-deferred) **or** confirm no v1 packets need to survive. This spec stabilizes the contract only.
 - The derived projection EAV row, the projection store, cross-platform unification, the velocity/momentum
   derivation, and the monitoring **scheduler mechanics** are not defined here (other artifacts; rebuildable
   / deferred).
@@ -74,16 +82,34 @@ status: PROPOSED — IG capture-shape contract; instantiates the cross-vendor-re
   image post genuinely has no `view_count` — a distinct state from blocked/hidden/0.) `reason` is a
   closed-vocabulary token for the non-observed states (e.g. `private`, `blocked`, `rate_limited`,
   `metric_hidden`, `content_type_inapplicable`).
-- **IG metric set + value types:** account-level — `follower_count` (int ≥ 0); identity/time —
-  `numeric_id` (stable key), `capture_time`; per-post, keyed by `shortcode` + `timestamp` —
-  `view_count` (int ≥ 0), `like_count` (int ≥ 0), `comment_count` (int ≥ 0). Each metric value carries its
-  posture.
-- **Identity / conflict policy (versioned):** stable key = `numeric_id`; `username` = mutable attribute;
-  re-capture relationship ∈ `{supersede, supplement, conflict, mixed}` (the existing
-  `re_capture_relationship` vocabulary). The policy version is pinned per packet.
-- **Version pinning:** each packet carries the `manifest_version` defining its metric→type mapping and the
-  identity/conflict-policy version — the "registry" is the manifest-pinned model definition, not an
-  external lookup.
+- **Packet identity/time metadata (NOT momentum metrics, no `MetricPosture`):** `numeric_id` (the stable
+  identity anchor) and `capture_time` are **required packet metadata**, not posture-bearing observations.
+  If `numeric_id` cannot be resolved the packet is **identity-incomplete** — a distinct packet-level
+  failure surfaced as such, **not** a metric that is `unavailable_with_reason`; a capture cannot exist
+  without a `capture_time`. This keeps the identity anchor from being modeled as an optional/absent metric.
+- **IG momentum metric set + value types (each carries `MetricPosture`):** account-level —
+  `follower_count` (int ≥ 0); per-post, keyed by `shortcode` + `timestamp` — `view_count` (int ≥ 0),
+  `like_count` (int ≥ 0), `comment_count` (int ≥ 0). Each carries a typed value + posture per the coupling
+  above.
+- **Identity / conflict policy (versioned, concretely identified):** stable key = `numeric_id`;
+  `username` = mutable attribute; re-capture relationship ∈ `{supersede, supplement, conflict, mixed}` —
+  the **existing `RE_CAPTURE_RELATIONSHIP_VALUES` frozenset in `models.py`** (confirmed), not reinvented
+  here. Each packet pins a **concrete identity/conflict-policy version identifier** (a named, immutable v0
+  policy artifact, named at build) so two implementers classify the same re-capture identically. The
+  **assignment criteria** for the four relationship states are owned by that versioned v0 policy artifact
+  (deferred to it), recoverable via the pinned version — not silently undefined and not invented in this
+  contract.
+- **Version pinning:** each packet carries the `manifest_version` (its metric→type mapping) and the
+  identity/conflict-policy version. The pinned versioned definitions are **required, immutable rebuild
+  inputs** (backbone invariant 0), retrieved by version — **not a live/mutable external registry lookup**.
+- **Packet-level coverage claim (distinct from per-metric `coverage_window`):** each capture packet
+  declares its **claimed coverage** — the period and the claimed post-set or discovery boundary (e.g.
+  "all grid posts back to cursor X" / "posts in [start,end]") — and its **attempted set**. A post inside
+  the claimed boundary but absent from the attempted/observed set is representable as **in-window-missing**
+  (post-level `not_attempted` / `unavailable_with_reason`), distinct from a post **outside** the boundary
+  (`out_of_capture_window`). The per-metric `coverage_window` narrows coverage **within** an observed post;
+  it does not by itself represent a missing post. (Exact encoding → scoping; the contract requires the
+  claim to exist.)
 - **IG monitoring profile (the contract's monitoring parameters; all R-tunable):** content-unit =
   reel/post; momentum metric = `view_count`; curve window ≈ 30d; age-bucket cadences 0–5d daily / 6–15d
   every 3d / 16–30d weekly; per-creator concurrently-tracked cap K ≈ 30; Tier-C heartbeat ≈ weekly.
@@ -100,9 +126,14 @@ status: PROPOSED — IG capture-shape contract; instantiates the cross-vendor-re
 - No capture can store a **non-observed** metric **with** a value (the coupling invariant rejects it).
 - Two captures of the same creator under **different usernames but the same `numeric_id`** resolve to one
   entity; a conflicting re-capture records a typed re-capture relationship.
-- A metric's **typed series is reconstructable from packets alone** (each packet pins the version defining
-  its metric→type mapping); no external registry read is required.
-- A post **missing** from a capture's claimed coverage window is distinguishable from one **not attempted**.
+- A capture whose **`numeric_id` cannot be resolved** is recorded as **identity-incomplete** at packet
+  level — never as a momentum metric carrying posture `unavailable_with_reason`.
+- A metric's **typed series is reconstructable from packets + the immutable packet-pinned versioned
+  registry/policy** (the backbone invariant-0 input set), with **no live/mutable external registry read** —
+  not from packets stripped of their pinned definitions.
+- A post **missing** from a capture's claimed coverage window is distinguishable from one **not attempted**
+  and from one **out of window**, because the packet declares its claimed/attempted post boundary (not only
+  per-metric `coverage_window`).
 
 ## Open questions
 
@@ -114,25 +145,65 @@ status: PROPOSED — IG capture-shape contract; instantiates the cross-vendor-re
 - **Deferred to build (gated):** the v1→v2 manifest bump + persisted-v1 read-back handling + the owner
   authorization for the runtime field-add. *Safe to defer:* these gate the build, not the contract's intent.
 - **Resolved here:** capture shape = (b); `MetricPosture` = AR-01 four + `not_applicable`; value↔posture
-  coupling; identity = `numeric_id`; version-pinning makes typing packet-recoverable.
+  coupling; identity = `numeric_id` (packet metadata, distinct from posture-bearing metrics);
+  version-pinning makes typing packet-recoverable **from packets + the pinned versioned registry/policy**
+  (backbone invariant 0, not packets alone); packet-level coverage claim distinguishes in-window-missing
+  from out-of-window and not-attempted.
+- **Deferred to scoping (added by review fold):** the exact encoding of the packet-level coverage claim
+  and the concrete v0 identity/conflict-policy version identifier + its state-assignment criteria. *Safe to
+  defer:* the contract requires both to exist and be packet-pinned; their encoding/criteria do not change
+  what must be true.
+
+## Advisory review disposition (AR-01..AR-05, CA-adjudicated)
+
+An advisory `no_repo` review returned **5 findings, 0 blocking**, recommending the spec not be treated as
+scoping-ready until packet-recoverable typing, coverage/window representation, identity-policy versioning,
+and the build-gate scope were tightened. Each was **CA-adjudicated against primary sources this session**
+(the backbone's invariant 0 + the `models.py` types), not accepted on the reviewer's say-so — claims to
+adjudicate, not premises to inherit:
+
+- **AR-01 (packet-recoverable typing) ACCEPTED** → "packet alone" was an overclaim that contradicted the
+  backbone's **invariant 0** (`rebuild = packets + versioned registry + versioned id/conflict policy`,
+  packet-pinned, "not packets alone"). RB#4 + version-pinning interface + acceptance reworded to the
+  invariant-0 input set; only a **live/mutable** external registry read is excluded.
+- **AR-02 (coverage/window not executable) ACCEPTED** → added a **packet-level coverage claim** (claimed
+  post-set/discovery boundary + attempted set) distinct from the per-metric `coverage_window`, so an
+  in-window-missing post is representable; RB#6 + an interface bullet + acceptance updated.
+- **AR-03 (identity/conflict policy versioning) ACCEPTED (modified)** → the relationship vocabulary is the
+  **confirmed existing `RE_CAPTURE_RELATIONSHIP_VALUES` frozenset** in `models.py`; the spec now requires a
+  **concrete pinned policy-version identifier** and assigns the state-criteria to the versioned v0 policy
+  artifact (deferred, not silently undefined).
+- **AR-04 (numeric_id conflation) ACCEPTED** → `numeric_id` + `capture_time` split out as **packet
+  identity/time metadata** (no `MetricPosture`; unresolved `numeric_id` ⇒ identity-incomplete), separate
+  from the posture-bearing momentum metric set — matching the backbone's separate identity plane.
+- **AR-05 (build fence too narrow) ACCEPTED** → the no-build fence now covers the **whole
+  runtime/persistence surface** (serializers, writers, migration/read-back, projection readers, tests),
+  not only `models.py`; the header `use_when` conditions "building" on the separate authorization.
+
+Advisory cross-vendor review, CA-adjudicated — **advisory input, not a formal verdict or owner adoption.**
+`authored_by: claude-opus-4-8`; `reviewed_by: <model — operator-couriered; vendor/de-correlation UNCONFIRMED
+by CA>`. The acceptances are independently backed by primary-source reads (backbone invariant 0; `models.py`
+`VisibleFactStatus` / `RE_CAPTURE_RELATIONSHIP_VALUES` / `SourceCaptureSlice`), so they do not rest on the
+reviewer's vendor.
 
 ## Downstream handoff
 
 ```yaml
 spec_handoff:
   status: SPEC_COMPLETE_READY_FOR_SCOPING
-  required_behavior: "Per-metric typed value + typed posture + coverage window on each IG capture packet; typed-shared-observation shape (b); value↔posture coupled; identity = numeric_id; typing packet-recoverable via version pinning."
-  non_goals: "No models.py edit / no build (double-gated); no projection store, EAV row, cross-platform unification, velocity layer, or scheduler mechanics; R + at-scale posture fill are probe-confirmed."
-  interfaces_contracts: "Typed observation {metric, posture, value, reason, coverage_window}; MetricPosture closed enum (AR-01 four + not_applicable); IG metric set + int types; versioned numeric-id identity/conflict policy; manifest version-pinning."
-  acceptance_criteria: "observed-0 vs not_applicable vs unavailable_with_reason vs out_of_capture_window vs not_attempted all distinguishable; no value on non-observed; same numeric_id across usernames = one entity; series rebuildable from packets alone; missing-in-window ≠ not-attempted."
+  required_behavior: "Per-metric typed value + typed posture on each IG capture packet (shape (b)); value↔posture coupled; numeric_id/capture_time are packet identity/time metadata (not posture metrics); packet-level coverage claim (claimed+attempted post boundary) distinct from per-metric coverage_window; typing packet-recoverable from packets + pinned versioned registry/policy (backbone invariant 0)."
+  non_goals: "No build of the whole typed-capture runtime/persistence surface (models.py field-add double-gated; serializers, writers, migration/read-back, projection readers, tests equally gated); no projection store, EAV row, cross-platform unification, velocity layer, or scheduler mechanics; R + at-scale posture fill are probe-confirmed."
+  interfaces_contracts: "Typed observation {metric, posture, value, reason, coverage_window}; MetricPosture closed enum (AR-01 four + not_applicable); momentum metric set + int types separate from numeric_id/capture_time packet metadata; concretely-versioned numeric-id identity/conflict policy (RE_CAPTURE_RELATIONSHIP_VALUES); packet-level coverage claim; manifest + policy version-pinning as immutable rebuild inputs."
+  acceptance_criteria: "observed-0 vs not_applicable vs unavailable_with_reason vs out_of_capture_window vs not_attempted all distinguishable; no value on non-observed; same numeric_id across usernames = one entity; unresolved numeric_id = identity-incomplete (not a metric posture); series rebuildable from packets + pinned versioned registry/policy (no live registry read); missing-in-window ≠ out-of-window ≠ not-attempted."
   deferred_open_questions:
     - "exact sub-model placement + discriminated-union encoding -> scoping"
     - "empirical IG posture-reason fill -> build/probe"
     - "v1->v2 bump + persisted-v1 read-back + owner authorization -> gated build"
+    - "packet-level coverage-claim encoding + concrete v0 identity/conflict-policy version id + state-assignment criteria -> scoping/policy artifact"
   review_timing_advisory:
     adversarial_review: recommended
     highest_value_checkpoint: after_artifact_pre_implementation
     review_target: "this IG capture-shape contract spec"
     why_this_checkpoint: "it binds the one irreversible, un-re-capturable lock-in; reviewing before the build implements it prevents baking a wrong typed shape into manifest v2."
-  scoping_may_rely_on: "the (b) decision, the MetricPosture enum + coupling, the IG metric set + types, the versioned numeric-id identity/conflict policy, the coverage-window contract, and per-packet version pinning."
+  scoping_may_rely_on: "the (b) decision, the MetricPosture enum + coupling, the momentum metric set + types (separate from numeric_id/capture_time metadata), the concretely-versioned numeric-id identity/conflict policy, the packet-level coverage claim + per-metric coverage_window, and per-packet manifest/policy version pinning as immutable rebuild inputs (backbone invariant 0)."
 ```
