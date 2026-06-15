@@ -42,6 +42,7 @@ stale_if:
 - Direction answered: the owner-selected **D1 = general** (one Candidate-Signal / Corpus Intake contract serving both the demand-durability indicators and the company-aggregate org-motion lane) and **D3 = scheduler deferred** (trigger-agnostic entrypoint), recorded in `demand_durability_indicator_standing_capture_obligation_home_decision_framing_v0.md`. D2 follows D1: a **separate sibling contract**, not a v0 amendment.
 - Implementation authorized: **no** · Scheduler/runtime authorized: **no** · Source access authorized: **no** · Contract hardening (ratification): **no** (owner-gated).
 - Required next step before ratification: a **delegated / adversarial review** (doctrine-bearing), then owner ratification. This proposal is authored to be reviewed, not to take effect on write.
+- **R1 hardening (2026-06-15):** patched against a cross-vendor adversarial review (controller = GPT-5 Codex / OpenAI; `de_correlation_bar: cross_vendor_discovery`). All five findings accepted; the CA-adjudicated remedy was a **bounded patch round** (S1 charter-as-owner-gated-gate; S3 runtime-architecture overreach removed; S5 checkable rebind gate; S7 behavioral never-a-feed boundary; pressure-test closure criteria bound) — **not** a full architecture pass. Adjudication record: `docs/review-outputs/adversarial-artifact-reviews/corpus_intake_contract_cross_vendor_adversarial_review_v0.md`.
 
 ## Purpose
 
@@ -111,6 +112,8 @@ Standing capture has no Decision Frame, so it must be bound to an approved **Sta
 - the **minimization rail** the series runs under (e.g. `business_entity_only` for org-motion; product/listing-scoped for indicators) — inherited from Ob.2, restated per series;
 - the **purpose**: which recurring decision family the corpus is meant to feed (S7), so the standing capture is not free-floating collection.
 
+The charter is a **gate, not a description.** Charter approval is **owner-gated** (the same owner gate that governs this contract); the approved charter is a **versioned artifact that proves authorization**; and a change to the series, source set, cadence, caps, or minimization requires a charter **revision**. Standing capture **has not started** — or **must stop** — whenever no current approved charter covers it. *(The exact charter record format stays an open knob; the owner-gated approval and the must-have-a-current-charter condition do not. AR-03.)*
+
 Failure mode: standing capture with no charter is free-floating corpus collection — the exact thing v0's Ob.1 rejects — and has not started.
 
 ### S2 — Series Identity & Pinning
@@ -128,7 +131,9 @@ Cadence is a first-class capture fact, not an implicit habit:
 
 - the **cadence model** is declared (e.g. hourly/daily for demand indicators; periodic/annual for org-motion filings) with **caps** and a **stop condition or review date**; no standing series runs unbounded;
 - **re-observation timing is decomposed** (Ob.8): the cadence is the *intended* rhythm; each row records its actual capture timing, and divergence (missed/late/extra samples) is visible;
-- **trigger-agnostic entrypoint (D3 deferred).** The capture path must be structured so a **manual trigger now** and a **future scheduler later** call the **same entrypoint** without re-architecting. Until a separate build authorization grants a scheduler, the operative cadence is **manual/attended**, and the contract is explicit that "hourly/daily" is the *target* rhythm the manual posture does not yet truly meet. Authorizing a scheduler is **not** part of this contract.
+- **manual-now; scheduler deferred (D3).** Until a separate build authorization grants a scheduler, the operative cadence is **manual/attended**, and the contract is explicit that "hourly/daily" is the *target* rhythm the manual posture does not yet truly meet — that **manual shortfall is itself a visible cadence fact**, recorded per series, not hidden. Authorizing a scheduler is **not** part of this contract, and this contract specifies **no** runtime, scheduler, entrypoint, or interface shape.
+
+> **Non-binding future-compatibility note (NOT an obligation).** A manual-now / scheduler-later rollout may later find it convenient for both triggers to share one capture entrypoint — but designing or requiring any entrypoint, interface, or runtime shape is **runtime architecture owned by a later build authorization**, not this obligation contract. It is named here only as foregone context, per the contract's own no-runtime-design boundary and v0's "runtime design as this contract" rejection. *(AR-05.)*
 
 ### S4 — Append-Only Series Integrity (extends Ob.15)
 
@@ -141,10 +146,10 @@ Cadence is a first-class capture fact, not an implicit habit:
 
 This is the load-bearing carve-out, lifted from v0 and made the exit obligation:
 
-- a standing observation or series is **not ECR-ready evidence**;
-- it becomes evidence **only** by **rebind or recapture under a Decision Frame**, which routes through the **v0 commissioned-capture contract** and discharges v0's obligations (including Ob.1) at that point;
-- until then the corpus is **decision-substrate that later commissioned reads draw from**, not pre-cleared evidence;
-- the rebind must preserve the relationship between the standing series and the commissioned recapture (which rows informed the frame; whether the frame triggered a fresh recapture), so the provenance from corpus to evidence is auditable.
+- a standing observation or series is **not ECR-ready evidence**, and a standing row **never hands off to ECR directly**;
+- **"rebound" is not a status label** that can be set on an existing corpus row. A row becomes ECR-ready **only** through a **commissioned recapture or rebind under a Decision Frame** that **re-discharges the v0 commissioned obligations (Ob.1–16)** for that frame — the observation re-enters the v0 contract and is captured/assessed there, not merely re-pointed-at;
+- **checkable rebind gate** — before any corpus-derived material is treated as evidence, all three must exist: (a) a Decision Frame; (b) a v0-contract discharge for the rebound or freshly-recaptured observation under that frame; (c) an auditable corpus→evidence provenance link (which standing rows informed the frame, and whether a fresh recapture was triggered). Absent any one, the material stays substrate. *(The gate condition is bound here; only its ECR-side field representation is deferred — see Open Design Knobs — because defining ECR fields is a forbidden capture output. AR-01.)*
+- until then the corpus is **decision-substrate that later commissioned reads draw from**, not pre-cleared evidence.
 
 Ob.16 (categorical handoff readiness) is satisfied here **as substrate readiness** — the corpus is inspectable and its limits are visible — not as evidence readiness.
 
@@ -160,6 +165,7 @@ The demand substrate is hostile and manipulable; standing capture does not relax
 Per the buyer-proof packet's never-a-feed invariant, **every Orca output is a calibrated decision with an action ceiling — never a feed or stream**, including when a read is monitored over time (recurring engagement is sold as recurring *decisions*, never as a monitoring feed). The standing corpus is the place this invariant is most at risk, so the contract encodes it structurally:
 
 - the corpus is **internal decision-substrate**; it must **not** be exposed, sold, or productized as a feed, stream, dashboard, alert subscription, or market-monitoring product;
+- **behavioral boundary (not just naming):** corpus-derived material reaches any consumer — buyer, internal workflow, or downstream lane — **only** wrapped in a **calibrated decision with an action ceiling** (a Decision Frame or recurring-decision wrapper). **Periodic raw-series delivery, a dashboard, an alert/threshold subscription, a trend stream, or a market-monitoring view is barred regardless of what it is named** — feed-shaped *behavior* is the kill, not the word "feed." Recurring monitoring is delivered as recurring *decisions*, each with its own frame and ceiling; *(AR-02.)*
 - outputs built on the corpus remain **calibrated decisions with action ceilings**; capturing a corpus hourly/daily is fine, **selling a feed is the kill** (it lands Orca on the "monitoring-only pull" kill and in the social-listening category the buyer-proof packet rejects);
 - the corpus exists to feed **recurring decisions**; the obligation home must keep it decision-substrate, not product output.
 
@@ -203,13 +209,24 @@ Per the v0 doctrine ("do not harden this contract from abstract reasoning alone"
 
 Pressure-test each against: whether the charter (S1) was sufficient to start; whether series identity/pins (S2) held across re-observation; whether cadence (S3) was bounded and decomposed; whether append-only integrity (S4) survived a conflicting re-observation; whether rebind (S5) produced auditable corpus→evidence provenance; whether manipulability flags (S6) rode forward without becoming judgment; and whether the never-a-feed lock (S7) held. Tighten, relax, split, or move obligations to satellite only after failures are compared.
 
+**Closure criteria — a pressure test passes only on observed evidence, never on a reviewed example** *(AR-04)*:
+
+- **S1** passes iff a real charter gated a real standing run **and** an attempted run with no current approved charter was actually refused/stopped.
+- **S2** passes iff a forced pin change (e.g. currency or exit-geo) produced a recorded re-pin break **and** a later read did not treat that break as real movement.
+- **S4** passes iff a conflicting re-observation supplemented (did not overwrite) the prior row **and** the series-recapture diff is recoverable.
+- **S5** passes iff a standing series rebound into a Decision Frame produced an auditable corpus→evidence provenance link **and** a pre-rebind direct-to-ECR handoff attempt was refused.
+- **S6** passes iff a manipulability flag rode forward as a fact with **no** weight, score, or verdict attached.
+- **S7** passes iff a corpus-derived deliverable was refused/blocked when shaped as a feed/dashboard/alert **and** accepted only inside a calibrated-decision wrapper.
+
+A pressure test **fails** when its closure evidence is absent, narrative-only, or contradicted; a failed test **blocks any hardening claim** for that obligation. "Reviewed examples" are **not** pressure-test evidence.
+
 ## Open Design Knobs (carried, not decided)
 
 - whether a standing series needs a **minimum re-observation interval floor** to avoid churn while preserving meaningful change (the v0 recapture-threshold knob, applied to cadence);
 - where the **series-recapture diff** is computed and stored (capture vs a later consolidation) without becoming an ECR/storage design;
 - how a **charter** is recorded and versioned (and whether charter approval is owner-gated per series or per source-family);
 - whether **scheduler authorization**, when sought, is per series, per lane, or global (deferred; high-lock-in);
-- how the **rebind provenance** (corpus rows → commissioned recapture) is represented without defining ECR fields.
+- the ECR-side **representation** of the rebind provenance (corpus rows → commissioned recapture) — how it is stored as ECR fields — without defining ECR fields here (the rebind **gate condition** itself is bound in S5, not deferred).
 
 ## Non-Claims
 
