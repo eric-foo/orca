@@ -131,13 +131,14 @@ only via the backing map.
 | `trend:` | `trend:beautypie.2023-05-01` | a TrendVector (demand movement); `read` is an action, not an ID namespace |
 | `decision:` | `decision:beautypie.repricing-2023` | a live brand-decision event |
 | `memo:` | `memo:beautypie.repricing-2023.1` | a decision-risk memo |
+| `reading:` | `reading:beautypie.repricing-2023.1` | a Reading (the `Read` action's calibrated decision output) |
 | `case:` | `case:beautypie_repricing_2023` | a backtest/proof case |
 | `outcome:` | `outcome:beautypie_repricing_2023` | a realized result |
 | `slot:` | `slot:disc-batch0.t1` | a target-selection slot |
 | `packet:` | `packet:3b89a19b…` | a source-capture packet (by sha) |
 | `evidence:` | `evidence:beautypie.repricing-2023.1` | a cleaned evidence unit |
 
-### 2.2 Object-type roster (15 types — at the hard cap; "16th in = one out")
+### 2.2 Object-type roster (16 types — TRIPS the 15-cap; one-out pending, see §6.1)
 
 Folds applied to stay under the cap (noted): **SubNiche → Vertical** (self-parent
 link). **`Read` is an ACTION on the `TrendVector` object, not an object type**
@@ -157,12 +158,13 @@ verb (§2.5). Demand-state, action-ceiling, read-type, and claim-tier are
 | 7 | **Observation** | One captured demand-signal instance from a Venue — the node the two provenance links connect. | integrity flags | CapturePacket / scan-spec (forward) |
 | 8 | **TrendVector** | The demand movement: demand moving toward/away from a target (ingredient/category/format/claim), with direction, velocity, expected lifespan. *(Reading it — emitting a calibrated decision — is the `Read` action, §2.5.)* | persistence_state, integrity_state | demand-read taxonomy |
 | 9 | **DecisionEvent** | The live brand-decision event the `Read` action serves (the monetization unit a Memo is produced for). | trigger status | candidate pool, discovery brief |
-| 10 | **Memo** | The Public-Signal Demand-Allocation Decision-Risk Memo for one qualified DecisionEvent (reasoning substrate + proof gate). | claim_tier; gate pass/cap/fail | buyer-proof packet |
-| 11 | **Case** | A backtest/proof case: a historical decision with known outcome. | claim_tier, split: dev\|holdout, entry_basis | batch-1 ledger declaration |
-| 12 | **Outcome** | The realized result a Call/Case is graded against (calibration target). | — | case ledger / calibration |
-| 13 | **Slot** | A target-selection slot in a discovery scan. | status: empty→filled | discovery target-selection brief |
-| 14 | **CapturePacket** | A write-once, hash-pinned source-capture packet — the raw provenance an Observation derives from. | manifest_version, cutoff_posture | `orca-harness/source_capture/models.py` |
-| 15 | **EvidenceUnit** | A cleaned evidence unit (IPF standard) bound at the Cleaning/Judgment boundary. | claim_tier | IPF foundation + evidence ladder |
+| 10 | **Reading** | The dated calibrated output of the `Read` action — Orca's call on a `TrendVector` for a `DecisionEvent`: an action ceiling (act/phase/narrow/hold/defend) + read_type, capped by integrity, bound by never-a-feed. The lightweight decision record; a `Memo` elaborates it for a qualified buyer decision. | read_type, action_ceiling, claim_tier | read outputs (gap — scan-spec forward consumer + memos) |
+| 11 | **Memo** | The Public-Signal Demand-Allocation Decision-Risk Memo for one qualified DecisionEvent (reasoning substrate + proof gate). | claim_tier; gate pass/cap/fail | buyer-proof packet |
+| 12 | **Case** | A backtest/proof case: a historical decision with known outcome. | claim_tier, split: dev\|holdout, entry_basis | batch-1 ledger declaration |
+| 13 | **Outcome** | The realized result a Reading/Call/Case is graded against (calibration target). | — | case ledger / calibration |
+| 14 | **Slot** | A target-selection slot in a discovery scan. | status: empty→filled | discovery target-selection brief |
+| 15 | **CapturePacket** | A write-once, hash-pinned source-capture packet — the raw provenance an Observation derives from. | manifest_version, cutoff_posture | `orca-harness/source_capture/models.py` |
+| 16 | **EvidenceUnit** | A cleaned evidence unit (IPF standard) bound at the Cleaning/Judgment boundary. | claim_tier | IPF foundation + evidence ladder |
 
 ### 2.3 Link map (typed relationships)
 
@@ -176,7 +178,7 @@ Signal flow:
 - `TrendVector —about→ Product` (or `—about→ Brand`)
 - `Observation —from→ Venue` · `Observation —supports→ TrendVector` · `Observation —captured_in→ CapturePacket`
 - `EvidenceUnit —cleaned_from→ Observation` (and/or `CapturePacket`)
-- the **`Read` action** (§2.5) reads a `TrendVector` and `—serves→ DecisionEvent`, recording its calibrated decision in a `Memo` for a qualified decision
+- the **`Read` action** (§2.5) reads a `TrendVector` and `—serves→ DecisionEvent`, emitting a `Reading`: `Reading —of→ TrendVector` · `Reading —for→ DecisionEvent` · `Memo —elaborates→ Reading` (the heavyweight form for a qualified decision)
 
 **The two load-bearing links** (owner-decided in the demand-gate closures; the
 read-machinery forward consumer depends on them — design them precisely):
@@ -196,7 +198,7 @@ read-machinery forward consumer depends on them — design them precisely):
 
 Proof / calibration:
 - `Memo —for→ DecisionEvent` · `Memo —cites→ EvidenceUnit` (and/or `Observation`)
-- `Case —backtests→ DecisionEvent` · `Call —graded_by→ Outcome` · `Case —graded_by→ Outcome`
+- `Case —backtests→ DecisionEvent` · `Reading —graded_by→ Outcome` · `Call —graded_by→ Outcome` · `Case —graded_by→ Outcome`
 - `Slot —filled_by→ Brand` + `DecisionEvent` (a candidate = brand + live decision)
 
 G4 distinction (must not leak into the G1 count):
@@ -218,15 +220,15 @@ Folded onto existing types under the cap, per the commission:
   integrity axis must NOT be collapsed into the persistence axis.
 - `action_ceiling` — the frozen ladder `Excluded → Watch → Probe → Test → Hold →
   Move → Commit` (verbs `act / phase / narrow / hold / defend`); capped by signal
-  integrity ("the verb may not exceed what signal integrity supports"). It is an
-  **output of the `Read` action** (§2.5), recorded with the decision (in a `Memo`
-  for a qualified decision), not a standing field on `TrendVector`.
+  integrity ("the verb may not exceed what signal integrity supports"). It is a
+  **field on the `Reading`** (the `Read` action's output, §2.5), not a standing field
+  on `TrendVector`.
 - `read_type ∈ {durable-demand, transient-spike, manufactured-demand,
   brand-decision-event (monetization unit), wind-caller-calibration (compounding
-  asset)}` — classifies the `Read` action's output. *Divergence is a technique, not
+  asset)}` — a field on the `Reading` (classifies it). *Divergence is a technique, not
   a read type.*
-- `claim_tier ∈ {product_learning, buyer_proof, judgment_quality}` — on Memo, Case,
-  Outcome (the evidence ladder, MAPPED, §5).
+- `claim_tier ∈ {product_learning, buyer_proof, judgment_quality}` — on Reading, Memo,
+  Case, Outcome (the evidence ladder, MAPPED, §5).
 
 ### 2.5 Action / gate map (governed transitions — the ONLY sanctioned state changes)
 
@@ -239,7 +241,7 @@ Each names the gate that ALREADY governs it; the ontology makes the gate
 | `TrendVector.monitor` | TrendVector | persistence is observed, not predicted (taxonomy) |
 | `TrendVector.earn_durable` | TrendVector | monitored persistence holds past the trigger (taxonomy) — the earned upgrade transient→durable |
 | `TrendVector.decay` | TrendVector | spike decays as called (taxonomy) |
-| `Read` (emit calibrated decision) | TrendVector → decision/Memo | reads a `TrendVector` for a `DecisionEvent`; emits the action-ceiling decision (typed by read_type), capped by signal integrity and bound by `never_a_feed` (demand-read taxonomy + Orca Promise) |
+| `Read` (emit calibrated decision) | TrendVector → Reading | reads a `TrendVector` for a `DecisionEvent`; emits a `Reading` (action ceiling + read_type), capped by signal integrity and bound by `never_a_feed` (demand-read taxonomy + Orca Promise) |
 | `Gate.G1` (independence) | TrendVector / candidate | ≥2 de-correlated origination families for material commitment; `derived_from`-chain siblings collapse to one (demand-gate closures) |
 | `Gate.G2` (costly-behavior floor) | TrendVector / candidate | ≥1 gradeable costly-behavior instance in ≥1 qualifying demand-venue family; absence of demand is not a pass (demand-gate closures) |
 | `Gate.G4` (org-motion corroboration) | TrendVector | separate org-motion cards; corroborates but excluded from the G1 count (demand-gate closures) |
@@ -333,8 +335,9 @@ never minted here.
 
 Stolen from the venue card set, the proven antidote to ontology rot:
 
-- **Hard cap: 15 domain object types.** "16th in = one out." The roster in §2.2 is
-  AT the cap by design.
+- **Hard cap: 15 domain object types.** "16th in = one out." The 2026-06-15 `Reading`
+  amendment (§6.1) is the 16th type and **trips this cap** — a one-out (or an
+  owner-ratified raise to 16) is pending the owner decision in §6.1.
 - **Owner: Eric.** Per-type review dates (each card carries a `review_by`); a card
   past its date is a stale hint to review or retire, not a current-state claim.
 - **Dated amendments only, never silent rewrites.** Fail-soft cards: dated hints,
@@ -353,9 +356,18 @@ Stolen from the venue card set, the proven antidote to ontology rot:
   decay`) moves onto `TrendVector`; `read_type` and `action_ceiling` become outputs of
   the `Read` action. Rationale: the source names "Read / Trend vector" as one concept,
   but the object (the demand movement) and the act of reading it separate cleanly — an
-  action operates on an object. Deferred sub-choice: the `Read` action's output is
-  recorded in a `Memo` for a qualified decision; whether lightweight reads also need a
-  separate lightweight decision-record object is left open (would be one-in-one-out).
+  action operates on an object.
+- **2026-06-15 (owner-directed): `Reading` split out.** The `Read` action's output is
+  now its own lightweight object — `Reading` (the calibrated call: action ceiling +
+  read_type + claim_tier) — distinct from the heavyweight `Memo`, which *elaborates* a
+  `Reading` for a qualified buyer decision after the Hard Gate. Most Readings never
+  become Memos. **This is the 16th type and trips the 15-cap.** Recommended one-out to
+  restore one-in-one-out: fold `Slot` → a `discovery_status` dimension on
+  `DecisionEvent` (a `Slot` is a discovery-lane worksheet row whose durable content is
+  a candidate DecisionEvent + gate evidence already captured by the gate actions).
+  **PENDING OWNER DECISION:** (a) fold `Slot` to hold 15 *(recommended)*, (b) fold a
+  different type, or (c) ratify the cap at 16. Until decided, the roster stands at 16,
+  flagged here and in §2.2 / §6.
 
 ---
 
