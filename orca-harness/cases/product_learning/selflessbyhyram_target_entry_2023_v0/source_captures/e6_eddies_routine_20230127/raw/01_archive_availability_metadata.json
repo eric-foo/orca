@@ -1,0 +1,54 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 459,
+    "capture_timestamp": "2026-06-15T14:19:46Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 14:19:45 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2Fcollections%2Feddies-routine&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20230201000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2Fcollections%2Feddies-routine&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20230201000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2Fcollections%2Feddies-routine&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20230201000000&limit=-10",
+  "original_url": "https://us.selflessbyhyram.com/collections/eddies-routine",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "V6C5WGJMXRYASP547BGMSGRIGWXRCGAL",
+    "mime_type": "text/html",
+    "original_url": "https://us.selflessbyhyram.com/collections/eddies-routine",
+    "snapshot_url": "https://web.archive.org/web/20230127110225/https://us.selflessbyhyram.com/collections/eddies-routine",
+    "status_code": "200",
+    "timestamp": "20230127110225"
+  },
+  "snapshot_count": 3,
+  "snapshots": [
+    {
+      "digest": "3DHPRFTFQAL62IKAOSPLGXG3UUOUYKZF",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/collections/eddies-routine",
+      "snapshot_url": "https://web.archive.org/web/20220518125118/https://us.selflessbyhyram.com/collections/eddies-routine",
+      "status_code": "200",
+      "timestamp": "20220518125118"
+    },
+    {
+      "digest": "WIV5DFLV5EZVXVTFITHYG36NI5Z6CTUA",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/collections/eddies-routine",
+      "snapshot_url": "https://web.archive.org/web/20221002190900/https://us.selflessbyhyram.com/collections/eddies-routine",
+      "status_code": "200",
+      "timestamp": "20221002190900"
+    },
+    {
+      "digest": "V6C5WGJMXRYASP547BGMSGRIGWXRCGAL",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/collections/eddies-routine",
+      "snapshot_url": "https://web.archive.org/web/20230127110225/https://us.selflessbyhyram.com/collections/eddies-routine",
+      "status_code": "200",
+      "timestamp": "20230127110225"
+    }
+  ]
+}
