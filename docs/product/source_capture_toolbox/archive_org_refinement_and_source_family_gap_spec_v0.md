@@ -72,11 +72,43 @@ gate** computes + enforces the capture-time quality floor from E/F/G's verdicts 
 G-rejected packet can't pass downstream as decision-grade (fixture-admission / Judgment stay
 downstream-owned).
 
+## Build status (landed items moved out of "proposed" per `stale_if`)
+
+*Updated 2026-06-16.* Two items have landed on `main`; the remaining proposed set is
+**B, D, E, F, H** + the Part-2 source-family gaps. Next build slice: **E** (cross-archive
+fallback ladder, v1 = Wayback + publisher-history per the (b+) owner decision).
+
+- **A — date-bound CDX: LANDED.** `build_cdx_availability_url` sets `to=cutoff` + `limit=-10`
+  on `main`; the latency/timeout footgun is closed. Only the optional operator-supplied
+  `from` lower-bound window remains (low value). Part-1.A's "Problem (code-verified: no
+  `&from`/`&to`)" is therefore **stale**.
+- **G — body verification (served-time): LANDED (#166).** `verify_archive_body` parses the
+  **served** snapshot timestamp from the post-redirect `final_url` and fails on served_ts
+  `>` cutoff (the no-lookahead body leak), an off-archive served host, a served-URL identity
+  mismatch, or — when a cutoff is set — an unparseable served time; the optional Wayback
+  replay modifier (`id_`/`if_`/…) is tolerated. On failure the runner sets
+  `archive_history_posture = attempt_failed`, appends an `archive_body_verification_failed`
+  limitation, and **does not preserve the verification-failed body as an addressable file**.
+  `select_snapshot`'s selection-time `<=cutoff` guard is unchanged. Hardened post-merge by a
+  de-correlated adversarial review (G-001 host-anchor + replay modifier; G-002 non-preserved
+  leaked body). **Still deferred within G:** content-integrity (soft-404 / charset) and the
+  E↔G auto-re-pick — both fold in with E/F.
+- **Invariant (capture↔judgment seam), recorded here rather than a standalone decision file:**
+  an archive body admitted as pre-cutoff evidence must be **served-time-verified ≤ cutoff**
+  from the expected host; a verification-failed body is not decision-grade and is not
+  preserved as addressable content. The judgment-spine backtest and slices E/F rely on this.
+  (No separate decision-record file created: the archive decision-record convention — e.g.
+  `source_capture_archive_snapshot_typed_timing_decision_v0.md` — is not yet on `main`; this
+  note + PR #166 are the durable record. A standalone record can follow on request.)
+- **Pre-G capture caveat:** capture cases built before #166 were never served-time-verified;
+  their recorded `final_url`s permit a cheap **retroactive** audit (no re-capture) if
+  backtest-evidence integrity needs confirming.
+
 ---
 
 ## Part 1 — archive_org adapter + playbook refinements
 
-### A. Date-bound the CDX availability query
+### A. Date-bound the CDX availability query — LANDED (latency fix on main; optional `from` window deferred)
 - **Problem (code-verified):** `build_cdx_availability_url` (`orca-harness/source_capture/adapters/archive_org.py:114-128`) issues the CDX query with only `url/output/fl/collapse` — **no `&from=`/`&to=`**. `select_snapshot` (:149-161) filters `snapshot.timestamp <= cutoff_timestamp` **client-side** after `parse_availability_snapshots` has parsed *every* returned row. On a heavily-archived URL this pulls the full snapshot history each call → latency/timeout, and contradicts the discovery note's own "date-bound the CDX query" lesson.
 - **Goal:** accept an optional date window and apply `&from=`/`&to=` (Wayback 14-digit form) on the CDX call; **keep** the `<=cutoff` client-side selection as the anti-leakage guarantee. Defense-in-depth: server-side window for cost, client-side `<=cutoff` for correctness.
 - **Proposed shape:** add `from_timestamp` / `to_timestamp` (or a `window` tuple) to `fetch_archive_org_capture` + `build_cdx_availability_url`; when a `cutoff_timestamp` is supplied, default `to` = cutoff (never widen past cutoff server-side), leave `from` operator-supplied/None; validate via the existing `_validate_wayback_timestamp`.
@@ -115,7 +147,7 @@ downstream-owned).
 - **Non-goals:** no gate-defeat (challenge-solving is a hard stop); **no full escalation ladder on every fetch** (probe-then-pin); **no refactor of `archive_org.py`'s existing direct-HTTP body path** (additive dispatcher; rung-1 fold-in deferred); no new fetch engines (reuse `direct_http` / `anti_blocking_http` / `browser_snapshot` / `cloakbrowser_snapshot`); no change to the `<=cutoff` leak-guard (slice E owns locate).
 - **Acceptance:** (a) probe on a memento whose direct-HTTP 403s but renders at the browser/cloakbrowser rung → returns the body with `body_rung_used` recorded; (b) steady-state with a pinned rung fetches direct at that rung without re-walking cheaper rungs; (c) a pinned rung that starts failing triggers a re-probe; (d) a Cloudflare *challenge*-only memento → STOP at the gate-defeat boundary (PARTIAL), not a solved challenge; (e) ladder exhausted → honest availability≠body PARTIAL with the escalation trail; (f) the existing single-rung `archive_org.py` path is unchanged when the dispatcher isn't invoked.
 
-### G. Body verification — served-time cutoff + identity + content integrity
+### G. Body verification — served-time cutoff + identity + content integrity — LANDED (#166; content-integrity + E↔G re-pick deferred)
 - *Provenance:* added 2026-06-14, same backtest/MGT robustness pass; the integrity gate slices E/F lean on ("usable body"). The centerpiece is a no-lookahead integrity hole, not just content hygiene. Fixed 2026-06-14 (owner-agreed): per-archive cutoff check + E↔G re-pick, after a live Wayback probe confirmed the leak.
 - **Problem (code-verified):** `fetch_archive_org_capture` records `body_result` (`orca-harness/source_capture/adapters/archive_org.py:105`) but never verifies the *delivered* body. Three silent-pass holes: (1) **served-time cutoff leak** — Wayback can 302 to the *nearest* available capture, which may be **post-cutoff**, defeating `select_snapshot`'s selection-time `<=cutoff` guard at the body level (select `20230912`, replay serves `20231002`); (2) **soft-404** — an archive "not archived / not found" page served with HTTP 200 + non-empty body; (3) **charset garble / identity drift** — wrong-encoding decode, or a served original-URL that differs from the requested one (cf. the archive_org adversarial review's A-05 provenance-imprecision finding).
 - **Goal:** a body-verification check that gates slice-F's "usable body" on **(1) cutoff integrity** — the *served* snapshot timestamp `<= cutoff` (closes the body-level no-lookahead leak); **(2) identity** — served original URL matches requested; **(3) content integrity** — not a soft-404/placeholder, not charset-garbled/empty-after-strip. On any fail → PARTIAL (availability≠body), never silent-pass; record the verdict in the receipt.
