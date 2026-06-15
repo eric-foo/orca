@@ -165,9 +165,20 @@ class MetricObservation(StrictModel):
     @field_validator("metric")
     @classmethod
     def validate_metric_non_empty(cls, value: str) -> str:
-        if not value.strip():
+        stripped = value.strip()
+        if not stripped:
             raise ValueError("metric identity must be a non-empty token")
-        return value
+        return stripped
+
+    @field_validator("reason")
+    @classmethod
+    def normalize_reason(cls, value: str | None) -> str | None:
+        # A whitespace-only reason is no reason: normalize it to None so the value<->posture
+        # coupling below rejects a blank "reason" on a non-observed metric (no fake reasons).
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
 
     @model_validator(mode="after")
     def validate_observation(self) -> "MetricObservation":

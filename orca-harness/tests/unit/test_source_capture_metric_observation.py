@@ -90,6 +90,28 @@ def test_metric_identity_must_be_non_empty(blank: str) -> None:
         MetricObservation(metric=blank, posture=MetricPosture.NOT_ATTEMPTED, reason="r")
 
 
+def test_metric_identity_is_whitespace_normalized() -> None:
+    # Surrounding whitespace is stripped so "  view_count  " and "view_count" are one identity.
+    obs = MetricObservation(metric="  view_count  ", posture=MetricPosture.NOT_ATTEMPTED, reason="r")
+    assert obs.metric == "view_count"
+
+
+@pytest.mark.parametrize("posture", NON_OBSERVED)
+def test_non_observed_whitespace_only_reason_is_rejected(posture: MetricPosture) -> None:
+    # A blank / whitespace-only reason is no reason: a non-observed metric must carry a real one.
+    with pytest.raises(ValidationError, match="requires a reason"):
+        MetricObservation(metric="view_count", posture=posture, reason="   ")
+
+
+def test_reason_is_whitespace_normalized_when_present() -> None:
+    obs = MetricObservation(
+        metric="view_count",
+        posture=MetricPosture.NOT_APPLICABLE,
+        reason="  image post has no views  ",
+    )
+    assert obs.reason == "image post has no views"
+
+
 def test_coverage_window_is_optional_and_accepted() -> None:
     obs = MetricObservation(
         metric="view_count",
