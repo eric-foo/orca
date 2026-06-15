@@ -1,0 +1,91 @@
+case_id: cocokind_holdprice_2025_v0
+batch_id: product_learning
+case_family: beauty_dtc_pricing_decide_vs_confirm
+decision_shape: ceiling_trap
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: correlated
+  reversibility_feasibility: high
+  reversibility_cost: medium
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: low
+  information_decay: slow
+  option_value: low
+  upside_shape: symmetric
+  urgency: low
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Brand accessibility positioning: cocokind has publicly positioned
+      itself as affordable clean beauty; address whether the price level supports or
+      contradicts this identity signal.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+  - must_address_item_id: MA-02
+    description: >-
+      Price stability trajectory: address whether the pre-cutoff price evidence
+      shows recent changes or stability over the ~1-year window captured (E1 vs E2 vs
+      E3).
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+  - must_address_item_id: MA-03
+    description: >-
+      Cost structure evidence gap: note that no direct cost or margin data
+      appears in the packet; state what this gap means for the confidence of any pricing
+      recommendation.
+    evidence_unit_ids: []
+  - must_address_item_id: MA-04
+    description: >-
+      SKU-level price architecture: address whether the individual product
+      page prices (E6-E10) are consistent with the collection-level prices (E4, E5)
+      and what this implies about pricing uniformity.
+    evidence_unit_ids:
+      - E4
+      - E5
+      - E6
+      - E7
+      - E8
+      - E9
+      - E10
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: true
+  known_fame_risk: moderate_fame_clean_beauty_niche
+  spoiler_inventory: >-
+    June 2025 Glossy interview with founder Priscilla Tsai stating
+    hold-price position under tariff pressure; BeautyMatter 2026 tariff-raiser list
+    absence (cocokind not named as a raiser); any post-cutoff brand announcements
+    about pricing
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: 71093da84ee9c15a86878e8d698704f8056d99d3dc38b6d9fbb10a1d5900a814

@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: cocokind.com/collections/all — Wayback Machine snapshot 2025-04-18 (full catalog with prices)
+source_type: archive_org_wayback
+timestamp: 2025-04-18T13:20:42Z
+retrieval_timestamp: 2026-06-15T13:45:20Z
+hash: 0a32b22d3a81909bc953418ce5f9af7c29dc1dad65552cf6222e6723341ab828
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: Archive snapshot timestamp 2025-04-18 is before the 2025-06-01 decision cutoff.
+summary: Cocokind full product catalog (all collections) as of April 18, 2025 — the broadest pre-cutoff view of the product lineup and listed prices across the full SKU range.
