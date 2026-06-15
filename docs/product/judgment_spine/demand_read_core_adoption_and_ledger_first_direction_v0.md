@@ -33,7 +33,7 @@ adoption (see Boundaries).
 
 ## Owner Decisions
 
-- **Decision B — ADOPTED.** The demand-read core (C0 Frame → C1 Admit → C2 Weight
+- **Decision B — ADOPTED.** The demand-read core (C0 Frame → C1 Allow → C2 Weight
   → C3 Verdict+Action-Ceiling → C4 Counterfactual) is accepted as the demand-read
   judgment procedure. It is a thin sibling: backtest mode = the core's sealed
   C3/C4 surface run as the FROZEN conductor's JSG-06 contestant (nothing grafted
@@ -73,7 +73,7 @@ focus. Rationale:
 ### How the two are used together (C2 Weight)
 
 Layered, both qualitative and shown in the reasoning trace:
-1. **Ledger** sets the baseline trust on each admitted signal (reliability prior).
+1. **Ledger** sets the baseline trust on each allowed signal (reliability prior).
 2. **Lessons** fire as configuration-level **overrides on top** when a validated,
    citation-disjoint, family-matched trigger appears (discount / flip a divergence
    / cap the ceiling), justified per-case.
