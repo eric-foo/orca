@@ -488,18 +488,31 @@ direction_change_propagation:
 
 ## §9. Smallest Complete Next Routing Object
 
-**After adoption (owner-signed), the first build is the N highest cross-lane-traffic
-object cards**, not the whole roster:
+**After adoption (owner-signed), the build proceeds in this order** — corrected by a
+pre-build pass (`workflow-deep-thinking` + `workflow-assumption-gate`, 2026-06-15) that
+refuted "build 5 cards first":
 
-1. `Brand`, `Venue`, `Observation`, `TrendVector`, `Case` — the five types with the most
-   cross-lane reference traffic — authored as dated cards, with the two links
-   (`derived_from`, `diverges_from`) specified precisely enough for the read-machinery.
-2. Re-express the in-flight scan-spec's Observation/Candidate schema in ontology
-   terms (no new vocabulary) when it lands on `main`.
+0. **The real first object is the ID-canonicalization rule** (an owner decision, not a
+   card). Every card references IDs, but today the backing artifacts use NON-slug IDs
+   (venue cards `#1–12`, candidate pool `#1–14`, batch ledger `*_v0`), so the cards
+   cannot be built without a canonical `brand:` / `venue:` / `case:` assignment +
+   collision rule, **reconciled with the harness `*_v0` IDs** (does
+   `case:beautypie_repricing_2023` equal the harness id?), with IDs that survive a
+   rename. Also encode here, citing the demand-gate closures: **`derived_from`
+   (origination) is authoritative over venue-family** for independence counting (the
+   card states the pointer; it mints no new rule).
+1. **Then author the three cards with landed backing:** `Brand`, `Venue`, `Case`, as
+   dated cards. The `Case` card MUST *map* (not restate) the dev/holdout split +
+   zero-spoiler discipline to the batch-ledger + evidence-ladder owners (Layer-2 rule).
+2. **Defer `Observation` + `TrendVector`** until the in-flight scan-spec lands on `main`,
+   so they are designed against a real producer rather than a guessed shape; then
+   re-express the scanner's Observation/Candidate schema in ontology terms (no new
+   vocabulary).
 
-**Deliberately deferred (satellite):** the remaining 10 cards; the ID
-registry/resolver; property-list schemas; migrating existing artifacts to stable
-IDs; the WindCaller card-set asset; demand-side Call.grade/Outcome calibration.
+**Deliberately deferred (satellite):** the remaining cards; the full ID
+registry/resolver (beyond the order-0 canonicalization seed); property-list schemas;
+migrating existing artifacts to stable IDs; the `WindCaller` card-set asset; demand-side
+`Call.grade` / `Outcome` calibration.
 
 **If not adopted:** no further build; the design stays PROPOSED.
 
