@@ -1,8 +1,8 @@
-# Data Capture Spine — Corpus Intake (Standing-Capture) Obligation Contract — Proposal v0
+# Data Capture Spine — Corpus Intake (Standing-Capture) Obligation Contract v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Product-method contract PROPOSAL (proposed, not ratified; owner-gated)
+artifact_role: Product-method contract (owner-ratified 2026-06-15; supersedes the prior PROPOSED status)
 scope: >
   Proposes the standing-capture sibling to the v0 commissioned Data Capture
   obligation contract — the "Candidate Signal Intake or Corpus Intake contract"
@@ -11,9 +11,9 @@ scope: >
   signal into an append-only corpus BEFORE any Decision Frame exists, serving
   both the demand-durability indicators (hourly/daily) and the company-aggregate
   org-motion forward series (periodic). Inherits the v0 obligation set; adds only
-  the standing-capture deltas. Proposal only — it authorizes no build, no
-  scheduler, no runtime, and no source access, and is not ECR-ready evidence
-  machinery.
+  the standing-capture deltas. As a ratified obligation contract it still
+  authorizes no build, no scheduler, no runtime, and no source access, and is
+  not ECR-ready evidence machinery.
 use_when:
   - Deciding whether a recurring / standing / pre-Decision-Frame capture activity has an obligation home.
   - Reviewing or ratifying the general standing-capture / corpus-intake obligation contract.
@@ -24,11 +24,11 @@ open_next:
   - docs/product/data_capture_spine/data_capture_spine_candidate_url_intake_contract_v0.md               # the locator layer below this contract
   - docs/decisions/company_aggregate_forward_signal_capture_lane_scope_decision_v0.md                    # the org-motion slice clarification this supersedes as obligation home
   - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md                         # the demand-indicator durability elements this governs standing
-  - docs/product/data_capture_spine/demand_durability_indicator_standing_capture_obligation_home_decision_framing_v0.md   # the owner-decision framing (D1=general, D3=deferred) this answers — lands via sibling PR #106 (indicator rename); not yet on main
+  - docs/product/data_capture_spine/demand_durability_indicator_standing_capture_obligation_home_decision_framing_v0.md   # the owner-decision framing (D1=general, D3=deferred) this answers — landed via merged PR #106 (indicator rename)
   - docs/decisions/pre_capture_discovery_spine_charter_recommendation_v0.md                              # WHERE-side discovery (deconflicted; not this contract)
   - docs/product/product_lead/orca_buyer_proof_packet_v0.md                                              # never-a-feed invariant (the structural lock)
 stale_if:
-  - The owner ratifies, rejects, or amends this proposal (ratification supersedes the proposal status).
+  - The owner amends, supersedes, or re-scopes this ratified contract.
   - The v0 commissioned obligation contract changes its standing-capture carve-out, its rebind rule, or its obligation set.
   - The Source Capture packet schema (manifest v1) changes the provenance/timing/posture/re-capture facts this inherits.
   - The company-aggregate slice clarification is re-scoped, or the demand-durability indicator profiles change their captured series.
@@ -37,11 +37,11 @@ stale_if:
 
 ## Status
 
-- Status: `PROPOSED_NOT_RATIFIED` — proposal for owner acceptance; **not** a ratified contract, **not** owner-locked, **not** hardened.
-- Artifact type: Product-method contract proposal (docs-write).
+- Status: `CONTRACT_RATIFIED_V0_2026_06_15` — **owner-ratified 2026-06-15**, superseding the prior `PROPOSED_NOT_RATIFIED` status. Ratification accepts the obligation contract; it is **not** a hardening or validation claim — the contract is **not yet pressure-tested** (see Pressure-Test Requirement).
+- Artifact type: Product-method contract (ratified; docs-write).
 - Direction answered: the owner-selected **D1 = general** (one Candidate-Signal / Corpus Intake contract serving both the demand-durability indicators and the company-aggregate org-motion lane) and **D3 = scheduler deferred** (trigger-agnostic entrypoint), recorded in `demand_durability_indicator_standing_capture_obligation_home_decision_framing_v0.md`. D2 follows D1: a **separate sibling contract**, not a v0 amendment.
-- Implementation authorized: **no** · Scheduler/runtime authorized: **no** · Source access authorized: **no** · Contract hardening (ratification): **no** (owner-gated).
-- Required next step before ratification: a **delegated / adversarial review** (doctrine-bearing), then owner ratification. This proposal is authored to be reviewed, not to take effect on write.
+- Ratification: **owner-ratified 2026-06-15** · Implementation authorized: **no** · Scheduler/runtime authorized: **no** · Source access authorized: **no** · Hardening: **no** (pressure-tests not yet run). Ratifying the obligation contract authorizes none of build, scheduler, runtime, or source access.
+- Ratification path (complete): delegated cross-vendor adversarial review (doctrine-bearing) → R1 hardening → **owner ratification 2026-06-15**. Remaining: (1) propagation to the controlling surfaces listed in `proposed_direction_change` (tracked post-ratification fast-follow); (2) pressure-testing per the Pressure-Test Requirement before any hardening claim.
 - **R1 hardening (2026-06-15):** patched against a cross-vendor adversarial review (controller = GPT-5 Codex / OpenAI; `de_correlation_bar: cross_vendor_discovery`). All five findings accepted; the CA-adjudicated remedy was a **bounded patch round** (S1 charter-as-owner-gated-gate; S3 runtime-architecture overreach removed; S5 checkable rebind gate; S7 behavioral never-a-feed boundary; pressure-test closure criteria bound) — **not** a full architecture pass. Adjudication record: `docs/review-outputs/adversarial-artifact-reviews/corpus_intake_contract_cross_vendor_adversarial_review_v0.md`.
 
 ## Purpose
@@ -51,7 +51,7 @@ The v0 Data Capture obligation contract governs **commissioned capture** — cap
 - the **demand-durability indicators** (price, availability/restock, search-interest, review-velocity) the owner confirmed should be monitored continuously on an **hourly-to-daily** rhythm; and
 - the **company-aggregate org-motion forward series** (headcount/size-band trend), which accretes entity-keyed observations on a periodic cadence before any Decision Frame.
 
-This proposal answers one question:
+This contract answers one question:
 
 ```text
 When Orca captures a public signal recurringly, before any Decision Frame
@@ -60,23 +60,23 @@ corpus is inspectable, bounded, minimized, and safely re-bindable as
 decision-substrate — without becoming evidence-by-stealth or a sold feed?
 ```
 
-It is a product-method contract proposal. It is **not** an ECR schema, Cleaning design, Judgment ruleset, source inventory, runtime/scheduler plan, scraper/API plan, storage design, dashboard, or build authorization.
+It is a product-method contract. It is **not** an ECR schema, Cleaning design, Judgment ruleset, source inventory, runtime/scheduler plan, scraper/API plan, storage design, dashboard, or build authorization.
 
 ## Position In The Capture Stack (the layer this owns)
 
-This proposal is deliberately narrow about where it sits, because adjacent landed work bounds it on every side:
+This contract is deliberately narrow about where it sits, because adjacent landed work bounds it on every side:
 
 | Layer | Owner artifact | What it owns | Relationship to this contract |
 | --- | --- | --- | --- |
 | Pre-capture discovery (WHERE) | `pre_capture_discovery_spine_charter_recommendation_v0.md` (rec: `DO_NOT_BUILD` a spine) | Direction-driven venue exploration: *where* signal lives, before any capture decision | **Not this contract.** Discovery is WHERE-side; this is capture-side recurring capture of an **already-approved** series. This contract does not discover venues. |
 | Candidate locator intake | `data_capture_spine_candidate_url_intake_contract_v0.md` | Bounded candidate **locator** rows + a promotion gate; inert planning context; explicitly *not* fetch/render/runner/capture | **Layer below.** Its promotion gate hands one selected locator to "a later authorized capture path." For a standing series, **this contract is that authorized path.** It does not produce locators. |
-| **Corpus Intake / standing capture (this contract)** | **this proposal** | The obligations for **recurring capture of an approved series into an append-only corpus, before a Decision Frame** | The standing analog of the v0 commissioned contract; the obligation home the two lanes need. |
+| **Corpus Intake / standing capture (this contract)** | **this contract** | The obligations for **recurring capture of an approved series into an append-only corpus, before a Decision Frame** | The standing analog of the v0 commissioned contract; the obligation home the two lanes need. |
 | Commissioned capture | `core_spine_v0_data_capture_spine_obligation_contract_v0.md` | Capture **for a Decision Frame** | **Sibling + rebind target.** v0 routes standing OUT to here; standing rows become ECR-ready only by recapture/rebind **back** under a Decision Frame (governed by v0). |
 | ECR / Cleaning / Judgment | (downstream spines) | Evidence receipt, transformation, decision use | Never touched directly by standing capture. The corpus is substrate, not evidence. |
 
 ### Why this is not the "owner-rejected standing registry"
 
-The pre-capture discovery charter recommendation cautions against "a standing knowledge-home created ahead of proven reuse" and routes such moves through a **promote-on-reuse** owner trigger. This proposal is consistent with that doctrine, not in tension with it:
+The pre-capture discovery charter recommendation cautions against "a standing knowledge-home created ahead of proven reuse" and routes such moves through a **promote-on-reuse** owner trigger. This contract is consistent with that doctrine, not in tension with it:
 
 - **It is promoted on proven reuse, not ahead of it.** Two independent lanes (demand indicators + org-motion) hit the identical standing-capture gap. That cross-lane recurrence *is* the promote-on-reuse signal the doctrine asks for; the framing note's D1 rationale ("the gap now blocks two lanes") is that argument.
 - **It is an obligation contract, not a data home.** The "standing registry" the owner rejected is a standing *knowledge artifact* accreting ahead of need. This is the *rulebook* that governs standing capture two lanes already need — it accretes no data and stands up no spine. Each lane keeps its own corpus and record shape.
@@ -201,7 +201,7 @@ In addition to all v0 forbidden outputs (credibility labels, integrity classific
 
 ## Pressure-Test Requirement (not hardened)
 
-Per the v0 doctrine ("do not harden this contract from abstract reasoning alone"), this proposal must **not** be treated as hardened until pressure-tested against the two real standing-capture lanes:
+Per the v0 doctrine ("do not harden this contract from abstract reasoning alone"), this contract must **not** be treated as hardened until pressure-tested against the two real standing-capture lanes:
 
 - at least one **demand-durability indicator** series (e.g. a price or availability series with promo-vs-permanent and exit-geo pin risk), exercising S2/S3/S4/S6;
 - the **company-aggregate org-motion** series (entity-keyed, official-first, attended-fallback posture), exercising S1/S2/S4/S5;
@@ -230,14 +230,14 @@ A pressure test **fails** when its closure evidence is absent, narrative-only, o
 
 ## Non-Claims
 
-This proposal does not prove or authorize validation, readiness, acceptance, owner-lock, contract hardening, source-of-truth promotion, buyer proof, repeatable demand, product/feature/implementation/commercial readiness, source-system feasibility, data rights, or runtime feasibility. It authorizes no implementation, scheduler, runtime, source access, storage, dashboard, automation, scraper, API, commit-as-doctrine, or ECR/Cleaning/Judgment design. It does not amend the v0 obligation contract, the source-access boundary, the Candidate URL Intake contract, or the company-aggregate decision; it proposes the standing-capture sibling those surfaces already point to. INV-1 is preserved: no weight, score, ranking, threshold, or judgment is introduced.
+This contract does not prove or authorize validation, readiness, hardening, source-of-truth promotion, buyer proof, repeatable demand, product/feature/implementation/commercial readiness, source-system feasibility, data rights, or runtime feasibility; ratification accepts the obligation set but is **not** a pressure-test pass. It authorizes no implementation, scheduler, runtime, source access, storage, dashboard, automation, scraper, API, or ECR/Cleaning/Judgment design. It does not amend the v0 obligation contract, the source-access boundary, the Candidate URL Intake contract, or the company-aggregate decision; it is the standing-capture sibling those surfaces already point to. INV-1 is preserved: no weight, score, ranking, threshold, or judgment is introduced.
 
-## Proposed Direction Change (not yet propagated)
+## Direction Change (ratified 2026-06-15; propagation pending as tracked fast-follow)
 
 ```yaml
 proposed_direction_change:
-  status: proposed_not_ratified
-  would_change_on_ratification: >
+  status: ratified_2026_06_15
+  what_changed_on_ratification: >
     Creates the standing-capture / Corpus Intake obligation contract that the v0
     commissioned Data Capture obligation contract routes standing/opportunistic
     capture out to. On ratification this becomes the obligation home for standing
@@ -245,12 +245,12 @@ proposed_direction_change:
     and giving the demand-durability indicators their standing-capture home, under
     D1=general + D3=scheduler-deferred.
   trigger_if_ratified: product_doctrine
-  propagation_performed: none
-  reason_no_propagation: >
-    Proposal stage. Authoring an obligation contract is contract-hardening =
-    owner-gated; a delegated/adversarial review and owner ratification are
-    prerequisites. No controlling source is edited and no routing surface is
-    registered until ratification, to avoid routing agents to an unratified contract.
+  propagation_performed: pending
+  reason_propagation_pending: >
+    Owner-ratified 2026-06-15. Propagation to the controlling surfaces below is a
+    tracked post-ratification fast-follow (mirroring the sibling demand-durability
+    lanes' deferred propagation), not yet performed. The surfaces_to_update list is
+    the tracking; until it runs, referrers still resolve to this file's path.
   surfaces_to_update_on_ratification:
     - path: docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
       change: Its standing-capture carve-out / stale_if can name this contract as the now-existing sibling (no obligation change).
@@ -262,14 +262,14 @@ proposed_direction_change:
       change: Register the standing-capture layer + this contract (a discoverability pass, deferred like the sibling lanes deferred theirs).
     - path: docs/workflows/orca_repo_map_v0.md
       change: Index the new contract.
-  intentionally_not_updated_now:
+  not_yet_updated:
     - path: all of the above
-      reason: Proposal stage; propagation is a post-ratification owner/topic-level pass, not part of authoring the proposal.
+      reason: Ratified; propagation is the tracked post-ratification fast-follow above, not yet run.
   non_claims:
     - not validation
     - not readiness
-    - not ratification
     - not contract hardening
-    - not propagation
+    - not propagation (pending; tracked above)
+    - not pressure-tested
     - not a build/scheduler/runtime/source-access authorization
 ```
