@@ -13,7 +13,7 @@ use_when:
   - Adjudicating whether to adopt the Orca ontology as the repo's semantic backbone.
   - Locating the proposed object roster, links, action gates, ID grammar, and binding plan.
 authority_boundary: retrieval_only
-status: PROPOSED_2026-06-15_AWAITING_OWNER_ADJUDICATION
+status: PROPOSED_2026-06-15_XVENDOR_REVIEW_APPLIED_AWAITING_OWNER_ADJUDICATION
 commission: docs/prompts/product-planning/orca_ontology_backbone_architecture_pass_commission_prompt_v0.md
 base: origin/main @ 953af7ea (frozen); freshness gate PASSED (8/8 sha-pins + LIVE grammar verified)
 adjudication_route: ICP / product-direction lane adjudicates; owner signs adoption and any folder/router binding.
@@ -83,7 +83,7 @@ grammar, and (b) MAPS workflow concepts to their existing overlay owners (Layer 
 **Success signal.**
 - *Core success.*
   - *Owner-observable:* owner reads this one doc and sees the full object roster
-    (≤~15), each with definition + stable-ID scheme + key states + governed
+    (≤18), each with definition + stable-ID scheme + key states + governed
     actions/gates + links + backing artifact, plus a Layer-2 pointer table — enough
     to adopt / amend / reject in one pass.
   - *Output fit:* cross-artifact references become addressable IDs
@@ -141,6 +141,10 @@ only via the backing map.
 
 ### 2.2 Object-type roster (17 of 18 types — cap raised to 18 on 2026-06-15; "19th in = one out")
 
+This roster is **v0 naming authority**, not a command to build all cards at once.
+Build-readiness is staged in §9: weak-backing and forward-consumer types may be
+reserved as names while their owning artifacts mature.
+
 Folds applied to stay under the cap (noted): **SubNiche → Vertical** (self-parent
 link). **`Read` is an ACTION on the `TrendVector` object, not an object type**
 (owner-directed amendment 2026-06-15, replacing the v0 TrendVector→Read merge — see
@@ -152,7 +156,7 @@ verb (§2.5). Demand-state, action-ceiling, read-type, and claim-tier are
 | # | Type | One-line definition | Key states / dimensions | Backing artifact(s) |
 | --- | --- | --- | --- | --- |
 | 1 | **Vertical** | A demand domain at a level (vertical or sub-niche); sub-niches nest via self-parent. | level: vertical \| sub_niche | thesis, wedge |
-| 2 | **Brand** | A consumer brand (consumer-facing label); company/parent resolution via `Org`. A Brand can itself act as a `WindCaller` (its own moves precede the shift). | — | candidate-pool handoff |
+| 2 | **Brand** | A consumer brand (consumer-facing label); company/parent resolution via `Org`. A Brand can itself act as a `WindCaller` (its own moves precede the shift), but never as an independent demand-origin for its own product/decision. | — | candidate-pool handoff |
 | 3 | **Product** | The demand target a TrendVector is *about*: ingredient / category / format / claim / SKU. | target_type | (gap — no single backing yet; §3) |
 | 4 | **Venue** | A demand-signal surface (where observations originate). | access_shape, review_by | beauty venue card set |
 | 5 | **WindCaller** | A leading-indicator referent — an account, community, detector, *or a Brand* whose own moves precede the shift; per vertical×sub-niche; carries the carve-out boundary. | calibration_state; carve-out (non-permanent, platform-scoped cap, internal-use) | demand-read taxonomy (gap — no card-set asset yet; §3) |
@@ -162,7 +166,7 @@ verb (§2.5). Demand-state, action-ceiling, read-type, and claim-tier are
 | 9 | **DecisionEvent** | The live brand-decision event the `Read` action serves (the monetization unit a Memo is produced for); a discovery scan evaluates *candidate* DecisionEvents (absorbs the former Slot). | trigger status, discovery_status: slot_open\|filled\|qualified | candidate pool, discovery brief |
 | 10 | **Reading** | The dated calibrated output of the `Read` action — Orca's call on a `TrendVector` for a `DecisionEvent`: an action ceiling (act/phase/narrow/hold/defend) + read_type, capped by integrity, bound by never-a-feed. The lightweight decision record; a `Memo` elaborates it for a qualified buyer decision. | read_type, action_ceiling, claim_tier | read outputs (gap — scan-spec forward consumer + memos) |
 | 11 | **Memo** | The Public-Signal Demand-Allocation Decision-Risk Memo for one qualified DecisionEvent (reasoning substrate + proof gate). | claim_tier; gate pass/cap/fail | buyer-proof packet |
-| 12 | **Case** | A backtest/proof case: a historical decision with known outcome. | claim_tier, split: dev\|holdout, entry_basis | batch-1 ledger declaration |
+| 12 | **Case** | A backtest/proof case: a historical decision with known outcome. | known_outcome; receipt-backed claim-cap pointers only. `split` and `entry_basis` are batch-ledger metadata, not standing ontology dimensions. | batch-1 ledger declaration |
 | 13 | **Outcome** | The realized result a Reading/Call/Case is graded against (calibration target). | — | case ledger / calibration |
 | 14 | **CapturePacket** | A write-once, hash-pinned source-capture packet — the raw provenance an Observation derives from. | manifest_version, cutoff_posture | `orca-harness/source_capture/models.py` |
 | 15 | **EvidenceUnit** | A cleaned evidence unit (IPF standard) bound at the Cleaning/Judgment boundary. | claim_tier | IPF foundation + evidence ladder |
@@ -191,13 +195,26 @@ read-machinery forward consumer depends on them — design them precisely):
   (independence by de-correlated origination) and the Demand-Substrate Hard Gate's
   independent-origin count. Directed, transitive for the collapse test (any shared
   upstream origination event = one family); pairwise "neither derives from the
-  other" is explicitly insufficient.
+  other" is explicitly insufficient. Cycles are invalid producer data; until
+  repaired, every node in the cycle collapses to one origination family. Multi-parent
+  derivation unions all upstream families, so any shared upstream family blocks
+  independent-origin counting.
 - **`Observation —diverges_from→ Observation`** — the cross-layer disagreement edge.
   The integrity / astroturf tell. Preserved as signal, never averaged away.
   Constrains the action ceiling; and where divergence indicates the costly-behavior
   instance is itself likely manufactured/coordinated, it can **defeat the floor**
   (G2), not merely cap the ceiling. Directed, non-collapsing (divergence is kept,
-  not resolved).
+  not resolved). It must carry the layer or coordination basis that makes the
+  disagreement meaningful: a G2 floor-defeater requires the costly-behavior instance
+  to sit inside the same coordinated layer that the divergence flags; otherwise
+  divergence constrains the ceiling only.
+
+Self-origin guard:
+- A `Brand —can_act_as→ WindCaller` link may support calibration or early-warning
+  reads, but observations/calls self-originated by that Brand are labeled
+  `self_originated` for that Brand's own Product/DecisionEvent and are excluded
+  from the G1 independent-origin count. They may corroborate or explain a move;
+  they cannot launder the brand's own signal into independent demand.
 
 Proof / calibration:
 - `Memo —for→ DecisionEvent` · `Memo —cites→ EvidenceUnit` (and/or `Observation`) · `Memo —serves→ Buyer` · `Buyer —owns→ DecisionEvent`
@@ -379,6 +396,22 @@ Stolen from the venue card set, the proven antidote to ontology rot:
   consumer-facing `Brand`) become first-class. Roster now 17 of 18. Also recorded: a
   `Brand` may act as a `WindCaller` (`Brand —can_act_as→ WindCaller`) — a brand's own
   moves can be the leading indicator.
+- **2026-06-15 (cross-vendor delegated review applied; CA-accepted).** A de-correlated
+  adversarial review-and-patch (reviewed_by `openai-gpt-5-codex`; authored_by Anthropic
+  Claude Opus; commission `docs/prompts/reviews/ontology_backbone_architecture_delegated_review_prompt_v0.md`)
+  returned four findings, all CA-adjudicated against cited source and accepted with no
+  modification: **AR-01** `Case` row — `claim_tier` / `split` / `entry_basis` demoted from
+  standing ontology dimensions to batch-ledger metadata + receipt-backed claim-cap pointers
+  (batch-1 ledger "mints no ladder vocabulary"; `claim_tier` is receipt-gated, not
+  type-intrinsic); **AR-02** the two load-bearing links specified at their failure edge —
+  `derived_from` gains cycle-collapse + multi-parent-union, `diverges_from` gains the
+  same-coordinated-layer basis a G2 floor-defeater requires; **AR-03** a self-origin guard so
+  a `Brand —can_act_as→ WindCaller` cannot count its own move as an independent G1 origin for
+  its own Product/DecisionEvent (`self_originated`, excluded from the independent-origin
+  count); **AR-04** live cap language corrected 15 → 18 and the roster marked v0 naming
+  authority with build-readiness staged in §9. No `NEEDS_ARCHITECTURE_PASS`. Report:
+  `docs/review-outputs/adversarial-artifact-reviews/ontology_backbone_architecture_review_v0.md`.
+  This hardening does not adopt the ontology — status stays PROPOSED.
 
 ---
 
@@ -410,7 +443,7 @@ adversarial / grounding perspectives run locally; extraction delegated read-only
 3. `derived_from` = independence/laundering (collapse); `diverges_from` =
    divergence/integrity (preserve-as-signal, never average) — both load-bearing.
 4. `never_a_feed` is an action constraint, not a new gate.
-5. The hard cap (15) holds; growth is one-in-one-out by dated amendment.
+5. The hard cap (18) holds; growth is one-in-one-out by dated amendment.
 
 **Lock-in the owner is accepting (the §0 lock_in_notice, concretely).** Adoption
 makes a repo-wide shared NAMING / RELATIONSHIP / ID-GRAMMAR surface the reference
