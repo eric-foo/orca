@@ -255,15 +255,32 @@ def _add_durability_arguments(parser: argparse.ArgumentParser) -> None:
     group.add_argument("--intended-cadence-random-seed", type=int, default=None)
 
 
+_CADENCE_SUBFLAG_ATTRS = (
+    "intended_cadence_slot_count",
+    "intended_cadence_delay_seconds",
+    "intended_cadence_window_seconds",
+    "intended_cadence_min_gap_seconds",
+    "intended_cadence_max_gap_seconds",
+    "intended_cadence_random_seed",
+)
+
+
 def _build_intended_cadence(args: argparse.Namespace) -> dict[str, object] | None:
     """Build the declared ``intended_cadence`` dict from cadence flags, or ``None`` if absent.
 
     Reuses ``cadence.build_cadence_plan`` so the shape is the canonical
     ``CadencePlan.to_dict()`` (no invented shape). ``--intended-cadence-mode`` gates the build:
-    without it the field stays ``None``. ``build_cadence_plan`` itself validates slot count and
-    gap/window constraints and raises ``ValueError`` for an incoherent plan.
+    without it the field stays ``None`` ONLY when no other cadence subflag is set. A cadence
+    subflag supplied without ``--intended-cadence-mode`` is an incoherent partial plan and fails
+    visibly (``ValueError`` -> exit 2) rather than being silently dropped. ``build_cadence_plan``
+    itself validates slot count and gap/window constraints and raises ``ValueError`` for an
+    incoherent plan.
     """
     if args.intended_cadence_mode is None:
+        if any(getattr(args, attr) is not None for attr in _CADENCE_SUBFLAG_ATTRS):
+            raise ValueError(
+                "cadence flags require --intended-cadence-mode"
+            )
         return None
     if args.intended_cadence_slot_count is None:
         raise ValueError("--intended-cadence-slot-count is required when --intended-cadence-mode is set")
@@ -283,10 +300,62 @@ def _build_intended_cadence(args: argparse.Namespace) -> dict[str, object] | Non
     return plan.to_dict()
 
 
+# Durability fields that imply a demand-durability series. If any is provided, the capture
+# must declare a --series-id so the facts have an identity to ride on (Major 2). Pins remain
+# honest gaps when absent (Ob.17); --series-id alone (no pins/cadence) stays a permitted
+# degenerate declared series. This gate validates input coherence only -- no weight, score,
+# threshold, ranking, or verdict (INV-1).
+_DURABILITY_FIELD_ATTRS = (
+    "session_visibility_pin",
+    "session_visibility_pin_unknown_reason",
+    "session_visibility_pin_not_applicable_reason",
+    "locale_pin",
+    "locale_pin_unknown_reason",
+    "locale_pin_not_applicable_reason",
+    "currency_pin",
+    "currency_pin_unknown_reason",
+    "currency_pin_not_applicable_reason",
+    "variant_pin",
+    "variant_pin_unknown_reason",
+    "variant_pin_not_applicable_reason",
+    "cold_start_at",
+    "cold_start_at_unknown_reason",
+    "cold_start_at_not_applicable_reason",
+    "pre_coverage_history_posture",
+    "pre_coverage_history_posture_unknown_reason",
+    "pre_coverage_history_posture_not_applicable_reason",
+    "intended_cadence_mode",
+    "intended_cadence_slot_count",
+    "intended_cadence_delay_seconds",
+    "intended_cadence_window_seconds",
+    "intended_cadence_min_gap_seconds",
+    "intended_cadence_max_gap_seconds",
+    "intended_cadence_random_seed",
+)
+
+
+def _require_series_identity(args: argparse.Namespace) -> None:
+    """Fail fast if durability facts are supplied without a --series-id to anchor them.
+
+    A demand-durability fact (pin value/reason, cold-start, pre-coverage posture, or any cadence
+    flag) needs a series identity to ride on; without one the fact has nowhere to belong. This
+    blocks durability facts with NO identity only -- a bare ``--series-id`` (degenerate declared
+    series) and an absent pin (honest gap per Ob.17) both stay permitted. Validates input
+    coherence only (INV-1).
+    """
+    if args.series_id is not None:
+        return
+    if any(getattr(args, attr) is not None for attr in _DURABILITY_FIELD_ATTRS):
+        raise ValueError(
+            "--series-id is required when any demand-durability field is set"
+        )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
     try:
+        _require_series_identity(args)
         exit_code, message = run_source_capture_http_packet(
             url=args.url,
             source_family=args.source_family,

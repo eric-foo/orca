@@ -375,6 +375,71 @@ def test_http_runner_sets_demand_durability_series_fields(http_server: str, scra
     assert manifest["capture_context"]["value"] == "direct HTTP source capture with stdlib urllib"
 
 
+def test_http_runner_rejects_cadence_subflag_without_mode(http_server: str, scratch_dir: Path) -> None:
+    # Major 1: a cadence subflag supplied without --intended-cadence-mode is an incoherent partial
+    # plan. It must fail VISIBLY (non-zero exit, error names the mode requirement) rather than being
+    # silently dropped. --series-id is supplied so the series-identity gate passes and the cadence
+    # gate is what fires.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "Does a cadence subflag without a mode fail visibly?",
+            "--output",
+            str(output_dir),
+            "--series-id",
+            "pilot_partial_cadence_001",
+            "--intended-cadence-slot-count",
+            "14",
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "--intended-cadence-mode" in result.stderr
+    assert not output_dir.exists()
+
+
+def test_http_runner_rejects_durability_field_without_series_id(http_server: str, scratch_dir: Path) -> None:
+    # Major 2: a demand-durability fact supplied without --series-id has no series identity to ride
+    # on. It must fail VISIBLY (non-zero exit, error names the series-id requirement) before the
+    # capture runs, rather than writing facts with no identity.
+    project_root = Path(__file__).resolve().parents[2]
+    output_dir = scratch_dir / "packet"
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "runners/run_source_capture_http_packet.py",
+            "--url",
+            f"{http_server}/ok",
+            "--decision-question",
+            "Does a durability field without a series id fail visibly?",
+            "--output",
+            str(output_dir),
+            "--locale-pin",
+            "en-GB",
+        ],
+        cwd=project_root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode != 0
+    assert "--series-id" in result.stderr
+    assert not output_dir.exists()
+
+
 def test_http_runner_leaves_durability_fields_none_for_non_durability_capture(
     http_server: str, scratch_dir: Path
 ) -> None:
