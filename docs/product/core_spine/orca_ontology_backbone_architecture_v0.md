@@ -128,7 +128,7 @@ only via the backing map.
 | `windcaller:` | `windcaller:tiktok.hyram` | a leading-indicator account/community/detector |
 | `call:` | `call:tiktok.hyram.2023-04-12` | a wind-caller's early public call |
 | `observation:` | `observation:basenotes.2023-04-12.3` | one captured demand signal |
-| `read:` | `read:beautypie.2023-05-01` | a demand read (trend vector) |
+| `trend:` | `trend:beautypie.2023-05-01` | a TrendVector (demand movement); `read` is an action, not an ID namespace |
 | `decision:` | `decision:beautypie.repricing-2023` | a live brand-decision event |
 | `memo:` | `memo:beautypie.repricing-2023.1` | a decision-risk memo |
 | `case:` | `case:beautypie_repricing_2023` | a backtest/proof case |
@@ -140,21 +140,23 @@ only via the backing map.
 ### 2.2 Object-type roster (15 types — at the hard cap; "16th in = one out")
 
 Folds applied to stay under the cap (noted): **SubNiche → Vertical** (self-parent
-link); **TrendVector → Read** (the read *is* the trend-vector-bearing object).
-Demand-state, action-ceiling, read-type, and claim-tier are **dimensions**, not
-types (§2.4). Gates are **actions**, not types (§2.5).
+link). **`Read` is an ACTION on the `TrendVector` object, not an object type**
+(owner-directed amendment 2026-06-15, replacing the v0 TrendVector→Read merge — see
+§6.1): the object is the demand movement (`TrendVector`); reading it is the governed
+verb (§2.5). Demand-state, action-ceiling, read-type, and claim-tier are
+**dimensions**, not types (§2.4). Gates are **actions**, not types (§2.5).
 
 | # | Type | One-line definition | Key states / dimensions | Backing artifact(s) |
 | --- | --- | --- | --- | --- |
 | 1 | **Vertical** | A demand domain at a level (vertical or sub-niche); sub-niches nest via self-parent. | level: vertical \| sub_niche | thesis, wedge |
 | 2 | **Brand** | A consumer brand, with parent-org resolution. | — | candidate-pool handoff |
-| 3 | **Product** | The demand target a read is *about*: ingredient / category / format / claim / SKU. | target_type | (gap — no single backing yet; §3) |
+| 3 | **Product** | The demand target a TrendVector is *about*: ingredient / category / format / claim / SKU. | target_type | (gap — no single backing yet; §3) |
 | 4 | **Venue** | A demand-signal surface (where observations originate). | access_shape, review_by | beauty venue card set |
 | 5 | **WindCaller** | A leading-indicator account/community/detector, per vertical×sub-niche; carries the carve-out boundary. | calibration_state; carve-out (non-permanent, platform-scoped cap, internal-use) | demand-read taxonomy (gap — no card-set asset yet; §3) |
-| 6 | **Call** | A wind-caller's early public call that opens a (transient) read. | persistence_state, integrity_state | scan-spec (forward) / read outputs |
+| 6 | **Call** | A wind-caller's early public call that opens a (transient) TrendVector. | — | scan-spec (forward) / read outputs |
 | 7 | **Observation** | One captured demand-signal instance from a Venue — the node the two provenance links connect. | integrity flags | CapturePacket / scan-spec (forward) |
-| 8 | **Read** | The demand read (trend vector): demand moving toward/away from a target, with direction, velocity, expected lifespan. | persistence_state, integrity_state, read_type, action_ceiling | demand-read taxonomy + memos |
-| 9 | **DecisionEvent** | The live brand-decision event a read serves (the monetization unit a Memo is produced for). | trigger status | candidate pool, discovery brief |
+| 8 | **TrendVector** | The demand movement: demand moving toward/away from a target (ingredient/category/format/claim), with direction, velocity, expected lifespan. *(Reading it — emitting a calibrated decision — is the `Read` action, §2.5.)* | persistence_state, integrity_state | demand-read taxonomy |
+| 9 | **DecisionEvent** | The live brand-decision event the `Read` action serves (the monetization unit a Memo is produced for). | trigger status | candidate pool, discovery brief |
 | 10 | **Memo** | The Public-Signal Demand-Allocation Decision-Risk Memo for one qualified DecisionEvent (reasoning substrate + proof gate). | claim_tier; gate pass/cap/fail | buyer-proof packet |
 | 11 | **Case** | A backtest/proof case: a historical decision with known outcome. | claim_tier, split: dev\|holdout, entry_basis | batch-1 ledger declaration |
 | 12 | **Outcome** | The realized result a Call/Case is graded against (calibration target). | — | case ledger / calibration |
@@ -170,10 +172,11 @@ Structural / identity:
 - `WindCaller —covers→ Vertical` (per vertical×sub-niche)
 
 Signal flow:
-- `WindCaller —made→ Call` · `Call —opens→ Read`
-- `Read —about→ Product` (or `—about→ Brand`) · `Read —serves→ DecisionEvent`
-- `Observation —from→ Venue` · `Observation —supports→ Read` · `Observation —captured_in→ CapturePacket`
+- `WindCaller —made→ Call` · `Call —opens→ TrendVector`
+- `TrendVector —about→ Product` (or `—about→ Brand`)
+- `Observation —from→ Venue` · `Observation —supports→ TrendVector` · `Observation —captured_in→ CapturePacket`
 - `EvidenceUnit —cleaned_from→ Observation` (and/or `CapturePacket`)
+- the **`Read` action** (§2.5) reads a `TrendVector` and `—serves→ DecisionEvent`, recording its calibrated decision in a `Memo` for a qualified decision
 
 **The two load-bearing links** (owner-decided in the demand-gate closures; the
 read-machinery forward consumer depends on them — design them precisely):
@@ -197,8 +200,8 @@ Proof / calibration:
 - `Slot —filled_by→ Brand` + `DecisionEvent` (a candidate = brand + live decision)
 
 G4 distinction (must not leak into the G1 count):
-- org-motion / retail-presence evidence `corroborates` a Read but is EXCLUDED from
-  the independent-origin count — modeled as a distinct link `corroborates` (G4),
+- org-motion / retail-presence evidence `corroborates` a TrendVector but is EXCLUDED
+  from the independent-origin count — modeled as a distinct link `corroborates` (G4),
   never `supports`-counted toward independence (G1). The premium signal is the
   `diverges_from` read where org-motion and demand layers disagree.
 
@@ -206,21 +209,24 @@ G4 distinction (must not leak into the G1 count):
 
 Folded onto existing types under the cap, per the commission:
 - `persistence_state: durable | transient` (durable = persists past trigger;
-  transient = real but decays) — on Read, Call, Outcome.
+  transient = real but decays) — on `TrendVector` (carried onto `Outcome` for
+  grading). "Hollow" is RETIRED (it conflated transient with manufactured).
 - `integrity_state: real | manufactured` (real = costly behavior; manufactured =
-  fake/amplified) — on Read, Call, Outcome. "Hollow" is RETIRED (it conflated
-  transient with manufactured).
+  fake/amplified) — on `TrendVector` (and `Outcome`).
 - derived action state `{durable→commit, transient→move/time-boxed,
   manufactured→discount/avoid}` — derived only where it helps a consumer; the
   integrity axis must NOT be collapsed into the persistence axis.
 - `action_ceiling` — the frozen ladder `Excluded → Watch → Probe → Test → Hold →
   Move → Commit` (verbs `act / phase / narrow / hold / defend`); capped by signal
-  integrity ("the verb may not exceed what signal integrity supports").
+  integrity ("the verb may not exceed what signal integrity supports"). It is an
+  **output of the `Read` action** (§2.5), recorded with the decision (in a `Memo`
+  for a qualified decision), not a standing field on `TrendVector`.
 - `read_type ∈ {durable-demand, transient-spike, manufactured-demand,
   brand-decision-event (monetization unit), wind-caller-calibration (compounding
-  asset)}`. *Divergence is a technique, not a read type.*
+  asset)}` — classifies the `Read` action's output. *Divergence is a technique, not
+  a read type.*
 - `claim_tier ∈ {product_learning, buyer_proof, judgment_quality}` — on Memo, Case,
-  Outcome, Read (the evidence ladder, MAPPED, §5).
+  Outcome (the evidence ladder, MAPPED, §5).
 
 ### 2.5 Action / gate map (governed transitions — the ONLY sanctioned state changes)
 
@@ -229,19 +235,20 @@ Each names the gate that ALREADY governs it; the ontology makes the gate
 
 | Action | On | Precondition / gate (where it already lives) |
 | --- | --- | --- |
-| `Read.open_transient` | Read | conservative default: a read opens transient and acts in-window; never opens durable (demand-read taxonomy / calling sequence) |
-| `Read.monitor` | Read | persistence is observed, not predicted (taxonomy) |
-| `Read.earn_durable` | Read | monitored persistence holds past the trigger (taxonomy) — the earned upgrade transient→durable |
-| `Read.decay` | Read | spike decays as called (taxonomy) |
-| `Gate.G1` (independence) | Read / candidate | ≥2 de-correlated origination families for material commitment; `derived_from`-chain siblings collapse to one (demand-gate closures) |
-| `Gate.G2` (costly-behavior floor) | Read / candidate | ≥1 gradeable costly-behavior instance in ≥1 qualifying demand-venue family; absence of demand is not a pass (demand-gate closures) |
-| `Gate.G4` (org-motion corroboration) | Read | separate org-motion cards; corroborates but excluded from the G1 count (demand-gate closures) |
-| `HardGate.evaluate` | candidate / Read | fusion+integrity rule bundling G1+G2+ceiling+integrity → fail \| pass-capped(1 origin) \| pass-material(≥2) (buyer-proof packet) |
+| `TrendVector.open_transient` | TrendVector | conservative default: opens transient and acts in-window; never opens durable (demand-read taxonomy / calling sequence) |
+| `TrendVector.monitor` | TrendVector | persistence is observed, not predicted (taxonomy) |
+| `TrendVector.earn_durable` | TrendVector | monitored persistence holds past the trigger (taxonomy) — the earned upgrade transient→durable |
+| `TrendVector.decay` | TrendVector | spike decays as called (taxonomy) |
+| `Read` (emit calibrated decision) | TrendVector → decision/Memo | reads a `TrendVector` for a `DecisionEvent`; emits the action-ceiling decision (typed by read_type), capped by signal integrity and bound by `never_a_feed` (demand-read taxonomy + Orca Promise) |
+| `Gate.G1` (independence) | TrendVector / candidate | ≥2 de-correlated origination families for material commitment; `derived_from`-chain siblings collapse to one (demand-gate closures) |
+| `Gate.G2` (costly-behavior floor) | TrendVector / candidate | ≥1 gradeable costly-behavior instance in ≥1 qualifying demand-venue family; absence of demand is not a pass (demand-gate closures) |
+| `Gate.G4` (org-motion corroboration) | TrendVector | separate org-motion cards; corroborates but excluded from the G1 count (demand-gate closures) |
+| `HardGate.evaluate` | candidate / TrendVector | fusion+integrity rule bundling G1+G2+ceiling+integrity → fail \| pass-capped(1 origin) \| pass-material(≥2) (buyer-proof packet) |
 | `Memo.produce` | Memo | named qualified buyer + live decision trigger selected AND Hard Gate passes (buyer-proof packet) |
 | `Call.grade` | Call | requires an Outcome receipt (wind-caller calibration; demand-side calibration is a gap — §3) |
 | `Case.seal` | Case | requires a pre-declared ledger row (batch-1 ledger declaration) |
 | `Slot.fill` | Slot | requires a dated, provenance-noted candidate scan by an authorized lane (discovery brief) |
-| *constraint* `never_a_feed` | recurring Read | every output is a calibrated decision with an action ceiling — never a feed/stream (Orca Promise; buyer-proof packet) |
+| *constraint* `never_a_feed` | the `Read` action | every output is a calibrated decision with an action ceiling — never a feed/stream (Orca Promise; buyer-proof packet) |
 
 Judgment-spine gates JSG-01..JSG-10 that govern Case/EvidenceUnit/Memo as they move
 toward judgment-quality evidence are MAPPED, not restated (§5).
@@ -283,7 +290,7 @@ why the ID *grammar* and the two links are CORE (not deferred):
   precisely (§2.3).
 - **Demand scan-core spec** (`orca_demand_scan_core_spec_v0.md`, IN-FLIGHT, not on
   `main`). A forward consumer whose Observation/Candidate schema should re-express in
-  ontology terms (`Observation`, `Read`, `Slot`, `Call`) with no new vocabulary when it
+  ontology terms (`Observation`, `TrendVector`, `Slot`, `Call`) with no new vocabulary when it
   lands. Requirement: the §2.1 ID grammar so its rows reference addressable objects, not
   path-and-prose.
 
@@ -337,6 +344,18 @@ Stolen from the venue card set, the proven antidote to ontology rot:
   property lists — those keep evolving in their owning lanes and are tracked only
   via the backing map (§3). This is the explicit authority boundary that keeps the
   backbone from becoming a straitjacket.
+
+### 6.1 Amendments (dated)
+
+- **2026-06-15 (owner-directed):** `Read` reclassified from object type to **action**
+  on the `TrendVector` object; `TrendVector` takes the object slot (cap unchanged at
+  15). The calling-sequence lifecycle (`open_transient → monitor → earn_durable /
+  decay`) moves onto `TrendVector`; `read_type` and `action_ceiling` become outputs of
+  the `Read` action. Rationale: the source names "Read / Trend vector" as one concept,
+  but the object (the demand movement) and the act of reading it separate cleanly — an
+  action operates on an object. Deferred sub-choice: the `Read` action's output is
+  recorded in a `Memo` for a qualified decision; whether lightweight reads also need a
+  separate lightweight decision-record object is left open (would be one-in-one-out).
 
 ---
 
@@ -449,7 +468,7 @@ direction_change_propagation:
 **After adoption (owner-signed), the first build is the N highest cross-lane-traffic
 object cards**, not the whole roster:
 
-1. `Brand`, `Venue`, `Observation`, `Read`, `Case` — the five types with the most
+1. `Brand`, `Venue`, `Observation`, `TrendVector`, `Case` — the five types with the most
    cross-lane reference traffic — authored as dated cards, with the two links
    (`derived_from`, `diverges_from`) specified precisely enough for the read-machinery.
 2. Re-express the in-flight scan-spec's Observation/Candidate schema in ontology
