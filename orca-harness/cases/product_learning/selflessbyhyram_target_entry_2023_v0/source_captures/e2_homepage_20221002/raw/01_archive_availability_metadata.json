@@ -1,0 +1,110 @@
+{
+  "availability_http_metadata": {
+    "byte_count": 1129,
+    "capture_timestamp": "2026-06-15T14:15:39Z",
+    "content_length": null,
+    "content_type": "application/json",
+    "date": "Mon, 15 Jun 2026 14:15:38 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20221031000000&limit=-10",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20221031000000&limit=-10",
+    "status": 200,
+    "timeout_seconds": 90.0
+  },
+  "availability_url": "https://web.archive.org/cdx/search/cdx?url=https%3A%2F%2Fus.selflessbyhyram.com%2F&output=json&fl=timestamp%2Coriginal%2Cstatuscode%2Cmimetype%2Cdigest&collapse=digest&to=20221031000000&limit=-10",
+  "original_url": "https://us.selflessbyhyram.com/",
+  "parse_warning": null,
+  "selected_snapshot": {
+    "digest": "WEFDGBKLKNZG6JKEF6AZV6AY3J5HLBUG",
+    "mime_type": "text/html",
+    "original_url": "https://us.selflessbyhyram.com/",
+    "snapshot_url": "https://web.archive.org/web/20221006233301/https://us.selflessbyhyram.com/",
+    "status_code": "200",
+    "timestamp": "20221006233301"
+  },
+  "snapshot_count": 10,
+  "snapshots": [
+    {
+      "digest": "TQYHSEXHHU4HLTX4XPOSKICOJ4OLFOK7",
+      "mime_type": "text/html",
+      "original_url": "http://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220419183240/http://us.selflessbyhyram.com/",
+      "status_code": "301",
+      "timestamp": "20220419183240"
+    },
+    {
+      "digest": "MH54LZO2GKOQKOHMYNN6U4EYLBTFFBPT",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220516034834/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220516034834"
+    },
+    {
+      "digest": "M5NHOGMABN3P3SM2H4U6JZUYBKEC4M7W",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220529092122/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220529092122"
+    },
+    {
+      "digest": "GYWGPY6WDFJIQQOS5W3N44EI45QG2OYJ",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220630160847/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220630160847"
+    },
+    {
+      "digest": "53EK53A3OPVWVHIDLBLKDJHRCAIJPP54",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220710135243/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220710135243"
+    },
+    {
+      "digest": "E5REQYXDZQN5ZSLWWHPHHEOSQR7CTXXP",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220728214122/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220728214122"
+    },
+    {
+      "digest": "LDUQ7WQWMRRKNISAXVBKSZIILCF3IFR3",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220829140229/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220829140229"
+    },
+    {
+      "digest": "HU7BAQRCL3YLQPRNEXWU2I27LJTD5HOY",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20220926164412/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20220926164412"
+    },
+    {
+      "digest": "5LVFRLQBFQJBVMQI3W7WOOISNLL2XDYT",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20221002195506/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20221002195506"
+    },
+    {
+      "digest": "WEFDGBKLKNZG6JKEF6AZV6AY3J5HLBUG",
+      "mime_type": "text/html",
+      "original_url": "https://us.selflessbyhyram.com/",
+      "snapshot_url": "https://web.archive.org/web/20221006233301/https://us.selflessbyhyram.com/",
+      "status_code": "200",
+      "timestamp": "20221006233301"
+    }
+  ]
+}

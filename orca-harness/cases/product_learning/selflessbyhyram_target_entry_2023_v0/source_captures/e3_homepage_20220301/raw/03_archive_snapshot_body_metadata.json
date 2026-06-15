@@ -1,0 +1,25 @@
+{
+  "original_url": "https://us.selflessbyhyram.com/",
+  "selected_snapshot": {
+    "digest": "USXXCCZDWKNSZS3F2ZOC5ZTT3V6BVUP4",
+    "mime_type": "text/html",
+    "original_url": "https://us.selflessbyhyram.com/",
+    "snapshot_url": "https://web.archive.org/web/20220331234557/https://us.selflessbyhyram.com/",
+    "status_code": "200",
+    "timestamp": "20220331234557"
+  },
+  "snapshot_body_http_metadata": {
+    "byte_count": 247298,
+    "capture_timestamp": "2026-06-15T14:16:43Z",
+    "content_length": null,
+    "content_type": "text/html; charset=utf-8",
+    "date": "Mon, 15 Jun 2026 14:16:42 GMT",
+    "etag": null,
+    "final_url": "https://web.archive.org/web/20220331234557/https://us.selflessbyhyram.com/",
+    "last_modified": null,
+    "reason": "OK",
+    "requested_url": "https://web.archive.org/web/20220331234557/https://us.selflessbyhyram.com/",
+    "status": 200,
+    "timeout_seconds": 90.0
+  }
+}
