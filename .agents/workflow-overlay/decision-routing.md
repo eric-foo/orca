@@ -154,6 +154,17 @@ reruns must include Cynefin routing when their task matches the trigger
 conditions. Prompt artifacts should reference this file instead of restating
 the whole router.
 
+## Subagent Model Tiering
+
+When delegating to a spawned subagent, choose the model tier per
+`docs/decisions/subagent_model_tiering_doctrine_v0.md`: default delegable work to
+the Sonnet `worker` agent type; trivial rote to the Haiku `mechanical` type;
+reserve Opus (`general-purpose`, which inherits the main tier, or an explicit
+`model: opus`) for genuine judgment. A subagent spawned with no model silently
+inherits the parent (Opus) tier, so route to a pinned type to avoid paying Opus
+for non-judgment work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` (it hard-caps all
+subagents and blocks Opus escalation — over-restraint).
+
 ## Non-Claims
 
 Cynefin routing is not validation, readiness, approval, acceptance, review,
