@@ -185,6 +185,62 @@ def test_packet_timing_accepts_explicit_archive_snapshot_time() -> None:
     assert timing.capture_time.value == "2026-06-11T00:00:00Z"
 
 
+def test_demand_durability_fields_optional_for_legacy_manifests() -> None:
+    # Additive / forward-only (mirrors archive_snapshot_time): a manifest written before the
+    # demand-durability fields existed (the minimal payload omits them) still validates, and the
+    # new fields read back as None on the packet and every slice -- no manifest_version bump,
+    # no in-place upgrade required.
+    payload = _minimal_packet_payload()
+    assert "series_id" not in payload
+    assert "session_visibility_pin" not in payload["source_slices"][0]  # type: ignore[index]
+
+    packet = SourceCapturePacket.model_validate(payload)
+
+    assert packet.series_id is None
+    assert packet.cold_start_at is None
+    assert packet.pre_coverage_history_posture is None
+    assert packet.intended_cadence is None
+    for source_slice in packet.source_slices:
+        assert source_slice.session_visibility_pin is None
+        assert source_slice.locale_pin is None
+        assert source_slice.currency_pin is None
+        assert source_slice.variant_pin is None
+
+
+def test_packet_accepts_explicit_demand_durability_fields() -> None:
+    # A demand-durability observation populates Element 1 pins (per slice) and Element 2 & 4
+    # series facts (per packet); they validate and round-trip. Pins are VisibleFacts (observed
+    # facts, never weights -- INV-1); series-diff (Element 3) is intentionally not a field here.
+    payload = _minimal_packet_payload()
+    payload["series_id"] = "pilot_sdj_bumbum_001"
+    payload["cold_start_at"] = {"status": "known", "value": "2026-06-14T17:45:09Z"}
+    payload["pre_coverage_history_posture"] = {
+        "status": "known",
+        "value": "uncovered by construction; series began at first commissioned capture",
+    }
+    payload["intended_cadence"] = {"mode": "fixed", "slot_count": 14, "delay_seconds": 86400.0}
+    slice0 = payload["source_slices"][0]  # type: ignore[index]
+    slice0["session_visibility_pin"] = {"status": "known", "value": "logged_out_public"}
+    slice0["locale_pin"] = {"status": "known", "value": "en-US"}
+    slice0["currency_pin"] = {"status": "known", "value": "USD"}
+    slice0["variant_pin"] = {
+        "status": "unknown_with_reason",
+        "reason": "default on-page variant; not pinned to a specific SKU id",
+    }
+
+    packet = SourceCapturePacket.model_validate(payload)
+
+    assert packet.series_id == "pilot_sdj_bumbum_001"
+    assert packet.cold_start_at is not None and packet.cold_start_at.value == "2026-06-14T17:45:09Z"
+    assert packet.pre_coverage_history_posture is not None
+    assert packet.intended_cadence == {"mode": "fixed", "slot_count": 14, "delay_seconds": 86400.0}
+    observed = packet.source_slices[0]
+    assert observed.session_visibility_pin is not None and observed.session_visibility_pin.value == "logged_out_public"
+    assert observed.locale_pin is not None and observed.locale_pin.value == "en-US"
+    assert observed.currency_pin is not None and observed.currency_pin.value == "USD"
+    assert observed.variant_pin is not None and observed.variant_pin.status == "unknown_with_reason"
+
+
 def test_model_rejects_missing_required_fields() -> None:
     payload = _minimal_packet_payload()
     del payload["source_family"]

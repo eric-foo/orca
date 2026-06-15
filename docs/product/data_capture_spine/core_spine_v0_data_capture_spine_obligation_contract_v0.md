@@ -481,6 +481,36 @@ Minimum handoff accomplishments:
 - Cleaning can proceed without reconstructing collection history;
 - Judgment can inspect capture limits without Capture making judgment calls.
 
+### 17. Demand-Durability Series Facts (Conditional)
+
+This obligation applies ONLY to a commissioned demand-durability proxy series
+(price, availability, search-interest, review) that observes a source repeatedly
+over time, per `capture_envelope_durability_delta_spec_v0.md`. It does not apply
+to one-shot captures, which leave these facts unset.
+
+For such a series, Capture must record:
+
+- the comparability pins held across the series — `session_visibility_pin`,
+  `locale_pin`, `currency_pin`, `variant_pin` (Element 1), per observed slice. A
+  pin the source does not expose is `unknown_with_reason` / `not_applicable`, and
+  its capture obligation is discharged `unavailable_by_source` — never written as
+  a fact status.
+- the series origin — `series_id`, `cold_start_at`, `pre_coverage_history_posture`
+  (Element 2), marking that history before the first observation is uncovered by
+  construction.
+- the declared sampling cadence — `intended_cadence` (Element 4), with realized
+  timings available via per-observation `capture_time` / `recapture_time` and gaps
+  recorded as visible limitations (an un-sampled gap is never "no change").
+
+These are observed facts that fix comparability and coverage extent; they are
+never weights, scores, or a durable-vs-hollow demand verdict (INV-1). The
+series-level recapture-diff (Element 3) is a separate cross-observation record and
+is **deferred** — not named here; when built it keys change on the EXTRACTED
+demand-relevant values, with the raw `PreservedFile.sha256` only a coarse
+inspect-flag (data-capture distillation binding, A1c). All Element 1/2/4 fields
+are **additive and optional**: existing manifests stay valid with them unset (no
+`SOURCE_CAPTURE_MANIFEST_VERSION` bump).
+
 ## Capture Modes
 
 ### Human-Led
@@ -849,3 +879,36 @@ vs admission/consume gate vs version-aware read-back; upgrade-on-load vs clear-r
 the build trigger) is NOT part of this R2 closure. It is routed to a standard architectural
 pass (`docs/prompts/architecture/source_capture_packet_schema_evolution_architecture_prompt_v0.md`),
 3 subagents, owner-run.
+
+```yaml
+# Demand-durability conditional obligation (Ob.17) + additive-optional schema fields. 2026-06-15.
+direction_change_propagation:
+  doctrine_changed: "The Data Capture obligation contract now names Demand-Durability Series Facts as Ob.17 — a CONDITIONAL obligation for commissioned demand-durability proxy series (Element 1 pins, Element 2 cold-start/series_id, Element 4 cadence) — matched by additive-optional fields on SourceCaptureSlice (4 pins) and SourceCapturePacket (series_id, cold_start_at, pre_coverage_history_posture, intended_cadence) in models.py. Backward-compatible: existing manifests stay valid with the fields unset; no SOURCE_CAPTURE_MANIFEST_VERSION bump (unlike the R2 backward-incompatible change). Series-diff (Element 3) deferred."
+  trigger: product_doctrine
+  controlling_sources_updated:
+    - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md
+    - orca-harness/source_capture/models.py
+  downstream_surfaces_checked:
+    - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
+    - docs/product/data_capture_spine/demand_proxy_price_timeseries_capture_profile_v0.md
+    - docs/product/data_capture_spine/demand_proxy_availability_restock_capture_profile_v0.md
+    - docs/decisions/distillation_binding_data_capture_v0.md
+    - orca-harness/source_capture/writer.py
+    - orca-harness/runners/run_source_capture_http_packet.py
+  intentionally_not_updated:
+    - path: orca-harness/source_capture/writer.py
+      reason: "Additive-optional fields default to None; writer/runners construct valid packets without setting them. A demand-durability series writer populates them — that integration is the real-series step, not this schema/contract hardening."
+    - path: SOURCE_CAPTURE_MANIFEST_VERSION (orca-harness/source_capture/models.py)
+      reason: "Additive-optional + backward-compatible (unlike R2); existing v1 manifests validate unchanged, so no version bump. Mirrors the archive_snapshot_time additive precedent."
+    - path: docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
+      reason: "Already DESCRIBES Elements 1-5 as capture facts; Ob.17 hardens Elements 1/2/4 into a conditional obligation + schema fields per its own owner-gated 'contract hardening' note. The Element-3 series-diff spec-text sharpen (extracted-values anchor) folds into the deferred Element-3 hardening, not here."
+  non_claims:
+    - "not validation"
+    - "not readiness"
+    - "not a real over-time series (the pilot was a single window)"
+    - "not series-diff (Element 3) hardening — deferred (cross-packet record + extracted-value extractor)"
+    - "not a demand verdict (INV-1 preserved)"
+    - "not ECR/Cleaning/Judgment design"
+    - "not runtime/scheduler authorization"
+    - "schema verified by the offline suite (861 passed, 2 skipped); broader doctrine-settledness not claimed beyond that"
+```
