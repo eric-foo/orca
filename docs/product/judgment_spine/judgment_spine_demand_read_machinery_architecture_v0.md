@@ -5,8 +5,8 @@ retrieval_header_version: 1
 artifact_role: Product architecture object (PROPOSED target architecture — pending owner adjudication)
 scope: >
   Target architecture for Orca's demand-read judgment CORE ("object C"): the
-  market-agnostic procedure that turns ADMITTED demand signal into a verdict +
-  action ceiling (admit → weight → verdict+ceiling → counterfactual). The two
+  market-agnostic procedure that turns an ALLOWED demand signal into a verdict +
+  action ceiling (allow → weight → verdict+ceiling → counterfactual). The two
   mode-shells that wrap it — backtest learning and the live decision loop — and
   the per-source weighting store ALREADY EXIST in this lane as PROPOSED
   architectures; this object supplies the core-shaped hole none of them specify
@@ -71,7 +71,7 @@ or gate reopening. Carries no validation/readiness/buyer claim; caps at
 
 The lane already has a backtest-learning loop (near half), a live decision loop
 (far half), and a signal-reliability ledger. What **none** of them specifies is
-the demand-read judgment procedure itself — the steps that turn *admitted* demand
+the demand-read judgment procedure itself — the steps that turn an *allowed* demand
 signal into a verdict + action ceiling. The far-half decision-object has a
 `sealed_call` slot (`recommendation`, `confidence_band`, `signals_used`,
 `reasoning_trace`); it does not say how a demand read *fills* it. The taxonomy
@@ -95,7 +95,7 @@ core is the piece they both presuppose and neither specifies.
     outcome; adversarial postmortem mints validated lessons)         seal-before-disclose; outcome lands later → resolution)
                          \                                          /
                           \------------------ THE CORE (this object) ------------------/
-                            C0 Frame → C1 Admit(gate) → C2 Weight(de-correlate·diverge·ledger)
+                            C0 Frame → C1 Allow(gate) → C2 Weight(de-correlate·diverge·ledger)
                             → C3 Verdict + Action Ceiling → C4 Counterfactual  (+ required reasoning trace)
                                               |
                           weighting store + lessons: near_half_signal_reliability_ledger_v0
@@ -107,7 +107,7 @@ core is the piece they both presuppose and neither specifies.
 Market-agnostic and mode-agnostic at the architecture level: both shells use the
 C0-C4 procedure, but each shell owns which acts are pre-seal input assembly,
 which are inside an isolated judgment, and which occur after resolution. In
-backtest mode, only the JSG-06 sealed judgment surface is isolated; C1 admission
+backtest mode, only the JSG-06 sealed judgment surface is isolated; the C1 allow step
 and any C2(c) ledger / lesson lookup complete before the child run and are not
 live-read by it. Every run must emit a **reasoning trace** (the JSG-06 /
 decision-object `reasoning_trace` analog, required per conductor addendum v1 R4)
@@ -117,12 +117,12 @@ so contamination can be tell-audited and lessons extracted.
   boundary: "Decision Frame remains the required starting point") — made explicit
   here, consistent with the buyer-proof memo opening (decision question + live
   trigger) and the far-half decision-object `frame`.
-- **C1 — Admit.** Apply the **Demand-Substrate Hard Gate** (≥2 independent venue
+- **C1 — Allow.** Apply the **Demand-Substrate Hard Gate** (≥2 independent venue
   families; costly-behavior anchor; integrity labels per venue). Fail →
   disqualify/hold. The core **routes to** the gate (owned by the buyer-proof
   packet); it does not restate it, and does not reopen the ratified gate
   decisions.
-- **C2 — Weight.** Over admitted signals: **(a) de-correlate** shared-origin
+- **C2 — Weight.** Over allowed signals: **(a) de-correlate** shared-origin
   signals via `derived_from` (independence is the truth-amount, not volume);
   **(b) map divergence** via `diverges_from` (cross-venue disagreement is signal);
   **(c) weight per decision-family** by reading the **signal-reliability ledger**
@@ -133,10 +133,17 @@ so contamination can be tell-audited and lessons extracted.
   is **qualitative, LLM-in-session, explained** — see INV-1.
   *(`derived_from`/`diverges_from` semantics are owned by the dispatched
   ontology-backbone commission, currently branch-only — confirm on adoption.)*
-- **C3 — Verdict + Action Ceiling.** Emit the durable-vs-hollow verdict and the
-  ceiling: **act / phase / narrow / hold / defend**. The ceiling is capped by the
-  weakest load-bearing evidence — costly behavior can reach Commit-grade;
-  engagement volume alone caps lower (buyer-proof rule).
+- **C3 — Verdict + Action Ceiling.** Emit the **demand-state verdict** on main's
+  two-axis model — **durable / transient** (persistence), given **real** (not
+  manufactured) — and the action ceiling **matched to the demand's lifespan**:
+  **act / phase / narrow / hold / defend** (long-horizon *commit* vs short-horizon
+  *move*). The ceiling is capped by the weakest load-bearing evidence — costly
+  behavior can reach Commit-grade; engagement volume alone caps lower (buyer-proof
+  rule). **Persistence-axis** risk patterns (resale/flip, event/one-time,
+  scarcity/panic) are classified **here** as transient, not capped at C2 (their
+  discriminator families arrive from C2 Rule 3); **manufactured-axis** integrity
+  defeaters are handled upstream at C2 (Rule 3) + the C1 gate. ("Hollow" is retired
+  per main #78: it conflated transient with manufactured.)
 - **C4 — Counterfactual.** "What evidence would let us decide better — what would
   change the answer?" (the buyer-proof memo's names-what-would-change line; the
   source of `assumptions` / `kill_or_adjust_triggers` for the live shell).
@@ -246,7 +253,7 @@ far-half (live) shells; this object adds only the **core** on that axis. The
 Classification, Decision Strength, Action Ceiling). The signal-reliability ledger
 and validated-lesson library are **Outcome Memory** (production + storage); the
 core only **consumes** them at C2 — Judgment Spine "must not own … deck
-production." Admission (C1) routes to the buyer-proof gate.
+production." The C1 allow step routes to the buyer-proof gate.
 
 ## Invariants Later Work Must Preserve
 
@@ -342,6 +349,39 @@ lane held no overlapping architecture).
   prompt (`derived_from`/`diverges_from`) is branch-only, not on `origin/main` —
   link semantics used per the handoff, confirm on adoption; the demand-gate
   closures proposal (P2/P3/P4) is untracked/branch-only — consumed, not reopened.
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Demand-read CORE C1 step renamed Admit -> Allow (and its derived object
+    "admitted signal" -> "allowed signal") to remove the confess/concede ambiguity;
+    the C1 admissibility GATE concept (Demand-Substrate Hard Gate, ratified G1/G2)
+    is unchanged. C3 verdict re-grounded onto main's two-axis model (durable /
+    transient + real / manufactured): "durable-vs-hollow" retired (main #78);
+    persistence-axis risk patterns are classified transient at C3 (not capped at
+    C2), receiving discriminator families from C2 Rule 3.
+  trigger: architecture_doctrine
+  related_triggers:
+    - product_doctrine
+  controlling_sources_updated:
+    - docs/product/judgment_spine/judgment_spine_demand_read_machinery_architecture_v0.md
+    - docs/product/judgment_spine/judgment_spine_c2_ledger_read_contract_v0.md
+  downstream_surfaces_checked:
+    - docs/product/product_lead/orca_demand_read_taxonomy_v0.md   # already two-axis; "hollow" hits are the retirement explanation, kept
+  intentionally_not_updated:
+    - path: "C2 admits ... lessons" (DRP-02 line), "admission inputs" (ratified gate), "admissible at C2" (permissible)
+      reason: lesson-admission and gate-admissibility are distinct from the C1 demand-signal step; the rename targets the C1 step verb + its "admitted signal" object only.
+  stale_language_search: >
+    rg -i "admit|admitt|admiss|hollow" on the two edited docs (2026-06-15): no "C1
+    Admit", no "admitted signal", no live "durable-vs-hollow"; residuals are all
+    intended-keep (lesson-admission, gate-admissibility, retirement explanation).
+  non_claims:
+    - not validation
+    - not readiness
+    - not a live fold to origin/main (per-lane PR pending)
+```
 
 ## Non-Claims
 
