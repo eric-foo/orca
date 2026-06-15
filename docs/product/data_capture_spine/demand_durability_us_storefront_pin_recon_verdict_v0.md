@@ -1,5 +1,29 @@
 # Demand Durability — US Storefront Pin Recon Verdict
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Recon verdict (INV-1 observed facts + limitations; GO verdict for US storefront pin via CloakBrowser delivery-zip widget)
+scope: >
+  Records the single-probe recon outcome for the demand-durability US storefront pin commission:
+  whether a stateful CloakBrowser session (clean local IP, no proxy, humanize=True) can set a US
+  delivery ZIP via amazon.com's public homepage widget and receive USD prices on a subsequent PDP
+  without triggering a bot gate. Covers confirmed selectors, measured ToS posture, honest
+  limitations, and what was built. No demand verdict, no scoring.
+authority_boundary: retrieval_only
+use_when:
+  - Loading context before running live Amazon US storefront capture slots
+  - Assessing whether PR #161 (access_failed detection) must land before Amazon slots run
+  - Reviewing the declared_delivery_zip limitation note or delivery_zip_requested metadata field
+stale_if:
+  - Amazon delivery location widget DOM selectors change (check #nav-global-location-popover-link, #GLUXZipUpdateInput, #GLUXZipUpdate)
+  - CloakBrowser version changes materially (current: 0.3.31)
+  - A subsequent probe shows bot-interstitial on clean-IP homepage (verdict degrades to NO-GO)
+open_next:
+  - docs/product/data_capture_spine/demand_durability_multi_retailer_rendered_capture_spec_v0.md
+  - docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md
+  - orca-harness/source_capture/adapters/cloakbrowser_snapshot.py
+```
+
 **Status:** `RECON_VERDICT_GO`
 **Date:** 2026-06-16
 **INV-1:** Observed facts + measured limitations only. No demand verdict, no scoring.
