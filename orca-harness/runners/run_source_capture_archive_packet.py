@@ -156,7 +156,11 @@ def run_source_capture_archive_packet(
         )
 
         body_file_ids: list[str] = []
-        if isinstance(capture.body_result, DirectHttpCaptureSuccess):
+        # G-002: a verification-failed (e.g. served-time-leak) body is NOT preserved as
+        # addressable content -- it must not survive as a usable preserved file a downstream
+        # body consumer could pick up; the leak survives only as a limitation + attempt_failed
+        # posture (the served ts is named in the limitation).
+        if isinstance(capture.body_result, DirectHttpCaptureSuccess) and not _body_verification_failed(capture):
             body_path = staging_parent / "archive_snapshot_body.bin"
             body_metadata_path = staging_parent / "archive_snapshot_body_metadata.json"
             if body_path.exists() or body_metadata_path.exists():

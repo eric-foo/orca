@@ -702,11 +702,15 @@ def _body_success_for(final_url: str) -> DirectHttpCaptureSuccess:
     )
 
 
+_ARCHIVE_BASE = "https://web.archive.org/web"
+
+
 def test_verify_archive_body_clean_pre_cutoff_passes() -> None:
     v = archive_org.verify_archive_body(
-        body_result=_body_success_for("https://web.archive.org/web/20230101000000/https://example.com/p"),
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230101000000/https://example.com/p"),
         requested_original_url="https://example.com/p",
         cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
     )
     assert v is not None and v.ok
     assert v.served_timestamp == "20230101000000"
@@ -716,31 +720,69 @@ def test_verify_archive_body_clean_pre_cutoff_passes() -> None:
 def test_verify_archive_body_served_time_leak_fails() -> None:
     # Selection said pre-cutoff, but the SERVED snapshot (final_url after a 302) is post-cutoff.
     v = archive_org.verify_archive_body(
-        body_result=_body_success_for("https://web.archive.org/web/20230912135629/https://example.com/p"),
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230912135629/https://example.com/p"),
         requested_original_url="https://example.com/p",
         cutoff_timestamp="20230101000000",
+        snapshot_base_url=_ARCHIVE_BASE,
     )
     assert v is not None and not v.ok
     assert v.served_timestamp == "20230912135629"
     assert "served_time_leak" in (v.reason or "")
 
 
-def test_verify_archive_body_url_identity_mismatch_fails() -> None:
+def test_verify_archive_body_equal_timestamp_boundary_passes() -> None:
+    # served == cutoff is NOT a leak: the line is <= cutoff.
     v = archive_org.verify_archive_body(
-        body_result=_body_success_for("https://web.archive.org/web/20230101000000/https://evil.example/other"),
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230601000000/https://example.com/p"),
         requested_original_url="https://example.com/p",
         cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
+    )
+    assert v is not None and v.ok and v.served_timestamp == "20230601000000"
+
+
+def test_verify_archive_body_tolerates_wayback_replay_modifier() -> None:
+    # G-001: a clean pre-cutoff body served via an id_/if_ replay modifier must NOT false-fail.
+    v = archive_org.verify_archive_body(
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230101000000id_/https://example.com/p"),
+        requested_original_url="https://example.com/p",
+        cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
+    )
+    assert v is not None and v.ok
+    assert v.served_timestamp == "20230101000000"
+
+
+def test_verify_archive_body_off_archive_host_fails() -> None:
+    # G-001: an off-archive redirect that mimics the /web/<ts>/<url> shape must NOT false-pass.
+    v = archive_org.verify_archive_body(
+        body_result=_body_success_for("https://evil.example/web/20230101000000/https://example.com/p"),
+        requested_original_url="https://example.com/p",
+        cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
+    )
+    assert v is not None and not v.ok
+    assert "served_off_archive_host" in (v.reason or "")
+
+
+def test_verify_archive_body_url_identity_mismatch_fails() -> None:
+    v = archive_org.verify_archive_body(
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230101000000/https://evil.example/other"),
+        requested_original_url="https://example.com/p",
+        cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
     )
     assert v is not None and not v.ok
     assert "served_url_identity_mismatch" in (v.reason or "")
 
 
 def test_verify_archive_body_unparseable_served_time_with_cutoff_fails() -> None:
-    # No /web/<14-digit>/ in final_url + a cutoff set -> unverifiable is a FAILURE, not a pass.
+    # On-host but no parseable 14-digit ts + a cutoff set -> unverifiable is a FAILURE, not a pass.
     v = archive_org.verify_archive_body(
-        body_result=_body_success_for("https://example.com/not-a-wayback-url"),
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/garbage/https://example.com/p"),
         requested_original_url="https://example.com/p",
         cutoff_timestamp="20230601000000",
+        snapshot_base_url=_ARCHIVE_BASE,
     )
     assert v is not None and not v.ok
     assert v.served_timestamp is None
@@ -748,12 +790,14 @@ def test_verify_archive_body_unparseable_served_time_with_cutoff_fails() -> None
 
 
 def test_verify_archive_body_no_cutoff_does_not_leak_check() -> None:
+    # No cutoff -> no leak check; an on-host parseable body passes and records its served ts.
     v = archive_org.verify_archive_body(
-        body_result=_body_success_for("https://example.com/not-a-wayback-url"),
+        body_result=_body_success_for(f"{_ARCHIVE_BASE}/20230101000000/https://example.com/p"),
         requested_original_url="https://example.com/p",
         cutoff_timestamp=None,
+        snapshot_base_url=_ARCHIVE_BASE,
     )
-    assert v is not None and v.ok and v.served_timestamp is None
+    assert v is not None and v.ok and v.served_timestamp == "20230101000000"
 
 
 def test_verify_archive_body_none_when_no_preserved_body() -> None:
@@ -762,11 +806,12 @@ def test_verify_archive_body_none_when_no_preserved_body() -> None:
             body_result=None,
             requested_original_url="https://example.com/p",
             cutoff_timestamp="20230601000000",
+            snapshot_base_url=_ARCHIVE_BASE,
         )
         is None
     )
     failure = DirectHttpCaptureFailure(
-        requested_url="https://web.archive.org/web/20230101000000/https://example.com/p",
+        requested_url=f"{_ARCHIVE_BASE}/20230101000000/https://example.com/p",
         failure_kind=DirectHttpCaptureFailureKind.NO_BODY,
         message="HTTP 503 empty body",
         status=503,
@@ -776,6 +821,7 @@ def test_verify_archive_body_none_when_no_preserved_body() -> None:
             body_result=failure,
             requested_original_url="https://example.com/p",
             cutoff_timestamp="20230601000000",
+            snapshot_base_url=_ARCHIVE_BASE,
         )
         is None
     )
@@ -804,8 +850,11 @@ def test_archive_runner_flags_served_time_leak_as_not_decision_grade(
     body_slice = manifest["source_slices"][1]
     assert body_slice["slice_id"] == "archive_snapshot_body"
     assert body_slice["archive_history_posture"]["value"] == "attempt_failed"
-    # honest preservation: the leaked body bytes stay preserved, just flagged not-clean.
-    assert body_slice["preserved_file_ids"] == ["file_02", "file_03"]
+    # G-002: the leaked post-cutoff body is NOT preserved as addressable content -- only the
+    # availability metadata (file_01) survives; the served ts lives in the leak limitation.
+    assert body_slice["preserved_file_ids"] == []
+    assert len(manifest["preserved_files"]) == 1
+    assert not (output_dir / "raw" / "02_archive_snapshot_body.bin").exists()
     _assert_receipt_non_claims(output_dir)
 
 

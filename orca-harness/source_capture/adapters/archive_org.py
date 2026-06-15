@@ -144,6 +144,7 @@ def fetch_archive_org_capture(
             body_result=body_result,
             requested_original_url=selected_snapshot.original_url,
             cutoff_timestamp=cutoff_timestamp,
+            snapshot_base_url=snapshot_base_url,
         )
 
     return ArchiveOrgCaptureSuccess(
@@ -158,7 +159,11 @@ def fetch_archive_org_capture(
     )
 
 
-_SERVED_SNAPSHOT_RE = re.compile(r"/web/(\d{14})/(.+)$")
+# Wayback replay form after the archive base: <14-digit ts>[<2-3 char modifier>_]/<original_url>.
+# The optional modifier (id_, if_, im_, cs_, js_, ...) must be tolerated or a clean modifier
+# replay false-fails (G-001); anchoring to the archive base (below) stops an off-archive
+# redirect that merely mimics the /web/<ts>/<url> shape from false-passing (G-001).
+_SERVED_SNAPSHOT_RE = re.compile(r"^(\d{14})(?:[a-z]{2,3}_)?/(.+)$")
 
 
 def verify_archive_body(
@@ -166,17 +171,29 @@ def verify_archive_body(
     body_result: DirectHttpCaptureSuccess | DirectHttpCaptureFailure | None,
     requested_original_url: str,
     cutoff_timestamp: str | None,
+    snapshot_base_url: str = DEFAULT_SNAPSHOT_BASE_URL,
 ) -> ArchiveBodyVerification | None:
     # Slice G -- served-time no-lookahead guard. select_snapshot's selection-time
     # <=cutoff check cannot see that Wayback may 302 a pre-cutoff request to a
     # POST-cutoff capture; this verifies the SERVED snapshot (parsed from the
-    # post-redirect final_url) is <=cutoff and still addresses the requested
-    # original URL. A served-time violation, an identity drift, or -- when a cutoff
-    # is set -- an unparseable served time is a verification FAILURE, never a silent
-    # pass. Content-integrity checks (soft-404 / charset) are a separate deferred slice.
+    # post-redirect final_url) came from the expected archive host, is <=cutoff,
+    # and still addresses the requested original URL. An off-archive host, a
+    # served-time violation, an identity drift, or -- when a cutoff is set -- an
+    # unparseable served time is a verification FAILURE, never a silent pass.
+    # Content-integrity checks (soft-404 / charset) are a separate deferred slice.
     if not isinstance(body_result, DirectHttpCaptureSuccess):
         return None  # no preserved body to verify; body-not-preserved is handled elsewhere
-    match = _SERVED_SNAPSHOT_RE.search(body_result.final_url)
+    base_prefix = snapshot_base_url.rstrip("/") + "/"
+    if not body_result.final_url.startswith(base_prefix):
+        return ArchiveBodyVerification(
+            ok=False,
+            served_timestamp=None,
+            reason=(
+                f"served_off_archive_host: final_url {body_result.final_url!r} is not under the "
+                f"expected archive base {base_prefix!r}"
+            ),
+        )
+    match = _SERVED_SNAPSHOT_RE.match(body_result.final_url[len(base_prefix):])
     if match is None:
         if cutoff_timestamp is None:
             return ArchiveBodyVerification(ok=True, served_timestamp=None)
@@ -185,7 +202,7 @@ def verify_archive_body(
             served_timestamp=None,
             reason=(
                 "served_time_unverifiable: could not parse a 14-digit served snapshot "
-                f"timestamp from final_url {body_result.final_url!r}"
+                f"timestamp from archive replay URL {body_result.final_url!r}"
             ),
         )
     served_timestamp, served_original_url = match.group(1), match.group(2)
