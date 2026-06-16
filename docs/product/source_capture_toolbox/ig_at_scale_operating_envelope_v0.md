@@ -6,8 +6,9 @@ artifact_role: Product artifact — IG at-scale capture operating-envelope recom
 scope: >
   Sizes the beauty-vertical IG capture operating envelope from the current per-IP, pace-bound R
   evidence: proxy cost/benefit as a fallback, human-like cadence/scroll posture beyond bounded_jitter,
-  and the ideal operating-account/IP count. Does not authorize live capture, proxy purchase,
-  session/cookie wiring, scheduler/runtime work, or commercial-scale collection.
+  the ideal operating-account/IP count, and the owner-selected two-lane serious-v0 path for
+  1,000 beauty creators. Does not authorize live capture, proxy purchase, session/cookie wiring,
+  scheduler/runtime work, network configuration, or commercial-scale collection.
 use_when:
   - Deciding whether the current beauty-vertical IG capture lane needs proxies, more operating accounts, or only pace discipline.
   - Translating the IG R-probe result into bounded monitoring-session defaults.
@@ -28,8 +29,9 @@ stale_if:
 ## Status
 
 `OPERATING_ENVELOPE_V0 — preliminary, costed fallback; not authorization.` This uses the current
-R-probe evidence and a 2026-06-16 proxy-pricing spot check. It is not validation, readiness,
-commercial authorization, a live-run instruction, a proxy-purchase approval, or a runner build spec.
+R-probe evidence, a 2026-06-16 proxy-pricing spot check, and the 2026-06-16 branch-lane closeout
+for the second-egress operating posture. It is not validation, readiness, commercial authorization,
+a live-run instruction, a proxy-purchase approval, a network-setup instruction, or a runner build spec.
 
 ## Source basis
 
@@ -56,20 +58,43 @@ External pricing spot-check (current enough for a v0 estimate; verify before spe
 
 ## Bottom line
 
-Do **not** buy proxies or add accounts for the current beauty-vertical IG monitoring posture.
+Do **not** buy proxies or add IG accounts for the current beauty-vertical IG monitoring posture.
 
 The live constraint is per-egress-IP **pace**, not account count and not ordinary session volume.
-Operate one logged-out egress path at the owner-adopted 2.5-4s minimum spacing, in bounded,
-human-initiated/self-terminating sessions. Add proxy/IP capacity only after a measured trigger:
-repeated blocks at compliant pace after a long fully-quiet cooldown, or a roster/cadence demand that
-cannot fit into acceptable bounded sessions on one egress.
+Operate logged-out egress paths at bounded human-paced spacing, in bounded,
+human-initiated/self-terminating sessions. For the owner-selected **1,000 creator serious v0**,
+the smallest reliable operating path is now:
+
+- **Lane 1:** main laptop on home fibre/home internet.
+- **Lane 2:** second laptop on phone USB tether or other mobile-data upstream.
+- **Do not use a VM for the two-lane setup.** A separate physical laptop plus mobile-data egress is
+  cleaner. Defer VM use until a third distinct egress lane is actually needed.
+- **Do not treat a second laptop on the same home Wi-Fi/fibre as lane 2.** It is the same public egress.
+- **Do not rotate per request.** Assign creators/due buckets to stable lanes.
 
 The ideal operating-account count for the current logged-out path is therefore:
 
-- **Current default:** 1 operating context / egress path; no logged-in/session account used.
-- **Fallback start:** 2 distinct `(operating context, egress IP)` pairs only after the trigger above.
+- **Small/default exploratory posture:** 1 operating context / egress path; no logged-in/session
+  account used.
+- **Current serious-v0 posture:** 2 distinct logged-out egress lanes for the 1,000 creator plan,
+  only after non-IG isolation checks confirm different public IP/provider paths.
+- **Fallback expansion:** a third distinct egress lane only if measured demand cannot fit the
+  two-lane window or repeated compliant-pace blocks persist after fully quiet cooldown.
 - **Ceiling discipline:** stay within the carve-out's start-<=5, cap-<=10 operating-account ceiling;
   never run multiple accounts on one egress and count that as throughput.
+
+## 1,000-Creator Serious-v0 Working Envelope
+
+Use observed rate and target rate separately:
+
+| Basis | Per lane | Two lanes | 3,500 modeled requests/day |
+| --- | ---: | ---: | ---: |
+| Observed clean run | ~285 modeled requests/hour/IP | ~570/hour aggregate | ~6.1 aggregate hours |
+| Next target to test | ~400 modeled requests/hour/IP at ~9s/request | ~800/hour aggregate | ~4.4 aggregate hours |
+
+The 9s/request figure is a planning target, not a validated safe rate. The observed clean evidence
+remains ~176 modeled requests over 37 minutes, or about 285 modeled requests/hour/IP. Use the
+two-lane plan to make the daily window comfortable, not to justify sub-2s behavior or evasion.
 
 ## Proxy Cost / Benefit
 
@@ -116,6 +141,7 @@ treat proxy cost as a sensitivity:
 | --- | --- | --- | --- |
 | M=200 illustrative vertical | ~308 modeled IG-requests/day | ~9 GB/month | ~$32-$65/month |
 | M=1000 illustrative vertical | ~1540 modeled IG-requests/day | ~46 GB/month | ~$160-$323/month |
+| 1,000 serious-v0 IG plan | ~2,800-3,500 modeled IG-requests/day | ~82-103 GB/month | ~$287-$721/month |
 
 If actual browser transfer averages 5 MB/request, multiply those dollar ranges by 5. This still makes
 proxy spend a fallback operating cost, not the current bottleneck: the current bottleneck is avoiding
@@ -130,7 +156,8 @@ Default session posture:
 
 - Human-initiated, bounded, self-terminating session; no standing crawler.
 - Due-list only for passive monitoring; no discovery during passive sessions.
-- One egress path by default; no concurrent multi-egress run unless the fallback trigger is met.
+- One egress path for exploratory/default work; two stable egress lanes for the current 1,000 creator
+  serious-v0 plan after non-IG isolation checks pass.
 - Hard floor: never sub-2s; operating target: 2.5-4s minimum spacing with longer natural gaps.
 - Abort on any login redirect, 429-like interstitial, or network-security block; then fully quiet,
   not periodic probing.
@@ -159,14 +186,35 @@ The account count question should be answered as egress math, not social-account
 
 | Scenario | Ideal count | Reason |
 | --- | --- | --- |
-| Current logged-out monitoring | 1 egress path; no session account | R is per IP; extra accounts on one IP add zero throughput. |
-| First fallback after measured compliant-pace blocks | 2 distinct egress paths | Tests whether capacity is additive without burning the <=5 starting envelope. |
+| Exploratory/default logged-out monitoring | 1 egress path; no session account | R is per IP; extra accounts on one IP add zero throughput. |
+| Current 1,000 creator serious-v0 path | 2 distinct egress paths; no session accounts | Keeps the daily monitoring window operationally comfortable without accounts, proxies, or VM complexity. |
+| First fallback after two-lane measured compliant-pace blocks | 3 distinct egress paths | Tests whether capacity is additive without burning the <=5 starting envelope. |
 | Larger fallback if one-IP session windows cannot fit roster demand | `ceil(demand / observed_per_ip_R)` distinct egress paths, capped by owner posture | Add IPs only from measured demand; do not pre-buy capacity. |
 | Session/account runtime | 0, unless owner amends carve-out | Current lane forbids cookies/sessions in committed runner paths. |
 
 Do not use the full <=10 cap as a target. It is a ceiling for risk control, not an operating goal.
 The right number is the smallest number of distinct egress paths that keeps compliant-pace sessions
 inside the intended monitoring window.
+
+## Lane-2 Setup Decision
+
+The current lane-2 operating decision is:
+
+```text
+lane_1 = main_laptop + home_fibre
+lane_2 = second_laptop + phone_usb_tether_or_mobile_data
+vm = deferred_until_third_distinct_egress_needed
+```
+
+Before any future IG work, run only non-IG isolation checks:
+
+1. Compare public IP/provider on both laptops using a plain IP checker.
+2. Confirm the second laptop loses internet when the phone tether/mobile upstream is disconnected.
+3. Confirm the second laptop does not silently rejoin home Wi-Fi.
+4. Confirm the phone is on mobile data, not home Wi-Fi.
+
+Passing these checks would prove only network separation, not IG safety, readiness, validation,
+or authorization to capture.
 
 ## Open Measurements
 
@@ -177,10 +225,13 @@ inside the intended monitoring window.
 - Throttle decay time remains unpinned; evidence says longer than the prior "minutes" assumption and
   not cleared by the retry pattern.
 - Average bytes per IG-request equivalent is unmeasured; needed for proxy cost precision.
+- 9s/request has not been validated; it is the next planning/probe target only.
+- The second-laptop/mobile-data lane has not been isolation-tested in this repo lane.
 
 ## Non-Claims
 
 Not validation, readiness, buyer proof, legal advice, commercial authorization, proxy-purchase
-approval, session/cookie authorization, anti-detect implementation, CAPTCHA solving, scheduler
-runtime, production deployment, ECR, Cleaning, Judgment, or projection acceptance. Price examples are
-a dated spot check only; verify provider pages and acceptable-use terms before any spend.
+approval, network-setup approval, session/cookie authorization, anti-detect implementation, CAPTCHA
+solving, scheduler runtime, production deployment, ECR, Cleaning, Judgment, or projection acceptance.
+Price examples are a dated spot check only; verify provider pages and acceptable-use terms before
+any spend.
