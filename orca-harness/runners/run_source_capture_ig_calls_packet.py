@@ -46,6 +46,7 @@ from source_capture.adapters.browser_snapshot import (
     DEFAULT_TIMEOUT_SECONDS,
     DEFAULT_VIEWPORT_HEIGHT,
     DEFAULT_VIEWPORT_WIDTH,
+    BrowserSnapshotFailureKind,
 )
 from source_capture.cadence import build_cadence_plan
 from source_capture.ig_momentum_harvest import (
@@ -110,17 +111,40 @@ def _detect_ig_block(*, final_url: str, title: str | None, visible_text: str, re
     return None
 
 
+DEFAULT_CAPTURE_RETRY_BACKOFF_SECONDS = 2.5
+
+# Transient capture failures worth retrying. A successful-but-BLOCKED page (login
+# redirect / 429) is NOT a BrowserSnapshotFailure -- it is handled by the caller's
+# _detect_ig_block and is deliberately never retried here (retrying a wall only
+# deepens the throttle).
+_RETRYABLE_CAPTURE_FAILURES = frozenset({
+    BrowserSnapshotFailureKind.TIMEOUT,
+    BrowserSnapshotFailureKind.CAPTURE_FAILED,
+})
+
+
 def _capture_one(url: str, *, scroll_passes: int, timeout_seconds: float, viewport_width: int,
-                 viewport_height: int, max_artifact_bytes: int):
-    return fetch_browser_snapshot_capture(
-        url=url,
-        timeout_seconds=timeout_seconds,
-        wait_until="load",
-        viewport_width=viewport_width,
-        viewport_height=viewport_height,
-        max_artifact_bytes=max_artifact_bytes,
-        scroll_passes=scroll_passes,
-    )
+                 viewport_height: int, max_artifact_bytes: int,
+                 max_attempts: int = 1, retry_backoff_seconds: float = 0.0,
+                 sleep_fn: Callable[[float], None] = time.sleep):
+    attempt = 0
+    while True:
+        attempt += 1
+        result = fetch_browser_snapshot_capture(
+            url=url,
+            timeout_seconds=timeout_seconds,
+            wait_until="load",
+            viewport_width=viewport_width,
+            viewport_height=viewport_height,
+            max_artifact_bytes=max_artifact_bytes,
+            scroll_passes=scroll_passes,
+        )
+        if not isinstance(result, BrowserSnapshotFailure):
+            return result
+        if result.failure_kind not in _RETRYABLE_CAPTURE_FAILURES or attempt >= max_attempts:
+            return result
+        if retry_backoff_seconds > 0:
+            sleep_fn(retry_backoff_seconds * attempt)  # linear backoff
 
 
 def _profile_handle_from_url(profile_url: str) -> str | None:
@@ -309,6 +333,8 @@ def run_source_capture_ig_calls_packet(
     capture_view_counts: bool = True,
     view_count_max_graphql_pages: int = DEFAULT_VIEW_COUNT_MAX_GRAPHQL_PAGES,
     xhr_request_gap_seconds: float = DEFAULT_XHR_REQUEST_GAP_SECONDS,
+    capture_retries: int = 0,
+    capture_retry_backoff_seconds: float = DEFAULT_CAPTURE_RETRY_BACKOFF_SECONDS,
     capture_context: str = "logged-out IG wind-caller calls capture (no session); one bounded account, recent calls",
     operator_category: str = "ig_calls_browser_snapshot_cli_operator",
     session_id: str | None = None,
@@ -326,6 +352,7 @@ def run_source_capture_ig_calls_packet(
     profile = _capture_one(
         profile_url, scroll_passes=profile_scroll_passes, timeout_seconds=timeout_seconds,
         viewport_width=viewport_width, viewport_height=viewport_height, max_artifact_bytes=max_artifact_bytes,
+        max_attempts=capture_retries + 1, retry_backoff_seconds=capture_retry_backoff_seconds, sleep_fn=sleep_fn,
     )
     if isinstance(profile, BrowserSnapshotFailure):
         return 3, f"profile capture failed: {profile.message}"
@@ -379,6 +406,7 @@ def run_source_capture_ig_calls_packet(
         item = _capture_one(
             url, scroll_passes=0, timeout_seconds=timeout_seconds, viewport_width=viewport_width,
             viewport_height=viewport_height, max_artifact_bytes=max_artifact_bytes,
+            max_attempts=capture_retries + 1, retry_backoff_seconds=capture_retry_backoff_seconds, sleep_fn=sleep_fn,
         )
         if isinstance(item, BrowserSnapshotFailure):
             item_records.append({"url": url, "status": "capture_failed", "message": item.message})
@@ -677,6 +705,9 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-view-counts", action="store_true")
     parser.add_argument("--view-count-max-graphql-pages", type=int, default=DEFAULT_VIEW_COUNT_MAX_GRAPHQL_PAGES)
     parser.add_argument("--xhr-request-gap-seconds", type=float, default=DEFAULT_XHR_REQUEST_GAP_SECONDS)
+    parser.add_argument("--capture-retries", type=int, default=0,
+                        help="extra retries for a TRANSIENT capture failure (timeout/capture_failed); never retries a block")
+    parser.add_argument("--capture-retry-backoff-seconds", type=float, default=DEFAULT_CAPTURE_RETRY_BACKOFF_SECONDS)
     parser.add_argument("--session-id", default=None)
     parser.add_argument("--warning", action="append", default=[])
     parser.add_argument("--limitation", action="append", default=[])
@@ -702,6 +733,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             capture_view_counts=not args.skip_view_counts,
             view_count_max_graphql_pages=args.view_count_max_graphql_pages,
             xhr_request_gap_seconds=args.xhr_request_gap_seconds,
+            capture_retries=args.capture_retries,
+            capture_retry_backoff_seconds=args.capture_retry_backoff_seconds,
             session_id=args.session_id,
             warnings=args.warning,
             limitations=args.limitation,
