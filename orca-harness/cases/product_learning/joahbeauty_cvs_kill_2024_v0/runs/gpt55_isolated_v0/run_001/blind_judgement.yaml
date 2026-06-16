@@ -1,0 +1,95 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; no post-cutoff information recalled.
+case_id: joahbeauty_cvs_kill_2024_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: Floor is active because the DTC signals do not justify abstention or
+    immediate retreat. Ceiling is limited because the missing CVS data prevents a
+    confident expand-or-exit call.
+contestant_id: gpt55_isolated_v0
+decision_shape: action_band
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: CVS-specific performance evidence is absent, making any channel-exit
+    recommendation low-confidence.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+  - E11
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: The homepage trajectory and about page indicate ongoing DTC brand investment
+    and maintained K-beauty/accessibility messaging near the cutoff, not visible brand
+    abandonment.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+- claim_id: C3
+  claim_role: supporting
+  claim_text: The catalog, collections, bundles, affiliate, and blog/news pages indicate
+    a still-operating DTC merchandising and acquisition system.
+  evidence_unit_ids:
+  - E5
+  - E6
+  - E8
+  - E10
+  - E11
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: The LA pop-up page shows investment in experiential, non-CVS retail
+    activation roughly six weeks before cutoff.
+  evidence_unit_ids:
+  - E7
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E10
+  - E11
+  statement: Active DTC brand investment is sufficient to avoid a CVS wind-down unless
+    direct CVS performance data shows the channel is economically failing.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: 8CC511DF1EC7E0434F719D4A7590410F535C6623CE74352B44432803B2AC638A
+recommended_action:
+  action_label: Maintain CVS, pause expansion
+  ladder_level: 2
+  rationale: 'The packet does not contain CVS sell-through, velocity, reorder, markdown,
+    or door-level data, so a channel-exit recommendation would rest on an unsupported
+    inference. The DTC-side evidence instead points to an active brand near the cutoff:
+    repeated homepage snapshots, a live brand-story page, catalog and collection pages,
+    bundles, affiliate acquisition, blog/news presence, and an LA pop-up. The LA pop-up
+    suggests Joah was investing experiential retail energy outside CVS, but that supports
+    channel diversification more than killing the CVS footprint. The best bounded
+    action is to maintain the CVS commitment while pausing expansion and using the
+    next decision gate to obtain retail performance data before any wind-down.'
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

@@ -21,15 +21,16 @@ This is a by-hand product-learning exercise that **uses** the harness; it is not
 a judgment-quality run. Specifically:
 
 - Contestant isolation was **instructed/attested**, not structurally proven
-  (sub-agent with `tool_uses=0` for the Claude run; external runs not yet
-  completed).
+  (sub-agent with `tool_uses=0` for the Claude run; Codex CLI `gpt-5.5`
+  external run recorded with no tool-like events observed in the JSONL
+  transcript; Grok 4 and Gemini not yet completed).
 - The scorer's `memorization_probe_result` is hardcoded `not_run`; no JSG-05
   gate was applicable (no known fame risk for this brand/case).
 - The frozen band inputs were facilitator-set and owner-ratified, not
   independently derived.
 
-No JSG gate is cleared or advanced by this record. External contestant runs
-(GPT, Grok, Gemini) are not yet complete; this record covers the Claude run only.
+No JSG gate is cleared or advanced by this record. The GPT-5.5 external run is
+now recorded; Grok 4 and Gemini are not yet complete.
 
 ## 2. Exam setup
 
@@ -55,6 +56,7 @@ No JSG gate is cleared or advanced by this record. External contestant runs
 | contestant | vendor / family | call | vs band [3,4] | recognition (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic | **3** | in-band (floor) | not recorded | sub-agent, `tool_uses=0` | `01KV69RP7C2P278W8RM0MGQ8CD` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **3** | in-band (floor) | no; did not recall post-cutoff information | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKN168FJF3STPVVWHQRVS` |
 
 The Claude run passed evidence-id presence, pre-decision status checks, and
 must-address coverage (MA-01…MA-03). However, `load_bearing_claim_citation_pass`
@@ -64,6 +66,9 @@ failure is a discipline defect, not an in-band/out-of-band result.
 
 The contestant reported `decision_shape: ceiling_trap`, correctly matching the
 harness-computed `band_status: normal` (ceiling_trap shape).
+
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. No failure events were logged.
 
 ## 4. Observations (stated as observed; no prescription)
 
@@ -81,8 +86,8 @@ harness-computed `band_status: normal` (ceiling_trap shape).
 
 ## 5. What remains unproven / open
 
-- **Cross-vendor comparison** is not yet available (GPT, Grok, Gemini runs not
-  submitted).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok
+  4 and Gemini are not submitted.
 - **Load-bearing citation discipline.** Whether the citation failure reflects a
   model-specific pattern or case-specific evidence sparsity is not determined.
 - **Band ceiling [4] as ceiling_trap floor [3].** A ceiling-trap band provides

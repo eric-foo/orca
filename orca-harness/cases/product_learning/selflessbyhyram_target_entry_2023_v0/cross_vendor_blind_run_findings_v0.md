@@ -21,8 +21,9 @@ This is a by-hand product-learning exercise that **uses** the harness; it is not
 a judgment-quality run. Specifically:
 
 - Contestant isolation was **instructed/attested**, not structurally proven
-  (sub-agent with `tool_uses=0` for the Claude run; external runs not yet
-  completed).
+  (sub-agent with `tool_uses=0` for the Claude run; Codex CLI `gpt-5.5`
+  external run recorded with no tool-like events observed in the JSONL
+  transcript; Grok 4 and Gemini not yet completed).
 - The scorer's `memorization_probe_result` is hardcoded `not_run`. This case
   carries `known_fame_risk: high_fame_beauty_influencer_skincare_brand` and
   `memorization_probe_required: true` in the ledger (JSG-05). The memorization
@@ -32,8 +33,8 @@ a judgment-quality run. Specifically:
 - The frozen band inputs were facilitator-set and owner-ratified, not
   independently derived.
 
-No JSG gate is cleared or advanced by this record. External contestant runs
-(GPT, Grok, Gemini) are not yet complete; this record covers the Claude run only.
+No JSG gate is cleared or advanced by this record. The GPT-5.5 external run is
+now recorded; Grok 4 and Gemini are not yet complete.
 
 ## 2. Exam setup
 
@@ -58,10 +59,14 @@ No JSG gate is cleared or advanced by this record. External contestant runs
 | contestant | vendor / family | call | vs band [3,4] | jsg05 (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic | **4** | in-band (ceiling) | `unproven` (self-reported; harness: `not_run`) | sub-agent, `tool_uses=0` | `01KV69GWSK85V5PVTECC0QM27Z` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **3** | in-band (floor) | yes, recognized brand/founder; no post-cutoff outcome information used | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKR7M4AVHNZNNZPQKRGH1` |
 
 The Claude run passed all evidence-id checks (presence, pre-decision status,
 load-bearing citation) and must-address coverage (MA-01…MA-03). No failure
 events logged. The call lands at the ceiling of the ceiling-trap band.
+
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. No failure events were logged.
 
 The contestant self-reported `jsg05_isolation_result: unproven` in the advisory
 phase_1 fields of the blind judgement, with notes that it flagged some
@@ -98,8 +103,8 @@ result, though the contestant did not label the shape as `ceiling_trap`.
   cannot be ruled out for this run. The `memorization_probe_result: not_run`
   in the score reflects harness-side: no scorer-enforced gate. This is the most
   significant unclosed concern for this case.
-- **Cross-vendor comparison** is not yet available (GPT, Grok, Gemini runs not
-  submitted).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok
+  4 and Gemini are not submitted.
 - **Whether the ceiling hit reflects fame-signal inflating the call.** If the
   contestant recognized the brand direction (mass-retail entry), that knowledge
   would push toward level 4 (commit to explore) rather than 3 (cautious). Not

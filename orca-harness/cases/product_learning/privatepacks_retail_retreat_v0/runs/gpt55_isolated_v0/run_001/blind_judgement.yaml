@@ -1,0 +1,95 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; I did not recognize the brand or recall post-cutoff
+    information.
+case_id: privatepacks_retail_retreat_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: The floor is active enough to halt new retail investment because the
+    packet frames DTC-site evidence as below-expectation and retail has meaningful
+    margin and operational risk. The ceiling is capped below a full retreat because
+    CVS/Target sell-through and reorder data are absent.
+contestant_id: gpt55_isolated_v0
+decision_shape: action_band
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: CVS and Target retail distribution was an active layer entered in mid-2024
+    and still relevant at the May 2025 cutoff.
+  evidence_unit_ids:
+  - E4
+  - E5
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: The store-locator and wholesale/retail-partner pages matter because
+    they show the brand presenting retail availability publicly, including active
+    retail partner scope rather than an already-abandoned channel.
+  evidence_unit_ids:
+  - E4
+  - E5
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: Homepage snapshots from pre-retail launch through cutoff-proximate are
+    DTC brand-health signals, but they are indirect and can reflect creative refreshes,
+    repositioning, or channel emphasis shifts rather than proven retail failure.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: The evidence set contains no CVS or Target sell-through, reorder, scan,
+    or buyer-feedback data, which prevents high-confidence support for a retail exit.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+- claim_id: C5
+  claim_role: supporting
+  claim_text: Retail creates meaningful economic and operational downside for a DTC-native
+    brand, so continuing to invest in retail growth without velocity proof is also
+    unsupported.
+  evidence_unit_ids:
+  - E4
+  - E5
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  statement: Public DTC-site deterioration or reduced retail emphasis is a weaker
+    signal than actual retailer sell-through data for deciding whether to exit CVS
+    and Target.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: 2A17BAB6B830F1D5A2B227C9DD606C60575358C2A78BBFCD72DCE2EECE24AE5C
+recommended_action:
+  action_label: Hold footprint; freeze expansion
+  ladder_level: 3
+  rationale: Do not exit or materially scale back CVS and Target on this packet alone,
+    because the evidence lacks direct sell-through, reorder, buyer feedback, or store-level
+    velocity data. The active store-locator and wholesale/retail-partner pages indicate
+    retail was still an active, publicly presented channel near the cutoff, so a hard
+    retreat would outrun the observed evidence. The stronger move is to stop incremental
+    retail growth, protect DTC focus, and use the current planogram window to demand
+    partner-level performance data before any exit or expansion decision.
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

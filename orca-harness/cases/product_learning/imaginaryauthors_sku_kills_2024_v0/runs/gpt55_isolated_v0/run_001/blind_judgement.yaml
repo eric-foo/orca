@@ -1,0 +1,97 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; I did not use any outside or post-cutoff information.
+case_id: imaginaryauthors_sku_kills_2024_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 3
+  claimed_floor: 1
+  reasoning: The floor is wait because the packet contains enough concern to investigate
+    but not enough to remove products. The ceiling is a very conservative active step
+    only if the omitted page details visibly showed weak current presentation or availability
+    issues, but the supplied text does not carry that claim.
+contestant_id: gpt55_isolated_v0
+decision_shape: private_context_dominant
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: The decisive data for discontinuation, including sales, margin, inventory,
+    and SKU-level sell-through, is absent from the packet.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: Homepage trajectory evidence from E1 and E2 can show which products
+    were foregrounded or deprioritized, but the packet does not reproduce enough homepage
+    detail to establish that Whispered Myths or Telegrama were meaningfully deprioritized.
+  evidence_unit_ids:
+  - E1
+  - E2
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: E3 and E4 indicate that Whispered Myths and Telegrama had individual
+    product-page snapshots with pricing, size, description, and availability presentation
+    before cutoff, but the provided packet text does not state the actual availability
+    or price values.
+  evidence_unit_ids:
+  - E3
+  - E4
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: E5 is described as the complete active catalog context, but the reproduced
+    packet does not provide the actual SKU count or itemized comparison needed to
+    show the two candidate SKUs are outliers in product type, price tier, or catalog
+    position.
+  evidence_unit_ids:
+  - E5
+- claim_id: C5
+  claim_role: supporting
+  claim_text: The brand context makes quiet discontinuation trust-sensitive because
+    enthusiast customers treat the catalog as a curated body of work.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+harness_version: v0_14
+judgement_class: wait
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  statement: A quiet discontinuation should require stronger SKU-specific evidence
+    than public page existence and non-featured placement because community trust
+    risk is material.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: 55B85B19B68919A841E07DD3E3149825A6B46AF07933FF8BF4B9F2515AEFF2D9
+recommended_action:
+  action_label: Do not quietly discontinue yet; gather internal SKU evidence first
+  ladder_level: 1
+  rationale: The packet supports that Whispered Myths and Telegrama were publicly
+    present as candidate product pages before cutoff, but it does not provide the
+    actual product-page statuses, prices, SKU velocity, margin, inventory burden,
+    or community attachment needed to justify quiet discontinuation. E1 and E2 are
+    useful for homepage-positioning comparison, but absence from homepage feature
+    placement would be weak evidence because the packet itself warns that promotional
+    rotation cannot distinguish low performance from ordinary merchandising. E5 is
+    described as a full catalog view, but the reproduced packet does not provide the
+    actual SKU count or catalog table needed to prove these two are outliers. Given
+    the brand-trust risk of quiet removals, the public evidence is insufficient for
+    an active kill recommendation.
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

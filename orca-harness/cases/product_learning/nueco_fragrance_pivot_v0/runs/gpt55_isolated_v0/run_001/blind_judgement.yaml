@@ -1,0 +1,107 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; I did not use any post-cutoff information.
+case_id: b2_holdout_h7_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 5
+  claimed_floor: 3
+  reasoning: The packet supports more than waiting because multiple DTC subscription
+    and personalization primitives are already live. It does not support levels 7-8
+    because subscription economics, channel scale, geography mix, and team capacity
+    are absent. A level 4 recommendation best fits an active but bounded priority.
+contestant_id: gpt55_isolated_v0
+decision_shape: option_creation
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: 'Subscription mechanics and personalization primitives are already live:
+    ReCharge plans, 20% discount, two-month minimum, plan cart separation, and a concern-based
+    recommendation survey.'
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E7
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: 'No observable subscription unit economics are provided: subscriber
+    count, churn/retention, LTV, CAC, plan attachment, and subscription margin are
+    absent from the static captures.'
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E7
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: The product range was already broad by late 2019, with 17 listed SKUs
+    across gut, skin, sleep, energy, immunity, stress, and formats including powders,
+    tinctures, capsules, topical spray, and fragrance.
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E1
+- claim_id: C4
+  claim_role: supporting
+  claim_text: Gut-health and prebiotic products appear especially prominent in the
+    best-sellers ordering, suggesting a better focus area than unconstrained category
+    expansion.
+  evidence_unit_ids:
+  - E5
+  - E7
+- claim_id: C5
+  claim_role: load_bearing
+  claim_text: 'Channel and geography signals exist but are weak: a NYC Flagship footer
+    link, England-based lab, USD checkout, and UK-origin barcode imply expansion optionality
+    without proving channel scale or geographic demand.'
+  evidence_unit_ids:
+  - E6
+  - E7
+- claim_id: C6
+  claim_role: supporting
+  claim_text: Marketing and retention infrastructure exists around the owned channel,
+    including referral, email, retargeting, affiliate, and review tooling.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E7
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E7
+  statement: The visible DTC subscription and survey infrastructure can be improved
+    materially without requiring a major new capability build.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: D4D7973BE3423D6C883566E13A6132E02F16B8FC0DDECA37C4280FD8452D67CF
+recommended_action:
+  action_label: Deepen DTC plans, constrain expansion
+  ladder_level: 4
+  rationale: Prioritise improving the owned DTC subscription and personalization experience,
+    but do it as a focused 2020 operating priority rather than a heavy all-in bet.
+    The site already has ReCharge subscriptions, a 20% recurring discount, plan/cart
+    UX, a survey-based recommendation flow, reviews, referral, email, retargeting,
+    affiliate, and bestseller signals; those are enough to justify active optimization.
+    Confidence is capped because no subscriber count, churn, retention, LTV, CAC,
+    plan attachment, or subscription margin is observable, so any claim about durable
+    recurring economics would be unsupported. Product/category expansion should be
+    slowed to selective bets around proven categories, because the late-2019 catalog
+    already spans many concerns and formats, creating dilution and operational-complexity
+    risk. Channel or geography expansion should remain small-test/opportunistic, since
+    the NYC Flagship, England lab, USD checkout, and UK-origin barcode signal possible
+    cross-channel/cross-geography activity but not enough evidence to redirect core
+    capital there.
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

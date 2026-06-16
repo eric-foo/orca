@@ -2,21 +2,21 @@ batch_id: product_learning
 case_id: joahbeauty_cvs_kill_2024_v0
 contestant_results:
 - blocking_failures: 0
-  contestant_id: claude_sonnet_isolated_subagent_v0
+  contestant_id: gpt55_isolated_v0
   in_band: false
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV69GVWT2MSY6HVTZ0TXN2M8
+  scoring_result_id: 01KV7YKNZPXFX536YHBQVCTJJN
   under_band: true
-  underreach_distance: 2
-facilitator_ledger_hash: 103c0f56568074713e071641459a1e9a8effae417a35e3fbe9639c98fa015d44
+  underreach_distance: 4
+facilitator_ledger_hash: 1662bf8e43c7e573482fb149947ede26d750f25a6557f36ff24a7e77c5f9e4ac
 failure_event_summary:
   by_severity:
     info: 1
   by_type:
     under_band: 1
   total: 1
-generated_at: '2026-06-15T18:43:22Z'
+generated_at: '2026-06-16T10:11:09Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

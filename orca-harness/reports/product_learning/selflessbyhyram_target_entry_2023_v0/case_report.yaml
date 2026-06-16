@@ -2,19 +2,19 @@ batch_id: product_learning
 case_id: selflessbyhyram_target_entry_2023_v0
 contestant_results:
 - blocking_failures: 0
-  contestant_id: claude_sonnet_isolated_subagent_v0
+  contestant_id: gpt55_isolated_v0
   in_band: true
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV69GWSK85V5PVTECC0QM27Z
+  scoring_result_id: 01KV7YKR7M4AVHNZNNZPQKRGH1
   under_band: false
   underreach_distance: 0
-facilitator_ledger_hash: df56627c4f5f7718200b674b8a3fa643d5adc4f453fb4bd93285d1aeb8e65175
+facilitator_ledger_hash: be51ece71e0579cac0439fe418c34b55fb1997a31b9245653fa8a22e406a4411
 failure_event_summary:
   by_severity: {}
   by_type: {}
   total: 0
-generated_at: '2026-06-15T18:43:23Z'
+generated_at: '2026-06-16T10:11:11Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

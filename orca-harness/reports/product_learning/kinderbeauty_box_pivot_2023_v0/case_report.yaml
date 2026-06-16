@@ -1,22 +1,20 @@
 batch_id: product_learning
 case_id: kinderbeauty_box_pivot_2023_v0
 contestant_results:
-- blocking_failures: 1
-  contestant_id: claude_sonnet_isolated_subagent_v0
+- blocking_failures: 0
+  contestant_id: gpt55_isolated_v0
   in_band: true
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV69RP7C2P278W8RM0MGQ8CD
+  scoring_result_id: 01KV7YKN168FJF3STPVVWHQRVS
   under_band: false
   underreach_distance: 0
-facilitator_ledger_hash: ef2a038975dfe8232e02ddbd780332d9d08501e9e07a5cddbf8573f626917dca
+facilitator_ledger_hash: 0169bc3742758bd39785e4fba51b171d14d0cde749c14b6a7b62aaa664e15949
 failure_event_summary:
-  by_severity:
-    blocking: 1
-  by_type:
-    evidence_id_missing: 1
-  total: 1
-generated_at: '2026-06-15T18:47:39Z'
+  by_severity: {}
+  by_type: {}
+  total: 0
+generated_at: '2026-06-16T10:11:08Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

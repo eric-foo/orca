@@ -21,15 +21,16 @@ This is a by-hand product-learning exercise that **uses** the harness; it is not
 a judgment-quality run. Specifically:
 
 - Contestant isolation was **instructed/attested**, not structurally proven
-  (sub-agent with `tool_uses=0` for the Claude run; external runs not yet
-  completed).
+  (sub-agent with `tool_uses=0` for the Claude run; Codex CLI `gpt-5.5`
+  external run recorded with no tool-like events observed in the JSONL
+  transcript; Grok 4 and Gemini not yet completed).
 - The scorer's `memorization_probe_result` is hardcoded `not_run`; no JSG-05
   gate was applicable (no known fame risk for this brand/case).
 - The frozen band inputs were facilitator-set and owner-ratified, not
   independently derived.
 
-No JSG gate is cleared or advanced by this record. External contestant runs
-(GPT, Grok, Gemini) are not yet complete; this record covers the Claude run only.
+No JSG gate is cleared or advanced by this record. The GPT-5.5 external run is
+now recorded; Grok 4 and Gemini are not yet complete.
 
 ## 2. Exam setup
 
@@ -57,6 +58,7 @@ No JSG gate is cleared or advanced by this record. External contestant runs
 | contestant | vendor / family | call | vs band [6,6] | recognition (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic | **6 (escalate)** | in-band | not recorded | sub-agent, `tool_uses=0` | `01KV69GWF5KVS7F5HR9JB1VV67` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **3** | under by 3 | no; did not recognize the brand or recall post-cutoff information | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKQ80K7VZ010XCKQ5G48D` |
 
 The Claude run passed evidence-id presence and pre-decision status checks, and
 must-address coverage (MA-01…MA-03). However, `load_bearing_claim_citation_pass`
@@ -64,6 +66,10 @@ is **false** — one blocking failure event logged: `01KV69GWF5H5BDR7HTFC0VAJMN`
 (`evidence_id_missing`, severity: blocking). The call is in-band (escalate at 6
 correctly matches the [6,6] conflict_escalate mandate); the citation failure is
 a discipline defect, not an in-band/out-of-band result.
+
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. One under_band failure event logged (info
+severity): `01KV7YKQ8012MP2VKQ9M09BEQZ`.
 
 The contestant reported `decision_shape: escalation_required` and
 `judgement_class: escalate` at `ladder_level: 6`. This matches the harness
@@ -99,8 +105,8 @@ reasoning clearly intended CONFLICT_ESCALATE (floor > ceiling), and the
 
 ## 5. What remains unproven / open
 
-- **Cross-vendor comparison** is not yet available (GPT, Grok, Gemini runs not
-  submitted).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok
+  4 and Gemini are not submitted.
 - **Whether conflict-escalate recognition is generalizable.** This case had
   the clearest possible pressure signal (`urgency: critical`, `opportunity_cost:
   severe`); whether other conflict-escalate cases with less extreme inputs are

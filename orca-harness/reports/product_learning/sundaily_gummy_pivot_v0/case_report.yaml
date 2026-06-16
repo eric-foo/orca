@@ -2,21 +2,21 @@ batch_id: product_learning
 case_id: sundaily_gummy_pivot_v0
 contestant_results:
 - blocking_failures: 0
-  contestant_id: claude_sonnet_isolated_subagent_v0
+  contestant_id: gpt55_isolated_v0
   in_band: false
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV69GX3SV1MZSS4DJYPVEHFY
+  scoring_result_id: 01KV7YKS5TFE2Q3Q67YDVFW3ZB
   under_band: true
-  underreach_distance: 5
-facilitator_ledger_hash: 66ac6f4c3a23ad3fd0fee93fbcc2454ee8c77c0250a00bffb66c3aa3245c5e22
+  underreach_distance: 3
+facilitator_ledger_hash: e94b04e15ee1eba379cb0ad0f235db9f3f7a3ab7639960a6a49df0e9d11b88a2
 failure_event_summary:
   by_severity:
     info: 1
   by_type:
     under_band: 1
   total: 1
-generated_at: '2026-06-15T18:43:23Z'
+generated_at: '2026-06-16T10:11:12Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

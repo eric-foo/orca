@@ -30,7 +30,9 @@ captures, no real blocker), so it was run (option i), not documented-excluded (o
 
 By-hand product-learning exercise that **uses** the harness; not a judgment-quality run.
 - Contestant isolation was **instructed/attested**, not structurally proven (sub-agent,
-  `tool_uses=0`, web-off by instruction). External arms not run (Claude-Sonnet arm only).
+  `tool_uses=0`, web-off by instruction; Codex CLI `gpt-5.5` external run recorded
+  with no tool-like events observed in the JSONL transcript). Grok 4 and Gemini not
+  yet completed.
 - The scorer's `memorization_probe_result` is hardcoded `not_run`. **Recognition WAS
   collected** at run time (see §3 tell-audit) given this brand's elevated fame risk.
 - The frozen band inputs were **facilitator-adopted verbatim from the outcome-blind
@@ -56,21 +58,26 @@ No JSG gate is cleared or advanced by this record.
   entered. The cutoff itself (2020-01-01) is a defensible supplements-led-era anchor with
   real date uncertainty; the brand is a US/UK BORDER case treated as US-market.
 
-## 3. Clean blind run (scored)
+## 3. Clean blind runs (scored)
 
 | contestant | vendor / family | call | vs band [3,5] | recognition (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic (claude-sonnet-4-6) | **4** | **in-band** | recognized brand = yes; attested no post-2020 info used | sub-agent, `tool_uses=0` | `01KV7SZFJHV14G0C6HG65204YF` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **4** | **in-band** | no; did not use any post-cutoff information | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKTV1HTE4YK62VSE9H3CH` |
 
 The run passed evidence-id presence, pre-decision status, load-bearing citation, and
 must-address coverage (MA-01…MA-03). No failure events. The contestant reported
 `decision_shape: action_band`, `ladder_level: 4`, claimed band [4,5] — consistent with
 the calibrated [3,5].
 
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. No failure events were logged.
+
 ### JSG-08 tell-audit
 
-- Recognition self-report: **yes** (recognized the brand), with an explicit attestation
+- Claude recognition self-report: **yes** (recognized the brand), with an explicit attestation
   that no post-2020 information influenced the answer.
+- GPT-5.5 recognition self-report: **no** recognition or post-cutoff use reported.
 - Outcome-USE test: the contestant's recommendation was to **hold the product range,
   protect the gut-health core, and deepen the subscription relationship** — i.e. the
   near-**opposite** of the actual held outcome (a pivot INTO a new product category,
@@ -91,11 +98,13 @@ the calibrated [3,5].
 3. **Recognition without evident use.** Unlike the slice-1 cases (no recognition data
    collected), recognition was captured here; the contestant recognized the brand yet
    produced an answer diverging from the known outcome.
-4. **Single-contestant, N=1.** Whether this generalizes requires the external arms.
+4. **Two-contestant partial panel.** Claude and GPT-5.5 are now recorded; whether this
+   generalizes still requires the remaining external arms.
 
 ## 5. What remains unproven / open
 
-- **Cross-vendor comparison** not available (GPT-5.5, Grok 4, Gemini not run; owner-executed).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok 4 and
+  Gemini are not run.
 - **Band inputs** were adopted from the outcome-blind builder's structural read; owner
   ratification pending. Whether `evidence_strength: moderate` (vs `weak`) is the right
   calibration for a forward capital-allocation call on DTC-surface-only evidence is a
@@ -113,6 +122,8 @@ the calibrated [3,5].
 
 - Score: `cases/product_learning/nueco_fragrance_pivot_v0/scores/01KV7SZFJHV14G0C6HG65204YF.yaml` (gitignored).
 - Blind judgement: `runs/claude_sonnet_isolated_subagent_v0/run_001/blind_judgement.yaml`.
+- GPT-5.5 score: `cases/product_learning/nueco_fragrance_pivot_v0/scores/01KV7YKTV1HTE4YK62VSE9H3CH.yaml` (gitignored).
+- GPT-5.5 blind judgement: `runs/gpt55_isolated_v0/run_001/blind_judgement.yaml`.
 - Case report: `reports/product_learning/b2_holdout_h7_v0/case_report.yaml` (keyed by the
   neutralized case_id).
 - Packet construction receipt: `packet_construction_receipt_v0.md` (outcome-blind build;

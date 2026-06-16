@@ -1,0 +1,107 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; I did not recall post-cutoff information.
+case_id: kinderbeauty_box_pivot_2023_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: The packet supports at least a minimal active response because public
+    subscription mechanics and a discounted first-box offer imply available levers
+    and possible economic pressure. The ceiling stays low because the decisive internal
+    economics are missing, so stronger restructuring could easily overcorrect.
+contestant_id: gpt55_isolated_v0
+decision_shape: option_creation
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: Kinder Beauty's public model is a recurring DTC clean, cruelty-free,
+    vegan subscription box with constrained curation credibility.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E11
+  - E12
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: The subscription flow already exposes customer choice or box-construction
+    mechanics, making a tier, frequency, or curation-model adjustment operationally
+    plausible.
+  evidence_unit_ids:
+  - E4
+  - E5
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: The $16 first-box offer indicates discount-led acquisition was visible
+    before cutoff, which weakens confidence that the current value proposition can
+    rely only on headline first-box conversion.
+  evidence_unit_ids:
+  - E7
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: Cancellation, skipping, billing, and customer-help surfaces are public,
+    so churn and retention mechanics are central enough that a pivot should preserve
+    trust and improve ongoing value rather than rely on friction.
+  evidence_unit_ids:
+  - E6
+  - E8
+- claim_id: C5
+  claim_role: load_bearing
+  claim_text: The packet lacks subscriber count, MRR, COGS, margin, CAC, and churn
+    data, preventing a confident recommendation for an aggressive price or structural
+    overhaul.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E10
+  - E11
+  - E12
+- claim_id: C6
+  claim_role: supporting
+  claim_text: Bestsellers, brand roster, and historical box pages provide some evidence
+    of product assortment and curation assets that could support value-based restructuring.
+  evidence_unit_ids:
+  - E10
+  - E11
+  - E12
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E7
+  statement: The publicly visible first-box discount and subscription-choice surfaces
+    are meaningful signals of economic or conversion pressure rather than merely routine
+    merchandising.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: E4A8C4F509933C73B343D5D2D064CA8F520191F037F739B729CF9EEDD1D788E7
+recommended_action:
+  action_label: Conservative subscription restructure
+  ladder_level: 3
+  rationale: 'Pivot, but do it conservatively: preserve the clean, cruelty-free, vegan
+    promise while testing lower-lock-in changes to pricing, frequency, and curation
+    rather than making a hard all-at-once reset. E4 and E5 show the subscription already
+    has surfaced choice/box-construction mechanics, and E7''s $16 first-box offer
+    suggests acquisition-price pressure or discount-led conversion is already part
+    of the model. E6 and E8 make cancellation, billing, skipping, and support mechanics
+    visible customer concerns, so the restructuring should improve retained value
+    rather than depend on cancellation friction. Because subscriber count, MRR, COGS,
+    churn, CAC, and margin are absent, the evidence supports action but not a high-conviction
+    aggressive pivot.'
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

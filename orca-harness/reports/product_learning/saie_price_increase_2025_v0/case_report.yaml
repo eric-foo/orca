@@ -1,22 +1,20 @@
 batch_id: product_learning
 case_id: saie_price_increase_2025_v0
 contestant_results:
-- blocking_failures: 1
-  contestant_id: claude_sonnet_isolated_subagent_v0
+- blocking_failures: 0
+  contestant_id: gpt55_isolated_v0
   in_band: true
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV7TCSVARTGSV0VHT9JYG1S3
+  scoring_result_id: 01KV7YKWE4K0Y18YVVRTJDDS48
   under_band: false
   underreach_distance: 0
 facilitator_ledger_hash: 80885b12a023c1ad3d1a54e3090a9f8e183fe3e374cbff08996ba838fba0865f
 failure_event_summary:
-  by_severity:
-    blocking: 1
-  by_type:
-    evidence_id_missing: 1
-  total: 1
-generated_at: '2026-06-16T08:57:29Z'
+  by_severity: {}
+  by_type: {}
+  total: 0
+generated_at: '2026-06-16T10:11:16Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

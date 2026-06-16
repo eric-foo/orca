@@ -1,22 +1,22 @@
 batch_id: product_learning
 case_id: privatepacks_retail_retreat_v0
 contestant_results:
-- blocking_failures: 1
-  contestant_id: claude_sonnet_isolated_subagent_v0
-  in_band: true
+- blocking_failures: 0
+  contestant_id: gpt55_isolated_v0
+  in_band: false
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV69GWF5KVS7F5HR9JB1VV67
-  under_band: false
-  underreach_distance: 0
-facilitator_ledger_hash: 8e11f32e6ecefae82e9c994c72d96c3c9ac1b863b2c0bd0fed8502f575cb5052
+  scoring_result_id: 01KV7YKQ80K7VZ010XCKQ5G48D
+  under_band: true
+  underreach_distance: 3
+facilitator_ledger_hash: 6db4e520819329069f86ce88b6b841e7c747f54c0ebbc32ab930de51d62299ba
 failure_event_summary:
   by_severity:
-    blocking: 1
+    info: 1
   by_type:
-    evidence_id_missing: 1
+    under_band: 1
   total: 1
-generated_at: '2026-06-15T18:43:23Z'
+generated_at: '2026-06-16T10:11:10Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

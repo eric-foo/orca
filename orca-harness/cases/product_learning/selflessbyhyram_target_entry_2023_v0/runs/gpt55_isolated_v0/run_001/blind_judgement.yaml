@@ -1,0 +1,75 @@
+advisory_phase_1_fields:
+  recognition_self_report: yes, I recognized the brand/founder name; no post-cutoff
+    outcome information was used.
+case_id: selflessbyhyram_target_entry_2023_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: The evidence supports active protection of DTC price integrity and community
+    positioning, but the absence of retail performance data prevents a stronger action
+    band.
+contestant_id: gpt55_isolated_v0
+decision_shape: action_band
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: The brand's current channel evidence is DTC-only, so repricing SKUs
+    downward for Target would risk visible price-tier incoherence versus the established
+    DTC catalog.
+  evidence_unit_ids:
+  - E4
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: The brand identity is tied to founder voice, mission language, community
+    trust, and direct merchandising rather than a detached mass-retail commodity position.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E5
+  - E6
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: There are no pre-existing retail performance signals in the packet,
+    so confidence in either Target entry or permanent refusal must be limited.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  statement: Existing DTC customers would notice and care about materially lower Target
+    price tiers for overlapping or closely comparable SKUs.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+prompt_hash: FEDE97D33AD95154825F5AA5432237829131B21EA03AA821B852E8A2DAED8732
+recommended_action:
+  action_label: Defer Target repricing; protect DTC-first positioning
+  ladder_level: 3
+  rationale: From the packet alone, the strongest supported move is to maintain DTC-first
+    positioning and not enter Target at a lower repriced tier yet. E4 indicates an
+    existing DTC catalog and price architecture that would be made visibly incoherent
+    if some SKUs appeared at lower Target tiers without a broader pricing architecture
+    reset. E5, E6, and E1-E3 point to a founder-led, community-trust brand model where
+    channel control and founder voice are central, making mass-retail repricing a
+    real positioning risk. Because the packet contains no retail sell-through, Target
+    terms, or comparable retail-performance evidence, this should be a conservative
+    active recommendation rather than a high-confidence rejection of retail forever.
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

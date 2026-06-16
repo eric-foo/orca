@@ -21,15 +21,16 @@ This is a by-hand product-learning exercise that **uses** the harness; it is not
 a judgment-quality run. Specifically:
 
 - Contestant isolation was **instructed/attested**, not structurally proven
-  (sub-agent with `tool_uses=0` for the Claude run; external runs not yet
-  completed).
+  (sub-agent with `tool_uses=0` for the Claude run; Codex CLI `gpt-5.5`
+  external run recorded with no tool-like events observed in the JSONL
+  transcript; Grok 4 and Gemini not yet completed).
 - The scorer's `memorization_probe_result` is hardcoded `not_run`; no JSG-05
   gate was applicable (no known fame risk for this brand/case).
 - The frozen band inputs were facilitator-set and owner-ratified, not
   independently derived.
 
-No JSG gate is cleared or advanced by this record. External contestant runs
-(GPT, Grok, Gemini) are not yet complete; this record covers the Claude run only.
+No JSG gate is cleared or advanced by this record. The GPT-5.5 external run is
+now recorded; Grok 4 and Gemini are not yet complete.
 
 ## 2. Exam setup
 
@@ -55,12 +56,17 @@ No JSG gate is cleared or advanced by this record. External contestant runs
 | contestant | vendor / family | call | vs band [6,6] | recognition (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic | **1 (wait)** | under by 5 | not recorded | sub-agent, `tool_uses=0` | `01KV69GX3SV1MZSS4DJYPVEHFY` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **3** | under by 3 | no; did not use any post-cutoff information | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKS5TFE2Q3Q67YDVFW3ZB` |
 
 The Claude run passed evidence-id presence, pre-decision status, and load-bearing
 citation checks, and must-address coverage (MA-01, MA-02; only 2 required for
 this case). One under_band failure event logged (info severity):
 `01KV69GX3SZSE2CSB7KN0FNQRT`. Underreach distance: 5 (the maximum possible
 given the band mandates level 6 and the call was level 1).
+
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. One under_band failure event logged (info
+severity): `01KV7YKS5T5SS9N6REQHD8HNJ0`.
 
 The contestant reported `decision_shape: action_band` and `judgement_class: wait`
 at `ladder_level: 1`. The harness computed `band_status: conflict_escalate`. The
@@ -93,8 +99,8 @@ a normal watch/wait case.
 
 ## 5. What remains unproven / open
 
-- **Cross-vendor comparison** is not yet available (GPT, Grok, Gemini runs not
-  submitted).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok
+  4 and Gemini are not submitted.
 - **Conflict-escalate recognition in low-ceiling, option-value-driven cases.**
   The privatepacks case had extreme urgency/opportunity_cost signals and was
   correctly called as escalate; this case has weaker pressure signals (high

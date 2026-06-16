@@ -2,19 +2,19 @@ batch_id: product_learning
 case_id: b2_holdout_h7_v0
 contestant_results:
 - blocking_failures: 0
-  contestant_id: claude_sonnet_isolated_subagent_v0
+  contestant_id: gpt55_isolated_v0
   in_band: true
   over_band: false
   overreach_distance: 0
   run_id: run_001
-  scoring_result_id: 01KV7SZFJHV14G0C6HG65204YF
+  scoring_result_id: 01KV7YKTV1HTE4YK62VSE9H3CH
   under_band: false
   underreach_distance: 0
-facilitator_ledger_hash: 9a58e728c62ba49e6dbf540e7e0f6db6c811861aaa3229c98a5b404c02c66f76
+facilitator_ledger_hash: 0126abb5b23bd60356ba1529c06f28a82b26045af27529df3a1cc9f07ec99d52
 failure_event_summary:
   by_severity: {}
   by_type: {}
   total: 0
-generated_at: '2026-06-16T08:50:13Z'
+generated_at: '2026-06-16T10:11:14Z'
 mapping_table_version: v0_14_mvp
 non_claim_notice: plumbing works only; not judgment quality

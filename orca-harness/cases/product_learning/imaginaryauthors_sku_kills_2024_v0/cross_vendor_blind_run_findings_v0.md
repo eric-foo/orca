@@ -21,15 +21,16 @@ This is a by-hand product-learning exercise that **uses** the harness; it is not
 a judgment-quality run. Specifically:
 
 - Contestant isolation was **instructed/attested**, not structurally proven
-  (sub-agent with `tool_uses=0` for the Claude run; external runs not yet
-  completed).
+  (sub-agent with `tool_uses=0` for the Claude run; Codex CLI `gpt-5.5`
+  external run recorded with no tool-like events observed in the JSONL
+  transcript; Grok 4 and Gemini not yet completed).
 - The scorer's `memorization_probe_result` is hardcoded `not_run`; no JSG-05
   gate was applicable (no known fame risk for this brand/case).
 - The frozen band inputs were facilitator-set and owner-ratified, not
   independently derived.
 
-No JSG gate is cleared or advanced by this record. External contestant runs
-(GPT, Grok, Gemini) are not yet complete; this record covers the Claude run only.
+No JSG gate is cleared or advanced by this record. The GPT-5.5 external run is
+now recorded; Grok 4 and Gemini are not yet complete.
 
 ## 2. Exam setup
 
@@ -57,10 +58,15 @@ No JSG gate is cleared or advanced by this record. External contestant runs
 | contestant | vendor / family | call | vs band [3,5] | recognition (self-report) | isolation basis | score id |
 |---|---|---|---|---|---|---|
 | `claude_sonnet_isolated_subagent_v0` | Anthropic | **3** | in-band (floor) | not recorded | sub-agent, `tool_uses=0` | `01KV69GVK7RRKEMQYW7XDA0EGK` |
+| `gpt55_isolated_v0` | OpenAI (gpt-5.5) | **1 (wait)** | under by 2 | no; did not use outside or post-cutoff information | Codex CLI fresh `gpt-5.5` session, `--search` not enabled, read-only sandbox, no tool-like events observed in JSONL transcript | `01KV7YKT20Y2EHE8T24MCG0WEM` |
 
 The Claude run passed all evidence-id checks (presence, pre-decision status,
 load-bearing citation) and must-address coverage (MA-01…MA-03). No failure
 events logged. The call lands at the band floor.
+
+The GPT-5.5 run passed evidence-id presence, pre-decision status, load-bearing
+citation, and must-address coverage. One under_band failure event logged (info
+severity): `01KV7YKT20932XNXTESHEPJ129`.
 
 ## 4. Observations (stated as observed; no prescription)
 
@@ -75,12 +81,12 @@ events logged. The call lands at the band floor.
    identified this as a non-escalation case.
 
 3. **Single-contestant observation only.** All of the above is N=1 run. No
-   cross-vendor comparison is possible until external runs complete.
+   cross-vendor comparison remains partial until Grok 4 and Gemini complete.
 
 ## 5. What remains unproven / open
 
-- **Cross-vendor comparison** is not yet available (GPT, Grok, Gemini runs not
-  submitted).
+- **Cross-vendor comparison** is partial: Claude and GPT-5.5 are recorded; Grok
+  4 and Gemini are not submitted.
 - **Band floor [3] placement.** `option_value: moderate` drives floor to 3; this
   is facilitator-set. Not contested by this run (contestant landed at 3).
 - **Recognition / leakage.** No self-reported recognition data collected for

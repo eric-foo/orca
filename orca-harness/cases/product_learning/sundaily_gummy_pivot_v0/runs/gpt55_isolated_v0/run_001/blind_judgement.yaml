@@ -1,0 +1,104 @@
+advisory_phase_1_fields:
+  recognition_self_report: no; I did not use any post-cutoff information.
+case_id: sundaily_gummy_pivot_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: 'The evidence supports active restraint rather than abstention: the UV
+    positioning is clear and stable, but commercial traction and regulatory exposure
+    are not measured. That makes levels 2-4 defensible, while a full pivot/rename
+    or aggressive expansion would rely on absent validation.'
+contestant_id: gpt55_isolated_v0
+decision_shape: option_creation
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: The brand's public identity and messaging were anchored to UV-protection
+    throughout the April-September 2018 evidence window.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: The five homepage snapshots do not show enough public drift toward a
+    broader skin-health platform to justify treating a rename as already validated
+    or strategically inevitable.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: The FAQ is the main evidence that UV-protection claims are a qualified
+    supplement-claims architecture rather than an unrestricted sunscreen-equivalent
+    promise, implying real compliance and positioning sensitivity.
+  evidence_unit_ids:
+  - E6
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: The packet contains no commercial validation, consumer research, competitive
+    benchmarking, or post-pivot response data, so a full repositioning would depend
+    on missing evidence.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+- claim_id: C5
+  claim_role: supporting
+  claim_text: A broader skin-health platform may reduce dependence on the narrow UV
+    niche, but the packet presents that as an opportunity hypothesis rather than a
+    proven superior strategy.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  statement: A full rename and broad skin-health repositioning should require stronger
+    evidence than homepage/FAQ messaging alone because it would materially reset existing
+    UV-specific brand equity.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+prompt_hash: 7A89C18D04BB611DA6F942496B7F5D3091E112649B3EDF6073298297D76FA197
+recommended_action:
+  action_label: Stay UV-focused; test broader skin-health options without renaming
+  ladder_level: 3
+  rationale: From the packet alone, the homepage evidence shows the brand remained
+    anchored to UV-protection across April-September 2018, including the cutoff-proximate
+    snapshot, so a full rename would discard the clearest existing equity without
+    evidence that the niche has failed. The FAQ evidence also implies the UV claim
+    architecture requires careful scoping and qualification, which is a real positioning
+    risk, but that risk argues for tighter claims discipline before it argues for
+    a broad platform pivot. The packet lacks sales, conversion, retention, consumer
+    research, competitive, or regulatory outcome evidence, so a committed repositioning
+    would be under-supported. The best move is to keep the Sundots UV-specific line
+    as the core while running low-lock-in tests of broader skin-health messaging or
+    adjacent products.
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

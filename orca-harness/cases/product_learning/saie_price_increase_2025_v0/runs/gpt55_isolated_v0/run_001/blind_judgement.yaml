@@ -1,0 +1,131 @@
+advisory_phase_1_fields:
+  recognition_self_report: yes, I recognized the brand; no post-cutoff information
+    was used.
+case_id: saie_price_increase_2025_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 4
+  claimed_floor: 2
+  reasoning: The permitted assumption says tariff pressure is real and non-trivial,
+    so pure inaction underreaches. But the packet lacks internal economics and customer
+    response evidence, so the supportable ceiling is a conservative active move, not
+    an aggressive or blanket price reset.
+contestant_id: gpt55_isolated_v0
+decision_shape: option_creation
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: Saie occupies an accessible premium-clean makeup position, with public
+    positioning centered on clean formulas, sustainability, brand identity, and products
+    typically in the $20-$36 range.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: A modest price increase would not automatically contradict the premium-clean
+    position, but a blanket increase could weaken accessible-premium coherence if
+    it moves entry or hero SKUs out of their current tier.
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: The PDP and collection evidence is described as containing near-cutoff
+    listed prices across blush, mascara, setting spray, bundle, and complexion/base
+    products, implying SKU-level architecture should be preserved rather than overwritten
+    uniformly.
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: No evidence unit provides direct COGS, gross margin, supplier invoices,
+    landed-cost data, tariff pass-through burden, sales volume, or consumer price
+    sensitivity, which materially lowers confidence in any broad pricing recommendation.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+- claim_id: C5
+  claim_role: supporting
+  claim_text: The homepage trajectory from July 2024 to November 2024 to May 2025
+    is useful as a brand signal, but the packet summary does not show a clear shift
+    toward cost-pressure messaging, value justification, or explicit preparation for
+    a tariff-driven price change.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+- claim_id: C6
+  claim_role: load_bearing
+  claim_text: Tariff-driven cost pressure is treated as real and non-trivial, so doing
+    nothing indefinitely would risk margin compression.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+  statement: At least some Saie SKUs have meaningful tariff-related cost exposure,
+    but that exposure is uneven enough that selective repricing is safer than a blanket
+    increase.
+  would_flip_if_false: true
+model_family: openai_gpt
+model_id: gpt-5.5
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+- MA-04
+prompt_hash: 73299E65D925A00998183E960610E625A2B5645DBFD95A9D3BDDFBA38948A29B
+recommended_action:
+  action_label: selective conservative repricing
+  ladder_level: 3
+  rationale: 'Do not apply a blanket $1-4 increase across all DTC products. The packet
+    supports that Saie sits in an accessible premium-clean band, so modest increases
+    are not inherently contradictory to positioning, but the absence of COGS, margin,
+    tariff exposure, and price-sensitivity data makes broad repricing under-supported.
+    Use a selective approach: raise only SKUs where price architecture remains coherent
+    and tariff exposure is most plausibly material, while preserving entry/hero price
+    points and tightening promotions or bundles to protect margin.'
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0
