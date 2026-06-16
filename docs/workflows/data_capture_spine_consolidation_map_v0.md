@@ -53,11 +53,12 @@ stale_if:
 | Plan bounded pre-commercial Reddit capture/consolidation | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` |
 | Check Reddit capture/consolidation success-signal hardening rationale | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
 | Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
+| Check raw-to-Judgment projection view doctrine | `docs/product/core_spine_v0_projection_doctrine_v0.md` |
 | Check whether Reddit capture output lands usefully in ECR (real-data probe; resolved by-design) | `docs/workflows/reddit_capture_to_ecr_consumption_probe_finding_v0.md` |
 | Check packet lifecycle, retention, sensitivity, or fixture movement | `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` |
 | Run existing capture tools safely | `orca-harness/docs/source_capture_agent_runbook.md` |
 | Author a new adapter against existing conventions | `orca-harness/docs/adapter_author_contract.md` |
-| Inspect actual implemented adapters/runners | `orca-harness/source_capture/` and `orca-harness/runners/` |
+| Inspect actual implemented adapters/runners/projection helpers | `orca-harness/source_capture/` and `orca-harness/runners/` |
 | Inspect bounded live Reddit Candidate URL Intake runner | `orca-harness/runners/run_reddit_candidate_intake_live.py` and `orca-harness/tests/unit/test_reddit_candidate_intake_live_runner.py` |
 | Inspect Reddit Graph Frontier / crawling graph local support | `orca-harness/capture_spine/reddit_graph_frontier/`, `orca-harness/runners/run_reddit_graph_frontier_register.py`, `orca-harness/tests/unit/test_reddit_graph_frontier.py`, `orca-harness/tests/unit/test_reddit_graph_frontier_runner.py`, and `orca-harness/tests/contract/test_reddit_graph_frontier_contract.py` |
 | Inspect CloakBrowser anonymous v0 adapter/runner | `orca-harness/source_capture/adapters/cloakbrowser_snapshot.py`, `orca-harness/runners/run_source_capture_cloakbrowser_packet.py`, and `orca-harness/tests/unit/test_source_capture_cloakbrowser_snapshot.py` |

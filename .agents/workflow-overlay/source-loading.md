@@ -380,6 +380,10 @@ Scanning / screening activity reads the screening-side distillation of this meth
 Equipment Kit** in `docs/product/core_spine/orca_vertical_exploration_guide_v0.md` (public pages,
 no logins, URLs + short quotes) — and escalates to the full playbook only for packet-grade capture.
 
+For raw-to-Judgment projection views, also open
+`docs/product/core_spine_v0_projection_doctrine_v0.md`; it constrains projection
+as a view over raw, not Cleaning, Judgment, or a new spine layer.
+
 ## ECR Source-Side Spine Read Pack
 
 Use this pack when the task touches the ECR source-side derived-record spine —
