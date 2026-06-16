@@ -157,13 +157,30 @@ the whole router.
 ## Subagent Model Tiering
 
 When delegating to a spawned subagent, choose the model tier per
-`docs/decisions/subagent_model_tiering_doctrine_v0.md`: default delegable work to
-the Sonnet `worker` agent type; trivial rote to the Haiku `mechanical` type;
-reserve Opus (`general-purpose`, which inherits the main tier, or an explicit
-`model: opus`) for genuine judgment. A subagent spawned with no model silently
-inherits the parent (Opus) tier, so route to a pinned type to avoid paying Opus
-for non-judgment work. Do not set `CLAUDE_CODE_SUBAGENT_MODEL` (it hard-caps all
-subagents and blocks Opus escalation — over-restraint).
+`docs/decisions/subagent_model_tiering_doctrine_v0.md`.
+
+In Claude Code, default delegable work to the Sonnet `worker` agent type;
+trivial rote to the Haiku `mechanical` type; reserve Opus (`general-purpose`,
+which inherits the main tier, or an explicit `model: opus`) for genuine
+judgment. A subagent spawned with no model silently inherits the parent (Opus)
+tier, so route to a pinned type to avoid paying Opus for non-judgment work. Do
+not set `CLAUDE_CODE_SUBAGENT_MODEL` (it hard-caps all subagents and blocks
+Opus escalation — over-restraint).
+
+In Codex, classify the delegated task before the `spawn_agent` call:
+mechanical/trivial rote, ordinary delegated work, or genuine judgment. Choose
+any explicit model override from the current tool surface only after checking
+that the name is actually available in the current session; otherwise omit the
+override or stop for an owner/tooling decision. `agent_type` remains a role
+selector (`explorer`, `worker`, or omitted), not the model tier. Do not turn a
+dated observed model list into durable routing doctrine.
+
+Model tiering does not imply source loading. A spawned subagent does not
+automatically read lane playbooks or overlay sources because it is called a
+capture worker, explorer, or judgment lane. For any subagent output the chief
+architect will consume, the dispatch must provide forked context, a bounded
+source capsule, or explicit required reads plus the source-readiness and
+return-shape contract in `.agents/workflow-overlay/prompt-orchestration.md`.
 
 ## Non-Claims
 
