@@ -86,6 +86,19 @@ For a PDP slice to be projectable, the raw packet should preserve:
 - raw screenshot/media as packet evidence when captured, even when the current
   projection only ledger-collapses hero imagery or cart/notify chrome.
 
+Retailer-specific capture details that now matter to projection:
+
+- Amazon: rendered DOM should preserve ASIN, the target DOM price input,
+  availability text, average-customer-review nodes, and any delivery-location
+  limitation or ZIP pin used for US storefront comparability.
+- Sephora: rendered DOM should preserve the target `ProductPage` root attributes
+  such as `data-cnstrc-item-price`, `data-cnstrc-item-id`, and
+  `data-cnstrc-item-variation-id` when present; recommendation-card
+  `product_list_price` fields are carried only as frame context, not as target
+  product price.
+- Ulta: rendered DOM should preserve JSON-LD plus `window.__APOLLO_STATE__`,
+  including the requested SKU context that can differ from the projected SKU.
+
 If rendered DOM HTML is missing, projection must emit a residual rather than
 fabricating rows.
 
@@ -96,7 +109,7 @@ The current projection view may emit only these row families:
 | Row kind | Meaning |
 | --- | --- |
 | `retail_pdp_product` | Packet/slice-level product context: retailer, source locator, series, pins, timing, cutoff, and archive posture. |
-| `retail_variant_offer` | Source-visible SKU/product/variant/price/currency/availability facts. |
+| `retail_variant_offer` | Source-visible SKU/product/variant/price/currency/availability facts plus source-visible binding provenance such as `price_isolation`, `price_binding_source`, `dom_price`, `apollo_requested_sku`, or `apollo_sku` when the raw packet exposes them. |
 | `retail_review_substrate` | Source-visible review-count/rating substrate and how it was located. |
 | `retail_embedded_structured_json` | Raw JSON-LD or Apollo-state text preserved verbatim with parse status. |
 | `retail_carried_module` | Frame-sensitive modules such as shipping, loyalty, and recommendations carried as visible context, not trusted as target product/review facts. |
@@ -136,7 +149,7 @@ Known residual classes include:
 | `<slice>:<retailer>:variant_offer_absent` | Projection could not locate a variant/offer binding. |
 | `<slice>:<retailer>:review_substrate_absent` | Projection could not locate the review substrate. |
 | `amazon_price_from_unanchored_visible_text_fallback` | Amazon price came only from a position-dependent visible-text `$N` fallback, not the target DOM price input. |
-| `sephora_price_from_structured_json_without_target_dom_price` | Sephora price came from structured JSON, not a target DOM price binding; carry it as source-visible but residualized. |
+| `sephora_price_from_structured_json_without_target_dom_price` | Sephora price came from structured JSON while the target `ProductPage` DOM price binding was absent; carry it as source-visible but residualized. |
 | `sephora_review_count_from_unanchored_fallback` | Sephora review count came only from an unanchored visible-text review pattern, not the target `Ratings & Reviews (N)` widget. |
 | `sephora_ld_json_review_count_differs_from_target_dom` | Sephora structured JSON review count differs from the target DOM review widget. |
 | `ulta_ld_json_apollo_<field>_mismatch` | Ulta JSON-LD and Apollo state disagree for a variant field such as SKU, product ID, price, or availability. |
@@ -174,12 +187,14 @@ Projection must not:
 
 The next safest move is **not** automatic ECR. The next move is one of:
 
-1. **Playbook review / owner acceptance** of this Retail/PDP projection contract.
-2. **Bounded implementation patch** to wire already-captured Retail PDP packets
-   into `build_retail_pdp_projection`, using this contract as the behavior
-   surface.
-3. **Retailer recon closure**, especially Amazon, if the immediate bottleneck is
-   source-access posture rather than projection behavior.
+1. **Targeted recapture/reprojection checks** for new retailer edge cases, such
+   as Sephora review-count precision, Ulta requested-SKU mismatch variants, or
+   Amazon storefront/location posture.
+2. **Auto-project-after-capture wiring** for already bounded Retail PDP packet
+   outputs, using this contract as the behavior surface and preserving
+   residuals unchanged.
+3. **Retailer recon closure** if the immediate bottleneck is source-access
+   posture rather than projection behavior.
 
 Auto-project-after-capture wiring is acceptable only as a bounded patch against
 this contract. It must not hide residuals, silently trust fallbacks, or feed ECR
@@ -202,6 +217,7 @@ direction_change_propagation:
     - docs/product/source_capture_toolbox/retail_pdp_projection_contract_v0.md
     - docs/product/source_capture_toolbox/README.md
     - docs/workflows/data_capture_spine_consolidation_map_v0.md
+    - docs/workflows/orca_repo_map_v0.md
   downstream_surfaces_checked:
     - AGENTS.md
     - .agents/workflow-overlay/README.md
@@ -223,29 +239,21 @@ direction_change_propagation:
         capture playbook and raw-to-Judgment projection work to projection
         doctrine; this artifact is reachable through the Armory README and Data
         Capture submap without changing the read-pack rule.
-    - path: docs/workflows/orca_repo_map_v0.md
+    - path: docs/product/source_capture_toolbox/capture_recon_index_v0.md
       reason: >
-        The root map already routes Data Capture / Source Capture Armory detail
-        through the Data Capture submap. The submap now names this artifact
-        directly, preserving pointer hierarchy.
-    - path: orca-harness/source_capture/retail_pdp_projection.py
-      reason: >
-        This turn stabilizes the contract around current behavior; no code
-        behavior was changed or authorized.
-    - path: orca-harness/tests/unit/test_retail_pdp_projection.py
-      reason: >
-        Current tests already cover the behavior summarized here; this docs
-        turn did not change code or test expectations.
+        This branch ran bounded scratch recapture/reprojection checks, but it
+        did not produce a durable recon closeout or fixture-admission decision.
+        Do not promote ignored `_test_runs/` packets into recon authority here.
   stale_language_search: >
-    rg -n "retail_pdp_projection_contract|Retail/PDP projection|Retail PDP projection"
+    rg -n "retail_pdp_projection_contract|Retail/PDP projection|Retail PDP projection|ProductPage|requested SKU"
     docs/product/source_capture_toolbox/README.md docs/workflows/data_capture_spine_consolidation_map_v0.md
     .agents/workflow-overlay/source-loading.md docs/workflows/orca_repo_map_v0.md
   stale_language_search_result: >
-    Executed 2026-06-17 in this worktree. Hits appeared only in the intended
-    new routing surfaces: Source Capture Armory README lines indexing this
-    artifact and the Data Capture Spine submap fast-route row. No checked
-    overlay or root-map surface carried conflicting Retail/PDP projection
-    routing language.
+    Executed 2026-06-17 in this worktree after Sephora target-DOM price and
+    Ulta requested-SKU residual hardening. Hits were updated in the intended
+    routing surfaces: this contract, the Source Capture Armory README, the Data
+    Capture Spine submap, and the repo map runner/source package route. Capture
+    recon index language was intentionally not promoted from scratch packets.
   non_claims:
     - not validation
     - not readiness
