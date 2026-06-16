@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Literal, Mapping
+from typing import Any, Literal, Mapping, Sequence
 
 from pydantic import Field, field_validator, model_validator
 
@@ -31,6 +31,15 @@ _FORBIDDEN_SOURCE_VISIBLE_FIELD_NAMES = frozenset(
         "strength",
         "strong",
         "weak",
+    }
+)
+
+_REQUIRED_RETAIL_STRUCTURE_BINDINGS = frozenset(
+    {
+        "sku_variant_price",
+        "variant_availability",
+        "review_substrate_for_product",
+        "series_locale_currency",
     }
 )
 
@@ -142,6 +151,11 @@ class RetailPdpProjectionPacket(StrictModel):
         return self
 
 
+def _retail_structure_preserved(bindings: Sequence[RetailPdpProjectionBinding]) -> bool:
+    binding_types = {binding.binding_type for binding in bindings}
+    return _REQUIRED_RETAIL_STRUCTURE_BINDINGS.issubset(binding_types)
+
+
 def build_retail_pdp_projection(
     *,
     packet: SourceCapturePacket,
@@ -210,8 +224,10 @@ def build_retail_pdp_projection(
             collapsed=collapsed,
             preserved_evidence_rows=len(rows),
             preserved_bindings=len(bindings),
+            # Retail PDPs have no parent->reply thread hierarchy; retail structure is attested
+            # through the binding map instead.
             hierarchy_preserved=True,
-            structure_preserved=bool(rows) and not residuals,
+            structure_preserved=_retail_structure_preserved(bindings),
         ),
         residuals=residuals,
     )
@@ -460,7 +476,12 @@ def _variant_offer_fields(
     residuals: list[str] = []
     if retailer == "amazon":
         fields = _amazon_variant_offer_fields(html=html, visible_text=visible_text, packet=packet, source_slice=source_slice)
-        return fields, _with_anchor(fallback_anchor, "html_selector", "#ASIN/#corePrice_feature_div/#availability"), []
+        amazon_residuals = (
+            ["amazon_price_from_unanchored_visible_text_fallback"]
+            if fields.get("price_isolation") == "unanchored_visible_text_fallback"
+            else []
+        )
+        return fields, _with_anchor(fallback_anchor, "html_selector", "#ASIN/#corePrice_feature_div/#availability"), amazon_residuals
 
     structured_fields, structured_anchor = _structured_variant_offer_fields(structured_entries)
     apollo_fields, apollo_anchor = _ulta_apollo_offer_fields(structured_entries) if retailer == "ulta" else ({}, None)
@@ -497,6 +518,8 @@ def _review_substrate_fields(
     if retailer == "sephora":
         fields = _sephora_review_fields(html=html, visible_text=visible_text, structured_entries=structured_entries)
         residuals = []
+        if fields.get("review_count_isolation") == "unanchored_fallback":
+            residuals.append("sephora_review_count_from_unanchored_fallback")
         ld_count = _string_or_none(fields.get("ld_json_review_count"))
         dom_count = _string_or_none(fields.get("review_count"))
         if ld_count and dom_count and ld_count != dom_count:
@@ -530,8 +553,12 @@ def _amazon_variant_offer_fields(
             r"value=[\"']([^\"']+)[\"'][^>]+name=[\"']items\[0\.base\]\[customerVisiblePrice\]\[amount\][\"']",
         ),
     )
+    # The DOM price input is target-anchored; the visible-text "$N" fallback is
+    # position-dependent, so fallback-only price reads are carried but residualized.
+    price_isolation = "amazon_dom_target_input"
     if price is None:
         price = _first_regex(visible_text, (r"\$(\d+(?:\.\d{2})?)",))
+        price_isolation = "unanchored_visible_text_fallback" if price is not None else "absent"
     availability = _first_literal(visible_text, ("In Stock", "Currently unavailable", "Out of Stock"))
     variant_name = _first_regex(visible_text, (r"Style:\s*([^\n]+)",))
     return {
@@ -539,6 +566,7 @@ def _amazon_variant_offer_fields(
         "sku": asin,
         "variant_name": variant_name or _fact_value(source_slice.variant_pin),
         "price": price,
+        "price_isolation": price_isolation,
         "price_currency": _fact_value(source_slice.currency_pin) or "USD",
         "availability": availability,
         "series_id": packet.series_id,
@@ -640,7 +668,14 @@ def _sephora_review_fields(
     visible_text: str,
     structured_entries: list[_StructuredJsonEntry],
 ) -> dict[str, Any | None]:
-    target_count = _first_regex(visible_text, (r"Ratings & Reviews\s*\(([^)]+)\)", r"([^\s]+)\s+Reviews\*?"))
+    # Only the parenthesized "Ratings & Reviews (N)" widget is target-anchored; the bare
+    # "<token> Reviews" pattern is position-dependent, so fallback-only reads are residualized.
+    anchored_count = _first_regex(visible_text, (r"Ratings & Reviews\s*\(([^)]+)\)",))
+    fallback_count = _first_regex(visible_text, (r"([^\s]+)\s+Reviews\*?",))
+    target_count = anchored_count or fallback_count
+    review_count_isolation = (
+        "target_anchored" if anchored_count else ("unanchored_fallback" if fallback_count else "absent")
+    )
     rating = _first_regex(visible_text, (r"Summary\s+5\s+4\s+3\s+2\s+1\s+(\d+(?:\.\d+)?)",))
     ld_count = None
     ld_rating = None
@@ -662,6 +697,7 @@ def _sephora_review_fields(
         "bazaarvoice_api_config_present": "api.bazaarvoice.com" in html.lower(),
         "rating": rating or ld_rating,
         "review_count": target_count,
+        "review_count_isolation": review_count_isolation,
         "ld_json_review_count": ld_count,
         "ld_json_rating": ld_rating,
         "recommendation_review_count_examples": recommendation_counts[:5],

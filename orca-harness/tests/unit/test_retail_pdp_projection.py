@@ -386,3 +386,69 @@ def test_retail_projection_rejects_judgment_smuggling_field_names() -> None:
             raw_anchor=raw_anchor,
             source_visible_fields={"credibility_label": "high"},
         )
+
+
+def test_amazon_price_unanchored_visible_text_fallback_is_residualized() -> None:
+    # With no target-anchored DOM price input, the only $N in visible text is a "$10 store card"
+    # offer. It must be carried-but-flagged, never silently trusted as the target price.
+    packet = _packet(
+        retailer="amazon",
+        locator="https://www.amazon.com/Some-Product/dp/B000000000",
+        series_id="amazon_test_us_v0",
+    )
+    html = '<html><body><input type="hidden" id="ASIN" name="ASIN" value="B000000000"></body></html>'
+    visible_text = (
+        "Get a $10 Amazon Store Card instantly upon approval\n"
+        "In Stock\n"
+        "Customer reviews 4.6 out of 5 stars\n"
+        "36,799 global ratings\n"
+    )
+
+    projection = _projection(packet=packet, html=html, visible_text=visible_text)
+
+    variant = _single_row(projection, "retail_variant_offer")
+    assert variant.source_visible_fields["price"] == "10"
+    assert variant.source_visible_fields["price_isolation"] == "unanchored_visible_text_fallback"
+    assert "amazon_price_from_unanchored_visible_text_fallback" in projection.residuals
+    assert projection.loss_ledger.structure_preserved is True
+
+
+def test_sephora_review_count_unanchored_fallback_is_residualized() -> None:
+    # With no parenthesized "Ratings & Reviews (N)" target widget, the only "<token> Reviews" in
+    # visible text is a recommendation count; it must be flagged as unanchored, not trusted as target.
+    packet = _packet(
+        retailer="sephora",
+        locator="https://www.sephora.com/product/some-thing-P000001",
+        series_id="sephora_test_us_v0",
+    )
+    html = "<html><body><span>nothing structured</span></body></html>"
+    visible_text = "Bestsellers you may like\n7.8K Reviews\nMore picks\n"
+
+    projection = _projection(packet=packet, html=html, visible_text=visible_text)
+
+    review = _single_row(projection, "retail_review_substrate")
+    assert review.source_visible_fields["review_count"] == "7.8K"
+    assert review.source_visible_fields["review_count_isolation"] == "unanchored_fallback"
+    assert "sephora_review_count_from_unanchored_fallback" in projection.residuals
+
+
+def test_structure_preserved_is_false_when_required_retail_bindings_are_absent() -> None:
+    # A residual is not itself structure loss, but a structured-json binding alone does not preserve
+    # the retail PDP binding structure.
+    packet = _packet(
+        retailer="sephora",
+        locator="https://www.sephora.com/product/some-thing-P000002",
+        series_id="sephora_test_us_v0",
+    )
+    ld_json = json.dumps(
+        {"@context": "http://schema.org", "@type": "WebPage", "name": "not a product"},
+        separators=(",", ":"),
+    )
+    html = f'<html><head><script type="application/ld+json">{ld_json}</script></head><body>x</body></html>'
+    visible_text = "x"
+
+    projection = _projection(packet=packet, html=html, visible_text=visible_text)
+
+    assert projection.residuals  # at least the variant_offer_absent residual
+    assert projection.loss_ledger.preserved_bindings >= 1  # the structured_json_for_product binding
+    assert projection.loss_ledger.structure_preserved is False
