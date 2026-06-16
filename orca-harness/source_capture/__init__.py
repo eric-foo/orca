@@ -17,6 +17,19 @@ from source_capture.models import (
 from source_capture.auth_state import AuthenticatedSessionMode
 from source_capture.proxy_profiles import ProxyCategory
 from source_capture.reddit_credentials import RedditCredentialMode
+from source_capture.reddit_projection import (
+    REDDIT_PROJECTION_CERTIFICATION,
+    REDDIT_PROJECTION_METHOD,
+    REDDIT_PROJECTION_VERSION,
+    ProjectionRawAnchor,
+    ProjectionRawRef,
+    RedditProjectionBinding,
+    RedditProjectionLossEntry,
+    RedditProjectionLossLedger,
+    RedditProjectionPacket,
+    RedditProjectionRow,
+    build_reddit_api_projection,
+)
 from source_capture.source_quality import (
     SOURCE_QUALITY_REPORT_SKELETON_VERSION,
     SOURCE_QUALITY_STATE_ASSEMBLER_VERSION,
@@ -35,6 +48,9 @@ __all__ = [
     "ProxyCategory",
     "ReceiptMetadata",
     "RedditCredentialMode",
+    "REDDIT_PROJECTION_CERTIFICATION",
+    "REDDIT_PROJECTION_METHOD",
+    "REDDIT_PROJECTION_VERSION",
     "SOURCE_CAPTURE_MANIFEST_VERSION",
     "SOURCE_QUALITY_REPORT_SKELETON_VERSION",
     "SOURCE_QUALITY_STATE_ASSEMBLER_VERSION",
@@ -42,6 +58,14 @@ __all__ = [
     "SourceCaptureSlice",
     "VisibleFact",
     "VisibleFactStatus",
+    "ProjectionRawAnchor",
+    "ProjectionRawRef",
+    "RedditProjectionBinding",
+    "RedditProjectionLossEntry",
+    "RedditProjectionLossLedger",
+    "RedditProjectionPacket",
+    "RedditProjectionRow",
+    "build_reddit_api_projection",
     "build_source_quality_report_skeleton",
     "build_source_quality_state_census",
     "known_fact",
