@@ -14,6 +14,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/capture_recon_index_v0.md
+  - docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md
 stale_if:
   - A probe surfaces a route the catalog lacks (CATALOG_GAP) -> amend the catalog.
   - The owner changes the risk posture (e.g. commercial/licensed phase begins, or the access-control line moves).
@@ -47,6 +48,13 @@ authorization and per-operation network approval.
 Per-source **recipe cards** are authored BY probes and accumulate over time. TikTok is the first
 *intended* probe target; the recon index shows TikTok/Instagram have no technical recon yet, so any
 social card is speculative until probed.
+
+**Source-specific lanes.** This playbook stays generic. When a source family already has its own
+lane or operator playbook, open that lane before choosing any generic capture route. For Reddit,
+route first to `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md` for
+discovery, graph/frontier selection, exact-thread capture, consolidation, and agent-view routing.
+Generic browser/search/direct capture is not a Reddit fallback unless the Reddit lane explicitly
+routes a bounded case back through this playbook.
 
 ## Risk posture (owner-authorized, pre-commercial)
 

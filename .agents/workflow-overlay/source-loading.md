@@ -438,10 +438,16 @@ Archive.org availability/body retrieval, and honest browser snapshot support;
 second-tranche Reddit API adapter and owner-named source adapters; and
 third-tranche anti-blocking/proxy/JS-challenge support. CloakBrowser is the
 selected primary anti-blocking browser backend for the next implementation lane.
-For Reddit pre-commercial capture, the current order is CloakBrowser
-anti-blocking first once implemented, then low-volume bounded
-subreddit/thematic/thread-family capture, then archive capture; commercial use
-moves to the sanctioned commercial / enterprise API or data-licensing path. That
+Reddit pre-commercial capture is source-specific: load the Data Capture submap
+and `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md`
+before choosing a capture method. For supplied exact old Reddit thread URLs,
+use old Reddit Direct HTTP first when current old Reddit HTML is the capture
+target and the bounded batch runner accepts the URL; use CloakBrowser when
+Direct HTTP is unsuitable, blocked, or browser-visible anti-blocking capture is
+explicitly needed; use archive capture only as the bounded operator-requested or
+visible-failure fallback. Reddit Candidate URL Intake and Graph Frontier produce
+candidate rows/registers, not Source Capture Packets. Commercial use moves to
+the sanctioned commercial / enterprise API or data-licensing path. That
 authorization does not cover commercial fetch services, SERP APIs, broad
 crawler/spider frameworks, storage, dashboards, schedulers, deployment,
 production runtime, contract hardening, source-access boundary change, or

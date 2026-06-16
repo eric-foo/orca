@@ -3,7 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product artifact
-scope: Current operator procedure for bounded Reddit capture and consolidation using implemented Source Capture Armory tools.
+scope: Current Reddit source-family lane and operator procedure for bounded Reddit capture and consolidation using implemented Source Capture Armory tools.
 use_when:
   - Running or planning exact-thread Reddit capture with current Orca runners.
   - Choosing between old Reddit Direct HTTP, CloakBrowser, archive fallback, and Reddit consolidation.
@@ -11,8 +11,8 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
-  - docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
-  - docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
+  - docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
+  - docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
   - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md
   - docs/product/source_capture_toolbox/README.md
@@ -28,10 +28,12 @@ stale_if:
 
 Status: `REDDIT_CAPTURE_OPERATOR_PLAYBOOK_V0`.
 
-This playbook is current-procedure guidance for bounded personal-project Reddit
-capture. It consolidates existing Armory and runbook rules. It does not create a
-new source-access method, authorize broad crawling, authorize commercial Reddit
-use, or prove capture quality.
+This playbook is the Reddit source-family lane under Source Capture Armory for
+bounded personal-project Reddit capture. It consolidates existing Armory and
+runbook rules and is the front door for Reddit capture routing before any
+generic Source Capture Playbook route is selected. It does not create a new
+source-access method, authorize broad crawling, authorize commercial Reddit use,
+or prove capture quality.
 
 ## Reddit Lane At A Glance
 
@@ -40,8 +42,8 @@ moves through four stages, in order, staying inside each stage's owner contract:
 
 | Stage | What it does | Runner | Owner contract |
 | --- | --- | --- | --- |
-| 1. Discover | Find candidate subreddits/threads (rows + provenance only; no bodies) | `orca-harness/runners/run_reddit_candidate_intake_live.py` | `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
-| 2. Select | Build a Graph Frontier Register over candidates and queue a non-executing next-run envelope | `orca-harness/runners/run_reddit_graph_frontier_register.py` | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
+| 1. Discover | Find candidate subreddits/threads (rows + provenance only; no bodies) | `orca-harness/runners/run_reddit_candidate_intake_live.py` | `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
+| 2. Select | Build a Graph Frontier Register over candidates and queue a non-executing next-run envelope | `orca-harness/runners/run_reddit_graph_frontier_register.py` | `docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
 | 3. Capture | Capture exact thread URLs into packets + consolidation (this playbook) | `run_reddit_old_http_batch.py` / `run_reddit_consolidation.py` / `run_reddit_batch_quality_summary.py` | this playbook |
 | 4. Read | Read the **cleaned view** we prepare (after projection): full content/body kept, only worthless noise removed -- all the data at a fraction of the token cost. Verbatim JSON is provenance only. | `orca-harness/runners/run_reddit_agent_view.py` | `orca-harness/docs/source_capture_agent_runbook.md` (read-surface rule) |
 

@@ -8,7 +8,7 @@ use_when:
   - Planning Reddit capture/consolidation before implementation.
   - Scoping old Reddit exact-thread capture, CloakBrowser anti-blocking fallback, and parser handoff.
   - Distinguishing personal-project capture/consolidation from commercial API, storage, dashboard, ECR, Cleaning, or Judgment work.
-authority_boundary: planning_only
+authority_boundary: retrieval_only
 open_next:
   - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
@@ -181,8 +181,11 @@ Forbidden capture-unit shapes:
 
 1. Commission a capture unit with the required boundary fields and classify it
    as `decision_frame_bound` or `candidate_or_scouting`.
-2. Fetch old Reddit HTML through the future CloakBrowser adapter once
-   implemented, using only the named source set and low-volume posture.
+2. For supplied exact thread URLs, fetch current old Reddit HTML through old
+   Reddit Direct HTTP first when the bounded batch runner accepts the URL. Use
+   CloakBrowser when Direct HTTP is unsuitable, blocked, or browser-visible
+   anti-blocking capture is explicitly needed, using only the named source set
+   and low-volume posture.
 3. Preserve raw HTML, visible text/body-equivalent, locator, capture time,
    access posture, cutoff posture, and warnings in a Source Capture Packet
    before parsing.

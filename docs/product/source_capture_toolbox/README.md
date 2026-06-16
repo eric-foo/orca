@@ -67,6 +67,7 @@ packet without redefining Capture obligations.
 | `docs/product/source_capture_toolbox/source_quality_cw_p1_end_to_end_pass_closeout_v0.md` | One-source CW-P1 Mini God-Tier metadata-only negative-path pass evidence; read as operational closeout context only, not fixture admission, validation, or doctrine authority. |
 | `docs/product/source_capture_toolbox/source_quality_state_assembler_v0.md` | Architecture boundary for a read-only Source Quality State Assembler over already-bounded rows and existing packets; state census only, not source discovery, runner dispatch, scoring, fixture admission, or Judgment authority. |
 | `docs/product/source_capture_toolbox/source_quality_slot3_post_recapture_closeout_v0.md` | Slot 3 post-recapture Mini God-Tier source-quality closeout across Reddit batch 1, Reddit batch 2, and WSO; read as operational closeout context only, not fixture admission, validation, source completeness, or Judgment authority. |
+| `docs/product/source_capture_toolbox/source_capture_playbook_v0.md` | Generic capture-investigation method for new source families: read the source problem, then point to the cheapest fitting route. Source-specific lanes override generic route choice when they exist. |
 | `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md` | Current operator procedure for bounded Reddit exact-thread capture with implemented Armory tools: old Reddit Direct HTTP batch first, quality summary, exact-URL archive fallback, CloakBrowser/proxy boundaries, warm same-context JSON as future/specialized enrichment, and no broad crawl or commercial-use claims. |
 | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` | Durable architectural planning thread for bounded pre-commercial Reddit capture/consolidation: exact old Reddit Direct HTTP as the current exact-thread operator default, CloakBrowser as the anti-blocking/browser-visible route when Direct HTTP is unsuitable or blocked, warm same-context Reddit JSON as a bounded enrichment path, packet-before-parser handoff, provenance-first consolidation shape, archive fallback, and non-implementation stop lines. |
 | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` | Advisory routing object that explains why the Reddit planning thread needs Decision-Frame-or-candidate classification, non-promoting success tiers, Armory vocabulary reuse, packet-contamination stops, no source-discovery expansion, and candidate-intake gap visibility. |
@@ -291,15 +292,18 @@ authorization for new adapters.
 
 ### Reddit Capture Operator Playbook
 
-Purpose: give operators and agents a single current-procedure route for bounded
-Reddit exact-thread capture using implemented Source Capture Armory tools.
+Purpose: give operators and agents the Reddit source-family lane and single
+current-procedure route for bounded Reddit exact-thread capture using
+implemented Source Capture Armory tools.
 
 The playbook is at
 `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md`.
-It covers required inputs, URL-list shape, old Reddit Direct HTTP batch capture,
-budget-window cadence, Reddit consolidation, quality summary interpretation,
-exact-URL archive fallback, CloakBrowser/proxy boundaries, warm same-context
-`.json` as a future/specialized enrichment path, and stop lines.
+Open it before using the generic Source Capture Playbook for Reddit work. It
+covers discovery-to-capture stage routing, required inputs, URL-list shape, old
+Reddit Direct HTTP batch capture, budget-window cadence, Reddit consolidation,
+quality summary interpretation, exact-URL archive fallback, CloakBrowser/proxy
+boundaries, warm same-context `.json` as a future/specialized enrichment path,
+and stop lines.
 
 It is operational guidance only. It is not validation, readiness, source
 completeness proof, source discovery authorization, broad crawling,
