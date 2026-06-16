@@ -147,7 +147,7 @@ courier state only when useful.
 - Source path: `.agents/skills/orca-product-lead/SKILL.md` (Orca-local).
 - Authorization: owner instruction in the Product Lead CA lane to create a
   reusable product-lead skill; the candidate was pre-named in
-  `docs/product/orca_product_lead_first_icp_wedge_decision_v0.md` ("Product Lead
+  `docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md` ("Product Lead
   Candidate Skill Notes"), which lists this skill as a downstream consumer.
 - Collision status (checked 2026-06-07): resolver-visible `product-lead` exists
   and is jb-scoped → shadow name avoids the collision; no repo-local skill

@@ -147,19 +147,20 @@ skill-governance action under the Protected Skill Boundary.
   through the repo-map product-anchor rows after the consumer-demand
   ratification; both copies verified identical; closes ORCA-HYGIENE-019).
   - Source path: `.agents/skills/orca-product-lead/SKILL.md` (Orca-local).
-  - Source sha256: `C8DEAA4DDEC94321ED47BA879D0C85269CACFEEE8D733B3634AB1A1C792634A3`
-    (re-pinned 2026-06-12; prior frozen sha
+  - Source sha256: `37FD65B7833CE80AC251111C6D5E7A1F26C26106E948F2134BE5533340AA3510`
+    (re-pinned 2026-06-16 after the product-lead adoption-record route
+    reference moved from flat `docs/product/` to `docs/product/product_lead/`;
+    prior frozen sha `C8DEAA4DDEC94321ED47BA879D0C85269CACFEEE8D733B3634AB1A1C792634A3`,
     `42EF7C2DCE667CFA09EA6F3F8CE369C7F55D7721D131692CB06C11152E908BB5`)
     (working-tree bytes; updated at deployment 2026-06-08 when the status text was
     added; supersedes the at-acceptance hash 2B011CE8; reread-required if the file
     changes).
-    (eol note 2026-06-12, post origin/main merge: the merge-conflict checkout
-    rematerialized both copies with CRLF working-tree line endings, so on-disk
-    Get-FileHash now reads
-    `C5D02D04E6E0C17A6468689D918E7CAB235AF45472C62D8DD3661E31E7D0ACD4`; git
-    content is unchanged — index blob `9b5b57e` on both copies, identical to the
-    re-pinned LF source. Either byte hash verifies the same frozen content
-    depending on checkout eol; the eol-stable identity is the git blob.)
+    (eol note: checkout filters may materialize CRLF or LF working-tree bytes,
+    so the durable identity is the git blob. In this worktree, on-disk
+    Get-FileHash reads
+    `37FD65B7833CE80AC251111C6D5E7A1F26C26106E948F2134BE5533340AA3510`; git
+    content blob is `d88f6cbf24461954b0bfcdc69ecb1d470517d5f3` on both copies,
+    identical after the route-reference refresh.)
   - Scope: prepares — does not freeze, run outreach, produce, or build — any Orca
     product decision (value proposition, offer, ICP / first-proof wedge,
     buyer-proof design, positioning / packaging, deliverable shape, pull / kill /
