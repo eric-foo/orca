@@ -332,3 +332,67 @@ def test_ig_calls_runner_no_secret_or_session_cli_flags() -> None:
     options = {opt for action in parser._actions for opt in action.option_strings}
     forbidden = {"--password", "--username", "--token", "--cookie", "--storage-state-path", "--state-label", "--session-mode"}
     assert options.isdisjoint(forbidden)
+
+
+def test_capture_one_retries_transient_failure_then_succeeds(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = {"n": 0}
+    sleeps: list[float] = []
+    transient = BrowserSnapshotFailure(
+        requested_url="u", failure_kind=BrowserSnapshotFailureKind.TIMEOUT, message="t"
+    )
+    ok = object()  # _capture_one returns any non-failure result unchanged
+
+    def fake(**_kw: object) -> object:
+        calls["n"] += 1
+        return transient if calls["n"] == 1 else ok
+
+    monkeypatch.setattr(ig_runner, "fetch_browser_snapshot_capture", fake)
+    result = ig_runner._capture_one(
+        "u", scroll_passes=0, timeout_seconds=1.0, viewport_width=10, viewport_height=10,
+        max_artifact_bytes=1000, max_attempts=2, retry_backoff_seconds=1.5, sleep_fn=sleeps.append,
+    )
+    assert result is ok
+    assert calls["n"] == 2          # retried exactly once
+    assert sleeps == [1.5]          # one linear backoff before the retry
+
+
+def test_capture_one_default_single_attempt_and_never_retries_non_transient(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls = {"n": 0}
+    transient = BrowserSnapshotFailure(
+        requested_url="u", failure_kind=BrowserSnapshotFailureKind.TIMEOUT, message="t"
+    )
+    monkeypatch.setattr(
+        ig_runner, "fetch_browser_snapshot_capture",
+        lambda **_kw: (calls.__setitem__("n", calls["n"] + 1), transient)[1],
+    )
+    # default max_attempts=1 -> single attempt even on a transient failure (zero behaviour change)
+    out = ig_runner._capture_one(
+        "u", scroll_passes=0, timeout_seconds=1.0, viewport_width=10, viewport_height=10,
+        max_artifact_bytes=1000,
+    )
+    assert out is transient and calls["n"] == 1
+
+    # a non-transient failure (dependency missing) is never retried, even with attempts left
+    calls["n"] = 0
+    dep = BrowserSnapshotFailure(
+        requested_url="u", failure_kind=BrowserSnapshotFailureKind.DEPENDENCY_UNAVAILABLE, message="d"
+    )
+    monkeypatch.setattr(
+        ig_runner, "fetch_browser_snapshot_capture",
+        lambda **_kw: (calls.__setitem__("n", calls["n"] + 1), dep)[1],
+    )
+    out2 = ig_runner._capture_one(
+        "u", scroll_passes=0, timeout_seconds=1.0, viewport_width=10, viewport_height=10,
+        max_artifact_bytes=1000, max_attempts=5,
+    )
+    assert out2 is dep and calls["n"] == 1
+
+
+def test_capture_retries_cli_flag_present_default_zero() -> None:
+    parser = ig_runner._build_parser()
+    args = parser.parse_args(["--profile-url", "u", "--decision-question", "q", "--output", "."])
+    assert args.capture_retries == 0
