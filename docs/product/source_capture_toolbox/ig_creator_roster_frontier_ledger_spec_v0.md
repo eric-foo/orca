@@ -143,9 +143,12 @@ provenance contract:
 - `candidate_promotion_link`: append-only bridge from frontier candidate to
   roster entry when a candidate is promoted.
 
-The roster should start with one or two high-density beauty sub-niches and 500
-rostered entries. A broad 1,000-creator beauty roster remains a later scale
-target after the loop proves useful in a bounded sub-niche.
+The roster should start with one commercially coherent beauty proof slice: 500
+total rostered entries across one high-density sub-niche, or two tightly adjacent
+sub-niches if the buyer decision truly spans both. This is not 500 entries per
+sub-niche, and it is not a thin whole-vertical spread. A broad 1,000-creator
+beauty roster remains a later scale target after the loop proves useful in a
+bounded sub-niche.
 
 This is product sequencing, not a legal cap. The wind-caller carve-out does not
 cap the number of public subject creators that may be considered, but the first
@@ -528,12 +531,15 @@ Schema-level enforcement expectations:
 
 Initial proof slice:
 
-- One or two beauty sub-niches.
-- 500 rostered creator records.
+- One commercially coherent beauty sub-niche, or two tightly adjacent sub-niches
+  only if the same buyer decision needs both.
+- 500 total rostered creator records across the proof slice.
 - All entries must be placed into A/B/C monitoring priority.
 - At least 100 entries should be reviewed deeply enough to validate name
   observation, sub-niche assignment, tiering, and lifecycle event behavior.
 - Frontier rows may exceed roster rows, but must remain depth-1 provenance.
+- If two adjacent sub-niches are used, record the split explicitly and explain
+  why the first commercial target requires both.
 
 Suggested tier distribution for the first proof slice:
 
@@ -590,7 +596,8 @@ checks:
 
 ## Open Questions
 
-- Which first beauty sub-niche should be used for the proof slice?
+- Which first commercial beauty sub-niche, buyer decision, and creator universe
+  should the 500-record proof slice represent?
 - What coarse follower bands should v0 allow?
 - Which source pointer grammar should be canonical for IG public profile reads?
 - Should a later implementation represent these records as YAML fixtures,
