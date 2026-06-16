@@ -328,6 +328,9 @@ def test_sephora_projection_uses_target_review_widget_not_recommendation_noise()
     assert structured.source_visible_fields["raw_json_text"] == ld_json
     variant = _single_row(projection, "retail_variant_offer")
     assert variant.source_visible_fields["sku"] == "2240844"
+    assert variant.source_visible_fields["price"] == "0.01"
+    assert variant.source_visible_fields["price_isolation"] == "structured_json_offer"
+    assert variant.source_visible_fields["price_binding_source"] == "ld_json"
     assert variant.source_visible_fields["availability"] == "https://schema.org/OutOfStock"
 
     review = _single_row(projection, "retail_review_substrate")
@@ -337,6 +340,7 @@ def test_sephora_projection_uses_target_review_widget_not_recommendation_noise()
     assert review.source_visible_fields["ld_json_review_count"] == "3"
     assert review.source_visible_fields["recommendation_review_count_examples"] == ["7.8K reviews"]
     assert review.source_visible_fields["recommendation_counts_are_not_target_substrate"] is True
+    assert "sephora_price_from_structured_json_without_target_dom_price" in projection.residuals
     assert "sephora_ld_json_review_count_differs_from_target_dom" not in projection.residuals
 
 
@@ -435,12 +439,64 @@ def test_ulta_projection_preserves_ld_json_and_apollo_verbatim_and_binds_rendere
     assert variant.source_visible_fields["price"] == "12.00"
     assert variant.source_visible_fields["availability"] == "https://schema.org/InStock"
     assert "ulta_ld_json_apollo_sku_mismatch" not in projection.residuals
+    assert "ulta_requested_sku_differs_from_projected_sku" in projection.residuals
 
     review = _single_row(projection, "retail_review_substrate")
     assert review.source_visible_fields["review_substrate_source"] == "ulta_ld_json_and_apollo_state"
     assert review.source_visible_fields["review_count"] == "671"
     assert review.source_visible_fields["ld_json_review_count"] == "671"
     assert review.source_visible_fields["apollo_review_count"] == "671"
+
+
+def test_ulta_projection_does_not_residualize_matching_requested_sku() -> None:
+    packet = _packet(
+        retailer="ulta",
+        locator="https://www.ulta.com/p/night-shift-overnight-lip-mask-pimprod2046225?sku=2645443",
+        series_id="ulta_nightshift_overnight_lipmask_us_v0",
+    )
+    ld_json = json.dumps(
+        {
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": "Night Shift Overnight Lip Mask - Watermelon",
+            "productID": "pimprod2046225",
+            "sku": "2645443",
+            "offers": {"@type": "Offer", "availability": "https://schema.org/InStock", "price": "12.00", "priceCurrency": "USD"},
+            "scent": "Watermelon",
+            "aggregateRating": {"@type": "AggregateRating", "ratingValue": 4.3, "reviewCount": 671},
+        },
+        separators=(",", ":"),
+    )
+    apollo = json.dumps(
+        {
+            "ROOT_QUERY": {
+                'Page({"moduleParams":{"sku":"2645443"},"url":{"path":"/p/night-shift-overnight-lip-mask-pimprod2046225"}})': {
+                    "content": {
+                        "modules": [
+                            {
+                                "skuId": "2645443",
+                                "productId": "pimprod2046225",
+                                "productName": "Night Shift Overnight Lip Mask",
+                                "listPrice": "$12.00",
+                                "availability": "InStock",
+                                "rating": 4.3,
+                                "reviewCount": 671,
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        separators=(",", ":"),
+    )
+    html = f'<script type="application/ld+json">{ld_json}</script><script>window.__APOLLO_STATE__ = {apollo}</script>'
+
+    projection = _projection(packet=packet, html=html, visible_text="Night Shift Overnight Lip Mask\n671 Reviews\n$12.00")
+
+    variant = _single_row(projection, "retail_variant_offer")
+    assert variant.source_visible_fields["sku"] == "2645443"
+    assert variant.source_visible_fields["apollo_requested_sku"] == "2645443"
+    assert "ulta_requested_sku_differs_from_projected_sku" not in projection.residuals
 
 
 def test_retail_projection_requires_raw_bytes_for_each_preserved_file() -> None:
