@@ -68,20 +68,38 @@ screen at product-learning tier is:
   (first-party vs third-party). Supply any decision-relevant brand attribute
   (positioning, reputation, awareness) as **in-packet evidence**, name-free, rather
   than relying on contestant recall; a "signal" that cannot survive name-removal is
-  recognition-recall, not evidence — treat it as a contamination tell. Mask at
+  recognition-recall, not evidence — treat it as a contamination tell. Supplied
+  attribute evidence is itself contamination-sensitive: it must be source-backed,
+  pre-cutoff, and authored under the same outcome-blind construction discipline as
+  all packet evidence (the constructor does not hold the sealed outcome) — never
+  outcome-shaped prose. Mask at
   construction time (the constructor authors the packet name-free; raw captures stay
   sealed and un-masked); the pseudonym↔real-case map is **operator-only and sealed**
-  (like the facilitator ledger). Masking stays whitelist-only (no enumerated
+  (like the facilitator ledger). Its owner, storage boundary, access rule, and
+  integrity/freshness semantics are a bound construction-contract item routed to the
+  packing / interface lane; until that interface lands this is doctrine intent and a
+  masked run is not yet executable as a sealed-crosswalk-backed run. Masking stays whitelist-only (no enumerated
   forbidden-category list on any contestant-readable surface), must pass the R6
   pre-freeze leakage gate, and a plain real-name search of the finished contestant
   packet must return nothing before freeze. **Route-out rule:** if the
   decision-relevant attribute cannot be described faithfully without re-identifying
   the brand, do not blind-backtest it — use a post-cutoff or prospective
-  seal-and-wait case instead.
+  seal-and-wait case instead. The maskability test weighs **all** identity-bearing
+  evidence kept real — a distinctive retailer / forum / publication, an exact metric,
+  a launch date, a singular source relationship — not just the brand attribute;
+  masking removes only the name-recall handle and makes no re-identification-resistance
+  claim (the tell-audit, not the mask, is the backstop), so route out only when a case
+  is both trivially re-identifiable and too brand-salient to learn from once
+  recognized. Track the route-out rate: if masking selects mostly low-brand-salience
+  cases, flag the masked-eligible set's decision-grade representativeness for owner
+  review before treating masked packets as the default population.
 - **Masking is a supplement, not the spine.** Web-search-off + the JSG-08 tell-audit
   remain the contamination spine; masking raises the bar on passive recognition and
   makes the tell-audit's job cleaner, but it must **not** relax the tell-audit, and a
-  masked case is never assumed "blind" on the strength of the mask alone.
+  masked case is never assumed "blind" on the strength of the mask alone. The
+  tell-audit-unchanged guardrail is a **required acceptance / freeze condition** for
+  any masked run — a run is invalid if the tell-audit was weakened to compensate for
+  masking; mechanical enforcement of that condition is a pending tail item.
 - **Swap on a confirmed outcome-use tell** — recognition capacity alone is not a
   swap; when a swap is warranted, the `Uses` counter ledger + this finder generate
   lower-count, more-obscure replacements.
