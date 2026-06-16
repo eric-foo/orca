@@ -9,8 +9,9 @@ scope: >
   hot-list, promotion/demotion loop, capture-once-then-recheck lifecycle) and the per-platform
   monitoring PROFILE seam (cadence values, curve window, content unit, momentum metric, spike
   threshold) that IG fills first and TikTok/YouTube/Reddit fill later. PROPOSED; the cadence numbers
-  remain illustrative and R-tunable. IG R now has a first measured pace-bound reading, with the
-  at-pace ceiling still open. Not a build-go, validation, or readiness claim.
+  remain illustrative and R-tunable. The current IG planning default uses a 1,000-creator serious-v0
+  roster target with 10/30/60 A/B/C allocation, while IG R still has only a first measured
+  pace-bound reading and an open at-pace ceiling. Not a build-go, validation, or readiness claim.
 use_when:
   - Deciding how to spend the bounded capture budget across creators/posts (tiering + recheck cadence).
   - Scoping the IG capture-shape contract's monitoring half, or a future platform satellite's profile.
@@ -67,6 +68,28 @@ feeding the *same* core scheduler — not a different scheduler.
 Everyone in the enumerated roster is at least Tier C (on the radar); the budget concentrates on A. This
 is full-vertical coverage in the sense that matters: known + watched everywhere, dense where the signal is.
 
+## Current IG v0 Roster Target
+
+For the beauty-first IG path, use **1,000 creators** as the current serious-v0 planning target,
+reached through gates rather than a one-shot jump:
+
+```text
+roster_gates = 250 -> 500 -> 1,000
+```
+
+The current v0 allocation is:
+
+| Tier | Count at 1,000 | Role |
+| --- | ---: | --- |
+| A | 100 | Dense monitoring for rising/high-signal creators and current breakouts |
+| B | 300 | Sampled monitoring for established or slower creators |
+| C | 600 | Cheap heartbeat so the known vertical stays on the radar |
+| Hot-list | floating | Temporary twice-daily / 12h / 6h attention while a spike persists |
+
+Keep 1,500 creators as an expansion sensitivity, not the starting target. Expansion should wait until
+roster discovery quality, source provenance, and the two-lane operating window are proven enough for
+the next gate.
+
 ## Age-bucket scheduler (core structure; satellite values)
 
 Each tracked post is sampled on a cadence that **decays with the post's absolute age** (NOT its recency
@@ -117,6 +140,11 @@ get full density), **not** the storage tier — total rows stay throughput-bound
 working horizon → no server; see the storage backbone). Current operating envelope:
 `docs/product/source_capture_toolbox/ig_at_scale_operating_envelope_v0.md`.
 
+For the current 1,000-creator serious-v0 IG planning model, use the operating envelope's working
+budget of roughly **2,800-3,500 modeled IG requests/day** across profile/follower heartbeat,
+post-momentum curves, and hot-list allowance. This is planning math, not a measured at-pace daily
+ceiling.
+
 **Batching note:** polling an age bucket reads its posts **together** → the reads return as a batch →
 the batch materializes as one projection partition. So the scheduler naturally produces the
 single-writer **batch** write pattern the storage backbone wants (captures write packets per-read;
@@ -140,6 +168,24 @@ others named-but-NOT-filled.**
 
 YouTube is the sharpest proof of the seam: its **months-to-years** curve window + **low posting
 frequency** are *profile values*, handled without touching the core scheduler.
+
+## Roster / Frontier Control Point
+
+The monitoring policy assumes a durable roster/frontier ledger, not repeated blind rediscovery. The
+smallest complete v0 shape is:
+
+- rostered creators: active subject set with platform namespace, handle/current id when observed,
+  sub-niche, tier view, status, due hints, limits, and policy version;
+- frontier edges: source creator/venue/surface, candidate handle, relationship type, hop depth,
+  evidence pointer, confidence, action, and resolution reason;
+- decision events: promote, demote, reject, pause, re-add, hot-list enter/exit, with reason and
+  evidence pointer.
+
+Discovery must stay outside passive monitoring. If owner-gated IG self-exploration is later run,
+the current planning cap is a bounded active micro-batch: one sub-niche, up to three seed creators,
+max two hops, max 15 profile reads, stop on throttle/login redirect, duplicate saturation, off-niche
+contamination, private/auth wall, or community closure. This paragraph is a planning control point,
+not live-discovery authorization.
 
 ## Carve-out conformance (load-bearing — must not become a standing crawler)
 
@@ -169,4 +215,6 @@ PROPOSED monitoring-policy architecture only — not a build-go, validation, rea
 All cadence/cap numbers are **illustrative and R-tunable**; R is first-measured but not fully
 characterized. Core machinery here; IG profile values are finalized in the IG capture-shape contract;
 other platform profiles are named-deferred seams. The scheduler consumes the rebuildable projection
-(the storage backbone) and must conform to the carve-out's bounded-session posture.
+(the storage backbone) and must conform to the carve-out's bounded-session posture. The roster/frontier
+control point above does not authorize live discovery, broad crawling, scheduler/runtime work, or
+cross-platform identity stitching.
