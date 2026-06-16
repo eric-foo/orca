@@ -175,7 +175,7 @@ index 28215ba..5428f8b 100644
 -   of N pre-committed uses," never "here is a case where S worked."
 +   of S scoreable uses, out of T total pre-committed uses with every exclusion
 +   reported," never "here is a case where S worked."
- 
+
  Per use, the outcome is exactly one of: `correct_direction` | `wrong_direction`
  | `not_applicable` (signal didn't bear on this case) | `unscoreable`
 -(outcome criterion couldn't be applied). Only `correct`/`wrong` count toward K/N;
@@ -188,9 +188,9 @@ index 28215ba..5428f8b 100644
 +as a favorable correct/wrong tally after seeing the outcome. Only `correct` /
 +`wrong` count toward the scoreable ratio; the total pre-committed count and all
 +exclusions travel with the ratio.
- 
+
  ## Ledger Schema v0
- 
+
 @@ -127,11 +134,14 @@ signal_reliability_ledger_v0:
            # - case_id:
            #   predicted_direction:        # recorded in the blind call (pre-reveal)
