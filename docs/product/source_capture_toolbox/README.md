@@ -70,6 +70,7 @@ packet without redefining Capture obligations.
 | `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md` | Current operator procedure for bounded Reddit exact-thread capture with implemented Armory tools: old Reddit Direct HTTP batch first, quality summary, exact-URL archive fallback, CloakBrowser/proxy boundaries, warm same-context JSON as future/specialized enrichment, and no broad crawl or commercial-use claims. |
 | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` | Durable architectural planning thread for bounded pre-commercial Reddit capture/consolidation: exact old Reddit Direct HTTP as the current exact-thread operator default, CloakBrowser as the anti-blocking/browser-visible route when Direct HTTP is unsuitable or blocked, warm same-context Reddit JSON as a bounded enrichment path, packet-before-parser handoff, provenance-first consolidation shape, archive fallback, and non-implementation stop lines. |
 | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` | Advisory routing object that explains why the Reddit planning thread needs Decision-Frame-or-candidate classification, non-promoting success tiers, Armory vocabulary reuse, packet-contamination stops, no source-discovery expansion, and candidate-intake gap visibility. |
+| `docs/product/source_capture_toolbox/retail_pdp_projection_contract_v0.md` | Retail/PDP raw-packet-to-projection contract/playbook for Amazon, Sephora, and Ulta: capture inputs, projection rows, residual semantics, retailer binding limits, and the no-ECR/Cleaning/Judgment boundary. |
 
 ## Armory Components
 
@@ -130,6 +131,23 @@ Packet core concern mapping:
 It must not own ECR fields, Cleaning transforms, Judgment scoring, credibility,
 inclusion, exclusion, discounting, Signal Use, Decision Strength, Action
 Ceiling, buyer proof, or commercial meaning.
+
+### Retail/PDP Projection Contract
+
+Purpose: stabilize how captured retailer PDP packets are mechanically projected
+into source-visible product, variant/offer, review substrate, embedded JSON, and
+carried-module rows before any auto-project-after-capture wiring or ECR
+sequencing.
+
+The contract is at
+`docs/product/source_capture_toolbox/retail_pdp_projection_contract_v0.md`.
+It covers Amazon, Sephora, and Ulta binding postures; unsafe fallback residuals;
+`structure_preserved` semantics; and explicit no-Cleaning/no-ECR/no-Judgment
+boundaries.
+
+It is product contract context only. It is not capture execution, validation,
+readiness, implementation authorization, source completeness proof, or buyer
+proof.
 
 ### Packet Fixture / Retention / Sensitivity Decision
 
