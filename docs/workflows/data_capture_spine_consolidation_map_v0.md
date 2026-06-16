@@ -49,6 +49,7 @@ stale_if:
 | Check bounded Reddit candidate URL intake default policy | `docs/decisions/data_capture_spine_reddit_candidate_url_intake_default_policy_decision_v0.md` |
 | Check LinkedIn Lane discovery, bounded watch, people/business candidate boundaries, and optional POC-risk mode | `docs/product/data_capture_spine/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md` |
 | Handle old Reddit search/listing HTML for Candidate URL Intake pilots | `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md` |
+| Check current Reddit source-family lane / exact-thread operator route | `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md` |
 | Plan bounded pre-commercial Reddit capture/consolidation | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md` |
 | Check Reddit capture/consolidation success-signal hardening rationale | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
 | Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
@@ -78,12 +79,15 @@ stale_if:
 - **Build authority is bounded.** The source-access tooling authorization owns
   first/second/third-tranche build scope. It now selects CloakBrowser as the
   primary anti-blocking backend.
-- **Reddit pre-commercial route is source-specific.** Use the implemented
-  anonymous CloakBrowser Snapshot runner for one supplied old Reddit/thread URL
-  when anti-blocking browser capture is needed, prefer old Reddit HTML where
-  available, keep capture low-volume and subreddit/thematic/thread-family
-  bounded, then use archive capture where live capture is unnecessary or fails
-  visibly.
+- **Reddit pre-commercial route is source-specific.** Open
+  `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md`
+  before choosing a Reddit capture method. For supplied exact old Reddit thread
+  URLs, use old Reddit Direct HTTP first when current old Reddit HTML is the
+  capture target and the bounded batch runner accepts the URL; use CloakBrowser
+  when Direct HTTP is unsuitable, blocked, or browser-visible anti-blocking
+  capture is explicitly needed; keep source-set work low-volume and
+  subreddit/thematic/thread-family bounded; use archive capture only as bounded
+  fallback or historical posture support.
 - **CloakBrowser anonymous v0 is implemented.**
   `orca-harness/source_capture/adapters/cloakbrowser_snapshot.py` and
   `orca-harness/runners/run_source_capture_cloakbrowser_packet.py` preserve
@@ -229,14 +233,25 @@ stale_if:
   fallback, `.json` fallback posture, and implementation stop lines.
 - owner: `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md`
 
+### Reddit capture operator lane
+
+- summary: Current Reddit source-family operator route under Source Capture
+  Armory. It routes a cold agent through discovery rows, Graph Frontier
+  selection, exact-thread Direct HTTP capture/consolidation, quality summary,
+  bounded fallback, and cleaned agent-view reads before any generic capture
+  fallback is considered.
+- owner: `docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md`
+
 ### Reddit Candidate URL Intake
 
 - summary: Capture Spine candidate-intake contract for the operator-facing
   bounded Reddit "crawler": candidate subreddit/thread/outbound URL rows plus
   provenance only, declared-and-capped related-surface candidate discovery
-  without same-run traversal, CloakBrowser as approved primary downstream
-  anti-blocking route, proxies not blanket stop conditions for pre-commercial
-  capture, bounded live first-contact intake under a run envelope, no
+  without same-run traversal, downstream capture routed through the Reddit
+  operator lane, CloakBrowser available only when that lane's Direct HTTP
+  conditions fail or browser-visible anti-blocking is explicitly needed, proxies
+  not blanket stop conditions for pre-commercial capture, bounded live
+  first-contact intake under a run envelope, no
   body/comment/profile capture, no Source Capture Packet
   output, and no automatic Data Capture handoff.
 - owner: `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md`
@@ -473,4 +488,76 @@ direction_change_propagation:
     - "not merged to main"
     - "not source-access boundary amendment"
     - "not ECR, Cleaning, or Judgment design"
+```
+
+## Direction Change Propagation - Reddit Source-Family Lane Pointerization
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Reddit capture routing is now pointerized through the Reddit source-family
+    operator lane: the generic Source Capture Playbook remains generic, and
+    Reddit work routes to the Reddit operator playbook before discovery,
+    Graph Frontier selection, exact-thread capture, consolidation, fallback, or
+    cleaned agent-view reads. Exact old Reddit Direct HTTP remains the current
+    exact-thread default when current old Reddit HTML is the target and the
+    bounded batch runner accepts the URL; CloakBrowser remains the
+    anti-blocking/browser-visible route when Direct HTTP is unsuitable, blocked,
+    or explicitly needed.
+  trigger: workflow_authority
+  related_triggers:
+    - product_doctrine
+    - output_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/source-loading.md
+    - docs/product/source_capture_toolbox/source_capture_playbook_v0.md
+    - docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md
+    - docs/product/source_capture_toolbox/README.md
+    - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md
+    - docs/workflows/data_capture_spine_consolidation_map_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/decision-routing.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/artifact-folders.md
+    - .agents/workflow-overlay/retrieval-metadata.md
+    - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md
+    - docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
+    - docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
+    - orca-harness/docs/source_capture_agent_runbook.md
+    - orca-harness/runners/
+    - orca-harness/source_capture/
+  intentionally_not_updated:
+    - path: docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md
+      reason: >
+        Source-access build authorization did not change; this patch only
+        changes routing/pointer surfaces and preserves the existing
+        anti-blocking/proxy and commercial-reroute boundaries.
+  stale_language_search: >
+    rg -n "Reddit|reddit|CloakBrowser|old Reddit Direct HTTP|\\.json|source_capture_playbook|reddit_capture_operator"
+    .agents/workflow-overlay/source-loading.md
+    docs/product/source_capture_toolbox/source_capture_playbook_v0.md
+    docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md
+    docs/product/source_capture_toolbox/README.md
+    docs/workflows/data_capture_spine_consolidation_map_v0.md
+    docs/workflows/orca_repo_map_v0.md
+  stale_language_search_result: >
+    Run at closeout. Remaining hits are intended live pointers to the Reddit
+    operator lane, Direct HTTP/CloakBrowser/warm JSON boundary text, and
+    historical/DCP search strings. No checked live route tells agents to use the
+    generic playbook/browser/search capture as a Reddit fallback, to use
+    CloakBrowser before a working exact-thread Direct HTTP capture, or to treat
+    Candidate URL Intake / Graph Frontier output as Source Capture Packets.
+  non_claims:
+    - not validation
+    - not readiness
+    - not implementation execution
+    - not live Reddit capture authorization
+    - not source discovery authorization
+    - not broad crawling
+    - not monitoring
+    - not commercial Reddit authority
+    - not ECR, Cleaning, Judgment, buyer proof, or source completeness proof
 ```

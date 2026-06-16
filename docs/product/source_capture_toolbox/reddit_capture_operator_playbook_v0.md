@@ -3,7 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product artifact
-scope: Current operator procedure for bounded Reddit capture and consolidation using implemented Source Capture Armory tools.
+scope: Current Reddit source-family lane and operator procedure for bounded Reddit capture and consolidation using implemented Source Capture Armory tools.
 use_when:
   - Running or planning exact-thread Reddit capture with current Orca runners.
   - Choosing between old Reddit Direct HTTP, CloakBrowser, archive fallback, and Reddit consolidation.
@@ -11,8 +11,8 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
-  - docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
-  - docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
+  - docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
+  - docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
   - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md
   - docs/product/source_capture_toolbox/README.md
@@ -28,10 +28,12 @@ stale_if:
 
 Status: `REDDIT_CAPTURE_OPERATOR_PLAYBOOK_V0`.
 
-This playbook is current-procedure guidance for bounded personal-project Reddit
-capture. It consolidates existing Armory and runbook rules. It does not create a
-new source-access method, authorize broad crawling, authorize commercial Reddit
-use, or prove capture quality.
+This playbook is the Reddit source-family lane under Source Capture Armory for
+bounded personal-project Reddit capture. It consolidates existing Armory and
+runbook rules and is the front door for Reddit capture routing before any
+generic Source Capture Playbook route is selected. It does not create a new
+source-access method, authorize broad crawling, authorize commercial Reddit use,
+or prove capture quality.
 
 ## Reddit Lane At A Glance
 
@@ -40,8 +42,8 @@ moves through four stages, in order, staying inside each stage's owner contract:
 
 | Stage | What it does | Runner | Owner contract |
 | --- | --- | --- | --- |
-| 1. Discover | Find candidate subreddits/threads (rows + provenance only; no bodies) | `orca-harness/runners/run_reddit_candidate_intake_live.py` | `docs/product/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
-| 2. Select | Build a Graph Frontier Register over candidates and queue a non-executing next-run envelope | `orca-harness/runners/run_reddit_graph_frontier_register.py` | `docs/product/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
+| 1. Discover | Find candidate subreddits/threads (rows + provenance only; no bodies) | `orca-harness/runners/run_reddit_candidate_intake_live.py` | `docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md` |
+| 2. Select | Build a Graph Frontier Register over candidates and queue a non-executing next-run envelope | `orca-harness/runners/run_reddit_graph_frontier_register.py` | `docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
 | 3. Capture | Capture exact thread URLs into packets + consolidation (this playbook) | `run_reddit_old_http_batch.py` / `run_reddit_consolidation.py` / `run_reddit_batch_quality_summary.py` | this playbook |
 | 4. Read | Read the **cleaned view** we prepare (after projection): full content/body kept, only worthless noise removed -- all the data at a fraction of the token cost. Verbatim JSON is provenance only. | `orca-harness/runners/run_reddit_agent_view.py` | `orca-harness/docs/source_capture_agent_runbook.md` (read-surface rule) |
 
@@ -369,4 +371,76 @@ direction_change_propagation:
     - "not monitoring"
     - "not commercial Reddit authority"
     - "not ECR, Cleaning, Judgment, or buyer proof"
+```
+
+## Direction Change Propagation - Reddit Source-Family Lane Pointerization
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Reddit capture routing is now pointerized through the Reddit source-family
+    operator lane: the generic Source Capture Playbook remains generic, and
+    Reddit work routes to the Reddit operator playbook before discovery,
+    Graph Frontier selection, exact-thread capture, consolidation, fallback, or
+    cleaned agent-view reads. Exact old Reddit Direct HTTP remains the current
+    exact-thread default when current old Reddit HTML is the target and the
+    bounded batch runner accepts the URL; CloakBrowser remains the
+    anti-blocking/browser-visible route when Direct HTTP is unsuitable, blocked,
+    or explicitly needed.
+  trigger: workflow_authority
+  related_triggers:
+    - product_doctrine
+    - output_authority
+  controlling_sources_updated:
+    - .agents/workflow-overlay/source-loading.md
+    - docs/product/source_capture_toolbox/source_capture_playbook_v0.md
+    - docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md
+    - docs/product/source_capture_toolbox/README.md
+    - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_planning_thread_v0.md
+    - docs/workflows/data_capture_spine_consolidation_map_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/decision-routing.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/artifact-folders.md
+    - .agents/workflow-overlay/retrieval-metadata.md
+    - docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md
+    - docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
+    - docs/product/data_capture_spine/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md
+    - orca-harness/docs/source_capture_agent_runbook.md
+    - orca-harness/runners/
+    - orca-harness/source_capture/
+  intentionally_not_updated:
+    - path: docs/decisions/data_capture_spine_source_access_tooling_build_authorization_v0.md
+      reason: >
+        Source-access build authorization did not change; this patch only
+        changes routing/pointer surfaces and preserves the existing
+        anti-blocking/proxy and commercial-reroute boundaries.
+  stale_language_search: >
+    rg -n "Reddit|reddit|CloakBrowser|old Reddit Direct HTTP|\\.json|source_capture_playbook|reddit_capture_operator"
+    .agents/workflow-overlay/source-loading.md
+    docs/product/source_capture_toolbox/source_capture_playbook_v0.md
+    docs/product/source_capture_toolbox/reddit_capture_operator_playbook_v0.md
+    docs/product/source_capture_toolbox/README.md
+    docs/workflows/data_capture_spine_consolidation_map_v0.md
+    docs/workflows/orca_repo_map_v0.md
+  stale_language_search_result: >
+    Run at closeout. Remaining hits are intended live pointers to the Reddit
+    operator lane, Direct HTTP/CloakBrowser/warm JSON boundary text, and
+    historical/DCP search strings. No checked live route tells agents to use the
+    generic playbook/browser/search capture as a Reddit fallback, to use
+    CloakBrowser before a working exact-thread Direct HTTP capture, or to treat
+    Candidate URL Intake / Graph Frontier output as Source Capture Packets.
+  non_claims:
+    - not validation
+    - not readiness
+    - not implementation execution
+    - not live Reddit capture authorization
+    - not source discovery authorization
+    - not broad crawling
+    - not monitoring
+    - not commercial Reddit authority
+    - not ECR, Cleaning, Judgment, buyer proof, or source completeness proof
 ```
