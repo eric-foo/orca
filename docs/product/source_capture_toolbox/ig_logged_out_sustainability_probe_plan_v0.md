@@ -25,6 +25,8 @@ open_next:
 stale_if:
   - A future probe pins the at-pace daily-volume ceiling, exact pace threshold, throttle decay, or two-lane additivity.
   - IG moves the required public signal behind auth or changes the logged-out read substrate.
+  - IG changes the profile DOM responsive variant such that `768x1024` no longer exposes the
+    measured profile-grid permalink links.
   - The wind-caller carve-out is amended to authorize sessions, standing scheduling, commercial scale, or a different account/egress posture.
   - The IG runner's read model, block detector, response-body support, or metric-observation behavior materially changes.
 ```
@@ -108,6 +110,13 @@ What is currently supported:
 - Neither proxies nor sessions are currently warranted for realistic monitoring/burst cadences.
 - The serious-v0 operating envelope uses two stable logged-out egress lanes for the 1,000-creator
   plan, not per-request rotation and not multiple logged-in accounts.
+- The 2026-06-17 successor probes add two route facts: current local egress can be logged-out
+  soft-walled, while alternate residential egress worked logged-out; owner-created session state on
+  current egress also worked for `web_profile_info`, but sustained account/session cadence remains
+  unmeasured and outside this logged-out-first plan.
+- Profile item enumeration is viewport-sensitive. In a bounded `@hyram` proxy route, `768x1024` and
+  `1280x1200` exposed 12 DOM permalinks, while `1280x720`, `820x1180`, and `1024x1366` exposed none.
+  JSON profile-feed enumeration still returned shortcodes when the DOM grid was empty.
 
 What remains not proven:
 
@@ -117,6 +126,7 @@ What remains not proven:
 - Whether repeated compliant windows accumulate throttle state.
 - Whether two distinct egress lanes behave additively under bounded IG reads.
 - Whether the second-laptop/mobile-data lane has been isolated and then tested in this repo lane.
+- Whether the logged-out current local egress recovers after a fully quiet cooldown.
 
 ## Probe Posture
 
@@ -127,11 +137,18 @@ that failure mode. The current risk is different: whether compliant, repeated, b
 usable. A wall-finding ramp is a contingency only if compliant testing gives a confusing result that
 cannot be interpreted without measuring the threshold.
 
+Use the measured profile-enumeration route deliberately: prefer `768x1024` for profile reads, and do
+not interpret an empty DOM grid at `1280x720` as a source NO-GO. If DOM links are absent, record the
+viewport and use `web_profile_info` / profile-feed JSON shortcodes as the fallback enumerator before
+classifying the failure.
+
 ### Hard boundaries
 
 - Publicly-viewable IG material only; no private accounts, DMs, paywalls, or access-control bypass.
 - Logged-out baseline only; no cookies, sessions, stored auth state, or login automation.
-- No proxies, anti-detect setup, or per-request IP rotation in the baseline.
+- No paid proxy, anti-detect setup, or per-request IP rotation in the baseline. A phone-tether/mobile
+  lane is an alternate logged-out egress lane, not request rotation. A residential proxy route is a
+  separate fallback diagnostic, not the baseline sustainability proof.
 - No standing crawler, daemon, unattended scheduler, or auto-retry loop.
 - No discovery during passive monitoring windows; subject handles are locked before the run.
 - No typed `metric_observations`; this measures read sustainability, not producer/projection acceptance.
@@ -179,6 +196,8 @@ Shape:
 
 - One egress lane.
 - 4-6 locked public handles.
+- Profile-enumeration viewport: start at `768x1024`; record any fallback to JSON shortcode
+  enumeration.
 - Pace: 2.5-4s minimum spacing with longer natural gaps; never sub-2s.
 - Size: about 80-120 modeled IG-request equivalents.
 - Stop on first block marker or unexpected auth wall.
@@ -188,7 +207,8 @@ Interpretation:
 - Clean baseline: proceed to Stage 2.
 - Any block at compliant pace: stop, record receipt, run a fully quiet cooldown, and do not expand
   until the failure is classified.
-- Missing signal but HTTP/page access clean: classify as content-shape/fidelity issue, not a rate wall.
+- Missing signal but HTTP/page access clean: first check viewport and JSON fallback. If access remains
+  clean, classify as content-shape/fidelity issue, not a rate wall.
 
 ### Stage 2 - Repeated Single-Lane Sustainability Windows
 
@@ -289,6 +309,8 @@ Every run must produce an append-only receipt. Minimum fields:
 | block_reason | If any. |
 | stop_reason | normal_ceiling, operator_abort, block_onset, auth_wall, unexpected_error. |
 | quiet_cooldown | If recovery was attempted. |
+| viewport | Profile-enumeration viewport; required for any DOM-grid success or failure interpretation. |
+| enumeration_route | DOM grid, profile-feed JSON, or mixed fallback. |
 | verdict | GO, PARTIAL, NO-GO, or CATALOG_GAP as defined by the source-capture playbook. |
 
 No receipt means no strict interpretation. Chat summaries or operator memory are not enough.
