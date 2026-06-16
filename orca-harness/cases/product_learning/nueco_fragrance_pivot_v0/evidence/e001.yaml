@@ -1,0 +1,21 @@
+evidence_id: E1
+source_id: E1
+source: "Wayback capture of https://www.thenueco.com/ — homepage snapshot 2019-12-21 (Wayback internally redirected to 2019-12-14 capture of same URL)"
+source_type: archive_org_wayback
+timestamp: "2019-12-21T00:34:25Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: 7a6204b583312a71488aaf397b4706079fbcec70cae5475a430d3093129174ec
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-12-21T00:34:25Z is before the 2020-01-01 cutoff; Wayback-internal redirect served the 2019-12-14 capture, which is also before the cutoff."
+summary: >
+  The December 2019 homepage (theme: "Dev - Homepage Redesign - Nov 2019") shows a
+  redesigned DTC site featuring a hero section promoting "Functional Fragrance," a
+  spotlight module for the newly launched DEBLOAT+ capsule product with clinical-trial
+  language, a personalized-consultation section organized around six concern categories
+  (Energy, Gut Health, Immunity, Skin, Sleep, Focus, Stress), brand-philosophy columns
+  (Proven / Clean / Sustainable), product-format differentiator content (powders /
+  tinctures / time-delay capsules), a journal article carousel, and a rotating
+  press-quote slider; marketing integrations visible include Google Ads, Facebook Pixel,
+  AdRoll retargeting, Klaviyo email, PepperJam affiliate, Friendbuy referral ($15
+  credit), and Judge.me reviews.

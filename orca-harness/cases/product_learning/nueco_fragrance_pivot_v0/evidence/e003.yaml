@@ -1,0 +1,16 @@
+evidence_id: E3
+source_id: E3
+source: "Wayback capture of https://www.thenueco.com/ — homepage snapshot 2019-02-27"
+source_type: archive_org_wayback
+timestamp: "2019-02-27T06:56:37Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: 03970d2fabd5f38c5f6b7f4319b12a6e3acdce174397d557a31bed475e7803c9
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-02-27T06:56:37Z is before the 2020-01-01 cutoff."
+summary: >
+  The February 2019 homepage (same theme as E2) shows the DTC storefront with an
+  "About" link included in the primary navigation (absent from E2's later version);
+  the subscription cart is present with the explicit on-page message "Plan ahead,
+  make it monthly," indicating that subscription-first merchandising was an active
+  front-end choice as early as Q1 2019; the technology stack is consistent with E2.

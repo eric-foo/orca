@@ -1,0 +1,20 @@
+evidence_id: E7
+source_id: E7
+source: "Wayback capture of https://www.thenueco.com/collections/all/products/debloat-food-prebiotic-1 — product detail page snapshot 2019-12-19"
+source_type: archive_org_wayback
+timestamp: "2019-12-19T07:41:39Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: 3c6dcc777557884808dc4e20999979b1a778875c17ed069629458083c01a4ffd
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-12-19T07:41:39Z is before the 2020-01-01 cutoff."
+summary: >
+  The December 2019 product detail page for DEBLOAT FOOD + PREBIOTIC shows a one-time
+  price of $55 and a subscription price of $44 (20% discount, 1-month frequency,
+  2-month minimum via ReCharge); 83 customer reviews at a 4.53-star rating; in-stock
+  inventory count of 2,579 units at the time of the snapshot; SKU PR-DEB-100 (barcode
+  5060506360003); ingredients listed as maqui fruit powder, cinnamon powder, ginger
+  root powder, turmeric root powder, and inulin (1 tsp / 5 g serving, 20 servings per
+  pouch); product created 2017-07-14 and published 2019-10-03; a "Why It Works" section
+  cites referenced clinical studies; Friendbuy referral widget present; product tagged
+  "gut health."

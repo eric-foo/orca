@@ -1,0 +1,18 @@
+evidence_id: E2
+source_id: E2
+source: "Wayback capture of https://www.thenueco.com/ — homepage snapshot 2019-06-26"
+source_type: archive_org_wayback
+timestamp: "2019-06-26T09:54:34Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: 872af5a24398ec2a4222c51a6034c7f2ce0e42282da2d92bb0554cab1a3d67da
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-06-26T09:54:34Z is before the 2020-01-01 cutoff."
+summary: >
+  The June 2019 homepage (theme: "The Nue Co 2018 - Barrel Updates") presents a
+  navigation structure with "Build a Plan" and "Shop" as primary CTAs alongside
+  standard nav links; active technology integrations visible in the page include
+  ReCharge Payments (subscription commerce), Judge.me (reviews), AdRoll (retargeting),
+  SECOMAPP (free-gift promotions), HubSpot (CRM), Mailchimp and Seguno (email);
+  the page reflects mid-2019 brand and commerce infrastructure with subscription and
+  retention tooling in place.
