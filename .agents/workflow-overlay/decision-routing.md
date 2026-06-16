@@ -168,11 +168,12 @@ not set `CLAUDE_CODE_SUBAGENT_MODEL` (it hard-caps all subagents and blocks
 Opus escalation — over-restraint).
 
 In Codex, classify the delegated task before the `spawn_agent` call:
-mechanical/trivial rote -> `gpt-5.3-codex-spark`; ordinary delegated work ->
-`gpt-5.4`; genuine judgment -> `gpt-5.5`. `agent_type` remains a role selector
-(`explorer`, `worker`, or omitted), not the model tier. Do not use
-`gpt-5.4-mini` as the ordinary default unless separately justified or
-re-decided by the owner.
+mechanical/trivial rote, ordinary delegated work, or genuine judgment. Choose
+any explicit model override from the current tool surface only after checking
+that the name is actually available in the current session; otherwise omit the
+override or stop for an owner/tooling decision. `agent_type` remains a role
+selector (`explorer`, `worker`, or omitted), not the model tier. Do not turn a
+dated observed model list into durable routing doctrine.
 
 Model tiering does not imply source loading. A spawned subagent does not
 automatically read lane playbooks or overlay sources because it is called a

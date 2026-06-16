@@ -42,19 +42,20 @@ on a judgment tier or judgment work can be accidentally underpowered.
 
 ## Assumption gate (Codex, observed 2026-06-16)
 
-Before applying the Codex mapping, check the actual spawn surface available in
-the current session:
+Before applying any Codex model override, check the actual spawn surface
+available in the current session:
 
 - **Subagent spawning available:** yes, via `multi_agent_v1.spawn_agent`.
 - **Model override available:** yes, `model` is an optional override; omission
   inherits the parent model.
-- **Observed Codex override values:** `gpt-5.3-codex-spark`, `gpt-5.4`,
-  `gpt-5.4-mini`, `gpt-5.5`.
+- **Observed Codex override values on 2026-06-16:** `gpt-5.3-codex-spark`,
+  `gpt-5.4`, `gpt-5.4-mini`, `gpt-5.5`.
 - **Reasoning/service overrides:** available but not part of this doctrine;
   omit them unless independently required.
 - **Stop condition:** if the tool schema no longer exposes these exact model
   names, do not invent replacements. Omit the model override or stop for an
-  owner/tooling decision.
+  owner/tooling decision. The dated list above is a dispatch aid, not a durable
+  availability claim.
 
 ## Decision
 
@@ -76,24 +77,29 @@ handle rate-limits). Forcing Haiku there causes wrong results and redo — a fal
 economy worse than the Opus it avoids. Sonnet is the workhorse; Haiku is only
 for genuinely trivial rote.
 
-For Codex sessions, use the same three-way dispatch discipline with Codex model
-overrides:
+For Codex sessions, use the same three-way dispatch discipline, but treat model
+names as a current tool-surface choice rather than durable doctrine:
 
-- **Mechanical / trivial rote -> `gpt-5.3-codex-spark`.** Use for exact,
-  low-judgment work: grep/inventory, command output collection, line lookup,
-  format-only edits, precise find/replace, or verification against explicit
-  acceptance criteria.
-- **Ordinary delegated work -> `gpt-5.4`.** This is the Codex workhorse for
-  bounded implementation, source synthesis, ordinary doc drafting, focused
-  review, and anything that is not clearly mechanical or judgment-heavy.
-- **Genuine judgment -> `gpt-5.5`.** Use when the task materially depends on
-  architecture, doctrine, irreversible tradeoffs, adversarial reasoning,
-  cross-surface reconciliation, or subtle correctness on shared contracts.
+- **Mechanical / trivial rote.** Use for exact, low-judgment work:
+  grep/inventory, command output collection, line lookup, format-only edits,
+  precise find/replace, or verification against explicit acceptance criteria.
+  If the 2026-06-16 observed override set is still current, the preferred
+  mechanical override is `gpt-5.3-codex-spark`.
+- **Ordinary delegated work.** Use for bounded implementation, source synthesis,
+  ordinary doc drafting, focused review, and anything that is not clearly
+  mechanical or judgment-heavy. If the 2026-06-16 observed override set is still
+  current, the preferred ordinary override is `gpt-5.4`.
+- **Genuine judgment.** Use when the task materially depends on architecture,
+  doctrine, irreversible tradeoffs, adversarial reasoning, cross-surface
+  reconciliation, or subtle correctness on shared contracts. If the 2026-06-16
+  observed override set is still current, the preferred judgment override is
+  `gpt-5.5`.
 
-Do not silently substitute `gpt-5.4-mini` for the ordinary Codex workhorse. It
-exists in the tool surface, but the owner-selected Codex rule for this doctrine
-is mechanical -> Spark, ordinary -> 5.4, judgment -> 5.5. `gpt-5.4-mini` remains
-an operator/tooling option only when separately justified or re-decided.
+Do not silently substitute `gpt-5.4-mini` for the ordinary Codex workhorse under
+the 2026-06-16 observed override set. More generally, do not substitute any
+unreviewed current-session model name merely because it looks adjacent. If the
+expected override is unavailable, omit the override or stop for an owner/tooling
+decision.
 
 If a delegated task mixes tiers, split it when the outputs can be cleanly
 separated. If it cannot be split without losing the point of the delegation,
@@ -129,9 +135,10 @@ which would re-introduce the over-restraint this doctrine avoids.
 ## Enforcement: Codex dispatch payloads, not hooks
 
 In Codex, tiering is applied at the `spawn_agent` call boundary when delegation
-is actually authorized. The chief architect classifies the subtask first, then
-sets the `model` override only when the classification intentionally differs
-from inheriting the parent model.
+is actually authorized. The chief architect classifies the subtask first, checks
+the current tool surface, then sets the `model` override only when the selected
+override is available and the classification intentionally differs from
+inheriting the parent model.
 
 Codex `agent_type` is role selection (`default`, `explorer`, `worker`), not the
 model tier. Do not set `agent_type` to `default`, `null`, empty, or same-as-parent
@@ -196,11 +203,11 @@ without hesitation.
 
 When spawning from Codex, classify every delegated task before the call:
 
-| Dispatch class | Codex model override | Use for |
+| Dispatch class | Codex override guidance | Use for |
 | --- | --- | --- |
-| `mechanical` | `gpt-5.3-codex-spark` | trivial rote, exact extraction, explicit verification, format-only work |
-| `ordinary` | `gpt-5.4` | default delegated work; implementation, synthesis, ordinary review |
-| `judgment` | `gpt-5.5` | doctrine, architecture, irreversible tradeoffs, adversarial reasoning |
+| `mechanical` | Use the current-session mechanical override; with the 2026-06-16 observed set, `gpt-5.3-codex-spark` | trivial rote, exact extraction, explicit verification, format-only work |
+| `ordinary` | Use the current-session ordinary workhorse; with the 2026-06-16 observed set, `gpt-5.4` | default delegated work; implementation, synthesis, ordinary review |
+| `judgment` | Use the current-session strongest judgment tier; with the 2026-06-16 observed set, `gpt-5.5` | doctrine, architecture, irreversible tradeoffs, adversarial reasoning |
 
 Record the classification in the subagent prompt when it would help later
 review: `dispatch_class`, `model_override`, and the one-sentence reason. Do not
@@ -228,15 +235,59 @@ Advisory delegation doctrine. Not validation, readiness, a cost guarantee, or a
 hard gate. It does not change any project's source hierarchy, review lanes, or
 lifecycle authority; it governs only which model tier delegated subagents use.
 It is not a Codex PreToolUse/PostToolUse hook and does not claim deterministic
-runtime enforcement beyond the observed `spawn_agent` payload fields. It also
-does not create automatic lane-playbook loading for Codex or Claude Code
-subagents.
+runtime enforcement beyond the observed `spawn_agent` payload fields. Dated
+model-name examples are not durable availability claims. It also does not create
+automatic lane-playbook loading for Codex or Claude Code subagents.
 
 ## Propagation
 
 - Added: `.claude/agents/worker.md` (sonnet), `.claude/agents/mechanical.md` (haiku).
 - Pointer added in `.agents/workflow-overlay/decision-routing.md` (delegation routing owner).
-- Amended for Codex: `multi_agent_v1.spawn_agent` assumption gate and
-  mechanical/ordinary/judgment model map.
+- Amended for Codex: `multi_agent_v1.spawn_agent` assumption gate,
+  mechanical/ordinary/judgment dispatch classes, dated observed override
+  examples, and the recheck-at-dispatch rule.
 - Amended for source context: lane/playbook reads are explicit dispatch inputs,
   with capture-spine required-read examples routed through source-loading.
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Orca subagent dispatch keeps the mechanical/ordinary/judgment source-context
+    discipline but treats Codex model names as current-session tool-surface
+    choices, not durable doctrine; dated observed model names are examples that
+    must be rechecked at dispatch time.
+  trigger: workflow_authority
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - docs/decisions/subagent_model_tiering_doctrine_v0.md
+    - .agents/workflow-overlay/decision-routing.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        Already routes delegated/cross-thread work to the overlay and does not
+        carry concrete model-name policy.
+    - path: .agents/workflow-overlay/README.md
+      reason: >
+        Already names decision-routing as the Cynefin/delegation owner; no new
+        overlay section was added.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        Source-readiness and prompt/handoff mechanics are unchanged; this patch
+        only clarifies dispatch-time model override selection.
+  stale_language_search: >
+    rg -n "gpt-5\\.3-codex-spark|gpt-5\\.4|gpt-5\\.5|model map|owner-selected Codex rule|model override"
+    docs/decisions/subagent_model_tiering_doctrine_v0.md .agents/workflow-overlay/decision-routing.md
+  non_claims:
+    - not validation
+    - not readiness
+    - not runtime enforcement
+    - not durable model availability
+    - not automatic source loading
+```
