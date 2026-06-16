@@ -37,8 +37,16 @@ direction_change_propagation:
     entirely; contamination = outcome-USE, not recognition-capacity.
   trigger: product_doctrine
   related_triggers: [review_authority]
-  status: PROPOSED (conductor addendum v1 pending cross-vendor re-review; this
-    propagation enacts the doc-level controlling sources and routes the rest)
+  status: PARTIALLY ENACTED (conductor addendum v1 owner-RATIFIED 2026-06-16). The
+    finder-frame operative bar + the judgement case construction protocol are
+    enacted, and a default-on identity-masking-with-sealed-crosswalk rule (mask the
+    target brand only; keep third-party identities, provenance, and decision numbers
+    real; supply brand attributes as in-packet evidence; route out un-maskable
+    cases) is layered on R5 at those same surfaces. Remaining downstream surfaces
+    (claim-defense doctrine, packing interface, fixture drafts, the _scratch batch-2
+    exam instruments, and the case_models.py code field) stay pending. The
+    ratification + masking adoption are routed to adversarial artifact review before
+    downstream lanes treat them as final.
 ```
 
 ## Controlling sources (change #6 — the root that mandates the blacklist field)
@@ -56,11 +64,23 @@ direction_change_propagation:
 - **Fixture drafts (blacklist + test-framing):** canoo_walmart, daimler (frontmatter + body + conversion plan + extraction plan), unity — all `forbidden_information_notice` enumerations + "blind judgment packet" / "what is withheld" framing. **proposed-pending**.
 - **Active-recall surfaces (R3 drop):** `memorization_probe_protocol.md` (whole doc — **supersede**); daimler memorization-probe-request-prep + work-queue; canoo/unity/daimler freeze-blockers ("memorization probe passes" -> "isolation_result proven"); batch-1 ledger :104 + batch-2 routing :44-47 ("recognition check FIRST" -> isolation + tell-audit). **proposed-pending**.
 - **Claim defense doctrine** (`docs/product/product_lead/orca_claim_defense_doctrine_v0.md`): :177 "model knew the outcome" receipt (recognition -> outcome-USE/trace); :195 amendment (active recall "post-seal forensic" -> dropped entirely); :187-188 **stale citation to the blocked v0 addendum -> v1**. **proposed-pending (high; my doctrine, stale pointer)**.
-- **Finder frame** (`docs/product/core_spine/orca_memorization_resistant_case_finder_frame_v0.md`): :52-57 "swap on recognition" -> swap-on-outcome-USE; active recall dropped; :60-62 anonymization must stay whitelist + R6 gate. **proposed-pending**.
+- **Finder frame** (`docs/product/core_spine/orca_memorization_resistant_case_finder_frame_v0.md`): :52-57 "swap on recognition" -> swap-on-outcome-USE + active recall dropped (already on the operative bar); anonymization bullet **enacted 2026-06-16** — replaced "optional flavor-anonymization, use sparingly" with **default-on identity-masking with sealed crosswalk** (mask target brand only; keep third-party identities / provenance / decision-numbers real; attributes-as-evidence; route-out; masking is a supplement, tell-audit unchanged); stays whitelist + R6 gate. **enacted**.
 - **Packing interface v3**: :135 spoiler_inventory sealed-only reinforcement; :156 contestant-visible boundary whitelist note. **proposed-pending**.
-- **Conductor operating model** `stale_if`: add the v1 addendum at ratification. **at-ratification**.
+- **Conductor operating model** `stale_if`: add the v1 addendum — **DUE NOW** (addendum ratified 2026-06-16; confirmed `judgment_quality_promotion_operating_model_v0.md` still carries no addendum reference). **pending follow-up**.
 
 ## Disposition legend / non-claims
 
-`enact` = doc edit applied/applying in this propagation. `proposed-pending` = fan-out-proposed, exact edit captured, application is the immediate follow-up pass (or a second editing fan-out). `ROUTED` = harness code, needs bounded authorization. `QUARANTINED`/freeze-hashed = do not rewrite frozen ledgers (breaks `ledger_freeze_hash`); packet-surface fixes only. Frozen/historical probe artifacts get a SUPERSEDED banner, not deletion. Not validation, readiness, or ratification; R5 itself is pending the conductor addendum v1 re-review.
+`enact` = doc edit applied/applying in this propagation. `proposed-pending` = fan-out-proposed, exact edit captured, application is the immediate follow-up pass (or a second editing fan-out). `ROUTED` = harness code, needs bounded authorization. `QUARANTINED`/freeze-hashed = do not rewrite frozen ledgers (breaks `ledger_freeze_hash`); packet-surface fixes only. Frozen/historical probe artifacts get a SUPERSEDED banner, not deletion. Not validation or readiness; the conductor addendum v1 re-review RETURNED and the addendum is **owner-ratified 2026-06-16** (finder-frame + construction-protocol surfaces enacted; remaining surfaces above stay pending).
+
+## Post-ratification review adjudication + residuals (2026-06-16)
+
+Adversarial artifact review of the ratification + masking adoption (PR #200) returned 5 findings; home-model adjudication:
+
+- **AR-01** (route-out under-scoped to attributes) — **patched** in the finder-frame masking rule: the maskability test now weighs all identity-bearing kept-real evidence (a distinctive retailer / forum / publication, an exact metric, a launch date, a singular source relationship), and masking is explicit that it makes no re-identification-resistance claim (the tell-audit is the backstop).
+- **AR-03** (attribute-as-evidence steering) — **patched**: supplied attribute evidence is contamination-sensitive — source-backed, pre-cutoff, authored under outcome-blind construction.
+- **AR-04** (crosswalk not executable) — **patched as pending**: the sealed-crosswalk interface (owner / storage / access / integrity) is a construction-contract item routed to the packing / interface lane; masked runs are not crosswalk-backed-executable until it lands.
+- **AR-05** (tell-audit guardrail unenforced) — **patched**: tell-audit-unchanged is a required acceptance / freeze condition; mechanical enforcement pending.
+- **AR-02** (route-out representativeness) — **DISSOLVED by owner correction 2026-06-16** (below): since recognizability is no longer a route-out trigger, merely-recognizable cases are kept and the masked-eligible set stays representative. No lane-downgrade policy needed.
+- **Owner doctrinal correction (2026-06-16, supersedes part of AR-01):** recognizability of the brand is **not** grounds to route a case out (recognition ≠ contamination — the spine). The masking job is to defeat *outcome-location*: anonymize decision-moment locators (datable events, named collaborations, distinctive launch episodes) so brand-recognition cannot become outcome-recall, keeping the bare cutoff + decision numbers real. Route out only the narrow famous-episode case where recognition reliably surfaces the sealed outcome even after locator-scrubbing. Tell-audit remains the backstop. Enacted in the finder-frame masking rule.
+- Reviewer ratification-scope + pointer/fork residuals (unverifiable no-repo) — home-model re-checked with repo access: **no over-ratification** (this map states partial enactment and names pending surfaces); **two now-due dangling references** found — the operating-model `stale_if` (above) and `prospective_decision_loop_target_architecture_v0.md:566` ("applied here as by-hand discipline per its PROPOSED status" — now ratified). Both pending follow-up in their owning lanes, not patched from this lane (scope discipline).
 ```
