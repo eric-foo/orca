@@ -105,11 +105,10 @@ sustained cadence remain unmeasured.
 
 - **Calls capture: SHIPPED** — logged-out runner, parsers, scroll enumeration, cadence, packet
   writer; full suite passes; live-verified. Merged.
-- **Calls runner robustness: PATCH CANDIDATE** — source read of
-  `run_source_capture_ig_calls_packet.py` shows the runner currently hard-stops when DOM permalink
-  enumeration is empty before using profile-feed JSON. The 2026-06-17 probes show this can be a false
-  NO-GO at some viewport/route combinations. A future patch should test `768x1024` enumeration and/or
-  fall back to JSON shortcodes before declaring profile-grid failure.
+- **Calls runner robustness: PARTIAL PATCHED** — `run_source_capture_ig_calls_packet.py` now defaults
+  profile/item captures to the measured `768x1024` viewport, reducing the known false-empty DOM grid
+  failure at `1280x720`. The runner can still hard-stop when DOM permalink enumeration is empty before
+  using profile-feed JSON, so JSON shortcode fallback remains a separate patch candidate.
 - **Reel view-count capture: NOT built** — feasibility proven only. The build would extend the
   logged-out runner to capture profile-feed response bodies + follow the grid cursor, parsing
   `video_view_count` per `shortcode` onto the call slices. Needs the runner to **expose response

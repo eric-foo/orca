@@ -44,8 +44,6 @@ from source_capture.adapters import BrowserSnapshotFailure, fetch_browser_snapsh
 from source_capture.adapters.browser_snapshot import (
     DEFAULT_MAX_ARTIFACT_BYTES,
     DEFAULT_TIMEOUT_SECONDS,
-    DEFAULT_VIEWPORT_HEIGHT,
-    DEFAULT_VIEWPORT_WIDTH,
     BrowserSnapshotFailureKind,
 )
 from source_capture.cadence import build_cadence_plan
@@ -91,6 +89,8 @@ DEFAULT_CADENCE_MIN_GAP_SECONDS = 8.0
 DEFAULT_CADENCE_MAX_GAP_SECONDS = 45.0
 DEFAULT_XHR_REQUEST_GAP_SECONDS = 3.0
 DEFAULT_VIEW_COUNT_MAX_GRAPHQL_PAGES = 1
+DEFAULT_IG_PROFILE_VIEWPORT_WIDTH = 768
+DEFAULT_IG_PROFILE_VIEWPORT_HEIGHT = 1024
 
 
 def _detect_ig_block(*, final_url: str, title: str | None, visible_text: str, rendered_dom: str) -> str | None:
@@ -327,8 +327,8 @@ def run_source_capture_ig_calls_packet(
     cadence_max_gap_seconds: float = DEFAULT_CADENCE_MAX_GAP_SECONDS,
     cadence_random_seed: int | None = None,
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
-    viewport_width: int = DEFAULT_VIEWPORT_WIDTH,
-    viewport_height: int = DEFAULT_VIEWPORT_HEIGHT,
+    viewport_width: int = DEFAULT_IG_PROFILE_VIEWPORT_WIDTH,
+    viewport_height: int = DEFAULT_IG_PROFILE_VIEWPORT_HEIGHT,
     max_artifact_bytes: int = DEFAULT_MAX_ARTIFACT_BYTES,
     capture_view_counts: bool = True,
     view_count_max_graphql_pages: int = DEFAULT_VIEW_COUNT_MAX_GRAPHQL_PAGES,

@@ -221,6 +221,35 @@ def test_ig_calls_runner_respects_item_cap(scratch_dir: Path, monkeypatch: pytes
     assert len(call_slices) == 2  # capped at max_items, not all 3 enumerated
 
 
+def test_ig_calls_runner_defaults_to_measured_profile_grid_viewport(
+    scratch_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    viewports: list[tuple[int, int]] = []
+
+    def fake_snapshot(**kw):
+        viewports.append((kw["viewport_width"], kw["viewport_height"]))
+        return _route_fake(kw["url"])
+
+    monkeypatch.setattr(ig_runner, "fetch_browser_snapshot_capture", fake_snapshot)
+    output_dir = scratch_dir / "packet"
+
+    exit_code, _ = run_source_capture_ig_calls_packet(
+        profile_url=PROFILE_URL,
+        output_directory=output_dir,
+        decision_question="q",
+        max_items=1,
+        cadence_random_seed=1,
+        capture_view_counts=False,
+        sleep_fn=lambda _s: None,
+    )
+
+    assert exit_code == 0
+    assert viewports == [
+        (ig_runner.DEFAULT_IG_PROFILE_VIEWPORT_WIDTH, ig_runner.DEFAULT_IG_PROFILE_VIEWPORT_HEIGHT),
+        (ig_runner.DEFAULT_IG_PROFILE_VIEWPORT_WIDTH, ig_runner.DEFAULT_IG_PROFILE_VIEWPORT_HEIGHT),
+    ]
+
+
 def test_ig_calls_runner_rejects_item_cap_above_bounded_default(scratch_dir: Path) -> None:
     with pytest.raises(ValueError, match="max_items must be no greater than"):
         run_source_capture_ig_calls_packet(
