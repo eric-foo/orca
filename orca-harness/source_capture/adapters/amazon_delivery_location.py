@@ -15,6 +15,7 @@ un-pinned -- never a fake "set" claim that could let a non-US capture count as a
 from __future__ import annotations
 
 import re
+import time
 
 from dataclasses import dataclass
 
@@ -44,11 +45,8 @@ _ZIP_INPUT_SELECTORS = ("#GLUXZipUpdateInput", "input[id*='zip' i][type='text']"
 _APPLY_SELECTORS = ("#GLUXZipUpdate", "span.a-button-inner > input[type='submit']")
 
 # The US-storefront signal recon proved appears in the rendered DOM once a US ZIP is applied.
-_US_CURRENCY_DOM_SIGNAL = 'currencyOfPreference" value="USD"'
-# Secondary signal: a US price as DISPLAYED ($NN.NN). Tightened from a bare "$" in the DOM
-# (which matches page JS like jQuery's `$`) to a real price pattern; the negative lookbehind
-# excludes prefixed currencies (S$, C$, A$, HK$ ...) so a Singapore price never matches here.
-_US_PRICE_PATTERN = re.compile(r"(?<![A-Za-z$])\$\d[\d,]*\.\d{2}")
+_INPUT_TAG_PATTERN = re.compile(r"<input\b[^>]*>", re.IGNORECASE)
+_ATTR_PATTERN = re.compile(r"""([^\s=/>]+)\s*=\s*(['"])(.*?)\2""", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -62,6 +60,10 @@ class AmazonDeliveryLocationPlugin:
 
     delivery_zip: str
     setup_timeout_seconds: float = 30.0
+
+    def __post_init__(self) -> None:
+        if self.setup_timeout_seconds <= 0:
+            raise ValueError("delivery_zip_setup_timeout_seconds must be greater than zero")
 
     @property
     def humanize(self) -> bool:
@@ -82,12 +84,12 @@ class AmazonDeliveryLocationPlugin:
         ``confirm`` is the source of truth for whether the storefront actually flipped.
         """
         warning_notes: list[str] = []
-        probe_ms = min(_WIDGET_PROBE_TIMEOUT_MS, setup_timeout_ms)
+        setup_deadline = time.monotonic() + (setup_timeout_ms / 1000)
 
         # Step 1: homepage navigation (bounded by the setup timeout, not the main timeout).
         try:
             page.goto(_AMAZON_HOMEPAGE_URL, wait_until="load", timeout=setup_timeout_ms)  # type: ignore[union-attr]
-            page.wait_for_timeout(_DELIVERY_LOCATION_SETTLE_MS)  # type: ignore[union-attr]
+            _wait_for_settle(page, setup_deadline)
         except Exception as exc:
             warning_notes.append(
                 f"delivery_zip_setup: homepage navigation failed ({exc}); "
@@ -103,9 +105,12 @@ class AmazonDeliveryLocationPlugin:
         # Step 2: open the delivery-location widget. FIX #4: a short probe click, no is_visible.
         widget_clicked = False
         for selector in _WIDGET_OPEN_SELECTORS:
+            probe_ms = _remaining_probe_timeout_ms(setup_deadline)
+            if probe_ms <= 0:
+                break
             try:
                 page.locator(selector).first.click(timeout=probe_ms)  # type: ignore[union-attr]
-                page.wait_for_timeout(_DELIVERY_LOCATION_SETTLE_MS)  # type: ignore[union-attr]
+                _wait_for_settle(page, setup_deadline)
                 widget_clicked = True
                 break
             except Exception:
@@ -125,6 +130,9 @@ class AmazonDeliveryLocationPlugin:
         # Step 3: fill the ZIP input.
         zip_filled = False
         for selector in _ZIP_INPUT_SELECTORS:
+            probe_ms = _remaining_probe_timeout_ms(setup_deadline)
+            if probe_ms <= 0:
+                break
             try:
                 page.locator(selector).first.fill(self.delivery_zip, timeout=probe_ms)  # type: ignore[union-attr]
                 zip_filled = True
@@ -149,9 +157,12 @@ class AmazonDeliveryLocationPlugin:
         # confirm() is the only thing that can mark the storefront pinned.
         apply_clicked = False
         for selector in _APPLY_SELECTORS:
+            probe_ms = _remaining_probe_timeout_ms(setup_deadline)
+            if probe_ms <= 0:
+                break
             try:
                 page.locator(selector).first.click(timeout=probe_ms)  # type: ignore[union-attr]
-                page.wait_for_timeout(_DELIVERY_LOCATION_SETTLE_MS)  # type: ignore[union-attr]
+                _wait_for_settle(page, setup_deadline)
                 apply_clicked = True
                 break
             except Exception:
@@ -160,7 +171,7 @@ class AmazonDeliveryLocationPlugin:
             return_pressed = False
             try:
                 page.keyboard.press("Return")  # type: ignore[union-attr]
-                page.wait_for_timeout(_DELIVERY_LOCATION_SETTLE_MS)  # type: ignore[union-attr]
+                _wait_for_settle(page, setup_deadline)
                 return_pressed = True
             except Exception as exc:
                 warning_notes.append(
@@ -223,34 +234,52 @@ class AmazonDeliveryLocationPlugin:
 def confirm_us_storefront(rendered_dom: str) -> PinConfirmation:
     """Confirm the rendered DOM shows a US storefront after the delivery-location pin attempt.
 
-    Confirmed iff a US signal is present: the recon-proven ``currencyOfPreference="USD"``, OR a
-    US ``$N.NN`` price PATTERN with NO Singapore ``S$`` marker (origin-IP leak guard; a bare
-    "$" from page JS does not qualify). Otherwise NOT
-    confirmed, with a detail naming what was missing. This is the post-capture source of truth
-    for the packet's pin_confirmed flag and the honesty of the note -- clicks alone never confirm.
+    Confirmed iff the recon-proven ``currencyOfPreference="USD"`` signal is present as an input
+    value. Dollar-looking prices are deliberately not a confirmation signal: they can appear in
+    scripts, cached data, alternate-market markup, or non-storefront page fragments. Otherwise
+    NOT confirmed, with a detail naming what was missing. This is the post-capture source of
+    truth for the packet's pin_confirmed flag and the honesty of the note -- clicks alone never
+    confirm.
     """
     dom = rendered_dom or ""
-    if _US_CURRENCY_DOM_SIGNAL in dom:
+    if _has_us_currency_dom_signal(dom):
         return PinConfirmation(
             confirmed=True,
             detail='currencyOfPreference="USD" observed in rendered DOM',
         )
-    has_sg_price = "S$" in dom
-    has_us_price = bool(_US_PRICE_PATTERN.search(dom))
-    if has_us_price and not has_sg_price:
-        return PinConfirmation(
-            confirmed=True,
-            detail="US '$N.NN' price pattern observed with no Singapore 'S$' marker in rendered DOM",
-        )
-    if has_sg_price:
-        return PinConfirmation(
-            confirmed=False,
-            detail="Singapore 'S$' price marker present in rendered DOM (storefront not US)",
-        )
     return PinConfirmation(
         confirmed=False,
         detail=(
-            'no US storefront signal (currencyOfPreference="USD" absent, no unambiguous US '
-            "'$' price) in rendered DOM"
+            'no US storefront signal (currencyOfPreference="USD" absent as a rendered input '
+            "value) in rendered DOM"
         ),
     )
+
+
+def _has_us_currency_dom_signal(dom: str) -> bool:
+    """Return True only for a rendered input carrying currencyOfPreference=USD."""
+    for input_tag in _INPUT_TAG_PATTERN.findall(dom):
+        attrs = {
+            match.group(1).lower(): match.group(3)
+            for match in _ATTR_PATTERN.finditer(input_tag)
+        }
+        if (
+            attrs.get("name") == "currencyOfPreference"
+            and attrs.get("value", "").upper() == "USD"
+        ):
+            return True
+    return False
+
+
+def _remaining_ms(deadline: float) -> float:
+    return max(0.0, (deadline - time.monotonic()) * 1000)
+
+
+def _remaining_probe_timeout_ms(deadline: float) -> float:
+    return min(_WIDGET_PROBE_TIMEOUT_MS, _remaining_ms(deadline))
+
+
+def _wait_for_settle(page: object, deadline: float) -> None:
+    settle_ms = min(_DELIVERY_LOCATION_SETTLE_MS, _remaining_ms(deadline))
+    if settle_ms > 0:
+        page.wait_for_timeout(settle_ms)  # type: ignore[union-attr]

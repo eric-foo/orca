@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,6 +27,7 @@ import pytest
 from runners import run_source_capture_cloakbrowser_packet as cloak_writer
 from runners import run_source_capture_durability_series as series_runner
 from runners.run_source_capture_durability_series import _WRITER_ARG_KNOB_ALLOWLIST
+from source_capture.adapters import amazon_delivery_location as amazon_pin
 from source_capture.adapters.amazon_delivery_location import (
     _AMAZON_HOMEPAGE_URL,
     AmazonDeliveryLocationPlugin,
@@ -41,6 +42,7 @@ from source_capture.adapters.cloakbrowser_snapshot import (
 
 
 _US_DOM = '<html><body><input name="currencyOfPreference" value="USD"></body></html>'
+_US_DOM_REORDERED = "<html><body><input value='USD' type='hidden' name='currencyOfPreference'></body></html>"
 _NON_US_DOM = "<html><body><span>S$45.00</span></body></html>"
 
 
@@ -133,10 +135,16 @@ def test_confirm_us_storefront_confirms_on_usd_currency_signal() -> None:
     assert "currencyOfPreference" in confirmation.detail
 
 
+def test_confirm_us_storefront_confirms_on_usd_currency_signal_attribute_order() -> None:
+    confirmation = confirm_us_storefront(_US_DOM_REORDERED)
+    assert confirmation.confirmed is True
+    assert "currencyOfPreference" in confirmation.detail
+
+
 def test_confirm_us_storefront_not_confirmed_on_singapore_price() -> None:
     confirmation = confirm_us_storefront(_NON_US_DOM)
     assert confirmation.confirmed is False
-    assert "S$" in confirmation.detail
+    assert "currencyOfPreference" in confirmation.detail
 
 
 def test_confirm_us_storefront_not_confirmed_when_no_signal() -> None:
@@ -153,11 +161,21 @@ def test_confirm_us_storefront_not_confirmed_on_bare_dollar_from_page_js() -> No
     assert confirmation.confirmed is False
 
 
-def test_confirm_us_storefront_confirms_on_us_price_pattern_without_sgd() -> None:
-    """A real US price pattern ($N.NN) with no S$ marker confirms via the tightened fallback."""
+def test_confirm_us_storefront_not_confirmed_on_us_price_pattern_without_currency_signal() -> None:
+    """A dollar-looking price alone is not proof the storefront flipped to US."""
     dom = "<html><body><span class='a-offscreen'>$24.99</span></body></html>"
     confirmation = confirm_us_storefront(dom)
-    assert confirmation.confirmed is True
+    assert confirmation.confirmed is False
+    assert "currencyOfPreference" in confirmation.detail
+
+
+@pytest.mark.parametrize("price", ["C$24.99", "A$24.99", "HK$24.99", "NZ$24.99"])
+def test_confirm_us_storefront_not_confirmed_on_prefixed_currency_without_currency_signal(
+    price: str,
+) -> None:
+    confirmation = confirm_us_storefront(f"<html><body><span>{price}</span></body></html>")
+    assert confirmation.confirmed is False
+    assert "currencyOfPreference" in confirmation.detail
 
 
 # ── The honesty keystone: note(...) ─────────────────────────────────────────────
@@ -207,9 +225,15 @@ def test_plugin_note_failed_step_surfaces_reason() -> None:
 class _FakePage:
     """A scriptable fake Playwright page. ``fail_steps`` names steps that should error."""
 
-    def __init__(self, fail_steps: set[str] | None = None, apply_button_missing: bool = False):
+    def __init__(
+        self,
+        fail_steps: set[str] | None = None,
+        apply_button_missing: bool = False,
+        clock_advance: Callable[[float], None] | None = None,
+    ):
         self.fail_steps = fail_steps or set()
         self.apply_button_missing = apply_button_missing
+        self._clock_advance = clock_advance
         self.calls: list[str] = []
         self.click_timeouts: list[float] = []
         self.return_pressed = False
@@ -221,6 +245,8 @@ class _FakePage:
 
     def wait_for_timeout(self, ms: float) -> None:
         self.calls.append("wait")
+        if self._clock_advance is not None:
+            self._clock_advance(ms)
 
     def locator(self, selector: str) -> "_FakeLocator":
         return _FakeLocator(self, selector)
@@ -289,6 +315,32 @@ def test_plugin_before_uses_short_probe_timeout_not_8000ms() -> None:
     assert page.click_timeouts, "widget steps should have probed with a timeout"
     assert all(t == 2500 for t in page.click_timeouts), page.click_timeouts
     assert 8000 not in page.click_timeouts
+
+
+def test_plugin_before_uses_setup_timeout_as_shared_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    """FIX #1: setup timeout is a shared pre-capture budget, not reset per widget step."""
+    clock = {"now": 0.0}
+
+    def _now() -> float:
+        return clock["now"]
+
+    def _advance(ms: float) -> None:
+        clock["now"] += ms / 1000
+
+    monkeypatch.setattr(amazon_pin.time, "monotonic", _now)
+    plugin = AmazonDeliveryLocationPlugin(delivery_zip="10001")
+    page = _FakePage(clock_advance=_advance)
+
+    outcome = plugin.before(page, setup_timeout_ms=2_000)
+
+    assert outcome.steps_completed is False
+    assert outcome.reason == "fill_zip"
+    assert page.click_timeouts == [500]
+
+
+def test_plugin_rejects_non_positive_setup_timeout() -> None:
+    with pytest.raises(ValueError, match="delivery_zip_setup_timeout_seconds"):
+        AmazonDeliveryLocationPlugin(delivery_zip="10001", setup_timeout_seconds=0)
 
 
 def test_plugin_before_homepage_failure_is_first_failed_step() -> None:
