@@ -298,6 +298,7 @@ def test_sephora_projection_uses_target_review_widget_not_recommendation_noise()
     </head><body>
       <section id="target-reviews">Ratings & Reviews (3)<span>3 Reviews*</span></section>
       <a data-cnstrc-item="recommendation" data-cnstrc-item-name="Alpha Beta">
+        <span data-at="product_list_price">$99.00</span>
         <span data-at="review_count" aria-label="7.8K reviews">7.8K</span>
       </a>
       <p>Sign in for FREE standard shipping.</p>
@@ -342,6 +343,52 @@ def test_sephora_projection_uses_target_review_widget_not_recommendation_noise()
     assert review.source_visible_fields["recommendation_counts_are_not_target_substrate"] is True
     assert "sephora_price_from_structured_json_without_target_dom_price" in projection.residuals
     assert "sephora_ld_json_review_count_differs_from_target_dom" not in projection.residuals
+
+
+def test_sephora_projection_uses_target_dom_price_when_product_page_anchor_exists() -> None:
+    packet = _packet(
+        retailer="sephora",
+        locator="https://www.sephora.com/product/lip-sleeping-mask-P420652",
+        series_id="sephora_laneige_lipmask_visible_price_recapture_v0",
+    )
+    ld_json = json.dumps(
+        {
+            "@context": "http://schema.org",
+            "@type": "Product",
+            "name": "Lip Sleeping Mask",
+            "productID": "P420652",
+            "sku": "1966258",
+            "scent": "Berry",
+            "offers": {"@type": "Offer", "price": "24.00", "priceCurrency": "USD", "availability": "https://schema.org/InStock"},
+            "aggregateRating": {"@type": "AggregateRating", "reviewCount": "22240", "ratingValue": "4.3158273381294965"},
+        },
+        separators=(",", ":"),
+    )
+    html = f"""
+    <html><head><script type="application/ld+json">{ld_json}</script></head>
+    <body>
+      <div data-cnstrc-item-id="P420652" data-cnstrc-item-price="$24.00"
+        data-cnstrc-item-variation-id="1966258" data-comp="ProductPage ProductPage BaseComponent">
+        <b>$24.00</b>
+      </div>
+      <a data-cnstrc-item="recommendation" data-cnstrc-item-name="Alpha Beta">
+        <span data-at="product_list_price">$99.00</span>
+      </a>
+      <section>Ratings & Reviews (22K)</section>
+    </body></html>
+    """
+
+    projection = _projection(packet=packet, html=html, visible_text="Ratings & Reviews (22K)\nAdd to Basket")
+
+    variant = _single_row(projection, "retail_variant_offer")
+    assert variant.source_visible_fields["sku"] == "1966258"
+    assert variant.source_visible_fields["price"] == "24.00"
+    assert variant.source_visible_fields["dom_price"] == "24.00"
+    assert variant.source_visible_fields["dom_product_id"] == "P420652"
+    assert variant.source_visible_fields["dom_sku"] == "1966258"
+    assert variant.source_visible_fields["price_isolation"] == "sephora_dom_product_page"
+    assert variant.source_visible_fields["price_binding_source"] == "rendered_dom_product_page"
+    assert "sephora_price_from_structured_json_without_target_dom_price" not in projection.residuals
 
 
 def test_sephora_projection_residualizes_ld_json_review_count_trap_when_dom_differs() -> None:

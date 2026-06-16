@@ -513,6 +513,9 @@ def _variant_offer_fields(
 
     structured_fields, structured_anchor = _structured_variant_offer_fields(structured_entries)
     apollo_fields, apollo_anchor = _ulta_apollo_offer_fields(structured_entries) if retailer == "ulta" else ({}, None)
+    sephora_dom_fields = _sephora_dom_offer_fields(html) if retailer == "sephora" else {}
+    if sephora_dom_fields:
+        structured_fields = {**structured_fields, **sephora_dom_fields}
     residuals.extend(_structured_price_residuals(retailer=retailer, structured_fields=structured_fields))
     if retailer == "ulta" and structured_fields and apollo_fields:
         for key in ("sku", "product_id", "price", "availability"):
@@ -680,6 +683,23 @@ def _ulta_apollo_offer_fields(
             "variant_binding_source": "apollo_state",
         }, entry.raw_anchor
     return {}, None
+
+
+def _sephora_dom_offer_fields(html: str) -> dict[str, Any | None]:
+    for match in re.finditer(r"<[^>]*data-comp=\"ProductPage[^\"]*\"[^>]*>", html, flags=re.IGNORECASE):
+        tag = match.group(0)
+        price = _html_attr_value(tag, "data-cnstrc-item-price")
+        if price is None:
+            continue
+        return {
+            "dom_product_id": _html_attr_value(tag, "data-cnstrc-item-id"),
+            "dom_sku": _html_attr_value(tag, "data-cnstrc-item-variation-id"),
+            "dom_price": price.lstrip("$"),
+            "price": price.lstrip("$"),
+            "price_isolation": "sephora_dom_product_page",
+            "price_binding_source": "rendered_dom_product_page",
+        }
+    return {}
 
 
 def _structured_price_residuals(
@@ -1082,6 +1102,10 @@ def _first_literal(text: str, literals: tuple[str, ...]) -> str | None:
         if literal.lower() in lower:
             return literal
     return None
+
+
+def _html_attr_value(tag: str, attr_name: str) -> str | None:
+    return _first_regex(tag, (rf"\b{re.escape(attr_name)}=[\"']([^\"']+)[\"']",))
 
 
 def _string_or_none(value: object) -> str | None:
