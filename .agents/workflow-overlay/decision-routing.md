@@ -174,6 +174,13 @@ mechanical/trivial rote -> `gpt-5.3-codex-spark`; ordinary delegated work ->
 `gpt-5.4-mini` as the ordinary default unless separately justified or
 re-decided by the owner.
 
+Model tiering does not imply source loading. A spawned subagent does not
+automatically read lane playbooks or overlay sources because it is called a
+capture worker, explorer, or judgment lane. For any subagent output the chief
+architect will consume, the dispatch must provide forked context, a bounded
+source capsule, or explicit required reads plus the source-readiness and
+return-shape contract in `.agents/workflow-overlay/prompt-orchestration.md`.
+
 ## Non-Claims
 
 Cynefin routing is not validation, readiness, approval, acceptance, review,

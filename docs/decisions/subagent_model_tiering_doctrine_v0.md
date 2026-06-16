@@ -12,14 +12,18 @@ use_when:
   - Spawning a subagent and choosing its model or runtime tier.
   - Authoring or reviewing custom agent definitions under `.claude/agents/`.
   - Deciding whether a delegated task needs the strongest available judgment tier.
+  - Defining what source context a spawned subagent must load or receive.
 authority_boundary: retrieval_only
 open_next:
   - .claude/agents/worker.md          # Claude Code Sonnet default workhorse
   - .claude/agents/mechanical.md      # Claude Code Haiku trivial-rote tier
   - .agents/workflow-overlay/decision-routing.md   # delegation routing owner
+  - .agents/workflow-overlay/prompt-orchestration.md # subagent source-readiness and return-shape owner
+  - .agents/workflow-overlay/source-loading.md       # source-pack and capture-method load owner
 stale_if:
   - Claude Code changes the subagent model-resolution order or the agent-definition `model` field.
   - Codex changes the `multi_agent_v1.spawn_agent` model override names or semantics.
+  - Codex adds repo/project-level automatic source loading for spawned agents.
   - The tier mapping is re-decided by the owner.
 ```
 
@@ -139,6 +143,50 @@ This preserves `.agents/workflow-overlay/decision-routing.md` Subagent Runtime
 Payload Safety: inherited runtime defaults are omitted fields; explicit
 runtime fields are used only for a real override, never as decorative defaults.
 
+## Source context is explicit, not implied by tier
+
+Model tier, agent type, branch name, and lane label do **not** automatically load
+Orca source context. A spawned subagent only has the context supplied by the
+harness: forked thread history, explicit `message` / `items`, attached files, or
+sources the prompt instructs it to read.
+
+Therefore, the spawning chief architect must bind source readiness at dispatch
+time whenever the subagent's output will be acted on. Do one of these:
+
+- use `fork_context: true` only when the parent thread already loaded the
+  controlling sources and the task can safely inherit that context;
+- provide a compact source capsule with the controlling excerpts and paths; or
+- require the subagent to read named sources first and report
+  `SOURCE_CONTEXT_READY` before analysis, patching, or verdicts.
+
+The source-loading rule is harness-neutral. In Codex it is especially important
+because `agent_type: explorer` / `worker` is only a role selector and the
+`model` override is only a runtime tier; neither one carries lane playbooks,
+repo maps, or overlay files by itself.
+
+For capture-spine activity, the dispatch must name the capture read pack instead
+of relying on "capture lane" as a magic role. Start with:
+
+- `AGENTS.md`
+- `.agents/workflow-overlay/README.md`
+- `.agents/workflow-overlay/source-loading.md`
+- `docs/product/source_capture_toolbox/source_capture_playbook_v0.md`
+- `docs/product/source_capture_toolbox/capture_recon_index_v0.md`
+
+If the subagent has concrete runner inputs and is operating the Source Capture
+Armory from `orca-harness/`, also require:
+
+- `.agents/workflow-overlay/safety-rules.md`
+- `docs/workflows/data_capture_spine_consolidation_map_v0.md`
+- `orca-harness/docs/source_capture_agent_runbook.md`
+
+This is not a prompt-artifact exception. Durable prompts, wrappers, handoffs,
+reruns, and patch prompts remain owned by `workflow-prompt-orchestrator`. An
+in-session subagent dispatch that only gathers, verifies, or performs a bounded
+worker task may be written directly, but it still needs explicit source
+readiness and the return-shape contract from
+`.agents/workflow-overlay/prompt-orchestration.md`.
+
 ## Operating rule (for the orchestrator)
 
 When spawning from Claude Code, default delegated work to `worker` (Sonnet). Use
@@ -160,13 +208,29 @@ turn that receipt into a runtime-model recommendation inside model-neutral
 review-lane artifacts; this doctrine governs spawn-time operator/tooling
 choice, not review-lane prompt content.
 
+For Codex subagents whose output will be consumed by the chief architect, include
+these dispatch fields unless the task is a trivial mechanical command:
+
+```text
+dispatch_class: mechanical | ordinary | judgment
+model_override: <Codex model, if intentionally set>
+source_context_mode: forked_context | required_reads | source_capsule
+required_reads_or_capsule: <paths or capsule summary>
+source_ready_signal: SOURCE_CONTEXT_READY before acting
+return_shape: exact requested fields, file:line cites for load-bearing claims,
+  unknown for absent facts
+stop_conditions: <task-specific stops>
+```
+
 ## Non-claims
 
 Advisory delegation doctrine. Not validation, readiness, a cost guarantee, or a
 hard gate. It does not change any project's source hierarchy, review lanes, or
 lifecycle authority; it governs only which model tier delegated subagents use.
 It is not a Codex PreToolUse/PostToolUse hook and does not claim deterministic
-runtime enforcement beyond the observed `spawn_agent` payload fields.
+runtime enforcement beyond the observed `spawn_agent` payload fields. It also
+does not create automatic lane-playbook loading for Codex or Claude Code
+subagents.
 
 ## Propagation
 
@@ -174,3 +238,5 @@ runtime enforcement beyond the observed `spawn_agent` payload fields.
 - Pointer added in `.agents/workflow-overlay/decision-routing.md` (delegation routing owner).
 - Amended for Codex: `multi_agent_v1.spawn_agent` assumption gate and
   mechanical/ordinary/judgment model map.
+- Amended for source context: lane/playbook reads are explicit dispatch inputs,
+  with capture-spine required-read examples routed through source-loading.
