@@ -1,0 +1,19 @@
+evidence_id: E6
+source_id: E6
+source: "Wayback capture of https://www.thenueco.com/pages/about — About page snapshot 2019-02-19"
+source_type: archive_org_wayback
+timestamp: "2019-02-19T23:16:22Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: d2bdc3133e9da336fefe774442289e24a743c698b734d92cf13a18ecd0a7dbec
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-02-19T23:16:22Z is before the 2020-01-01 cutoff."
+summary: >
+  The February 2019 About page presents the brand origin story (founded 2017, rooted
+  in a grandfather-scientist narrative) and a four-stage product philosophy (proven
+  formula → remove synthetic chemicals → substitute organic food ingredients → natural
+  supplement backed by science); it identifies ingredient sourcing choices (Camu Camu
+  for Vitamin C, Baobab for Beta-Carotene, Beetroot for Iron), manufacturing in a
+  20-year-old English lab in FDA-approved facilities, recyclable glass packaging, a
+  "zero waste by 2020" sustainability commitment, a footer reference to an "NYC Flagship"
+  location, and subscription-benefit language grouped as Delivered / Results / Support.

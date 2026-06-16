@@ -1,0 +1,17 @@
+evidence_id: E4
+source_id: E4
+source: "Wayback capture of https://www.thenueco.com/collections/all — full catalog snapshot 2019-11-17"
+source_type: archive_org_wayback
+timestamp: "2019-11-17T09:34:15Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: 20c3e364e0fe6a040c2a17f70506fc7018051f83c95d2465125775b588f8240d
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-11-17T09:34:15Z is before the 2020-01-01 cutoff."
+summary: >
+  The November 2019 collections/all page lists 17 or more distinct SKUs with prices
+  ranging from $30 (FUNCTIONAL FRAGRANCE) to $85 (NOOTRO-FOCUS), spanning internal
+  concern categories (Energy, Gut Health, Immunity, Skin, Sleep, Stress) visible as
+  filter tags; the catalog includes ingestibles (capsules, powders, drops), topical
+  products (Topical-C at $70), and fragrance, indicating a broad multi-format assortment
+  with meaningful ASP spread and category diversity as of late 2019.

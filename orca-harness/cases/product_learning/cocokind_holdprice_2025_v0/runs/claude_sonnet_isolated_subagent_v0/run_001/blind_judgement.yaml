@@ -1,0 +1,130 @@
+advisory_phase_1_fields: {}
+case_id: cocokind_holdprice_2025_v0
+contestant_band_claim:
+  advisory_only: true
+  claimed_ceiling: 5
+  claimed_floor: 2
+  reasoning: 'Floor is 2 (minimal conservative action — hold all prices, absorb fully)
+    because the packet provides no evidence that margin pressure has already become
+    acute; price stability over a year could reflect deliberate hold or healthy margin.
+    Ceiling is 5 (strong committed action — broad catalog increase with stated rationale)
+    because the tariff pressure is stipulated as real and non-trivial, and a founder
+    with full authority could reasonably act decisively. The band does not extend
+    to 7–8 because no evidence in the packet supports aggressive or escalatory action;
+    the cost structure gap (MA-03) actively suppresses confidence above 5. Escalation
+    (6) is not warranted because the evidence is sparse but not conflicting.
+
+    '
+contestant_id: claude_sonnet_isolated_subagent_v0
+decision_shape: action_band
+evidence_used:
+- claim_id: C1
+  claim_role: load_bearing
+  claim_text: 'Cocokind''s pre-cutoff SKU prices are predominantly sub-$30, consistent
+    with an accessible price architecture across both bestseller and full-catalog
+    views.
+
+    '
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+- claim_id: C2
+  claim_role: load_bearing
+  claim_text: 'Individual product page prices (E6–E10) are consistent with collection-level
+    prices (E4, E5), indicating no observed discrepancy between SKU-level and collection-level
+    price display — pricing appears uniform and not selectively suppressed in any
+    view.
+
+    '
+  evidence_unit_ids:
+  - E4
+  - E5
+  - E6
+  - E7
+  - E8
+  - E9
+  - E10
+- claim_id: C3
+  claim_role: load_bearing
+  claim_text: 'The homepage trajectory across three snapshots spanning ~one year (E1,
+    E2, E3) shows site and messaging evolution but no evidence of price-point messaging
+    changes that would signal an already-executed price increase during the window.
+
+    '
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+- claim_id: C4
+  claim_role: load_bearing
+  claim_text: 'No cost, margin, or tariff exposure data appears in the packet; the
+    cost structure that would determine whether current prices are sustainable under
+    tariff pressure is entirely unobserved.
+
+    '
+  evidence_unit_ids: []
+- claim_id: C5
+  claim_role: contextual
+  claim_text: 'The brand''s stated positioning as affordable clean beauty creates
+    a brand-trust constraint on how price changes are executed and communicated, independent
+    of the magnitude chosen.
+
+    '
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+harness_version: v0_14
+judgement_class: recommend
+load_bearing_assumption:
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E4
+  - E5
+  statement: 'The observed price stability across E1–E3 and SKU pages reflects a deliberate
+    brand hold, not merely that no snapshot happened to capture a price change event
+    — i.e., that the snapshot cadence is sufficient to detect a material price move
+    if one had occurred.
+
+    '
+  would_flip_if_false: true
+model_family: anthropic_claude
+model_id: claude-sonnet-4-6
+model_snapshot_if_available: null
+must_address_items_covered:
+- MA-01
+- MA-02
+- MA-03
+- MA-04
+prompt_hash: DC2635D49FDA98F8567FEBDD5237DCCA641BE952158AD7894FB1A8E9546339EB
+recommended_action:
+  action_label: Selective SKU-level price increase, modest magnitude, with positioning
+    anchor held
+  ladder_level: 3
+  rationale: 'The evidence shows a stable, sub-$30 price architecture across hero
+    SKUs (E6–E10) and bestsellers (E4, E5), with no observed price movement across
+    the ~one-year homepage window (E1–E3). This stability is itself a brand signal:
+    cocokind has not used price increases as a visible lever even as tariff pressure
+    built through 2024–2025. The affordable clean beauty positioning (MA-01) creates
+    a real ceiling trap — aggressive broad increases risk brand-level damage that
+    is harder to recover than margin. However, absorbing all tariff cost with zero
+    adjustment is unsupported by the evidence as sustainable, and the absence of cost
+    or margin data (MA-03) means the margin floor is unknown. The correct move under
+    this uncertainty is selective adjustment on SKUs where the price-to-positioning
+    gap is widest (non-entry price points, hero serums) while holding or protecting
+    entry-level SKUs that anchor accessibility. Confidence is deliberately moderated
+    to level 3 because the missing cost structure data is the single largest gap —
+    without it, neither the magnitude of necessary increase nor the margin headroom
+    is observable from the packet alone.
+
+    '
+run_id: run_001
+seed_if_supported: null
+temperature: 1.0

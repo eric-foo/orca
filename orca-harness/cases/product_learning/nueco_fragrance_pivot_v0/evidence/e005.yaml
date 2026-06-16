@@ -1,0 +1,19 @@
+evidence_id: E5
+source_id: E5
+source: "Wayback capture of https://www.thenueco.com/collections/best-sellers — best-sellers collection snapshot 2019-11-17"
+source_type: archive_org_wayback
+timestamp: "2019-11-17T12:09:27Z"
+retrieval_timestamp: "2026-06-15T14:18:00Z"
+hash: abc8d24811b108f055fba0c9fc2cf9098d524cde87b5d565a0b66bea8de064eb
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Snapshot timestamp 2019-11-17T12:09:27Z is before the 2020-01-01 cutoff."
+summary: >
+  The November 2019 best-sellers collection page surfaces a curated subset of the
+  catalog leading with food-and-supplement hybrids (DEBLOAT FOOD + PREBIOTIC,
+  PREBIOTIC + PROBIOTIC, SKIN FOOD + PREBIOTIC, ENERGY FOOD + PREBIOTIC) followed
+  by MAGNESIUM EASE, FUNCTIONAL FRAGRANCE, SLEEP DROPS, NOOTRO-FOCUS, and
+  PROBIOTIC PROTEIN-PLANT; the selection spans gut health, skin, sleep, and
+  cognitive categories with the food-blend SKUs consistently leading, and the same
+  concern-category filter taxonomy (Energy, Gut Health, Immunity, Skin, Sleep, Stress)
+  is present.

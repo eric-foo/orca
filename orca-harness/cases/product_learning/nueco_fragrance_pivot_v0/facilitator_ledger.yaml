@@ -1,0 +1,73 @@
+batch_id: product_learning
+case_family: dtc_wellness_brand_growth_strategy
+case_id: b2_holdout_h7_v0
+committed_at: '2026-06-16T00:00:00Z'
+decision_shape: action_band
+fixture_grade: plumbing_grade
+fixture_status: QUARANTINED
+frozen_band_inputs:
+  authority: full
+  authority_acquisition_cost: low
+  capability: partial
+  capability_build_cost: medium
+  evidence_independence: partially_independent
+  evidence_strength: moderate
+  information_decay: fast
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  option_value: moderate
+  reversibility_cost: medium
+  reversibility_feasibility: medium
+  upside_shape: asymmetric_up
+  urgency: medium
+labeling_rubric_version: v0_14
+leakage_audit:
+  known_fame_risk: The Nue Co. is a recognizable DTC wellness/supplement brand; a
+    contestant may recall its later product-mix and channel trajectory. Recognition
+    self-report and JSG-08 tell-audit required; contestant-facing case_id neutralized
+    (b2_holdout_h7_v0) to reduce cueing.
+  memorization_probe_required: true
+  spoiler_inventory: 'Roster-stated post-cutoff outcome (held, not independently verified
+    here): a shift toward fragrance-led revenue share, a reduction in customer-acquisition
+    cost, and an Ulta retail entry after the 2020-01-01 cutoff. Any post-2020-01-01
+    brand announcement, revenue-mix, channel, funding, or acquisition fact is a spoiler.'
+ledger_authors:
+  primary_labeler: batch2-exec-slice2 facilitator (band adopted verbatim from the
+    outcome-blind builder structural read)
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+ledger_freeze_hash: a9150d51b5150a4b2e69f93b335494cc1fce1058cf5bae9cf885be609e6a54c4
+mapping_table_version_pin: v0_14_mvp
+must_address_items:
+- description: Address that no subscription unit-economics are observable (subscriber
+    count, churn/retention, LTV, CAC, plan attachment) - only the live ReCharge mechanics,
+    the 20% recurring discount, and the 2-month minimum are visible (E1-E3, E7) -
+    and what that gap means for confidence in any recommendation that leans on deepening
+    the subscription relationship.
+  evidence_unit_ids:
+  - E1
+  - E2
+  - E3
+  - E7
+  must_address_item_id: MA-01
+- description: Address what the late-2019 catalog breadth (17+ SKUs across gut, skin,
+    sleep, energy, immunity, stress, plus recent format and category extensions) shown
+    in E4/E5 implies for the range/category-expansion path and the risk of focus dilution
+    or operational complexity.
+  evidence_unit_ids:
+  - E4
+  - E5
+  must_address_item_id: MA-02
+- description: Address the channel and geography signals - the NYC Flagship footer
+    link and England-based lab (E6) and USD checkout with UK-origin barcode (E7) -
+    and what they imply for the channel-diversification or geographic-expansion option.
+  evidence_unit_ids:
+  - E6
+  - E7
+  must_address_item_id: MA-03
+second_label_diffs: []
+underreach_observability:
+  basis: null
+  evidence_unit_ids: []
+  notes: null
+  present: false

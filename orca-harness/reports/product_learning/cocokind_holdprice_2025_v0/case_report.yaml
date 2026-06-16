@@ -1,0 +1,22 @@
+batch_id: product_learning
+case_id: cocokind_holdprice_2025_v0
+contestant_results:
+- blocking_failures: 1
+  contestant_id: claude_sonnet_isolated_subagent_v0
+  in_band: true
+  over_band: false
+  overreach_distance: 0
+  run_id: run_001
+  scoring_result_id: 01KV7TCSPYRR3D2VSRX66Z914Q
+  under_band: false
+  underreach_distance: 0
+facilitator_ledger_hash: 358381444d5aaf74404230bd99688c209dd86d1d2a2bf168dde44b44262035b6
+failure_event_summary:
+  by_severity:
+    blocking: 1
+  by_type:
+    evidence_id_missing: 1
+  total: 1
+generated_at: '2026-06-16T08:57:29Z'
+mapping_table_version: v0_14_mvp
+non_claim_notice: plumbing works only; not judgment quality
