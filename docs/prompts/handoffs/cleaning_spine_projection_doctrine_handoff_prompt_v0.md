@@ -39,7 +39,7 @@ goal_handoff:
   anchor_goal: >
     Produce the first Cleaning Spine foundation artifact: the layer contract,
     allowed transforms, ledger obligations, raw/projection/cleaned relationship,
-    raw-pull triggers, and owner-reserved decisions.
+    raw-pull triggers, and installed owner-decision gates.
   success_signal: >
     A cold reader can tell, for any projected or raw source slice, what Cleaning
     may transform, what it must preserve and link, what it must defer to
@@ -62,26 +62,28 @@ thread_operating_target_continuity:
     state as an active target.
 ```
 
-## Open Decisions First
+## Installed Decisions First
 
-Owner-reserved decisions the Cleaning lane must name, not resolve:
+Owner directions the Cleaning lane must carry without widening:
 
-- **OD-1 / pipeline ordering:** exact binding among raw capture, mechanical
-  source projection, Evidence Candidate Record, and Cleaning remains an owner
-  architecture decision. Use the current product boundary notes as inputs; do
-  not freeze a runtime order or schema.
-- **OD-4 / dedupe and clustering effects:** Cleaning may define
-  non-destructive dedupe and clustering mechanics, but any independence,
-  credibility, uncertainty, exclusion, Signal Integrity, Decision Strength, or
-  Action Ceiling effect belongs to Judgment Spine.
-- **OD-7 / naming and object model:** do not promote "Projected Unit",
-  "Cleaned Unit", or any new object into a canonical spine object unless the
-  owner explicitly adjudicates the object model. Prefer view/packet/ledger
-  language until accepted source says otherwise.
+- **OD-1 / pipeline ordering:** Cleaning uses one input handle keyed to raw,
+  with optional projection and ECR references attached when present. Projection
+  and ECR remain keyed siblings over raw for Cleaning purposes; transform
+  entries must not carry brittle triplicate references.
+- **OD-4 / where dedupe and clustering live:** Cleaning core v0 may define
+  exact-identity dedupe mechanics only. Near-match dedupe, copied-language
+  grouping, and clustering remain candidate/deferred mechanics unless
+  separately owner-authorized. Any independence, credibility, uncertainty,
+  exclusion, Signal Integrity, Decision Strength, or Action Ceiling effect
+  belongs to Judgment Spine.
+- **OD-7 / naming and object model:** "Projected Unit" is a working label for
+  the existing Data Capture Projection Packet row view. Do not promote
+  "Projected Unit", "Cleaned Unit", or any new object into canonical spine
+  ontology.
 
 Recommended lane posture: proceed with the Cleaning foundation contract now,
-while keeping those decisions as visible constraints and blockers where they
-would otherwise force a schema/runtime choice.
+while keeping those installed directions as visible constraints and blockers
+where implementation would otherwise widen them into schema/runtime choices.
 
 ## Drift Guard
 
@@ -172,7 +174,7 @@ The artifact should answer these questions:
 5. When must Cleaning pull raw, halt, or escalate to owner/Judgment?
 6. What Cleaning outputs are acceptable inputs to Judgment, and what claims must
    Judgment re-open raw for?
-7. What remains unresolved because OD-1, OD-4, or OD-7 is owner-reserved?
+7. What remains deferred or candidate because OD-1, OD-4, or OD-7 is bounded?
 
 Keep the artifact small enough to become a foundation, not a universal source
 manual. Use a section for source-family adaptation rules rather than embedding a
@@ -197,13 +199,13 @@ Traceability And Raw-Pull Rules
 Dedupe / Clustering Mechanics
 Source-Family Adaptation Boundary
 Cleaning-To-Judgment Handoff
-Open Owner Decisions
+Owner Directions Installed
 Validation / Review Needed
 ```
 
 Do not freeze field names beyond illustrative candidates unless the artifact
-labels them `candidate` and names the owner-reserved decision that would promote
-them.
+labels them `candidate` and names the owner direction or separate authorization
+that would promote them.
 
 ## Validation Gates For The Receiver
 
