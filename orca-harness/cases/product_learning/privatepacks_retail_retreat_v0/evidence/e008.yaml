@@ -1,0 +1,11 @@
+evidence_id: E8
+source_id: E8
+source: "privatepacks.com/pages/our-story-2023 — Wayback Machine snapshot 2025-02-19"
+source_type: archive_org_wayback
+timestamp: "2025-02-19T22:29:20Z"
+retrieval_timestamp: "2026-06-15T13:47:54Z"
+hash: 644b2fa1a7a0c3c6e9256e01d23850b404078ecc3d65fd86a5b19ddff0e7410f
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-02-19T22:29:20Z is before the 2025-05-01 decision cutoff."
+summary: "Brand origin story and identity page as of February 2025, providing context on how Private Packs narrates its founding, DTC roots, and any articulated strategic direction."

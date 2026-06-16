@@ -1,0 +1,11 @@
+evidence_id: E10
+source_id: E10
+source: "saiehello.com/products/complexion-boost — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T06:47:31Z"
+retrieval_timestamp: "2026-06-15T13:50:56Z"
+hash: e82a4c1679dd400a5065dda410d6be3008f3acaaaf78d1516613888e5fdf9143
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T06:47:31Z is before the 2025-06-01 decision cutoff."
+summary: "Product detail page for Complexion Boost showing listed price, product description, and complexion-category positioning approximately five weeks before the decision cutoff."

@@ -1,0 +1,11 @@
+evidence_id: E4
+source_id: E4
+source: "saiehello.com/collections/all — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T06:12:56Z"
+retrieval_timestamp: "2026-06-15T13:53:31Z"
+hash: a47a3a8090626494fb4afc4804df27656a8d3282f1c9c31aef9c8987e18f5223
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T06:12:56Z is before the 2025-06-01 decision cutoff."
+summary: "Full catalog grid page snapshot showing Saie's complete product lineup, names, and listed prices across all categories as of late April 2025."

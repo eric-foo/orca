@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "kinderbeauty.com/pages/choose-your-box — subscription selection page, 2023-02-05"
+source_type: archive_org_wayback
+timestamp: "2023-02-05T20:45:36Z"
+retrieval_timestamp: "2026-06-15T13:07:46Z"
+hash: 4297195b0d100caafe5d97319a2a611b9c3fe594c02aebd5560325c8043f65ef
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-05T20:45:36Z is before the 2023-03-01 decision cutoff."
+summary: Capture of the Kinder Beauty subscription selection page showing the available subscription tier or box options presented to prospective subscribers, including pricing, box variant descriptions, and the conversion entry point for new sign-ups.

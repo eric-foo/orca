@@ -1,0 +1,11 @@
+evidence_id: E4
+source_id: E4
+source: "imaginaryauthors.com/products/telegrama — Wayback Machine snapshot 2024-03-04"
+source_type: archive_org_wayback
+timestamp: "2024-03-04T23:39:16Z"
+retrieval_timestamp: "2026-06-15T14:22:54Z"
+hash: 87513690b4c4ade71779f54a5bbb1dc0519404052f8871ae06b516f68bd5ee88
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-03-04T23:39:16Z is before the 2024-08-01 decision cutoff."
+summary: Individual product page capture for Telegrama taken approximately five months before the decision cutoff, showing product description, pricing, size options, and availability status as presented to DTC customers at that time.

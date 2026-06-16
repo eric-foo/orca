@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: "www.joahbeauty.com homepage — Wayback Machine snapshot 2024-05-20"
+source_type: archive_org_wayback
+timestamp: "2024-05-20T11:23:07Z"
+retrieval_timestamp: "2026-06-15T13:40:36Z"
+hash: ae32bab28a9af24c7eeea4f79df49465a91b167b6224877d2f6917d0118954f6
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-05-20T11:23:07Z is before the 2024-06-01 decision cutoff."
+summary: "Cutoff-proximate DTC homepage reflecting active promotional messaging, hero product featuring, and brand identity signals for Joah Beauty as a K-beauty mass-accessible line."

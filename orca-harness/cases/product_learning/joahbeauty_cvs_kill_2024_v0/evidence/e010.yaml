@@ -1,0 +1,11 @@
+evidence_id: E10
+source_id: E10
+source: "www.joahbeauty.com/blogs/news — Wayback Machine snapshot 2024-03-03"
+source_type: archive_org_wayback
+timestamp: "2024-03-03T00:08:11Z"
+retrieval_timestamp: "2026-06-15T13:51:01Z"
+hash: a055417e9e6235df0740bc0e1eaf725814bead120db785a8e49396414a95b115
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-03-03T00:08:11Z is before the 2024-06-01 decision cutoff."
+summary: "Brand news blog index approximately 3 months before the decision cutoff, reflecting public editorial and marketing activity visible to consumers."

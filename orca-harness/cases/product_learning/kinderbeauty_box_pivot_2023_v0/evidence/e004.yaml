@@ -1,0 +1,11 @@
+evidence_id: E4
+source_id: E4
+source: "kinderbeauty.com/pages/bundler — box bundling/checkout mechanism, 2023-02-06"
+source_type: archive_org_wayback
+timestamp: "2023-02-06T00:42:10Z"
+retrieval_timestamp: "2026-06-15T13:07:00Z"
+hash: 3b51d570bce9acfef6fa7c6c20417e5aae9d5ebadd467fde3babc0f3da830236
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-02-06T00:42:10Z is before the 2023-03-01 decision cutoff."
+summary: Capture of the Kinder Beauty box bundling and checkout mechanism page, showing how the subscription checkout flow is structured, what choices subscribers make at the point of conversion, and what box-construction mechanics are surfaced to customers.

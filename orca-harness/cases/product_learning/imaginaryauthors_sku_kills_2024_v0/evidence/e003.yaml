@@ -1,0 +1,11 @@
+evidence_id: E3
+source_id: E3
+source: "imaginaryauthors.com/products/whispered-myths — Wayback Machine snapshot 2024-06-16"
+source_type: archive_org_wayback
+timestamp: "2024-06-16T00:39:27Z"
+retrieval_timestamp: "2026-06-15T14:20:08Z"
+hash: 8fc235cf156c04c3eecd3f74f78fe072852ac353aaad7b678c8116cda1dcd4d9
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-06-16T00:39:27Z is before the 2024-08-01 decision cutoff."
+summary: Individual product page capture for Whispered Myths taken approximately six weeks before the decision cutoff, showing product description, pricing, size options, and availability status as presented to DTC customers at that time.

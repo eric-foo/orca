@@ -1,0 +1,20 @@
+batch_id: product_learning
+case_id: imaginaryauthors_sku_kills_2024_v0
+contestant_results:
+- blocking_failures: 0
+  contestant_id: claude_sonnet_isolated_subagent_v0
+  in_band: true
+  over_band: false
+  overreach_distance: 0
+  run_id: run_001
+  scoring_result_id: 01KV69GVK7RRKEMQYW7XDA0EGK
+  under_band: false
+  underreach_distance: 0
+facilitator_ledger_hash: 66eaa6c4adbc752afd05e9495d77f05223fe970e60648a69748471fdd8792e11
+failure_event_summary:
+  by_severity: {}
+  by_type: {}
+  total: 0
+generated_at: '2026-06-15T18:43:22Z'
+mapping_table_version: v0_14_mvp
+non_claim_notice: plumbing works only; not judgment quality

@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: "saiehello.com homepage — Wayback Machine snapshot 2025-05-23"
+source_type: archive_org_wayback
+timestamp: "2025-05-23T19:31:47Z"
+retrieval_timestamp: "2026-06-15T13:44:32Z"
+hash: 3730750cec3d4c408671943907b3e2dbefffc2a1c382d781b6ea0903e93ad5f3
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-05-23T19:31:47Z is before the 2025-06-01 decision cutoff."
+summary: "Homepage snapshot showing Saie's brand messaging, hero product selection, and featured product presentation approximately one week before the decision cutoff."

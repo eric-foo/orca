@@ -1,0 +1,77 @@
+case_id: selflessbyhyram_target_entry_2023_v0
+batch_id: product_learning
+case_family: beauty_dtc_mass_retail_entry
+decision_shape: ceiling_trap
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: correlated
+  reversibility_feasibility: medium
+  reversibility_cost: medium
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: low
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      DTC pricing tier signals: address what the full catalog (E4) reveals about
+      the current price point architecture and what a Target repricing to lower
+      tiers would imply for price-tier coherence across the DTC and retail
+      channels.
+    evidence_unit_ids:
+      - E4
+  - must_address_item_id: MA-02
+    description: >-
+      Brand identity and community trust signals: address what the about-us page
+      (E5), eddies-routine collection (E6), and homepage trajectory (E1-E3)
+      reveal about the brand's influencer-origin identity and the positioning risk
+      of mass-retail entry.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+      - E5
+      - E6
+  - must_address_item_id: MA-03
+    description: >-
+      No retail performance data available: explicitly address the absence of any
+      pre-existing retail performance signals for this brand and what this means
+      for confidence in either recommending or declining Target entry.
+    evidence_unit_ids: []
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: true
+  known_fame_risk: high_fame_beauty_influencer_skincare_brand
+  spoiler_inventory: >-
+    Any post-cutoff information about Selfless by Hyram retail channel strategy,
+    Target distribution outcomes, pricing changes, or founder business decisions
+    after 2023-02-01
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: 8d0c8f00931bc532c2c03c60700f55d2b69ce56456e3c07f238982d91dee9815

@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: "imaginaryauthors.com homepage — Wayback Machine snapshot 2024-07-17"
+source_type: archive_org_wayback
+timestamp: "2024-07-17T09:13:56Z"
+retrieval_timestamp: "2026-06-15T14:15:06Z"
+hash: aa6992b171ae8d630f6eeaa73437cb3ad410c6e0dabb9be73f74342eeea5f52a
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-07-17T09:13:56Z is before the 2024-08-01 decision cutoff."
+summary: Cutoff-proximate homepage capture of the Imaginary Authors DTC storefront showing brand presentation, featured products, and overall storefront state approximately two weeks before the decision date.

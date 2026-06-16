@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "www.joahbeauty.com/collections/all — Wayback Machine snapshot 2024-05-20"
+source_type: archive_org_wayback
+timestamp: "2024-05-20T12:03:50Z"
+retrieval_timestamp: "2026-06-15T13:44:15Z"
+hash: d8e7ec4eb448648c063ceae21f3863c6db3b9e821a79183414a5cfaf632f7bd9
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-05-20T12:03:50Z is before the 2024-06-01 decision cutoff."
+summary: "Full DTC product catalog at the cutoff-proximate date, showing complete assortment breadth, SKU count, product categories, and pricing visible on the Shopify storefront."

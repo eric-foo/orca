@@ -1,0 +1,116 @@
+case_id: sundaily_gummy_pivot_v0
+contestant_id: claude_sonnet_isolated_subagent_v0
+run_id: run_001
+model_id: claude-sonnet-4-6
+model_family: anthropic_claude
+model_snapshot_if_available: null
+prompt_hash: 2CE99A46587265066A205782C84DEDB7CD6504211F4086C19A37E4D1B0BF6AFC
+temperature: 1.0
+seed_if_supported: null
+harness_version: v0_14
+judgement_class: wait
+decision_shape: action_band
+recommended_action:
+  ladder_level: 1
+  action_label: Wait — gather commercial and claims data before committing to any pivot
+  rationale: >-
+    The six evidence units (E1-E5 homepage snapshots, E6 FAQ) provide only
+    metadata-level summaries: they confirm the snapshots exist and are pre-cutoff,
+    but their summary fields do not reproduce actual copywriting, messaging text,
+    claims language, or any content that would reveal messaging drift (MA-01) or
+    regulatory qualification scope (MA-02). Absent observable content, the evidence
+    set cannot support any positive claim about whether the UV positioning is
+    succeeding, straining, or creating compliance exposure. The known-uncertainty
+    disclosures in the packet reinforce this: no sales volume, no conversion data,
+    no repeat-purchase rate, no competitive landscape information, and no regulatory
+    determination are present. The pivot-to-broader-skin-health action has high
+    reversibility cost (a rename and rebrand writes off existing brand equity and
+    resets DTC community expectations) and, per the ledger-visible frozen band
+    inputs, high option value and slow information decay — meaning the cost of
+    waiting is low and the cost of premature irreversible action is high. The
+    correct action is to gather the missing commercial and regulatory information
+    before committing to any repositioning of any magnitude. Levels 2-4 cannot be
+    ruled in or out without commercial traction data; levels 5, 7-8 are ruled out
+    by the high reversibility cost, absence of positive pivot signal, and asymmetric
+    downside loss shape.
+
+contestant_band_claim:
+  claimed_floor: 1
+  claimed_ceiling: 3
+  reasoning: >-
+    Floor is 1 (Wait): the evidence is weak (all same-domain, correlated, and
+    summaries contain no substantive content), commercial traction is entirely
+    unknown, and no signal of positioning failure or strategic tension is observable
+    from the provided summaries. Rushing past Wait requires either evidence of
+    failure in the current UV frame or evidence of a clear skin-health opportunity —
+    neither is present. Ceiling is 3 (Modest broadening: add 1-2 complementary
+    gummies while preserving UV focus): in the very best reading, the FAQ (E6) could
+    theoretically reveal ingredient adjacencies or consumer demand signals that
+    justify minor SKU expansion, but without observable content this remains
+    speculative. A full moderate pivot (level 4) or higher would require evidence of
+    commercial ceiling or regulatory exposure that is not present in the summaries.
+    The band is 1-3 with level 1 as the primary recommendation given the evidence
+    weight.
+  advisory_only: true
+
+evidence_used:
+  - claim_id: C1
+    claim_text: >-
+      The five homepage snapshots (E1-E5) span April to September 2018 but their
+      summary fields contain only metadata descriptions, not actual copywriting or
+      messaging content. No signal of messaging drift or strategic tension is
+      observable from what is provided.
+    claim_role: load_bearing
+    evidence_unit_ids: [E1, E2, E3, E4, E5]
+
+  - claim_id: C2
+    claim_text: >-
+      The FAQ (E6) is identified as the most substantive source for product claims
+      architecture and regulatory positioning, but its summary field does not
+      reproduce the actual FAQ content. The regulatory compliance risk of UV-specific
+      claims is therefore unassessable from the evidence as provided.
+    claim_role: load_bearing
+    evidence_unit_ids: [E6]
+
+  - claim_id: C3
+    claim_text: >-
+      No commercial data (sales, conversion, repeat purchase, subscriber counts) is
+      present in any evidence unit. Whether the UV-specific positioning is
+      commercially succeeding or plateauing is entirely unobservable.
+    claim_role: load_bearing
+    evidence_unit_ids: [E1, E2, E3, E4, E5, E6]
+
+  - claim_id: C4
+    claim_text: >-
+      A rename and repositioning carries high reversibility cost: it writes off
+      existing brand equity and resets DTC community expectations built around
+      UV-protection claims. This structural cost requires positive pivot signal to
+      justify, which is absent.
+    claim_role: supporting
+    evidence_unit_ids: [E1, E2, E3, E4, E5]
+
+  - claim_id: C5
+    claim_text: >-
+      Information decay is slow and urgency is low for this decision (no evidence of
+      competitive preemption, regulatory deadline, or seasonal cliff). Option value
+      is high because waiting preserves the ability to pursue any of levels 2-7
+      later once commercial evidence is available. The cost of waiting is therefore
+      low relative to the cost of premature irreversible action.
+    claim_role: contextual
+    evidence_unit_ids: [E1, E2, E3, E4, E5, E6]
+
+must_address_items_covered:
+  - MA-01
+  - MA-02
+
+load_bearing_assumption:
+  statement: >-
+    The evidence summary fields represent the totality of observable content from
+    each snapshot — i.e., no richer homepage or FAQ text is available beyond the
+    metadata-level descriptions in the summary fields. If the actual archived page
+    content were recoverable and revealed substantive messaging drift or regulatory
+    strain, the recommendation could shift toward levels 3 or 4.
+  evidence_unit_ids: [E1, E2, E3, E4, E5, E6]
+  would_flip_if_false: true
+
+advisory_phase_1_fields: {}

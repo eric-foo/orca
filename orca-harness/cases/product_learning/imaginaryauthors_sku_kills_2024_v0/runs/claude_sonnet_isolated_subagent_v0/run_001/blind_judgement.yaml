@@ -1,0 +1,102 @@
+case_id: imaginaryauthors_sku_kills_2024_v0
+contestant_id: claude_sonnet_isolated_subagent_v0
+run_id: run_001
+model_id: claude-sonnet-4-6
+model_family: anthropic_claude
+model_snapshot_if_available: null
+prompt_hash: 0724281c4eb55172e1d6effdf3cb9a988139cabb7cd73aa1996a812a45f39bbb
+temperature: 1.0
+seed_if_supported: null
+harness_version: v0_14
+judgement_class: recommend
+decision_shape: action_band
+recommended_action:
+  ladder_level: 3
+  action_label: "Soft preservation: keep both SKUs listed but deprioritize marketing spend"
+  rationale: >
+    The public evidence establishes that both Whispered Myths (E3, June 2024) and
+    Telegrama (E4, March 2024) were live, purchasable products on the DTC storefront
+    within the evidence window, and E5 (March 2024 full catalog) and E1 (July 2024
+    homepage) confirm the storefront itself was active and healthy approaching the
+    cutoff. There is no public-facing discontinuation signal, stock-out marker, or
+    price-reduction in any evidence unit for either SKU. The packet simultaneously
+    contains no velocity, margin, or community sentiment data that could affirmatively
+    justify discontinuing either title. Aggressive action (levels 4–8) would require
+    evidence of underperformance that this packet does not contain. Full preservation
+    without any deprioritization (level 2) ignores the acknowledged real cost of
+    carrying potentially slow-moving inventory and the stated portfolio-management
+    tension. Level 3 (soft preservation) is the minimum action that honestly reflects
+    the structural tension without overreading absent evidence: keep both SKUs in the
+    live catalog to preserve community trust and catalog permanence, while consciously
+    concentrating marketing spend on titles with visible promotional momentum, pending
+    collection of internal velocity data sufficient to revisit the decision.
+contestant_band_claim:
+  claimed_floor: 3
+  claimed_ceiling: 5
+  reasoning: >
+    Floor 3: The evidence cannot justify discontinuing either SKU. Both products are
+    demonstrably live in the DTC catalog across multiple pre-cutoff snapshots, with no
+    public signal of distress. Dropping below level 3 (i.e., preserving both with no
+    action) would ignore a real and acknowledged cost of carrying slow inventory in a
+    small-batch founder-led business, but that cost cannot be quantified from public
+    evidence alone. Level 3 captures the minimum appropriate response to the tension.
+    Ceiling 5: The evidence could theoretically support a staged exit for one or both
+    SKUs if one were to infer slow performance from the absence of homepage featuring,
+    but the packet itself explicitly warns that absence from prominent placement is not
+    evidence of low performance. Without internal data or community sentiment, a staged
+    exit (level 4 or 5) would rest on a prohibited inference. Therefore the ceiling is
+    5 rather than 7 or 8, but landing near the floor is more defensible given the
+    evidence gap.
+  advisory_only: true
+evidence_used:
+  - claim_id: C1
+    claim_text: >
+      Both Whispered Myths and Telegrama were live, purchasable products on the
+      imaginaryauthors.com DTC storefront within the pre-cutoff evidence window,
+      with no public-facing discontinuation or distress signals.
+    claim_role: load_bearing
+    evidence_unit_ids: [E3, E4, E5]
+  - claim_id: C2
+    claim_text: >
+      The DTC storefront was active and presenting brand content approximately two
+      weeks before the decision cutoff, confirming the platform context for the
+      decision.
+    claim_role: supporting
+    evidence_unit_ids: [E1]
+  - claim_id: C3
+    claim_text: >
+      A longitudinal homepage reference exists from May 2023 (approximately 14
+      months pre-cutoff) that could support catalog-composition comparison, but the
+      evidence summary contains no extractable catalog-change signal.
+    claim_role: contextual
+    evidence_unit_ids: [E2]
+  - claim_id: C4
+    claim_text: >
+      No internal sales volume, margin, sell-through rate, or community sentiment
+      data is available in the packet. The decision must be made on public DTC
+      storefront signals only, which carry minimal velocity signal.
+    claim_role: load_bearing
+    evidence_unit_ids: [E1, E2, E3, E4, E5]
+  - claim_id: C5
+    claim_text: >
+      The packet explicitly states that absence from homepage featuring is not
+      evidence of low performance, foreclosing the inference that non-featured
+      products are underperforming.
+    claim_role: load_bearing
+    evidence_unit_ids: [E1, E2]
+must_address_items_covered:
+  - MA-01
+  - MA-02
+  - MA-03
+load_bearing_assumption:
+  statement: >
+    The absence of any public discontinuation signal, stock-out marker, or pricing
+    distress in the pre-cutoff snapshots means both SKUs were carrying as normal
+    live catalog items at the time of the decision, and this absence of distress
+    is sufficient to make aggressive discontinuation unjustifiable on the available
+    evidence. If either SKU had shown a stock-out or removal from the collections/all
+    page in the evidence window, the recommendation would shift toward a staged exit
+    (level 4 or 5) for that SKU.
+  evidence_unit_ids: [E3, E4, E5]
+  would_flip_if_false: true
+advisory_phase_1_fields: {}

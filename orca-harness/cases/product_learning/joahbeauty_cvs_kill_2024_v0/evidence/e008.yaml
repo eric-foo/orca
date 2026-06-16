@@ -1,0 +1,11 @@
+evidence_id: E8
+source_id: E8
+source: "www.joahbeauty.com/pages/bundles — Wayback Machine snapshot 2024-04-15"
+source_type: archive_org_wayback
+timestamp: "2024-04-15T13:34:15Z"
+retrieval_timestamp: "2026-06-15T13:50:23Z"
+hash: 9d1f102775a340da9b9a64bba786bacd57ec76a5a279231e89c49ab7b236438c
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-04-15T13:34:15Z is before the 2024-06-01 decision cutoff."
+summary: "Bundle offers page approximately 6 weeks before the decision cutoff, showing multi-product promotional packaging and DTC conversion strategy."

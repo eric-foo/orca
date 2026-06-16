@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "saiehello.com/collections/bestsellers — Wayback Machine snapshot 2025-05-22"
+source_type: archive_org_wayback
+timestamp: "2025-05-22T00:54:48Z"
+retrieval_timestamp: "2026-06-15T13:48:00Z"
+hash: b2db2d0c68dfd29fc835d76d2623983a58b3d3b9124c945e2a44fa1e98e2d6f3
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-05-22T00:54:48Z is before the 2025-06-01 decision cutoff."
+summary: "Bestsellers collection page snapshot showing Saie's curated hero product selection and listed prices for top-priority SKUs approximately ten days before the decision cutoff."

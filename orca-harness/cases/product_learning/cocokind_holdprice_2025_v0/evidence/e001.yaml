@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: cocokind.com homepage — Wayback Machine snapshot 2025-05-30 (cutoff-proximate)
+source_type: archive_org_wayback
+timestamp: 2025-05-30T19:23:04Z
+retrieval_timestamp: 2026-06-15T13:41:34Z
+hash: 22ab4e993b9ba4773fdae4d5540f06d60f65a999b2f0f8df7823ef9f3cd6420d
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: Archive snapshot timestamp 2025-05-30 is before the 2025-06-01 decision cutoff.
+summary: Cocokind homepage as of May 30, 2025 — the most recent pre-cutoff snapshot. Preserves brand messaging, featured collections, and homepage layout at the decision point.

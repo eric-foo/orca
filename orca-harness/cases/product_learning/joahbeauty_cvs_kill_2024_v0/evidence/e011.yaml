@@ -1,0 +1,11 @@
+evidence_id: E11
+source_id: E11
+source: "www.joahbeauty.com/pages/affiliate-program — Wayback Machine snapshot 2024-04-15"
+source_type: archive_org_wayback
+timestamp: "2024-04-15T12:15:51Z"
+retrieval_timestamp: "2026-06-15T13:48:31Z"
+hash: be0e8d613450ca161a45e67efcdf486c7d8a432b3a6125d707a175b90eed55ba
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-04-15T12:15:51Z is before the 2024-06-01 decision cutoff."
+summary: "Affiliate program page approximately 6 weeks before the decision cutoff, showing the structure of Joah Beauty's creator/influencer DTC acquisition channel."

@@ -1,0 +1,11 @@
+evidence_id: E6
+source_id: E6
+source: "www.joahbeauty.com/collections — Wayback Machine snapshot 2024-05-20"
+source_type: archive_org_wayback
+timestamp: "2024-05-20T13:17:58Z"
+retrieval_timestamp: "2026-06-15T13:44:42Z"
+hash: 49336b3820f7cd430f42a140b9e70fb94088869bc0a615b3cb34dcb720b6c6ae
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2024-05-20T13:17:58Z is before the 2024-06-01 decision cutoff."
+summary: "Collections index page at the cutoff-proximate date, showing product category organization, navigation structure, and merchandising hierarchy on the DTC storefront."

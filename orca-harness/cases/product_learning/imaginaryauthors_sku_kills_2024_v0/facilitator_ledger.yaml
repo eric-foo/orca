@@ -1,0 +1,73 @@
+case_id: imaginaryauthors_sku_kills_2024_v0
+batch_id: product_learning
+case_family: beauty_dtc_sku_management
+decision_shape: normal
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: moderate
+  evidence_independence: partially_independent
+  reversibility_feasibility: medium
+  reversibility_cost: medium
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: symmetric
+  opportunity_cost: low
+  information_decay: slow
+  option_value: moderate
+  upside_shape: symmetric
+  urgency: low
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Brand catalog positioning: address whether the homepage trajectory (E1, E2)
+      shows the candidate SKUs featured or deprioritized, and what this implies
+      for their current standing in the lineup.
+    evidence_unit_ids:
+      - E1
+      - E2
+  - must_address_item_id: MA-02
+    description: >-
+      Product page status for Whispered Myths and Telegrama: address what E3 and
+      E4 reveal about the current availability, pricing, and active presentation
+      of the two candidate SKUs.
+    evidence_unit_ids:
+      - E3
+      - E4
+  - must_address_item_id: MA-03
+    description: >-
+      Catalog breadth context: address what E5 (full catalog, March 2024) reveals
+      about SKU count and whether the candidate SKUs are outliers in terms of
+      product type, price tier, or catalog positioning.
+    evidence_unit_ids:
+      - E5
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: false
+  known_fame_risk: ""
+  spoiler_inventory: >-
+    Any post-cutoff information about discontinuation or availability changes
+    for Whispered Myths or Telegrama
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: 238d4c82135dd729f5116655fbf6177a70c94e54f507f7ed54c0daaf34b9cb02

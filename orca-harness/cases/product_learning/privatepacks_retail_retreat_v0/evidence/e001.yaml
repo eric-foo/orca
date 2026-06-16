@@ -1,0 +1,11 @@
+evidence_id: E1
+source_id: E1
+source: "privatepacks.com homepage — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T09:12:59Z"
+retrieval_timestamp: "2026-06-15T13:42:55Z"
+hash: f12b75412f7576e6d3529e8ce04606b0d2da65a1659494683a3eefbabd0947b1
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T09:12:59Z is before the 2025-05-01 decision cutoff."
+summary: "Cutoff-proximate DTC homepage reflecting how the brand was presenting its product offering and any retail channel messaging to visitors three days before the decision date."

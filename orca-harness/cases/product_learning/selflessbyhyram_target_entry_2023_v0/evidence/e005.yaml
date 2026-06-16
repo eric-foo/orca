@@ -1,0 +1,11 @@
+evidence_id: E5
+source_id: E5
+source: "us.selflessbyhyram.com/pages/about-us — Wayback Machine snapshot 2023-01-27"
+source_type: archive_org_wayback
+timestamp: "2023-01-27T10:41:00Z"
+retrieval_timestamp: "2026-06-15T14:17:33Z"
+hash: eacedc47cad0bcc6730ee95b650795c499091d97f745fa9bf62b74e99914dbe2
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2023-01-27T10:41:00Z is before the 2023-02-01 decision cutoff."
+summary: "Cutoff-proximate capture of the brand's stated origin narrative, mission language, and identity positioning on the about-us page, reflecting how Selfless by Hyram officially articulated its values immediately before the decision date."

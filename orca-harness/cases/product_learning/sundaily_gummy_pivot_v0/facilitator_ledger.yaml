@@ -1,0 +1,71 @@
+case_id: sundaily_gummy_pivot_v0
+batch_id: product_learning
+case_family: beauty_wellness_brand_repositioning
+decision_shape: conflict_escalate
+labeling_rubric_version: v0_14
+mapping_table_version_pin: v0_14_mvp
+
+ledger_authors:
+  primary_labeler: batch2-exec-slice1 orchestrator lane
+  second_labeler: owner (pending)
+  second_labeler_type: human_operator
+
+second_label_diffs: []
+
+frozen_band_inputs:
+  evidence_strength: weak
+  evidence_independence: correlated
+  reversibility_feasibility: medium
+  reversibility_cost: high
+  authority: full
+  authority_acquisition_cost: low
+  capability: full
+  capability_build_cost: low
+  loss_shape: asymmetric_down
+  opportunity_cost: moderate
+  information_decay: slow
+  option_value: high
+  upside_shape: asymmetric_up
+  urgency: low
+
+must_address_items:
+  - must_address_item_id: MA-01
+    description: >-
+      Brand messaging trajectory: address what the five homepage snapshots
+      (E1-E5, April-September 2018) reveal about the stability or drift of the
+      UV-protection positioning over the evidence window, and whether any
+      messaging evolution signals strategic tension.
+    evidence_unit_ids:
+      - E1
+      - E2
+      - E3
+      - E4
+      - E5
+  - must_address_item_id: MA-02
+    description: >-
+      Product claims architecture: address what the FAQ (E6) reveals about how
+      UV-protection claims are scoped, qualified, and positioned relative to
+      regulatory expectations, and what this implies for positioning risk under
+      the current UV-specific niche.
+    evidence_unit_ids:
+      - E6
+
+underreach_observability:
+  present: false
+  basis: null
+  notes: null
+  evidence_unit_ids: []
+
+leakage_audit:
+  memorization_probe_required: false
+  known_fame_risk: ""
+  spoiler_inventory: >-
+    Any post-cutoff information about Sundots brand rename, strategic
+    repositioning, new product categories, or retailer relationships after
+    2018-10-01
+
+fixture_status: QUARANTINED
+fixture_grade: plumbing_grade
+committed_at: "2026-06-16T00:00:00Z"
+
+ledger_freeze_hash: 1ac2c3591a6a0676a8399c5a626b5d5b136233577ed48e20e9f8bddabc5361c5

@@ -1,0 +1,11 @@
+evidence_id: E8
+source_id: E8
+source: "saiehello.com/products/airset — Wayback Machine snapshot 2025-04-28"
+source_type: archive_org_wayback
+timestamp: "2025-04-28T04:53:16Z"
+retrieval_timestamp: "2026-06-15T13:49:58Z"
+hash: ddce3c3b4172705115d1aed52adb4ab3f9ebf7ca3b21c1de55fe8a7d56d24b0f
+hash_basis: raw_stored_bytes
+pre_decision_status: verified_pre_decision
+pre_decision_basis: "Archive snapshot timestamp 2025-04-28T04:53:16Z is before the 2025-06-01 decision cutoff."
+summary: "Product detail page for the AirSet setting spray showing listed price, product description, and finishing-category positioning approximately five weeks before the decision cutoff."
