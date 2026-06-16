@@ -24,7 +24,7 @@ stale_if:
 - Status: ACTIVE_RETRIEVAL_MAP (retrieval-only; source authority remains in `.agents/workflow-overlay/source-of-truth.md`)
 - Artifact type: Workflow navigation artifact
 - Scope: Repo navigation and source-pack selection
-- Refreshed: 2026-06-16 (added Codex-compatible local Git-hook adapters under `.githooks/`, the local hook installer under `.github/scripts/`, and the promoted auto-merge/main-red-alert workflows under `.github/workflows/`). Prior: 2026-06-11 repo-structure binding v0: machine map `repo-structure.yaml` + EP-04 placement checker registered; root strays quarantined to `docs/_inbox/`.
+- Refreshed: 2026-06-17 (added the local Retail/PDP projection runner route under `orca-harness/runners/`). Prior: 2026-06-16 added Codex-compatible local Git-hook adapters under `.githooks/`, the local hook installer under `.github/scripts/`, and the promoted auto-merge/main-red-alert workflows under `.github/workflows/`; 2026-06-11 repo-structure binding v0 registered machine map `repo-structure.yaml` + EP-04 placement checker and quarantined root strays to `docs/_inbox/`.
 - Implementation authorized: no
 
 ## How To Use This Map
@@ -406,7 +406,7 @@ design) remain gated.
 | `orca-harness/schemas/` | Pydantic v2 models for cases, judgments, scoring, and probes (v0.14). |
 | `orca-harness/scoring/` | Deterministic band scorer and mapping table (v0.14 Step A); not judgment-quality proof. |
 | `orca-harness/reports/` | Report-rendering code (case and source-observability reports); generated dry-run outputs under it are gitignored. |
-| `orca-harness/runners/` | CLI entrypoints for case runs, memorization probe, bounded Candidate URL Intake live first-contact sourcing, Reddit Graph Frontier / crawling graph register preparation, source-capture packets (incl. the cross-archive `run_source_capture_historical_packet.py`, which runs the slice-E locate ladder and writes the selected rung's body plus a thin `archive_locate_metadata.json` ladder receipt), and source-observability reports. |
+| `orca-harness/runners/` | CLI entrypoints for case runs, memorization probe, bounded Candidate URL Intake live first-contact sourcing, Reddit Graph Frontier / crawling graph register preparation, source-capture packets (incl. the cross-archive `run_source_capture_historical_packet.py`, which runs the slice-E locate ladder and writes the selected rung's body plus a thin `archive_locate_metadata.json` ladder receipt), local Retail/PDP packet-directory projection (`run_retail_pdp_projection.py`; no capture, ECR, Cleaning, or Judgment), and source-observability reports. |
 | `orca-harness/cases/` | Tracked deterministic fixture case(s) (e.g. TR/Casetext v0.14) with evidence, packet, and ledger; generated `scores/` and run outputs are gitignored. |
 | `orca-harness/config/` | Static YAML config (contestants, models, prompts) consumed by runners. |
 | `orca-harness/docs/` | Harness operating docs: source-capture packet and agent runbook, source-observability record guide, and scalability note. |

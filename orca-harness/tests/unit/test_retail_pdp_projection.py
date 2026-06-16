@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from runners import run_retail_pdp_projection as retail_projection_runner
 from source_capture.models import (
     CaptureModeCategory,
     PacketTiming,
@@ -19,10 +22,13 @@ from source_capture.models import (
 )
 from source_capture.retail_pdp_projection import (
     RETAIL_PDP_PROJECTION_CERTIFICATION,
+    RetailPdpProjectionInputError,
     RetailPdpProjectionRow,
     RetailProjectionRawAnchor,
     RetailProjectionRawRef,
     build_retail_pdp_projection,
+    build_retail_pdp_projection_from_packet_directory,
+    write_retail_pdp_projection,
 )
 
 
@@ -117,6 +123,87 @@ def _projection(
     return build_retail_pdp_projection(
         packet=packet,
         raw_file_bytes_by_file_id={"file_01": html.encode("utf-8"), "file_02": visible_text.encode("utf-8")},
+    )
+
+
+def _packet_with_file_bytes(
+    packet: SourceCapturePacket,
+    raw_file_bytes_by_file_id: dict[str, bytes],
+) -> SourceCapturePacket:
+    return packet.model_copy(
+        update={
+            "preserved_files": [
+                preserved_file.model_copy(
+                    update={
+                        "sha256": hashlib.sha256(raw_file_bytes_by_file_id[preserved_file.file_id]).hexdigest(),
+                        "size_bytes": len(raw_file_bytes_by_file_id[preserved_file.file_id]),
+                    }
+                )
+                for preserved_file in packet.preserved_files
+            ]
+        }
+    )
+
+
+def _write_packet_directory(
+    tmp_path: Path,
+    packet: SourceCapturePacket,
+    raw_file_bytes_by_file_id: dict[str, bytes],
+) -> tuple[Path, SourceCapturePacket]:
+    packet = _packet_with_file_bytes(packet, raw_file_bytes_by_file_id)
+    packet_dir = tmp_path / "packet"
+    for preserved_file in packet.preserved_files:
+        file_path = packet_dir / preserved_file.relative_packet_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_bytes(raw_file_bytes_by_file_id[preserved_file.file_id])
+    (packet_dir / "manifest.json").write_text(
+        f"{json.dumps(packet.model_dump(mode='json'), indent=2, sort_keys=True)}\n",
+        encoding="utf-8",
+    )
+    return packet_dir, packet
+
+
+def _sephora_projection_packet_dir(tmp_path: Path) -> tuple[Path, SourceCapturePacket]:
+    packet = _packet(
+        retailer="sephora",
+        locator="https://www.sephora.com/product/lip-sleeping-mask-in-berry-2-5g-P446304",
+        series_id="sephora_laneige_lipmask_berry_us_v0",
+    )
+    ld_json = json.dumps(
+        {
+            "@context": "http://schema.org",
+            "@type": "ProductGroup",
+            "productGroupID": "P446304",
+            "hasVariant": [
+                {
+                    "@type": "Product",
+                    "sku": "2240844",
+                    "color": "Lip Sleeping Mask in Berry - 2.5g",
+                    "offers": {
+                        "@type": "Offer",
+                        "price": "0.01",
+                        "priceCurrency": "USD",
+                        "availability": "https://schema.org/OutOfStock",
+                    },
+                }
+            ],
+            "aggregateRating": {"@type": "AggregateRating", "reviewCount": "3", "ratingValue": "3.7"},
+        },
+        separators=(",", ":"),
+    )
+    html = f"""
+    <html><head>
+      <script type="application/ld+json">{ld_json}</script>
+    </head><body>
+      <section id="target-reviews">Ratings & Reviews (3)</section>
+      <p>OUT OF STOCK</p>
+    </body></html>
+    """
+    visible_text = "OUT OF STOCK\nRatings & Reviews (3)\nSummary\n5\n4\n3\n2\n1\n3.7\n3 Reviews*"
+    return _write_packet_directory(
+        tmp_path,
+        packet,
+        {"file_01": html.encode("utf-8"), "file_02": visible_text.encode("utf-8")},
     )
 
 
@@ -452,3 +539,72 @@ def test_structure_preserved_is_false_when_required_retail_bindings_are_absent()
     assert projection.residuals  # at least the variant_offer_absent residual
     assert projection.loss_ledger.preserved_bindings >= 1  # the structured_json_for_product binding
     assert projection.loss_ledger.structure_preserved is False
+
+
+def test_packet_directory_writer_emits_hash_verified_projection_json(tmp_path: Path) -> None:
+    packet_dir, packet = _sephora_projection_packet_dir(tmp_path)
+    output_path = tmp_path / "projection" / "retail_pdp_projection.json"
+
+    projection = write_retail_pdp_projection(packet_directory=packet_dir, output_path=output_path)
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert written["packet_id"] == packet.packet_id
+    assert written["certification"] == RETAIL_PDP_PROJECTION_CERTIFICATION
+    assert projection.loss_ledger.structure_preserved is True
+    assert {row["row_kind"] for row in written["rows"]} >= {
+        "retail_pdp_product",
+        "retail_variant_offer",
+        "retail_review_substrate",
+        "retail_embedded_structured_json",
+    }
+    product_row = next(row for row in written["rows"] if row["row_kind"] == "retail_pdp_product")
+    assert product_row["raw_anchor"]["sha256"] == packet.preserved_files[0].sha256
+    assert product_row["source_visible_fields"]["retailer"] == "sephora"
+
+
+def test_retail_pdp_projection_runner_writes_projection_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    packet_dir, _packet = _sephora_projection_packet_dir(tmp_path)
+    output_path = tmp_path / "runner_projection.json"
+
+    assert retail_projection_runner.main(["--packet-dir", str(packet_dir), "--output", str(output_path)]) == 0
+
+    assert capsys.readouterr().out.strip() == str(output_path)
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["projection_method"] == "retail_pdp_mechanical_projection"
+    assert written["loss_ledger"]["structure_preserved"] is True
+
+
+def test_packet_directory_projection_blocks_missing_preserved_file(tmp_path: Path) -> None:
+    packet_dir, _packet = _sephora_projection_packet_dir(tmp_path)
+    (packet_dir / "raw" / "01_cloakbrowser_rendered_dom.html").unlink()
+
+    with pytest.raises(RetailPdpProjectionInputError, match="not found"):
+        build_retail_pdp_projection_from_packet_directory(packet_directory=packet_dir)
+
+
+def test_packet_directory_projection_blocks_sha_mismatch(tmp_path: Path) -> None:
+    packet_dir, _packet = _sephora_projection_packet_dir(tmp_path)
+    html_path = packet_dir / "raw" / "01_cloakbrowser_rendered_dom.html"
+    body = html_path.read_bytes()
+    html_path.write_bytes((b"X" if body[:1] != b"X" else b"Y") + body[1:])
+
+    with pytest.raises(RetailPdpProjectionInputError, match="sha256 mismatch"):
+        build_retail_pdp_projection_from_packet_directory(packet_directory=packet_dir)
+
+
+def test_packet_directory_projection_blocks_preserved_path_escape(tmp_path: Path) -> None:
+    packet_dir, packet = _sephora_projection_packet_dir(tmp_path)
+    escaped_files = [
+        preserved_file.model_copy(update={"relative_packet_path": "../escape.html"})
+        if preserved_file.file_id == "file_01"
+        else preserved_file
+        for preserved_file in packet.preserved_files
+    ]
+    packet = packet.model_copy(update={"preserved_files": escaped_files})
+    (packet_dir / "manifest.json").write_text(
+        f"{json.dumps(packet.model_dump(mode='json'), indent=2, sort_keys=True)}\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RetailPdpProjectionInputError, match="resolves outside the packet dir"):
+        build_retail_pdp_projection_from_packet_directory(packet_directory=packet_dir)

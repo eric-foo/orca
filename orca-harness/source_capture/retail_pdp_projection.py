@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+from pathlib import Path
 from typing import Any, Literal, Mapping, Sequence
 
 from pydantic import Field, field_validator, model_validator
@@ -154,6 +156,32 @@ class RetailPdpProjectionPacket(StrictModel):
 def _retail_structure_preserved(bindings: Sequence[RetailPdpProjectionBinding]) -> bool:
     binding_types = {binding.binding_type for binding in bindings}
     return _REQUIRED_RETAIL_STRUCTURE_BINDINGS.issubset(binding_types)
+
+
+class RetailPdpProjectionInputError(ValueError):
+    """A packet directory cannot be projected without losing raw-file integrity."""
+
+
+def build_retail_pdp_projection_from_packet_directory(*, packet_directory: Path) -> RetailPdpProjectionPacket:
+    """Build a Retail/PDP projection from an existing local Source Capture Packet directory."""
+    packet, raw_file_bytes_by_file_id = _load_packet_directory_projection_inputs(packet_directory)
+    return build_retail_pdp_projection(packet=packet, raw_file_bytes_by_file_id=raw_file_bytes_by_file_id)
+
+
+def write_retail_pdp_projection(*, packet_directory: Path, output_path: Path) -> RetailPdpProjectionPacket:
+    """Write a projection JSON sidecar from an existing packet directory.
+
+    This is a local view writer only: it reads ``manifest.json`` plus hash-verified
+    preserved files, then writes the mechanical projection. It performs no capture,
+    fetch, Cleaning, ECR, or Judgment work.
+    """
+    projection = build_retail_pdp_projection_from_packet_directory(packet_directory=packet_directory)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        f"{json.dumps(projection.model_dump(mode='json'), indent=2, sort_keys=True)}\n",
+        encoding="utf-8",
+    )
+    return projection
 
 
 def build_retail_pdp_projection(
@@ -925,6 +953,59 @@ def _with_anchor(raw_anchor: RetailProjectionRawAnchor, anchor_kind: str, anchor
     )
 
 
+def _load_packet_directory_projection_inputs(packet_directory: Path) -> tuple[SourceCapturePacket, dict[str, bytes]]:
+    manifest_path = packet_directory / "manifest.json"
+    raw_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(raw_manifest, dict):
+        raise RetailPdpProjectionInputError(f"manifest is not a JSON object: {manifest_path}")
+
+    packet = SourceCapturePacket.model_validate(raw_manifest)
+    raw_file_bytes_by_file_id: dict[str, bytes] = {}
+    for preserved_file in packet.preserved_files:
+        file_path = _resolve_packet_relative_path(
+            packet_directory=packet_directory,
+            relative_packet_path=preserved_file.relative_packet_path,
+            file_id=preserved_file.file_id,
+        )
+        if not file_path.is_file():
+            raise RetailPdpProjectionInputError(
+                f"preserved file for {preserved_file.file_id!r} not found at "
+                f"{preserved_file.relative_packet_path!r} under the packet dir; block-don't-repair."
+            )
+        body = file_path.read_bytes()
+        if len(body) != preserved_file.size_bytes:
+            raise RetailPdpProjectionInputError(
+                f"preserved file size mismatch for {preserved_file.file_id!r} "
+                f"(read {len(body)}, manifest {preserved_file.size_bytes}); block-don't-repair."
+            )
+        recomputed_sha256 = hashlib.sha256(body).hexdigest()
+        if recomputed_sha256 != preserved_file.sha256:
+            raise RetailPdpProjectionInputError(
+                f"preserved file sha256 mismatch for {preserved_file.file_id!r} "
+                f"(recomputed {recomputed_sha256}, manifest {preserved_file.sha256}); block-don't-repair."
+            )
+        raw_file_bytes_by_file_id[preserved_file.file_id] = body
+    return packet, raw_file_bytes_by_file_id
+
+
+def _resolve_packet_relative_path(*, packet_directory: Path, relative_packet_path: str, file_id: str) -> Path:
+    candidate = Path(relative_packet_path)
+    if candidate.is_absolute():
+        raise RetailPdpProjectionInputError(
+            f"preserved path {relative_packet_path!r} for {file_id!r} is absolute; block-don't-repair."
+        )
+    packet_root = packet_directory.resolve()
+    resolved = (packet_root / candidate).resolve()
+    try:
+        resolved.relative_to(packet_root)
+    except ValueError as exc:
+        raise RetailPdpProjectionInputError(
+            f"preserved path {relative_packet_path!r} for {file_id!r} resolves outside the packet dir; "
+            f"block-don't-repair."
+        ) from exc
+    return resolved
+
+
 def _decode_text(body: bytes) -> str:
     return body.decode("utf-8", errors="replace")
 
@@ -1003,6 +1084,7 @@ __all__ = [
     "RETAIL_PDP_PROJECTION_CERTIFICATION",
     "RETAIL_PDP_PROJECTION_METHOD",
     "RETAIL_PDP_PROJECTION_VERSION",
+    "RetailPdpProjectionInputError",
     "RetailPdpProjectionBinding",
     "RetailPdpProjectionLossEntry",
     "RetailPdpProjectionLossLedger",
@@ -1011,4 +1093,6 @@ __all__ = [
     "RetailProjectionRawAnchor",
     "RetailProjectionRawRef",
     "build_retail_pdp_projection",
+    "build_retail_pdp_projection_from_packet_directory",
+    "write_retail_pdp_projection",
 ]

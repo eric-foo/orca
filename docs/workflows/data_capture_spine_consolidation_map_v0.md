@@ -55,6 +55,7 @@ stale_if:
 | Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
 | Check raw-to-Judgment projection view doctrine | `docs/product/core_spine_v0_projection_doctrine_v0.md` |
 | Check Retail/PDP projection contract for Amazon, Sephora, and Ulta | `docs/product/source_capture_toolbox/retail_pdp_projection_contract_v0.md` |
+| Project an existing Retail/PDP packet directory into local projection JSON | `orca-harness/runners/run_retail_pdp_projection.py` and `orca-harness/tests/unit/test_retail_pdp_projection.py` |
 | Check whether Reddit capture output lands usefully in ECR (real-data probe; resolved by-design) | `docs/workflows/reddit_capture_to_ecr_consumption_probe_finding_v0.md` |
 | Check packet lifecycle, retention, sensitivity, or fixture movement | `docs/decisions/source_capture_packet_fixture_retention_sensitivity_decision_v0.md` |
 | Run existing capture tools safely | `orca-harness/docs/source_capture_agent_runbook.md` |

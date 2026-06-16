@@ -34,6 +34,7 @@ from source_capture.retail_pdp_projection import (
     RETAIL_PDP_PROJECTION_CERTIFICATION,
     RETAIL_PDP_PROJECTION_METHOD,
     RETAIL_PDP_PROJECTION_VERSION,
+    RetailPdpProjectionInputError,
     RetailPdpProjectionBinding,
     RetailPdpProjectionLossEntry,
     RetailPdpProjectionLossLedger,
@@ -42,6 +43,8 @@ from source_capture.retail_pdp_projection import (
     RetailProjectionRawAnchor,
     RetailProjectionRawRef,
     build_retail_pdp_projection,
+    build_retail_pdp_projection_from_packet_directory,
+    write_retail_pdp_projection,
 )
 from source_capture.source_quality import (
     SOURCE_QUALITY_REPORT_SKELETON_VERSION,
@@ -67,6 +70,7 @@ __all__ = [
     "RETAIL_PDP_PROJECTION_CERTIFICATION",
     "RETAIL_PDP_PROJECTION_METHOD",
     "RETAIL_PDP_PROJECTION_VERSION",
+    "RetailPdpProjectionInputError",
     "SOURCE_CAPTURE_MANIFEST_VERSION",
     "SOURCE_QUALITY_REPORT_SKELETON_VERSION",
     "SOURCE_QUALITY_STATE_ASSEMBLER_VERSION",
@@ -90,6 +94,7 @@ __all__ = [
     "RetailProjectionRawRef",
     "build_reddit_api_projection",
     "build_retail_pdp_projection",
+    "build_retail_pdp_projection_from_packet_directory",
     "build_source_quality_report_skeleton",
     "build_source_quality_state_census",
     "known_fact",
@@ -97,5 +102,6 @@ __all__ = [
     "not_attempted",
     "render_receipt",
     "unknown_with_reason",
+    "write_retail_pdp_projection",
     "write_local_source_capture_packet",
 ]
