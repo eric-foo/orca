@@ -108,12 +108,16 @@ receipt_artifact_or_gap: this skeleton is setup context; future per-case receipt
 ## Per-Case Record Shape
 
 Use this as a slot checklist, not as a completed schema. Empty or unknown fields
-must stay empty or `unknown`; do not backfill with guesses.
+must stay empty or `unknown`; do not backfill with guesses. Any field that looks
+like an achieved state must carry the artifact or receipt pointer that makes it
+true; without that pointer, keep the field at the weaker candidate, incomplete,
+or unknown state.
 
 ```yaml
 fragrance_level1_case:
   case_id:
   case_status: candidate | admitted | excluded
+  case_admission_artifact_ref:
   decision_family: fragrance_level1
   decision_frame:
     product_learning_question:
@@ -133,33 +137,45 @@ fragrance_level1_case:
         reason:
   evidence_packet:
     packet_id:
+    packet_construction_authority_ref:
     evidence_object_refs: []
     provenance_notes:
     post_cutoff_exclusion_notes:
   c1_allow:
     allow_state: allowed | held | excluded | unknown
+    allow_artifact_or_rationale_ref:
     rationale:
   c2_weighting:
+    decision_family_query:
     signals:
       - signal_id:
         direction: supports | opposes | hedges | unknown
         qualitative_read:
+        direction_reasoning:
         caveats:
+        n_scoreable:
+        small_n_or_staleness_caveat:
         ledger_row_ref:
         no_row_handling:
+        ambiguity_or_absence_classification:
     reasoning_trace:
   forecast:
     expected_outcome:
     metric:
     measurement_window:
-    confidence_band:
+    forecast_confidence_if_used:
+    forecast_confidence_basis:
     sealed_before_reveal: yes | no | unknown
   c3_decision:
     demand_state: durable | transient | unknown
+    persistence_basis:
     action_ceiling: act | phase | narrow | hold | defend | unknown
     horizon: commit | move | unknown
+    confidence_band:
+    confidence_band_basis:
     recommendation:
     signals_used: []
+    cap_reasons:
     reasoning_trace:
   reveal_eval:
     outcome_record_ref:
@@ -169,9 +185,12 @@ fragrance_level1_case:
   lesson_capture:
     candidate_lessons: []
     candidate_signal_rows: []
-    promotion_status: not_attempted | candidate | promotion_validated
+    promotion_status: not_attempted | candidate | promotion_validated_by_artifact
+    promotion_artifact_ref:
+    promoted_signal_row_refs: []
   product_learning_receipt:
-    receipt_status: incomplete | complete
+    receipt_status: incomplete | complete_by_artifact
+    receipt_artifact_ref:
     raw_answer_location:
     owner_readback:
     product_or_friction_signals:
@@ -181,6 +200,20 @@ fragrance_level1_case:
       - not run authorization
       - not scoring authorization
 ```
+
+### Per-Case Guardrails
+
+- `admitted`, `excluded`, `authorized_by_pointer`,
+  `promotion_validated_by_artifact`, and `complete_by_artifact` are not
+  self-certifying values; each requires the adjacent artifact or receipt pointer.
+- `forecast_confidence_if_used` is a forecast/evaluation field. It is not the C3
+  sealed-call `confidence_band`.
+- C2 trace fields must make caveats travel: direction reasoning, N/small-N or
+  staleness, ledger row or no-row handling, and absence/ambiguity
+  classification.
+- C3 trace fields must preserve the transient-default and action-ceiling logic:
+  persistence basis, C3 `confidence_band`, tagged `signals_used`, and cap
+  reasons.
 
 ## Source-Family Starting Hints
 
