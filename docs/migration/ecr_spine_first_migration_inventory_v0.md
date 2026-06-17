@@ -14,8 +14,8 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/workflows/ecr_spine_submap_v0.md
-  - docs/decisions/orca_spine_first_workspace_structure_proposal_v0.md
-  - docs/migration/foundation_layer_rename_v0.md
+  - .agents/workflow-overlay/artifact-folders.md
+  - repo-structure.yaml
   - docs/workflows/orca_repo_map_v0.md
 stale_if:
   - PR #239 is merged, closed, or materially amended.
