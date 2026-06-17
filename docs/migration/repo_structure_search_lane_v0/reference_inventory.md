@@ -70,3 +70,30 @@ in-lane) and no longer holds the old paths, so the engine does not rewrite it.
 - `apply_moves.py --dry-run` re-scans the live tree at apply; any new full-path
   reference added by a concurrent lane is reported and rewritten; anything
   outside this inventory is surfaced for reconciliation rather than auto-trusted.
+
+## Provenance pins (residual, not blocking)
+
+The migration rewrites LIVE-doc references to the new `search/` paths (agents
+navigate directly) and leaves HISTORICAL records' old paths to resolve via
+`moved_paths_index.md`. Side effect: `input_hashes` content-hash pins of the
+rewritten docs no longer match current content. Repo-wide audit:
+**25 such pins across 19 ledgers**. The hash is `sha256` of the git-blob
+(16-hex pin = first 16 chars; some pins are full 64-hex).
+
+This is provenance drift, NOT broken navigation - every reference resolves. It is
+left as-is by design (decision: prioritize direct, navigable references + low
+bloat over re-pinning point-in-time receipts):
+
+- Most pins are point-in-time receipts of churny docs - 14 pin
+  `orca_buyer_proof_packet_v0.md`, which changed 5+ times before this migration,
+  so they were already stale and are correctly "as-of-then".
+- Historical records (decisions / reviews / prompts) are point-in-time and must
+  not be retro-edited.
+- Re-pinning a churny consumer (buyer-proof) would immediately re-stale.
+
+The genuinely-current pins are the in-lane ledgers (this spec's `input_hashes`
+table + the scan-core spec). Because the algorithm is `sha256`, any later
+substantive review of a ledger can re-pin cheaply. Owning ledgers: the #228
+source-class spec, the scan-core spec, the judgment_spine evidence-ladder, the
+ratification runbook, plus historical prompts/reviews (see the migration commit's
+audit).
