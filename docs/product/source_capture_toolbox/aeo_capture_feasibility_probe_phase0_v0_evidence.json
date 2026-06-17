@@ -70,6 +70,26 @@
     "google_aio_Q02": "source-host overlap ~3; AIO fired both",
     "conclusion": "firing + extractability stable; specific brand/source SET volatile run-to-run"
   },
+  "gemini_aistudio_teardown_2026-06-17": {
+    "surface": "Gemini API / Google AI Studio (Gemini 3 Flash Preview, Grounding with Google Search ON)",
+    "query": "best niche fragrance brands for men 2026",
+    "fan_out_queries_captured": [
+      "best niche fragrance brands for men 2026 reviews trends",
+      "top niche perfume houses for men 2026 releases",
+      "best artisanal cologne brands 2026 for men",
+      "new niche fragrance brands 2026 men's grooming awards"
+    ],
+    "fan_out_source": "searchEntryPoint chips (google.com/search?q=...&client=app-vertex-grounding) in rendered DOM",
+    "grounded_sources_unmasked": {
+      "method": "groundingChunks web.uri = vertexaisearch.cloud.google.com/grounding-api-redirect/<token>; hit redirect -> 302 -> publisher; tokens ephemeral, resolve on receipt",
+      "resolved": ["beautinow.com (The Best New Niche Fragrances of 2026 So Far)", "apetogentleman.com (11 Up-and-Coming Men's Fragrance Brands For 2026)"]
+    },
+    "proxy_fidelity_vs_consumer_aio": "brands overlap (Amouage, Xerjoff in both; Creed in consumer box); BOTH unmasked sources also in consumer AIO Q01 source set; n=1",
+    "network_route": "AI Studio backend = binary protobuf RPC (clients6.google.com/$rpc/...); not readable without schema; use DOM chips or official API JSON",
+    "recursion_test": "fed back sibling 'best artisanal cologne brands 2026 for men' -> model answered from training knowledge WITHOUT grounding (terminated, no re-fan-out); free grounding flaky (internal error / permission denied); reliable mapping needs API + billing",
+    "exposed_fields_per_docs": ["webSearchQueries", "groundingChunks", "groundingSupports", "searchEntryPoint"],
+    "caveats": ["proxy not consumer AIO", "vertexaisearch URIs expire", "grounding ToS forbids analyze/index/collect", "free Gemini-3 grounding quota tightened/flaky"]
+  },
   "verdict": "GO (qualified) for both engines; Google AI Overviews = PRIMARY automatable target; only UNMEASURED GO-criterion is >=2 dates",
   "non_claims": ["not capture-run authorization","not sourcing authorization","not validation/readiness/buyer-proof","not ToS/legal sufficiency","deliverable PROPOSED","model_lane unbound"]
 }

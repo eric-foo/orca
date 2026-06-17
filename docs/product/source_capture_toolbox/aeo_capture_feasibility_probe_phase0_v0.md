@@ -267,3 +267,99 @@ buyer-proof, **not** a ToS / legal-sufficiency claim. Deliverable is `PROPOSED`;
 `model_lane: unbound`. The GO verdict authorizes nothing by itself — a scaled
 automated capture build requires separate explicit owner authorization naming the
 bounded implementation scope.
+
+---
+
+# Addendum — Google AIO / Gemini retrieval-exposure teardown (2026-06-17)
+
+Follow-on to the question: *can we capture what Google's AI **called upon** (the
+queries it issued + the sources it pulled), not just the rendered answer?* Run as
+a 4-agent research fan-out (web/docs) + a live Google AI Studio grounding probe on
+the logged-in account (owner-authorized, internal research; owner accepts the
+Gemini-grounding ToS/civil risk for the pre-commercial proving phase — **not a ToS
+clearance**).
+
+## Headline
+
+- **Consumer Search AI Overview exposes ONLY the rendered answer + final cited
+  sources.** The internal fan-out sub-queries and the full candidate pool are
+  server-side and reach **no** client surface. Confirmed by the research agents AND
+  a market scan: **no commercial tool** (SerpApi, DataForSEO, Bright Data, Profound,
+  ZipTie, Semrush, …) breaches this ceiling for Google — all extract only the
+  rendered answer + cited sources; the one "query fan-out" product (Profound)
+  *infers* it and only for non-Google engines.
+- **Gemini API / AI Studio (Grounding with Google Search) DOES expose the fan-out +
+  sources** — `webSearchQueries`, `groundingChunks`, `groundingSupports`,
+  `searchEntryPoint` — **but** (a) it is a **different system** (a *proxy* for the
+  consumer AIO, not a mirror), (b) source URIs are **expiring `vertexaisearch`
+  redirects**, and (c) the **grounding ToS forbids analyzing / indexing / collecting**
+  grounded results (gray for internal research; a blocker for productizing).
+
+## Live captures (AI Studio, Gemini 3 Flash Preview, grounding ON; query = "best niche fragrance brands for men 2026")
+
+- **Fan-out queries it issued (4), read from the `searchEntryPoint` chips:**
+  `"best niche fragrance brands for men 2026 reviews trends"` ·
+  `"top niche perfume houses for men 2026 releases"` ·
+  `"best artisanal cologne brands 2026 for men"` ·
+  `"new niche fragrance brands 2026 men's grooming awards"`
+  (one prompt → 4 reformulated sibling queries).
+- **Grounded sources (2 unique), unmasked past the `vertexaisearch` redirect:**
+  `beautinow.com` ("The Best New Niche Fragrances of 2026 So Far") and
+  `apetogentleman.com` ("11 Up-and-Coming Men's Fragrance Brands For 2026").
+- **Proxy fidelity vs the consumer AIO (same query):** brands overlap at the top
+  (Amouage, Xerjoff in both; Creed in the consumer box), and **both unmasked
+  sources also appear in the consumer AIO's source set** → the proxy tracks the
+  real box at brand *and* source level here (n=1; not a guarantee).
+
+## Mechanism diagnosis — how the data is / isn't exposed
+
+- **Queries → `searchEntryPoint` chips.** Grounding renders mandatory "Google
+  Search Suggestion" chips; each is a plain `google.com/search?q=<query>` link, so
+  the issued queries sit in the DOM in the clear. Google's ToS *requires* showing
+  these chips — which is exactly what leaks the queries.
+- **Sources → `vertexaisearch` redirects.** `groundingChunks[].web.uri` =
+  `vertexaisearch.cloud.google.com/grounding-api-redirect/<token>` (and `web.title`
+  is usually the bare domain). For the real deep URL: hit the redirect → 302 →
+  publisher (loop it). **Tokens are ephemeral — resolve on receipt.** Demonstrated
+  live. **For the CONSUMER AIO you do NOT touch `vertexaisearch`** — its cited
+  source domains render directly in the SERP DOM (9–23/query, in the clear).
+- **NOT via the AI Studio network stream:** its backend is a binary **protobuf RPC**
+  (`clients6.google.com/$rpc/…`) — unreadable without the proto schema. Use the
+  rendered DOM (chips) or the official API JSON instead.
+
+## Fan-out shape — interlinked-recursion test
+
+- One broad seed → 4 fan-out queries (sibling reformulations of one intent).
+- Feeding a narrower sibling back **terminated**: the model answered from its own
+  knowledge **without re-searching** (grounding tool ON, but the model decides
+  per-prompt whether to search). So the fan-out is **not an automatic cascade** —
+  some nodes expand, some dead-end. (n=1 clean run; free AI Studio grounding was
+  too flaky — recurrent `internal error` / `permission denied` on the grounding
+  call — to map further; reliable mapping needs the API with billing.)
+
+## Per-surface verdict ("what it called upon")
+
+| Surface | Answer + cited sources | Fan-out queries | Candidate pool | Catch |
+|---|:---:|:---:|:---:|---|
+| Consumer AI Overview | ✅ rendered (direct domains) | ❌ server-side | ❌ | scrape = ToS + SearchGuard + DMCA suit |
+| AI Mode | ✅ richer source set | ❌ | ❌ | same |
+| Mobile AIO | ✅ (more click-gated) | ❌ | ❌ | nothing extra |
+| Gemini API / AI Studio | ✅ structured | ✅ `webSearchQueries` (proven live) | ❌ (cited only) | proxy ≠ box; redirects expire; ToS forbids analytics/indexing |
+
+## Implication for capture architecture
+
+- **AEO ground truth (what shoppers see):** capture the **rendered consumer AIO** —
+  brands + cited source domains, per-run (volatile; capture fresh). Commoditized;
+  no `vertexaisearch`, no fan-out available.
+- **Richer query→source structure:** the **Gemini API** (proxy) via a scripted loop
+  capturing `webSearchQueries` + resolved `groundingChunks`. ToS-gray; proxy, not
+  ground truth.
+- **ChatGPT** stays the only engine exposing the *real* issued query + full pulled
+  set from the *actual consumer* surface (see F5 correction above).
+
+## Addendum non-claims
+
+Research/feasibility only. The Gemini grounding surface is a **proxy**, not the
+consumer AIO. ToS observations are **not legal advice** and **not a ToS clearance**;
+the owner accepts the measured ToS/civil risk for internal pre-commercial research
+only. No productization, no scaled capture, no sourcing authorization implied.
