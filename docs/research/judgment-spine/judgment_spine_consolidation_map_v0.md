@@ -43,12 +43,13 @@ stale_if:
 | Understand no-tools isolation for JSG-04/05/06 | `harness/v0_14/contestant_no_tools_execution_contract_v0.md` | research |
 | Know what machinery is built vs a named gap (build-state) | `judgment_spine_machinery_build_state_gap_map_v0.md` | research |
 | Read the SP-5 finalization-receipt contract | `sp5_finalization_receipt_spec_v0.md` | research |
+| Orient after fragrance reconciliation and split current Judgment into core/satellite portions | `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` | product |
 
-## Current Reality Snapshot (as of v0, refreshed 2026-06-09 — verify each against its owner)
+## Current Reality Snapshot (as of v0, refreshed 2026-06-09; JSG-01 and decomposition pointer refreshed 2026-06-17 — verify each against its owner)
 
 - **Conductor exists and is test-worthy, not proven** — it routes/verifies receipts and computes nothing (→ conductor non-claims).
 - **By-hand cap is in force:** there is no contestant-execution runner, so JSG-04/05/06 run by-hand and a run **caps at product-learning** (→ conductor, Seam 3).
-- **JSG-01 stays FROZEN (`indeterminate_until_authored`)** — for narrower reasons than v0 stated. The ECR SP-1/2/3/6 derivers **are built** (`orca-harness/ecr/deriver.py`: timing / inspectability / identity / source-visibility postures off the `SourceCapturePacket`; they bind no `EvidenceUnit` and make no JSG-01 claim). AR-01 (who finalizes `pre_decision_status`) is **resolved** — distinct cross-family act, operator-for-now (→ `docs/decisions/ar_01_pre_decision_status_finalizer_staffing_v0.md`). What still gates an unfreeze: the **SP-5 finalizer mechanism built** + a **case packet carrying the derived fields** (ECR slice-2). (→ conductor JSG-01 row, **now corrected to match** — derivers built, AR-01 resolved; commit `d2cac45`.)
+- **JSG-01 is UNFROZEN / evaluable, but clears no case until an authorized run evaluates one** — the build-state map records the JSG-01-scoped `EvidenceUnit` binding as built/ratified/realized and the conductor row tracks the owner-dated unfreeze act. Missing or unresolvable owner fields still route to not-cleared; an authorized run remains separate.
 - **Current cases are pre-cutoff** and cap at qualitative / product-learning; none is a scoreable fixture. Which cases exist → manifest (the inventory owner); what each can claim → evidence ladder. (This map does not list cases — that would inherit the manifest's drift.)
 - **Judgment-quality lane — where we are / next** (orientation, refreshed 2026-06-10; verify against the lane records, which own the detail):
   - *Tier:* capped at **product-learning** (by-hand); "almost judgment-quality" is a proximity description, **not** a minted tier → `ideal_judgment_quality_run_and_current_position_v0.md`.
@@ -93,6 +94,11 @@ stale_if:
 - summary: Phase-1 code-readiness spec — schemas, action bands, scorer, runner contracts, probe; the no-tools contract owns JSG-04/05/06 isolation.
 - status: Phase-1 spec; does not authorize implementation by itself.
 - pointer: `docs/research/judgment-spine/harness/v0_14/index.md` and `.../contestant_no_tools_execution_contract_v0.md` (research).
+
+### Current-state and decomposition frame
+- summary: Product-learning bridge from the 2026-06-17 fragrance reconciliation into a core/satellite split for future Judgment work portions.
+- status: docs-only product-learning context; not source-of-truth, validation, readiness, or proof.
+- pointer: `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` (product).
 
 ## Status Vocabularies (owner-defined — this map points, never redefines)
 
