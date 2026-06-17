@@ -38,6 +38,7 @@ REQUIRED_ROW_COLUMNS = {
     "surface_cutoff_status",
     "cutoff_status",
 }
+VALID_HANDOFF_MODES = {"backtest", "forward", "unknown"}
 
 
 @dataclass(frozen=True)
@@ -49,6 +50,12 @@ class Finding:
 
 def _normalize_header(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "_", value.strip().lower()).strip("_")
+
+
+def _normalize_vocab(value: Any) -> str:
+    if value is None:
+        return ""
+    return re.sub(r"[^a-z0-9]+", "_", str(value).strip().lower()).strip("_")
 
 
 def _split_table_row(line: str) -> list[str]:
@@ -92,13 +99,18 @@ def parse_signal_rows(text: str) -> tuple[dict[str, dict[str, str]], list[Findin
 
     rows: dict[str, dict[str, str]] = {}
     out_findings: list[Finding] = []
-    for line in table_lines[1:]:
+    for table_index, line in enumerate(table_lines[1:], start=2):
         cells = _split_table_row(line)
         if _is_separator_row(cells):
             continue
         if len(cells) != len(headers):
+            first_cell = cells[0] if cells else ""
             out_findings.append(
-                Finding("malformed_signal_board_row", "Row has a different cell count than the header.")
+                Finding(
+                    "malformed_signal_board_row",
+                    "Row has a different cell count than the header "
+                    f"(table row {table_index}, first cell {first_cell or '<blank>'}).",
+                )
             )
             continue
         row = dict(zip(headers, cells, strict=True))
@@ -156,11 +168,12 @@ def _handoff_ids(packet: dict[str, Any], key: str) -> tuple[list[str], list[Find
 
 def _validate_handoff_row(row_id: str, row: dict[str, str], mode: str) -> list[Finding]:
     findings: list[Finding] = []
-    evidence_status = row.get("evidence_status", "")
-    cutoff_status = row.get("cutoff_status", "")
-    surface_cutoff_status = row.get("surface_cutoff_status", "")
-    source_family = row.get("source_family", "")
-    signal_role = row.get("signal_role", "")
+    evidence_status_raw = row.get("evidence_status", "")
+    evidence_status = _normalize_vocab(evidence_status_raw)
+    cutoff_status = _normalize_vocab(row.get("cutoff_status", ""))
+    surface_cutoff_status = _normalize_vocab(row.get("surface_cutoff_status", ""))
+    source_family = _normalize_vocab(row.get("source_family", ""))
+    signal_role = _normalize_vocab(row.get("signal_role", ""))
 
     if source_family == "aeo_answer_engines" or signal_role == "aeo_visibility":
         findings.append(
@@ -179,7 +192,7 @@ def _validate_handoff_row(row_id: str, row: dict[str, str], mode: str) -> list[F
         findings.append(
             Finding(
                 "handoff_row_not_source_backed",
-                f"Classifier handoff row must be source_backed, got {evidence_status or '<blank>'}.",
+                f"Classifier handoff row must be source_backed, got {evidence_status_raw or '<blank>'}.",
                 row_id,
             )
         )
@@ -209,8 +222,19 @@ def validate_text(text: str) -> list[Finding]:
     rows, row_findings = parse_signal_rows(text)
     packet, packet_findings = parse_classifier_handoff(text)
     findings = [*row_findings, *packet_findings]
-    if row_findings or packet_findings:
+    if packet_findings or not rows:
         return findings
+
+    mode = _normalize_vocab(packet.get("mode"))
+    if not mode:
+        findings.append(Finding("missing_handoff_mode", "classifier_handoff_packet.mode is required."))
+    elif mode not in VALID_HANDOFF_MODES:
+        findings.append(
+            Finding(
+                "invalid_handoff_mode",
+                f"classifier_handoff_packet.mode must be one of {', '.join(sorted(VALID_HANDOFF_MODES))}.",
+            )
+        )
 
     signal_ids, signal_findings = _handoff_ids(packet, "signal_rows_for_handoff")
     counter_ids, counter_findings = _handoff_ids(packet, "counterevidence_rows_for_handoff")
@@ -229,7 +253,7 @@ def validate_text(text: str) -> list[Finding]:
         if row is None:
             findings.append(Finding("handoff_row_unknown", f"Row {row_id} is not present in Section 4.", row_id))
             continue
-        findings.extend(_validate_handoff_row(row_id, row, str(packet.get("mode", "")).strip()))
+        findings.extend(_validate_handoff_row(row_id, row, mode))
 
     return findings
 
