@@ -32,6 +32,7 @@ stale_if:
   - A fragrance casebook admission artifact accepts, rejects, or materially changes the first Level 1 cases.
   - An owning source-capture artifact admits fragrance venue/source families or authorizes capture.
   - A completed fragrance product_learning_receipt exists.
+  - The beauty venue card set changes its access-route observations for Basenotes, Fragrantica, or the specialist fragrance blog cluster.
 ```
 
 ## Status
@@ -166,6 +167,7 @@ fragrance_level1_case:
     forecast_confidence_if_used:
     forecast_confidence_basis:
     sealed_before_reveal: yes | no | unknown
+    seal_artifact_or_process_ref:
   c3_decision:
     demand_state: durable | transient | unknown
     persistence_basis:
@@ -206,6 +208,13 @@ fragrance_level1_case:
 - `admitted`, `excluded`, `authorized_by_pointer`,
   `promotion_validated_by_artifact`, and `complete_by_artifact` are not
   self-certifying values; each requires the adjacent artifact or receipt pointer.
+- `capture_authority: authorized_by_pointer` must point to an owning
+  source-capture artifact that is external to this skeleton; a pointer to this
+  skeleton, the reconciliation artifact, or any other non-authorizing source
+  does not satisfy the authorization requirement.
+- `sealed_before_reveal: yes` is an achieved-state value under the general
+  guardrail above; use `unknown` unless the sealing method or process record
+  can be named in `seal_artifact_or_process_ref`.
 - `forecast_confidence_if_used` is a forecast/evaluation field. It is not the C3
   sealed-call `confidence_band`.
 - C2 trace fields must make caveats travel: direction reasoning, N/small-N or
@@ -214,6 +223,11 @@ fragrance_level1_case:
 - C3 trace fields must preserve the transient-default and action-ceiling logic:
   persistence basis, C3 `confidence_band`, tagged `signals_used`, and cap
   reasons.
+- The `product_learning_receipt` sub-object is a pointer/status slot, not a
+  full receipt. A `complete_by_artifact` status requires the referenced artifact
+  to satisfy all minimum receipt fields owned by the evidence ladder; the
+  inline sub-object fields are supplements, not substitutes for the evidence
+  ladder's minimum receipt field set.
 
 ## Source-Family Starting Hints
 
