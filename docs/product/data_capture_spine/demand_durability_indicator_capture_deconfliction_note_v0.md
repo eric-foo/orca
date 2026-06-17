@@ -18,7 +18,7 @@ open_next:
   - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md       # keystone delta (consumed by all four profiles)
   - docs/product/data_capture_spine/demand_durability_indicator_price_timeseries_capture_profile_v0.md
   - docs/product/data_capture_spine/demand_durability_indicator_availability_restock_capture_profile_v0.md
-  - docs/product/data_capture_spine/demand_durability_indicator_search_interest_capture_profile_v0.md
+  - docs/product/search/demand_durability_indicator_search_interest_capture_profile_v0.md
   - docs/product/data_capture_spine/demand_durability_indicator_review_velocity_corpus_capture_profile_v0.md
   - docs/product/data_capture_spine/demand_durability_indicator_standing_capture_obligation_home_decision_framing_v0.md
 stale_if:
@@ -131,7 +131,7 @@ direction_change_propagation:
     - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md
     - docs/product/data_capture_spine/demand_durability_indicator_price_timeseries_capture_profile_v0.md
     - docs/product/data_capture_spine/demand_durability_indicator_availability_restock_capture_profile_v0.md
-    - docs/product/data_capture_spine/demand_durability_indicator_search_interest_capture_profile_v0.md
+    - docs/product/search/demand_durability_indicator_search_interest_capture_profile_v0.md
     - docs/product/data_capture_spine/demand_durability_indicator_review_velocity_corpus_capture_profile_v0.md
     - docs/product/data_capture_spine/demand_durability_indicator_capture_deconfliction_note_v0.md
   downstream_surfaces_checked:

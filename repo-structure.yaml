@@ -60,7 +60,7 @@ product_lanes:
   - { name: ecr, status: current }
   - { name: product_lead, status: current }
   - { name: source_capture_toolbox, status: current }   # pre-existing bound folder
-  - { name: search, status: planned }                   # topic lane; planned until the search-lane migration applies
+  - { name: search, status: current }                   # topic lane (orca_search_product_lane_binding_v0)
 
 # Runtime/scratch: excluded from placement evaluation wherever they sit.
 scratch_rules:
