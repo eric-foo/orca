@@ -18,7 +18,7 @@ open_next:
   - .agents/workflow-overlay/prompt-orchestration.md
 input_hashes:
   uploaded_commission_gate_draft_sha256: A58E9956BCBAF9359380E13E7060129DB1B6C48CBBF7126CD65D0C5417B03E5F
-branch_or_commit: codex/judgment-level1-prompt-artifacts at c974e49c1828e1217cd1b1a88eeec036c0c9265e
+branch_or_commit: codex/judgment-level1-prompt-artifacts authoring-dependency base c974e49c1828e1217cd1b1a88eeec036c0c9265e
 stale_if:
   - The Level 1 core-minimum doc changes its default mode, SCV loop, commission-gate role, source registry, outcome labels, forecast/action/log/evaluation contract, or live/client readiness gates.
   - The fragrance casebook admission frame changes its outcome-label families or named-case admission minimum.
@@ -90,6 +90,10 @@ orca_start_preflight:
     - C:/Users/vmon7/AppData/Local/Temp/orca_commission_gate_prompt.md
 ```
 
+This is a historical authoring receipt. The local temp draft named above was
+hashed as an authoring input; it is not a downstream blocker and is not required
+to use this durable prompt artifact.
+
 Preflight defaults:
 `docs/prompts/templates/shared/orca_preflight_defaults_v0.md v0` - constants
 bound; deltas stated here.
@@ -118,8 +122,10 @@ Required deltas:
 - dirty_state_allowance: authoring worktree was clean before edits; downstream
   receiver must report dirty state if repo sources are read.
 - controlling_source_state: clean at authoring preflight before these edits.
-- branch_or_commit_reference: `codex/judgment-level1-prompt-artifacts` at
-  `c974e49c1828e1217cd1b1a88eeec036c0c9265e`.
+- branch_or_commit_reference: `codex/judgment-level1-prompt-artifacts`
+  authoring-dependency base
+  `c974e49c1828e1217cd1b1a88eeec036c0c9265e`; this is not an artifact-location
+  claim.
 - doctrine_change_decision: no intended doctrine change; if a receiver needs to
   change product doctrine, prompt policy, claim tiers, gate ownership, source
   authority, or lifecycle boundaries, stop and route through the owning source.
@@ -152,6 +158,19 @@ Before applying the prompt:
 Declare `SOURCE_CONTEXT_READY` before producing a gate brief. If any required
 source is missing, declare `SOURCE_CONTEXT_INCOMPLETE` and return the smallest
 specific blocker.
+
+## Fitness Reference
+
+Executor target and review axis-to-attack, not a review pass bar:
+
+- Goal: turn an admitted Level 1 backtest case into a bounded commission-gate
+  brief that names source priorities, confirmation and counterevidence paths,
+  graph-family needs, forecast targets, redirect rules, and stop conditions.
+- Done looks like: the output is a `commission_gate_brief`, `evidence_plan`,
+  `graph_family_plan`, and `forecast_targets_for_downstream` with blockers and
+  source gaps named; it does not produce a final recommendation, retrieve
+  evidence, authorize source capture, authorize a run, score anything, or claim
+  proof or readiness.
 
 ## Prompt
 

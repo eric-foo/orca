@@ -19,7 +19,7 @@ open_next:
   - .agents/workflow-overlay/prompt-orchestration.md
 input_hashes:
   uploaded_judgment_prompt_draft_sha256: 841760B716F26FEECB3576A6B79DDAC1BD66183284A1583D371B676FBAC3D506
-branch_or_commit: codex/judgment-level1-prompt-artifacts at c974e49c1828e1217cd1b1a88eeec036c0c9265e
+branch_or_commit: codex/judgment-level1-prompt-artifacts authoring-dependency base c974e49c1828e1217cd1b1a88eeec036c0c9265e
 stale_if:
   - The Level 1 core-minimum doc changes its default mode, forecast/action/log/evaluation contract, outcome labels, or live/client readiness gates.
   - The fragrance casebook admission frame changes its canonical outcome-label families.
@@ -92,6 +92,10 @@ orca_start_preflight:
     - C:/Users/vmon7/AppData/Local/Temp/orca_judgement_prompt_level1.md
 ```
 
+This is a historical authoring receipt. The local temp draft named above was
+hashed as an authoring input; it is not a downstream blocker and is not required
+to use this durable prompt artifact.
+
 Preflight defaults:
 `docs/prompts/templates/shared/orca_preflight_defaults_v0.md v0` - constants
 bound; deltas stated here.
@@ -120,8 +124,10 @@ Required deltas:
 - dirty_state_allowance: authoring worktree was clean before edits; downstream
   receiver must report dirty state if repo sources are read.
 - controlling_source_state: clean at authoring preflight before these edits.
-- branch_or_commit_reference: `codex/judgment-level1-prompt-artifacts` at
-  `c974e49c1828e1217cd1b1a88eeec036c0c9265e`.
+- branch_or_commit_reference: `codex/judgment-level1-prompt-artifacts`
+  authoring-dependency base
+  `c974e49c1828e1217cd1b1a88eeec036c0c9265e`; this is not an artifact-location
+  claim.
 - doctrine_change_decision: no intended doctrine change; if a receiver needs to
   change product doctrine, prompt policy, claim tiers, gate ownership, source
   authority, or lifecycle boundaries, stop and route through the owning source.
@@ -165,6 +171,19 @@ Before applying the prompt:
 Declare `SOURCE_CONTEXT_READY` before producing judgment output. If any required
 source is missing, declare `SOURCE_CONTEXT_INCOMPLETE` and return the smallest
 specific blocker.
+
+## Fitness Reference
+
+Executor target and review axis-to-attack, not a review pass bar:
+
+- Goal: turn a gated Level 1 evidence stack into coarse forecast records, a
+  utility assessment, one C3-owned action ceiling with a bounded Level 1 action
+  posture, a decision-log entry, and reveal/evaluation hooks.
+- Done looks like: the output records the case ID, cutoff, evidence references,
+  forecast targets, utility notes, canonical C3 `action_family`, optional
+  Level 1 action posture, decision log fields, and evaluation hooks; it does not
+  retrieve sources, score, reveal outcomes, calibrate, authorize a run, complete
+  product learning, or claim proof or readiness.
 
 ## Prompt
 
@@ -342,18 +361,34 @@ Utility assessment output:
 
 ## Action Recommendation
 
-Use exactly one primary action family:
+Use exactly one canonical C3 action family. The `action_family` field must use
+the owner vocabulary:
 
 ```text
-commit_or_deepen
-controlled_test
-bounded_wait_with_trigger
-avoid_kill_or_discount
-reposition_or_change_offer
-collect_specific_evidence
+act
+phase
+narrow
+hold
+defend
 ```
 
 Never output passive monitor.
+
+If the Level 1 business posture is useful, add a separate
+`level1_action_posture` field. It is explanatory only and must map back to the
+canonical C3 `action_family`:
+
+| Level 1 posture | Canonical `action_family` to record |
+| --- | --- |
+| `commit_or_deepen` | `act` only when the evidence supports a material/committing action; otherwise `phase` or `narrow` |
+| `controlled_test` | `phase` for staged test, or `narrow` for constrained SKU/channel/audience test |
+| `bounded_wait_with_trigger` | `hold` |
+| `avoid_kill_or_discount` | `defend` when protecting an existing position, or `hold` when the correct move is only to avoid action |
+| `reposition_or_change_offer` | `narrow` for scoped offer/channel change, or `phase` for staged repositioning |
+| `collect_specific_evidence` | `hold` unless the evidence-collection act itself is the bounded action, in which case use `narrow` |
+
+Do not record a Level 1 posture as `action_family`. If no mapping is defensible,
+return `BLOCKED_ACTION_MAPPING_UNRESOLVED` with the missing owner/source input.
 
 Bad:
 
@@ -371,7 +406,8 @@ Action object:
 
 ```json
 {
-  "action_family": "controlled_test",
+  "action_family": "narrow",
+  "level1_action_posture": "controlled_test",
   "specific_action": "...",
   "magnitude": "range or bucket",
   "timing": "start date / decision window",
@@ -388,9 +424,10 @@ Action object:
 }
 ```
 
-`collect_specific_evidence` is valid only when framed as value-of-information:
-the missing evidence, source family, timebox, action unlocked, and stop
-condition must all be named.
+`collect_specific_evidence` as a `level1_action_posture` is valid only when
+framed as value-of-information: the missing evidence, source family, timebox,
+action unlocked, canonical C3 `action_family`, and stop condition must all be
+named.
 
 ## Decision Log
 

@@ -123,7 +123,14 @@ blocker_agents:
   - Any future artifact that claims validation, readiness, buyer proof, judgment quality, run authorization, scoring authorization, or prompt adoption.
 deferrable_owner_decisions:
   - Which exact fragrance cases form the first admitted casebook.
-  - Whether any prompt artifact should be authored through workflow-prompt-orchestrator.
+resolved_prompt_artifact_decision:
+  status: resolved_in_dependent_prompt_artifact_lane
+  artifacts:
+    - docs/prompts/product-planning/judgment_level1_commission_gate_prompt_v0.md
+    - docs/prompts/product-planning/judgment_level1_judgment_prompt_v0.md
+  boundary: >
+    prompt surfaces only; no case-specific execution, approval, run
+    authorization, scoring, proof, or readiness
 ```
 
 ## Mini God Tier Handling
