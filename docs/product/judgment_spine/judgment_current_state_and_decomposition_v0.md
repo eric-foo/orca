@@ -24,7 +24,7 @@ open_next:
   - docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md
   - docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md
   - docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md
-  - docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md
+  - docs/product/judgment_spine/judgment_level1_product_learning_core_minimum_v0.md
 stale_if:
   - The evidence ladder changes claim tiers, closeout states, receipt minima, or promotion gates.
   - The conductor changes its no-authority invariant, by-hand cap, or JSG routing.
@@ -79,6 +79,7 @@ market-agnostic.
 | Fragrance Level 1 satellite skeleton | Repo-local product-learning skeleton | Reserves fragrance casebook/source/evidence/weighting/forecast/decision/reveal/lesson/receipt slots | No admitted cases, source authority, run, score, or proof |
 | Fragrance Level 1 casebook admission frame | Repo-local product-learning casebook organizer | Admits the 25-slot casebook shape, bucket allocation, selection rules, and outcome-label families | No named cases admitted, no source authority, run, score, or proof |
 | Fragrance Level 1 named-case candidate screen | Repo-local product-learning candidate screen | Ranks first admission attempts against the case-selection doctrine without selecting a case | No named cases admitted, no source authority, run, score, or proof |
+| Level 1 product-learning core minimum | Repo-local product-learning core minimum | Names the reusable market-agnostic core pieces satellites must consume before filling domain-specific cases | Product-learning context only; no case run, source authority, score, proof, or readiness |
 
 ## Core Ownership
 
@@ -172,18 +173,16 @@ Current slice status:
 4. **Done in this lane:** the named-case candidate screen ranks first admission
    attempts. It recommends which case to try admitting first, but still admits
    no named case.
-5. **Next:** define the reusable **Level 1 product-learning core minimum**
-   before additional satellite execution work. That artifact should name the
-   minimum core run contract, what current Judgment already provides, what
-   remains blocked, which slots satellites may fill, and what claims remain
-   impossible.
-6. **Deferred until the core minimum is named:** source/evidence binding,
-   C2/C3 weighting and decision mapping, forecast fields, reveal/eval fields,
-   and per-case product-learning receipt shape.
+5. **Done in the dependent core-minimum lane:** the reusable **Level 1
+   product-learning core minimum** now names the market-agnostic core pieces
+   satellites must consume, what current Judgment already provides, what remains
+   blocked, which slots satellites may fill, and what claims remain impossible.
+6. **Next after the core minimum:** named-case admission attempt, source/evidence
+   plan, and per-case product-learning receipt template remain separate slices.
 
 Top-level repo-map updates should stay thin. The repo map should route readers
 to the Judgment consolidation map; the consolidation map remains the correct
-local index for Judgment-specific current-state and handoff pointers.
+local index for Judgment-specific current-state and core-minimum pointers.
 
 ## Non-Claims
 
@@ -212,5 +211,5 @@ claim inflation.
 - `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md`
 - `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md`
 - `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md`
+- `docs/product/judgment_spine/judgment_level1_product_learning_core_minimum_v0.md`
 - `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md`
-- `docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md`

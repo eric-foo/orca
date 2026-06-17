@@ -452,7 +452,7 @@ The Judgment Spine spans **both** trees — `docs/research/judgment-spine/` (the
 
 | Path | Use for |
 | --- | --- |
-| `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | **Judgment Spine entry map — open first.** Per-area summary, owner-native status, and one pointer for thesis, cases/manifest, conductor, gate ownership, evidence ladder, JSG-08, harness, and the active Level 1 product-learning continuation handoff when one is live; routes to the owners rather than restating them. The path toward judgment-quality evidence, not proof; by-hand runs cap at product-learning. |
+| `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | **Judgment Spine entry map — open first.** Per-area summary, owner-native status, and one pointer for thesis, cases/manifest, conductor, gate ownership, evidence ladder, JSG-08, harness, current decomposition, and the Level 1 product-learning core minimum; routes to the owners rather than restating them. The path toward judgment-quality evidence, not proof; by-hand runs cap at product-learning. |
 
 ## Data Capture Spine
 

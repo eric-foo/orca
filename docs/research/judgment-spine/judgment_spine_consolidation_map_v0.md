@@ -44,10 +44,10 @@ stale_if:
 | Know what machinery is built vs a named gap (build-state) | `judgment_spine_machinery_build_state_gap_map_v0.md` | research |
 | Read the SP-5 finalization-receipt contract | `sp5_finalization_receipt_spec_v0.md` | research |
 | Orient after fragrance reconciliation and split current Judgment into core/satellite portions | `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` | product |
+| Use or review the reusable Level 1 product-learning core minimum before adding satellite execution detail | `docs/product/judgment_spine/judgment_level1_product_learning_core_minimum_v0.md` | product |
 | Fill the first fragrance Level 1 product-learning satellite slots without claiming proof or run authority | `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` | product |
 | Fill or check the first fragrance Level 1 casebook slots without admitting named cases prematurely | `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md` | product |
 | Choose which named fragrance Level 1 case to try admitting first | `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md` | product |
-| Continue this PR lane into the Level 1 product-learning core-minimum slice | `docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md` | hygiene |
 
 ## Current Reality Snapshot (as of v0, refreshed 2026-06-09; JSG-01 and decomposition pointer refreshed 2026-06-17 — verify each against its owner)
 
@@ -104,6 +104,11 @@ stale_if:
 - status: docs-only product-learning context; not source-of-truth, validation, readiness, or proof.
 - pointer: `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` (product).
 
+### Level 1 product-learning core minimum
+- summary: Market-agnostic reusable core minimum for Level 1 satellites: claim caps, gate/run boundaries, current built-vs-gap state, satellite-fillable slots, and impossible claims.
+- status: docs-only product-learning context; not source-of-truth, validation, readiness, run authorization, scoring, buyer proof, or judgment-quality evidence.
+- pointer: `docs/product/judgment_spine/judgment_level1_product_learning_core_minimum_v0.md` (product).
+
 ### Fragrance Level 1 satellite skeleton
 - summary: Repo-local product-learning skeleton for fragrance-specific casebook, source, evidence, weighting, forecast, decision, reveal, lesson, and receipt slots.
 - status: docs-only product-learning context; not casebook admission, source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
@@ -118,11 +123,6 @@ stale_if:
 - summary: Repo-local product-learning screen that reconciles fanout search results against the case-selection doctrine and recommends the first admission attempt without admitting any named case.
 - status: docs-only candidate screen; all named products remain `candidate_pending_selection`, `held`, or rejected for first admission; no source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
 - pointer: `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md` (product).
-
-### Level 1 product-learning core-minimum handoff
-- summary: Single-consumption cold-lane packet for moving from the fragrance organizer closeout into the reusable Level 1 core-minimum docs slice.
-- status: operational checkpoint only; not source-of-truth, validation, readiness, doctrine, proof, or run authorization; consume once and re-verify every load-bearing claim.
-- pointer: `docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md` (hygiene).
 
 ## Status Vocabularies (owner-defined — this map points, never redefines)
 
