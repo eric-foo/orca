@@ -23,6 +23,8 @@ open_next:
   - docs/product/judgment_spine/fragrance_level1_product_learning_reconciliation_v0.md
   - docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md
   - docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md
+  - docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md
+  - docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md
 stale_if:
   - The evidence ladder changes claim tiers, closeout states, receipt minima, or promotion gates.
   - The conductor changes its no-authority invariant, by-hand cap, or JSG routing.
@@ -76,6 +78,7 @@ market-agnostic.
 | Fragrance Level 1 reconciliation | Durable product-learning context | Maps the temp fragrance draft onto current Judgment/demand-read surfaces | Unreceipted product-learning context |
 | Fragrance Level 1 satellite skeleton | Repo-local product-learning skeleton | Reserves fragrance casebook/source/evidence/weighting/forecast/decision/reveal/lesson/receipt slots | No admitted cases, source authority, run, score, or proof |
 | Fragrance Level 1 casebook admission frame | Repo-local product-learning casebook organizer | Admits the 25-slot casebook shape, bucket allocation, selection rules, and outcome-label families | No named cases admitted, no source authority, run, score, or proof |
+| Fragrance Level 1 named-case candidate screen | Repo-local product-learning candidate screen | Ranks first admission attempts against the case-selection doctrine without selecting a case | No named cases admitted, no source authority, run, score, or proof |
 
 ## Core Ownership
 
@@ -157,27 +160,30 @@ false failure.
 
 ## First Work Slices After This Map
 
-Smallest sensible sequence:
+Current slice status:
 
-1. **Core slice:** keep this current-state/decomposition map as the retrieval
-   bridge from reconciliation into future portions.
-2. **Fragrance satellite skeleton:** use the repo-local Level 1
-   product-learning skeleton that imports the core boundaries instead of
-   restating them:
-   `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md`.
-3. **Casebook admission frame:** use the repo-local Level 1 admission frame to
-   hold the 25-slot allocation and admit named cases only after cutoff, source,
-   and outcome-label fields are bounded:
-   `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md`.
-4. **Source/evidence slice:** bind source-family candidates and evidence-object
-   shape without claiming capture authority.
-5. **Judgment surface slice:** map C2 weighting, C3 decision/action, forecast
-   fields, and reveal/eval fields into one per-case product-learning receipt
-   shape.
+1. **Done in this lane:** this current-state/decomposition map now bridges the
+   reconciliation into a core/satellite split.
+2. **Done in this lane:** the fragrance satellite skeleton exists as an
+   organizer for casebook, source, evidence, weighting, forecast, decision,
+   reveal, lesson, and receipt slots. It is not execution machinery.
+3. **Done in this lane:** the casebook admission frame reserves the 25-slot
+   shape and selection rules. It admits no named cases.
+4. **Done in this lane:** the named-case candidate screen ranks first admission
+   attempts. It recommends which case to try admitting first, but still admits
+   no named case.
+5. **Next:** define the reusable **Level 1 product-learning core minimum**
+   before additional satellite execution work. That artifact should name the
+   minimum core run contract, what current Judgment already provides, what
+   remains blocked, which slots satellites may fill, and what claims remain
+   impossible.
+6. **Deferred until the core minimum is named:** source/evidence binding,
+   C2/C3 weighting and decision mapping, forecast fields, reveal/eval fields,
+   and per-case product-learning receipt shape.
 
-Top-level repo-map update is not part of this slice unless navigation changes
-outside the existing Judgment consolidation-map route. The consolidation map is
-the correct local index for this artifact.
+Top-level repo-map updates should stay thin. The repo map should route readers
+to the Judgment consolidation map; the consolidation map remains the correct
+local index for Judgment-specific current-state and handoff pointers.
 
 ## Non-Claims
 
@@ -203,4 +209,8 @@ claim inflation.
 - `docs/product/judgment_spine/prospective_decision_loop_target_architecture_v0.md`
 - `docs/product/core_spine/beauty_venue_card_set_v0.md`
 - `docs/product/judgment_spine/fragrance_level1_product_learning_reconciliation_v0.md`
+- `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md`
+- `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md`
+- `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md`
 - `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md`
+- `docs/hygiene/judgment_level1_product_learning_core_minimum_handoff_v0.md`
