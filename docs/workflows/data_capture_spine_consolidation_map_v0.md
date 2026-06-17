@@ -54,6 +54,7 @@ stale_if:
 | Check Reddit capture/consolidation success-signal hardening rationale | `docs/product/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
 | Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
 | Check tenant/source-family payload attachment boundary | `docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md` |
+| Explain the core-facts vs typed-attachment split in plain language | `docs/product/data_capture_spine/source_capture_core_payload_split_explainer_v0.md` |
 | Check raw-to-Judgment projection view doctrine | `docs/product/core_spine_v0_projection_doctrine_v0.md` |
 | Check Retail/PDP projection contract for Amazon, Sephora, and Ulta | `docs/product/source_capture_toolbox/retail_pdp_projection_contract_v0.md` (target DOM price/SKU binding posture, residual vocabulary, and no-ECR/Cleaning/Judgment boundary) |
 | Check current Retail/PDP projection playbook for Amazon, Sephora, and Ulta | `docs/product/source_capture_toolbox/retail_pdp_projection_playbook_v0.md` |
@@ -190,6 +191,7 @@ stale_if:
   current `SourceCaptureSlice` payload fields are transitional/incumbent; new
   payload families target packet/slice-keyed logical extension envelopes.
 - owner: `docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md`
+- plain-language companion: `docs/product/data_capture_spine/source_capture_core_payload_split_explainer_v0.md`
 
 ### Source-access boundary
 
