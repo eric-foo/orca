@@ -45,6 +45,7 @@ stale_if:
 | Read the SP-5 finalization-receipt contract | `sp5_finalization_receipt_spec_v0.md` | research |
 | Orient after fragrance reconciliation and split current Judgment into core/satellite portions | `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` | product |
 | Fill the first fragrance Level 1 product-learning satellite slots without claiming proof or run authority | `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` | product |
+| Fill or check the first fragrance Level 1 casebook slots without admitting named cases prematurely | `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md` | product |
 
 ## Current Reality Snapshot (as of v0, refreshed 2026-06-09; JSG-01 and decomposition pointer refreshed 2026-06-17 — verify each against its owner)
 
@@ -105,6 +106,11 @@ stale_if:
 - summary: Repo-local product-learning skeleton for fragrance-specific casebook, source, evidence, weighting, forecast, decision, reveal, lesson, and receipt slots.
 - status: docs-only product-learning context; not casebook admission, source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
 - pointer: `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` (product).
+
+### Fragrance Level 1 casebook admission frame
+- summary: Repo-local product-learning frame for the first 25 fragrance case slots, bucket allocation, named-case admission gate, and outcome-label families.
+- status: admits the casebook slot shape only; no named cases admitted, source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
+- pointer: `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md` (product).
 
 ## Status Vocabularies (owner-defined — this map points, never redefines)
 

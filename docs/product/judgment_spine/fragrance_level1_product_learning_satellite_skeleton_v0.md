@@ -16,6 +16,7 @@ authority_boundary: retrieval_only
 open_next:
   - docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md
   - docs/product/judgment_spine/fragrance_level1_product_learning_reconciliation_v0.md
+  - docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md
   - docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md
   - docs/product/judgment_spine/judgment_quality_promotion_operating_model_v0.md
   - docs/product/judgment_spine/judgment_spine_demand_read_machinery_architecture_v0.md
@@ -29,7 +30,7 @@ stale_if:
   - The evidence ladder changes claim tiers, closeout states, receipt minima, or promotion gates.
   - The conductor changes its no-authority invariant, by-hand cap, JSG routing, or run-authorization boundary.
   - The demand-read core, C2, C3, near-half, far-half, or signal-ledger surfaces are accepted, rejected, or materially amended.
-  - A fragrance casebook admission artifact accepts, rejects, or materially changes the first Level 1 cases.
+  - The fragrance casebook admission frame accepts, rejects, or materially changes the first Level 1 case slots or named cases.
   - An owning source-capture artifact admits fragrance venue/source families or authorizes capture.
   - A completed fragrance product_learning_receipt exists.
   - The beauty venue card set changes its access-route observations for Basenotes, Fragrantica, or the specialist fragrance blog cluster.
@@ -283,7 +284,7 @@ If any fragrance prompt is needed, author it through `workflow-prompt-orchestrat
 
 ## Next Docs-Only Moves
 
-1. Author the first fragrance casebook admission artifact.
+1. Fill the first named case candidates into the casebook admission frame.
 2. Author a fragrance source/evidence plan that consumes the beauty venue
    card-set by pointer and routes capture authority to the source-capture owners.
 3. Create a first per-case product-learning receipt template or example only
