@@ -48,7 +48,7 @@ defaults to `chat-only`.
 
 ## Prompt Body
 
-```text
+````text
 You are preparing an Orca Commission Signal Board for one commission candidate
 or decision context.
 
@@ -249,7 +249,7 @@ requires them.
 | Creator / social video | Instagram, TikTok, YouTube, shorts/reels, affiliate/creator posts, later Reddit creator/community personalities | attention spread, creator clusters, campaign risk, audience language, propagation timing | Instagram has current adjacent capture/discovery work. TikTok, YouTube, and Reddit creator profiles are planned/deferred seams unless separately authorized. |
 | Retail / PDP | Sephora, Ulta, Amazon, Nordstrom, brand PDPs, retailer search/category pages | availability, assortment, stock/discounting posture, review context, retailer corroboration | Retail/PDP is corroborative and operationally useful; it is not consumer-origin by itself. |
 | Search / discovery | Google Trends, search-volume provider, SERP, marketplace search, on-site search | interest traces, query language, discovery routes, counterevidence queries | Search-interest can carry attention/interest signal; methodology and pins stay owned by the search/AEO lane. |
-| AEO / answer engines | Google AI Overviews, Gemini, ChatGPT, other answer-engine surfaces | answer visibility, cited-source ecosystem, entity association, visibility gaps | Visibility annotation only unless a later owner-approved schema amendment changes this; never an independent demand-origin surface today. |
+| AEO / answer engines | Google AI Overviews, Gemini, ChatGPT, other answer-engine surfaces | answer visibility, cited-source ecosystem, entity association, visibility gaps | Visibility annotation only; never an independent demand-origin surface. Any change to this posture requires an Orca owner decision, not a per-run dispatcher override. |
 | News / editorial / trade | trade publications, editorial, newsletters, specialist blogs, press | launch chronology, industry framing, awareness, third-party narrative | News is a distinct family; LinkedIn reposts of news point back to the actual source. |
 | Professional / org-motion | ATS/careers pages, hiring pages, founder/executive public posts, partnership announcements, LinkedIn when explicitly routed | hiring/movement, organizational intent, operator-side propagation | ATS/careers pages are better movement sources than LinkedIn. LinkedIn remains no-live/planning-only unless separately authorized. |
 | Owned channels | brand site, brand socials, email archive, product pages, press releases | official chronology, brand claims, launch framing | High chronology value, low independence. |
@@ -424,6 +424,8 @@ graph_retrieval_brief:
   future_info_exclusion_rule:
 ```
 
+Use `graph_weight_notes` to record relation utility only (connection richness, propagation clustering, duplication risk, counterevidence routing). Do not record signal strength or demand-origin confidence here; graph weight is never signal weight.
+
 Use `forecast_targets_supported_without_probabilities` only to name downstream
 outcomes this evidence could help forecast later, such as review velocity,
 restock/stockout, discounting, creator decay, search decay, or retailer
@@ -454,6 +456,12 @@ classifier_handoff_packet:
 The classifier handoff packet is a packaging surface only. Do not map rows to
 classifier families unless the dispatcher provides the classifier mapping.
 
+For backtests: exclude rows where `surface_cutoff_status: post_cutoff_surface`,
+`cutoff_status: post_cutoff_excluded`, or
+`evidence_status: excluded_future_info` from both `signal_rows_for_handoff` and
+`counterevidence_rows_for_handoff`. Carry them to `source_family_gaps` instead,
+with a note that the surface did not exist within the evidence cutoff window.
+
 ### 9. Visible Limitations
 
 List limitations specific to this commission. Include platform, source access,
@@ -472,7 +480,9 @@ next_authorized_step: <one sentence>
 Use `board_status` for the board's usefulness:
 
 - `READY_FOR_RETRIEVAL_HANDOFF` - the board is complete enough to hand to a
-  separately authorized retrieval/extraction lane.
+  separately authorized retrieval/extraction lane. This is not a demand verdict or
+  demand-classification readiness signal; any classifier use remains separately
+  authorized under the demand classifier's own authority.
 - `COLLECTION_BOARD_ONLY` - the board is useful as a collection map, but major
   gaps or cutoff uncertainties prevent a clean retrieval handoff.
 - `NEEDS_COMMISSION_INTAKE` - required intake fields are missing; return the
@@ -510,7 +520,7 @@ in one sentence.
 - End with the board status and run-boundary YAML block.
 
 COMMISSION INPUTS FOLLOW:
-```
+````
 
 ## Non-Claims
 
