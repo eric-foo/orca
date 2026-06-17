@@ -53,7 +53,7 @@ The lane has three different objects:
    Do not run the validator.
 4. If inputs are complete, generate the full board with Sections 1-10.
 5. Save the exact board output to a temporary file or a bound durable artifact.
-6. Run the validator against that saved full board output.
+6. Run the validator against that saved full board output (see Validator Command section).
 7. If the validator passes, the board is mechanically safe for handoff-row
    packaging only.
 8. If the validator fails, fix the board output or report the finding codes.
@@ -93,14 +93,21 @@ Section 8, because it is not a board.
 
 ## What The Validator Checks
 
-The validator cross-checks rows listed in Section 8 against the Section 4 table.
-It fails when a handoff row:
+The validator first checks Section 4 and Section 8 structure. It fails when
+Section 4 is missing its Markdown table, required columns (`row_id`,
+`source_family`, `signal_role`, `evidence_status`, `surface_cutoff_status`,
+`cutoff_status`), or has malformed rows, missing row IDs, or duplicate row IDs.
+It also fails when Section 8 is missing, lacks a YAML fence, has invalid YAML,
+or lacks `classifier_handoff_packet`.
+
+After structure passes, the validator cross-checks rows listed in Section 8
+against the Section 4 table. It fails when the handoff packet has a missing or
+invalid `mode` field, or when a referenced handoff row:
 
 - is unknown;
 - is not `source_backed`;
 - is `excluded_future_info`;
 - is AEO / answer-engine visibility;
-- has missing or invalid `classifier_handoff_packet.mode`;
 - in backtest mode, lacks `surface_cutoff_status: existed_by_cutoff`;
 - in backtest mode, lacks `cutoff_status: in_window`.
 
