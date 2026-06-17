@@ -1,15 +1,15 @@
-"""Signal Content Record -- v0 source-side content model (the "what a signal says" layer).
+"""Signal Statement Record -- v0 source-side statement model (the "what a signal says" layer).
 
 The second derived-record kind after the ECR integrity postures
-(``docs/product/core_spine_v0_signal_content_record_architecture_v0.md``): a
-wedge-agnostic, structured record of a signal's CONTENT, keyed to a
+(``docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md``): a
+wedge-agnostic, structured record of what a signal says, keyed to a
 ``SourceCapturePacket`` and composed by the Evidence Unit by reference -- never
 merged into provenance/integrity, never carrying a Judgment verdict.
 
 v0 scope: the data model + validators only. No deriver (raw -> filled record),
 no rich family payloads, no persistence/finalizer, no EvidenceUnit binding, no
 Cleaning/Judgment. The final Evidence Unit field architecture remains
-owner-reserved and JSG-01 stays frozen; this is the bounded content-field
+owner-reserved and JSG-01 stays frozen; this is the bounded statement-field
 ratification analogue of the SP-1/2/3/6 source-side ratification.
 """
 from __future__ import annotations
@@ -23,7 +23,7 @@ from schemas.case_models import StrictModel
 from source_capture.models import VisibleFact
 
 
-SIGNAL_CONTENT_MANIFEST_VERSION = "signal_content_record_v0"
+SIGNAL_STATEMENT_MANIFEST_VERSION = "signal_statement_record_v0"
 
 
 def _require_non_empty(value: str, *, field_name: str) -> str:
@@ -39,12 +39,12 @@ def _require_optional_non_empty(value: str | None, *, field_name: str) -> str | 
 
 
 class SignalFamily(StrEnum):
-    """Closed, wedge-agnostic content-row families plus a mandatory residual.
+    """Closed, wedge-agnostic statement-row families plus a mandatory residual.
 
     signal-quality meta is intentionally NOT a member: per the architecture
     direction it is carried by the ECR integrity postures, the ``VisibleFact``
     honesty fields, the ``decision_relevance`` tag, and Judgment -- it is not a
-    content-row family. Adding a family later is an additive enum change; an
+    statement-row family. Adding a family later is an additive enum change; an
     unresolved family degrades to ``RESIDUAL_FAMILY_UNRESOLVED`` rather than
     being forced or rejected.
     """
@@ -189,12 +189,12 @@ class FamilyDetailBase(StrictModel):
     """
 
 
-class ContentReferences(StrictModel):
+class StatementReferences(StrictModel):
     """By-KEY references to provenance + integrity -- never embedded, never merged.
 
-    Content links to "can I trust the saying" (the ``SourceCapturePacket`` and
-    the ECR postures) by key; it never copies those records in. One-directional:
-    content -> provenance, never the reverse.
+    The statement links to "can I trust the saying" (the ``SourceCapturePacket``
+    and the ECR postures) by key; it never copies those records in.
+    One-directional: statement -> provenance, never the reverse.
     """
 
     packet_id: str
@@ -202,7 +202,7 @@ class ContentReferences(StrictModel):
     ecr_posture_ref_ids: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def validate_keys(self) -> "ContentReferences":
+    def validate_keys(self) -> "StatementReferences":
         if not self.packet_id.strip():
             raise ValueError("packet_id reference must be a non-empty key")
         if self.slice_id is not None and not self.slice_id.strip():
@@ -215,7 +215,7 @@ class ContentReferences(StrictModel):
         return self
 
 
-class SignalContentRecord(StrictModel):
+class SignalStatementRecord(StrictModel):
     """v0 wedge-agnostic structured record of WHAT a signal says.
 
     One record == one observed event/claim from one source slice. Any
@@ -224,8 +224,8 @@ class SignalContentRecord(StrictModel):
     interpretation.
     """
 
-    manifest_version: Literal["signal_content_record_v0"] = SIGNAL_CONTENT_MANIFEST_VERSION
-    content_id: str
+    manifest_version: Literal["signal_statement_record_v0"] = SIGNAL_STATEMENT_MANIFEST_VERSION
+    statement_id: str
     signal_family: SignalFamily
     decision_relevance: DecisionRelevance
 
@@ -239,7 +239,7 @@ class SignalContentRecord(StrictModel):
     raw_observation: str
 
     # By-key links to provenance + integrity (never embedded).
-    references: ContentReferences
+    references: StatementReferences
 
     # Optional generic shapes -- family richness lives in their VALUES, not new columns.
     delta: Delta | None = None
@@ -249,8 +249,8 @@ class SignalContentRecord(StrictModel):
     family_detail: FamilyDetailBase | None = None
 
     @model_validator(mode="after")
-    def validate_anchors(self) -> "SignalContentRecord":
-        _require_non_empty(self.content_id, field_name="content_id")
+    def validate_anchors(self) -> "SignalStatementRecord":
+        _require_non_empty(self.statement_id, field_name="statement_id")
         if not self.raw_observation.strip():
             raise ValueError("raw_observation must be a non-empty source-language anchor")
         return self

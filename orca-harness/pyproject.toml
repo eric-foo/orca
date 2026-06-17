@@ -30,6 +30,7 @@ include = [
   "scoring",
   "source_capture",
   "source_capture.*",
+  "signal_statement",
   "source_observability",
 ]
 

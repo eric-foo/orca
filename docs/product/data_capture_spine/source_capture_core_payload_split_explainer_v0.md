@@ -148,7 +148,7 @@ flowchart TD
   B --> D["Typed Attachment Envelope<br/>source-specific details"]
   C --> E["Projection<br/>convenient derived view"]
   D --> E
-  E --> F["ECR / SCR / Cleaning / Judgment<br/>downstream receipts and use"]
+  E --> F["ECR / Signal Statement Record / Cleaning / Judgment<br/>downstream receipts and use"]
 ```
 
 ## What This Changes
@@ -183,7 +183,7 @@ This explainer does not decide:
 - the projection cache or materialization strategy;
 - ECR schema or receipt mechanics;
 - Cleaning tag schema or write location;
-- SCR, Signal Content, or Judgment internals;
+- Signal Statement Record or Judgment internals;
 - production runtime, scheduler, dashboard, or storage engine.
 
 Those belong in a separate data-lake mechanics planning lane.
@@ -201,7 +201,7 @@ The next lane should answer mechanics questions such as:
 - What exactly is a projection, and where is it stored if materialized?
 - Where does ECR read from, and what receipt does it write?
 - Where does Cleaning read from, and where do tags or cleaned handles attach?
-- How do ECR, SCR, Cleaning, and Judgment keep raw-keyed traceability without
+- How do ECR, Signal Statement Record, Cleaning, and Judgment keep raw-keyed traceability without
   copying source truth into competing sources of truth?
 
 Until that lane is accepted, the safe mental model is:

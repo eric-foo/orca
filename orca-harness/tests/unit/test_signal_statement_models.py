@@ -1,4 +1,4 @@
-"""Tests for the v0 Signal Content Record data model.
+"""Tests for the v0 Signal Statement Record data model.
 
 Validation focus (no deriver/persistence/binding here): round-trip under
 extra=forbid; closed-enum rejection; key-integrity; residual-degrades-honestly;
@@ -12,14 +12,14 @@ import pytest
 from pydantic import ValidationError
 
 from source_capture.models import VisibleFact, VisibleFactStatus
-from signal_content.models import (
-    SIGNAL_CONTENT_MANIFEST_VERSION,
-    ContentReferences,
+from signal_statement.models import (
+    SIGNAL_STATEMENT_MANIFEST_VERSION,
+    StatementReferences,
     DecisionRelevance,
     Delta,
     FamilyDetailBase,
     Reaction,
-    SignalContentRecord,
+    SignalStatementRecord,
     SignalEventTimeField,
     SignalEventTimeReference,
     SignalEventTimeStatus,
@@ -37,25 +37,25 @@ def _event_time() -> SignalEventTimeReference:
     )
 
 
-def _record(**overrides) -> SignalContentRecord:
+def _record(**overrides) -> SignalStatementRecord:
     fields = dict(
-        content_id="sc-0001",
+        statement_id="statement-0001",
         signal_family=SignalFamily.COMPETITOR_PRICE_PACKAGING_MOVE,
         decision_relevance=DecisionRelevance.DECIDE_CANDIDATE,
         subject_entity=_known("Competitor X"),
         event_or_claim=_known("raised Pro tier from $20 to $25"),
         signal_event_time=_event_time(),
         raw_observation="Pro plan now $25/mo (was $20).",
-        references=ContentReferences(packet_id="pkt-1", slice_id="slc-1"),
+        references=StatementReferences(packet_id="pkt-1", slice_id="slc-1"),
     )
     fields.update(overrides)
-    return SignalContentRecord(**fields)
+    return SignalStatementRecord(**fields)
 
 
 def test_round_trip_under_extra_forbid_with_default_version() -> None:
     rec = _record()
-    assert rec.manifest_version == SIGNAL_CONTENT_MANIFEST_VERSION
-    rebuilt = SignalContentRecord.model_validate(rec.model_dump())
+    assert rec.manifest_version == SIGNAL_STATEMENT_MANIFEST_VERSION
+    rebuilt = SignalStatementRecord.model_validate(rec.model_dump())
     assert rebuilt == rec
 
 
@@ -87,7 +87,7 @@ def test_signal_quality_meta_is_not_a_content_family() -> None:
 def test_manifest_version_literal_rejects_other_versions() -> None:
     # read-checked _vN: a v0 model strictly admits only v0 records
     with pytest.raises(ValidationError):
-        _record(manifest_version="signal_content_record_v1")
+        _record(manifest_version="signal_statement_record_v1")
 
 
 def test_signal_event_time_requires_a_reference_not_a_visible_fact() -> None:
@@ -160,17 +160,17 @@ def test_event_time_status_defaults_known_keeps_bare_reference_valid() -> None:
 
 def test_key_integrity_rejects_empty_packet_id() -> None:
     with pytest.raises(ValidationError):
-        ContentReferences(packet_id="   ")
+        StatementReferences(packet_id="   ")
 
 
 def test_key_integrity_rejects_empty_posture_ref() -> None:
     with pytest.raises(ValidationError):
-        ContentReferences(packet_id="pkt-1", ecr_posture_ref_ids=["ok", ""])
+        StatementReferences(packet_id="pkt-1", ecr_posture_ref_ids=["ok", ""])
 
 
 def test_key_integrity_rejects_duplicate_posture_refs() -> None:
     with pytest.raises(ValidationError):
-        ContentReferences(packet_id="pkt-1", ecr_posture_ref_ids=["a", "a"])
+        StatementReferences(packet_id="pkt-1", ecr_posture_ref_ids=["a", "a"])
 
 
 def test_visible_fact_honesty_known_requires_value() -> None:
@@ -178,9 +178,9 @@ def test_visible_fact_honesty_known_requires_value() -> None:
         _record(subject_entity=VisibleFact(status=VisibleFactStatus.KNOWN))
 
 
-def test_content_id_and_raw_observation_must_be_non_empty() -> None:
+def test_statement_id_and_raw_observation_must_be_non_empty() -> None:
     with pytest.raises(ValidationError):
-        _record(content_id="   ")
+        _record(statement_id="   ")
     with pytest.raises(ValidationError):
         _record(raw_observation="")
 
@@ -197,7 +197,7 @@ def test_optional_delta_and_reaction_round_trip() -> None:
         delta=Delta(dimension="price", before=_known("$20"), after=_known("$25")),
         reaction=Reaction(kind="complaint_volume", observed_magnitude_state=_known("spike")),
     )
-    assert SignalContentRecord.model_validate(rec.model_dump()) == rec
+    assert SignalStatementRecord.model_validate(rec.model_dump()) == rec
 
 
 def test_empty_family_detail_slot_accepts_none_and_empty_base() -> None:

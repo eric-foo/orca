@@ -2,7 +2,7 @@
 
 Mirrors the capture_spine Reddit lane-support pattern (frozen dataclass +
 StrEnum + a custom ``*Error(ValueError)`` + module-level ``validate_*`` in
-``validation.py``), NOT the signal_content pydantic pattern: this is an
+``validation.py``), NOT the signal_statement pydantic pattern: this is an
 internal, high-volume capture record, so it sits on the dataclass side of the
 pydantic-at-the-boundary / dataclass-internal split.
 

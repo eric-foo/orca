@@ -127,7 +127,7 @@ Source Capture
        |- stable core facts: where, when, how, packet/slice/file keys
        |- Retail/PDP typed envelope: retailer/product/SKU/price/review substrate
   -> Retail/PDP projection view [derived, re-runnable]
-  -> ECR/SCR by raw key/ref
+  -> ECR/Signal Statement Record by raw key/ref
   -> Cleaning by raw handle + sibling refs
   -> Judgment by full derivation chain + raw pull-in when needed
 ```
@@ -137,7 +137,7 @@ Source Capture
 1. Do not add Retail/PDP product, price, review, retailer-module, or SKU-detail
    fields directly to `SourceCaptureSlice`.
 2. Do not treat Retail/PDP projection JSON as canonical source truth.
-3. Do not let ECR, SCR, or Cleaning become the capture-payload home.
+3. Do not let ECR, Signal Statement Record, or Cleaning become the capture-payload home.
 4. Carry source-visible residuals forward; do not convert them into exclusion,
    credibility, or strength labels.
 5. Keep final physical representation open until the storage lane selects it.

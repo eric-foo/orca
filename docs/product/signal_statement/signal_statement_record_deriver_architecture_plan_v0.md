@@ -1,34 +1,34 @@
-# Signal Content Record (SCR) Deriver — Derivation Architecture Plan v0
+# Signal Statement Record Deriver — Derivation Architecture Plan v0
 
 ```yaml
 retrieval_header_version: 1
 artifact_role: Product artifact
 scope: >
-  Non-executing architecture routing object for the Signal Content Record (SCR)
-  deriver: the extraction contract (raw_observation -> a filled SignalContentRecord),
+  Non-executing architecture routing object for the Signal Statement Record
+  deriver: the extraction contract (raw_observation -> a filled SignalStatementRecord),
   the per-field M1/M2/M3 mapping, the honesty/residualize rules, the re-derive
   lifecycle, and the authored-input (signal_family + event-core) resolution. The
   next derived-record kind after the ECR SP-1/2/3/6 source-side derivers. Advisory
   planning only; recommends a target shape and surfaces owner-reserved decisions;
   builds nothing.
 use_when:
-  - Building or reviewing the SCR deriver against the v0 SignalContentRecord model.
+  - Building or reviewing the Signal Statement Record deriver against the v0 SignalStatementRecord model.
   - Deciding the extraction/authored-input contract before any deriver build.
   - Resolving the signal_event_time honesty gap and the authorship boundary.
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/signal_content/core_spine_v0_signal_content_record_architecture_v0.md
-  - orca-harness/signal_content/models.py
+  - docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md
+  - orca-harness/signal_statement/models.py
   - orca-harness/ecr/__init__.py
 branch_or_commit: ecr-sp3-timing-deriver-slice1 @ c912203 (worktree dirty; controlling sources pinned below)
 input_pins:
-  docs/product/core_spine_v0_signal_content_record_architecture_v0.md: committed 834c930 (controlling owner doc)
-  orca-harness/signal_content/models.py: committed 834c930 (the v0 model derived INTO; 17 model tests green)
+  docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md: committed 834c930 (controlling owner doc)
+  orca-harness/signal_statement/models.py: committed 834c930 (the v0 model derived INTO; 17 model tests green)
   orca-harness/ecr/ (SP-6 source-visibility deriver): committed 6329d71 (the pattern reused)
 downstream_consumers:
-  - The SCR deriver build (separately authorized) — receives this as its behavior spec.
+  - The Signal Statement Record deriver build (separately authorized) — receives this as its behavior spec.
 stale_if:
-  - signal_content/models.py changes the SignalContentRecord fields, SignalFamily / DecisionRelevance vocabularies, or the SignalEventTimeReference shape.
+  - signal_statement/models.py changes the SignalStatementRecord fields, SignalFamily / DecisionRelevance vocabularies, or the SignalEventTimeReference shape.
   - An authored signal-classification input record / SP-5-style finalizer is built (activates the dormant M2 lane).
   - The signal_event_time honesty gap (D2) is resolved by a model amendment.
   - The ECR-consolidation sequencing for this slice changes.
@@ -44,7 +44,7 @@ stale_if:
 
 ## Human Summary
 
-**Decision (lane judgment).** The SCR extraction is a **SPLIT**: a **mechanical carry-shell** (M1-carry of keys / raw text / timing-reference + M2 of a neutral routing tag) that **composes** an authored interpretive core (`signal_family` + the event-core), and **residualizes that core when the authored input is absent** — which is the **default today**, because no authored-classification input record and no SP-5-style finalizer exist in source (grep-confirmed, all three lenses). The deriver **carries-or-residualizes; it never authors.** The authored interpretive lane is **declared-but-dormant** (a named, typed seam — not built), exactly as SP-6's `archive_corroborated` / `archive_diverged` rows are declared-but-dormant behind a missing producer fact. `TARGET_RECOMMENDED`.
+**Decision (lane judgment).** The Signal Statement Record extraction is a **SPLIT**: a **mechanical carry-shell** (M1-carry of keys / raw text / timing-reference + M2 of a neutral routing tag) that **composes** an authored interpretive core (`signal_family` + the event-core), and **residualizes that core when the authored input is absent** — which is the **default today**, because no authored-classification input record and no SP-5-style finalizer exist in source (grep-confirmed, all three lenses). The deriver **carries-or-residualizes; it never authors.** The authored interpretive lane is **declared-but-dormant** (a named, typed seam — not built), exactly as SP-6's `archive_corroborated` / `archive_diverged` rows are declared-but-dormant behind a missing producer fact. `TARGET_RECOMMENDED`.
 
 **Three source-grounded load-bearing points:**
 - **The authored input does not exist → residualize is the default, surfaced as a finding (not a blocker).** Per the brief's own instruction (this is "like SP-5's deferred finalizer… likely needs a provenance-bound authored input, residualized when absent"). The mechanical half is buildable today and emits an honest record from a packet alone.
@@ -68,13 +68,13 @@ stale_if:
 **Amended deriver contract** (supersedes §"Bounded build scope teed up"):
 
 ```python
-derive_signal_content(
+derive_signal_statement(
     packet: SourceCapturePacket,
     *,
     preserved_bodies: Mapping[str, str],          # file_id -> verbatim source-language body; caller-supplied, frozen
     ecr_posture_refs: Sequence[str] = (),         # caller-materialized ECR posture KEYS; default empty
     authored_interpretation: AuthoredInterpretation | None = None,  # declared + dormant
-) -> list[SignalContentRecord]
+) -> list[SignalStatementRecord]
 ```
 
 - Pure; no I/O; no mutation; binds no `EvidenceUnit`. The file-read that produces `preserved_bodies` lives in a **thin caller** (the SP-2 "recompute at the harness, never trust here" precedent).
@@ -89,12 +89,12 @@ derive_signal_content(
 | `references.ecr_posture_ref_ids` | M1 from caller-supplied `ecr_posture_refs`; **default `[]`; never synthesized** (no `posture_id` exists; the link is already carried by the shared `packet_id`/`slice_id`). |
 | `signal_event_time` | **D2 = (b1):** residual carrier is the **v0 default** — `{status: unknown_with_reason, packet_timing_field: None, reason}`; the deriver **never** mechanically selects publication-vs-edit. Requires the model amendment below. |
 | `decision_relevance` | **v0 = always `UNRESOLVED`** (family always residual); **never inferred** from prose/context. The brief's "shape-derived" mechanism is **deferred to the authored lane**, not overturned. |
-| `content_id` | Deterministic over **`(packet_id, slice_id)` only** — never mixes `raw_observation` bytes (re-derive stability). |
+| `statement_id` | Deterministic over **`(packet_id, slice_id)` only** — never mixes `raw_observation` bytes (re-derive stability). |
 
 **The one model amendment (D2 = b1) — scheduled, NOT applied here.** `SignalEventTimeReference` (today `{packet_timing_field: SignalEventTimeField}`, required, no residual → a fully-residual record is non-constructible) gains a `VisibleFact`-style shape: `status: SignalEventTimeStatus = KNOWN` (additive default → existing constructions + the 17 tests unchanged), `packet_timing_field: SignalEventTimeField | None = None`, `reason: str | None = None`, with a validator (`KNOWN ⇒ field set, reason None`; non-`KNOWN ⇒ field None, reason non-empty`) mirroring `VisibleFact` / `EcrTimingResidual`. **Anti-scope-creep:** the record's `signal_event_time` field stays **required**; only the *reference object* gains the carrier; do **not** add members to `SignalEventTimeField`. This is the *only* model edit the build is authorized to make.
 
 **Build-time micro-decisions (named, so they cannot re-leak as silent improvisation):**
-1. `content_id` basis = `(packet_id, slice_id)` only; body bytes forbidden in the basis.
+1. `statement_id` basis = `(packet_id, slice_id)` only; body bytes forbidden in the basis.
 2. Multi-body slice (`SourceCaptureSlice.preserved_file_ids` is a list): **one record per slice**; the multi-body → single `raw_observation` composition rule (primary vs concatenation) is a **named build decision**, never a file→record fan-out.
 3. Referenced-but-unsupplied body = **caller error → no record + a surfaced limitation**, never an empty-anchor record (distinct from "slice has no files" → cleanly no record).
 4. Body verification **deferred**: hash-integrity is ECR/SP-2's lane; v0 carries the supplied body verbatim, trusting the frozen input; an optional `sha256`/`size` check vs the packet's `PreservedFile` is a named-deferred caller/harness option, not a v0 deriver bar.
@@ -102,7 +102,7 @@ derive_signal_content(
 
 **Amendment non-claims.** No build; no model edit performed (D2=b1 specified, scheduled); no authored-input record/finalizer; no EvidenceUnit binding; no Cleaning/Judgment; no commit/push; JSG-01 FROZEN. The SPLIT, the dormant authored lane, the re-derive-not-migrate lifecycle, the three-honesty-state encoding, and emit-timing are **carried unchanged** from v0.
 
-**Out-of-scope finding (flagged, not fixed here).** The brief (`core_spine_v0_signal_content_record_architecture_v0.md:47`) says "the five families" but `SignalFamily` has four members + `RESIDUAL_FAMILY_UNRESOLVED` — a real source inconsistency that does not affect v0 (family always residual). Routed to separate cleanup.
+**Out-of-scope finding (flagged, not fixed here).** The brief (`core_spine_v0_signal_statement_record_architecture_v0.md:47`) says "the five families" but `SignalFamily` has four members + `RESIDUAL_FAMILY_UNRESOLVED` — a real source inconsistency that does not affect v0 (family always residual). Routed to separate cleanup.
 
 ---
 
@@ -110,7 +110,7 @@ derive_signal_content(
 
 | Question | Result | Why |
 |---|---|---|
-| What is the SCR extraction contract? | `TARGET_RECOMMENDED` → **SPLIT (mechanical carry-shell + residualizing authored core)** | Settles the load-bearing question; lowest downstream lock-in (dormant typed seam, not a built lane or baked input schema); mirrors the SP-6 mechanical-with-named-residuals pattern. |
+| What is the Signal Statement Record extraction contract? | `TARGET_RECOMMENDED` → **SPLIT (mechanical carry-shell + residualizing authored core)** | Settles the load-bearing question; lowest downstream lock-in (dormant typed seam, not a built lane or baked input schema); mirrors the SP-6 mechanical-with-named-residuals pattern. |
 | Is the interpretive core mechanically derivable from the frozen packet today? | **NO (finding)** — `signal_family` + event-core are not | No authored-classification input / finalizer exists in source. Resolved by residualize-default + a declared-dormant authored lane (D1). |
 | Can the v0 model stay honest under absence? | **NO for one field (finding)** — `signal_event_time` has no unknown path | Required reference, two members, no residual. Needs a model amendment (D2). The lane names it; does not pick. |
 
@@ -118,12 +118,12 @@ derive_signal_content(
 
 ## Decision frame (what the extraction call actually is)
 
-The `SignalContentRecord` v0 model exists and is green (17 model tests). What is undecided is the **deriver's extraction contract**: how a captured `raw_observation` becomes a filled record. The model's fields split cleanly by *where their value can honestly come from*:
+The `SignalStatementRecord` v0 model exists and is green (17 model tests). What is undecided is the **deriver's extraction contract**: how a captured `raw_observation` becomes a filled record. The model's fields split cleanly by *where their value can honestly come from*:
 
 - **Provenance / keying / structural facts** the frozen `SourceCapturePacket` already carries (keys, raw text, timing reference, version) — mechanically present.
 - **Interpretive facts** — *what kind of signal this is* (`signal_family`) and *what it claims* (the event-core: `subject_entity`, `event_or_claim`) — which the packet does **not** carry. The packet records *that a capture happened* and *its provenance/timing*, never *what the content says*.
 
-The structural fork the contract must answer: is extraction **AUTHORED**, **MECHANICAL (M2-derive)**, or a **SPLIT**? Decisive context: the brief (`core_spine_v0_signal_content_record_architecture_v0.md:66`) names the extraction "like SP-5's deferred finalizer… likely needs a provenance-bound **authored** input, residualized when absent — never invent family or content." And the boundary doc's SP-5 decision establishes the *shape* an authored interpretation must take: cross-family, provenance-bound, no self-authoring.
+The structural fork the contract must answer: is extraction **AUTHORED**, **MECHANICAL (M2-derive)**, or a **SPLIT**? Decisive context: the brief (`core_spine_v0_signal_statement_record_architecture_v0.md:66`) names the extraction "like SP-5's deferred finalizer… likely needs a provenance-bound **authored** input, residualized when absent — never invent family or content." And the boundary doc's SP-5 decision establishes the *shape* an authored interpretation must take: cross-family, provenance-bound, no self-authoring.
 
 ---
 
@@ -151,8 +151,8 @@ Legend: **M1** = carry by value/key/reference from a frozen producer fact, no ju
 
 | Field | Type | Mode | v0 behavior + residualize rule |
 |---|---|---|---|
-| `manifest_version` | `Literal["signal_content_record_v0"]` | structural | Pinned constant; strict-admit v0 only (model test). |
-| `content_id` | `str` | M2-mech | Deterministic, stable id for this (packet, slice, event); non-empty; **not** random (re-derive stability). |
+| `manifest_version` | `Literal["signal_statement_record_v0"]` | structural | Pinned constant; strict-admit v0 only (model test). |
+| `statement_id` | `str` | M2-mech | Deterministic, stable id for this (packet, slice, event); non-empty; **not** random (re-derive stability). |
 | `references.packet_id` | `str` | M1 (key) | The promoted packet's real key; required non-empty; **links, never embeds.** |
 | `references.slice_id` | opt `str` | M1 (key) | The slice the event was observed in (when slice-grain). |
 | `references.ecr_posture_ref_ids` | by-key list | M1 (key) | The same packet's ECR posture ids (SP-1/2/3/6); deduped; content→integrity link only, **never merged.** |
@@ -195,7 +195,7 @@ The deriver runs **only after** (a) a candidate is **promoted** and (b) a `Sourc
 
 ## Re-derive lifecycle
 
-- **Derived / re-derivable from the FROZEN raw observable, never persisted-at-capture.** Re-running the deriver over the same frozen packet (and the same frozen authored core, when one exists) yields the same record. `raw_observation` is the durable anchor; the SCR is a *read*, not stored state. *(This is only true because the SPLIT kept the deriver mechanical — a live-classifier core would break it; that is the load-bearing coupling between the resolution and this lifecycle.)*
+- **Derived / re-derivable from the FROZEN raw observable, never persisted-at-capture.** Re-running the deriver over the same frozen packet (and the same frozen authored core, when one exists) yields the same record. `raw_observation` is the durable anchor; the Signal Statement Record is a *read*, not stored state. *(This is only true because the SPLIT kept the deriver mechanical — a live-classifier core would break it; that is the load-bearing coupling between the resolution and this lifecycle.)*
 - **Family-taxonomy change = RE-DERIVE, not a stored-column migration.** Adding/retiring a `SignalFamily` member → re-run over the still-frozen packets; records that were `RESIDUAL_FAMILY_UNRESOLVED` may resolve to the new family on re-derive. No data migration.
 - **Read-checked `_vN`, strict-admit, no upgrade-on-load** — the `manifest_version` Literal admits only `_v0`; a `_v1` deriver is a new read, not an in-place mutation. Additive family-enum growth (records that do not fit degrade to the residual).
 - **Activating the dormant authored lane is itself a re-derive, not a migration:** when a frozen, provenance-bound authored input later exists, re-run the deriver (now passing it) over the frozen packets to fill the residualized core. The residual record is *superseded by re-derivation*, never rewritten in place.
@@ -216,10 +216,10 @@ The deriver runs **only after** (a) a candidate is **promoted** and (b) a `Sourc
 ## Bounded build scope teed up + what stays deferred
 
 **The v0 build this tees up (smallest complete; a separate, later authorization):**
-- One module `orca-harness/signal_content/deriver.py` (sibling to `ecr/deriver.py`), exposing the **Amendment v0.1** signature `derive_signal_content(packet, *, preserved_bodies, ecr_posture_refs=(), authored_interpretation=None) -> list[SignalContentRecord]` — pure, no I/O, no mutation, binds no `EvidenceUnit`. *(v0's packet-only signature is superseded: `raw_observation` is carried from the caller-supplied body, not the packet.)*
-- v0 behavior = M1-carry + M2-neutral (`content_id`, `decision_relevance`, the event-time reference) + **M3-residualize the authored core.** With `authored_interpretation=None` (the only state that exists), it emits a **structurally complete, honestly-residual** record.
+- One module `orca-harness/signal_statement/deriver.py` (sibling to `ecr/deriver.py`), exposing the **Amendment v0.1** signature `derive_signal_statement(packet, *, preserved_bodies, ecr_posture_refs=(), authored_interpretation=None) -> list[SignalStatementRecord]` — pure, no I/O, no mutation, binds no `EvidenceUnit`. *(v0's packet-only signature is superseded: `raw_observation` is carried from the caller-supplied body, not the packet.)*
+- v0 behavior = M1-carry + M2-neutral (`statement_id`, `decision_relevance`, the event-time reference) + **M3-residualize the authored core.** With `authored_interpretation=None` (the only state that exists), it emits a **structurally complete, honestly-residual** record.
 - The `authored_interpretation` parameter is **declared and dormant** (typed `| None`, defaulted `None`), with a docstring stating it is unbuilt — the named seam.
-- Tests mirroring `test_signal_content_models.py` (see validation expectations).
+- Tests mirroring `test_signal_statement_models.py` (see validation expectations).
 
 **Deferred (NOT authorized here — each a separate owner gate):**
 - The **authored-classification input record** — its schema and (critically) its **provenance binding** (SP-5-style: out-of-band, cross-family, provenance-bound). **The first deferred slice.**
@@ -247,7 +247,7 @@ next_routing_object:
       sibling of ecr/deriver.py and the smallest complete mechanical slice.
     authored_core_carrier: >
       A thin, FROZEN-once-produced, provenance-bound authored-interpretation input
-      keyed (packet_id, slice_id) -- contract only; NOT a persisted SCR field and
+      keyed (packet_id, slice_id) -- contract only; NOT a persisted Signal Statement Record field and
       NOT the SP-5 finalizer mechanism (which stays deferred).
   owner_decisions_ratified:                 # all ratified this turn via Architecture-Pass Amendment v0.1
     - D1: ACCEPTED -- no authored interpretive input exists in source (grep-confirmed, re-verified
@@ -264,7 +264,7 @@ next_routing_object:
   unchanged:
     - JSG-01 stays FROZEN; final EvidenceUnit field architecture owner-reserved.
     - No deriver built; no persistence/finalizer; no EvidenceUnit binding; no Cleaning/Judgment; no commit.
-    - The v0 SCR model is unchanged EXCEPT the one additive D2=b1 amendment to SignalEventTimeReference
+    - The v0 Signal Statement Record model is unchanged EXCEPT the one additive D2=b1 amendment to SignalEventTimeReference
       (scheduled for the build, not applied here); the other fields + the 17 green tests are unchanged.
   not_proven:
     - That an authored interpretive input EXISTS or is producible today (it does not; this is the SP-5 echo).
@@ -276,7 +276,7 @@ next_routing_object:
 
 ## Validation expectations the build must name
 
-Mirroring `orca-harness/tests/unit/test_signal_content_models.py` (17 green) and the `ecr/` deriver tests, the future deriver build (not authorized here) must satisfy tests able to FAIL:
+Mirroring `orca-harness/tests/unit/test_signal_statement_models.py` (17 green) and the `ecr/` deriver tests, the future deriver build (not authorized here) must satisfy tests able to FAIL:
 
 1. **Round-trip** — every derived record survives `model_validate(model_dump())` under `extra="forbid"`, including all-residual-core records.
 2. **Closed-enum** — only closed `SignalFamily` / `DecisionRelevance` members are emitted; a non-member/low-confidence authored family degrades to `RESIDUAL_FAMILY_UNRESOLVED` (not an error, not a coined value); no graded relevance is ever produced.
@@ -310,9 +310,9 @@ Per `.agents/workflow-overlay/source-of-truth.md`, and matching the SP-6 precede
 
 ```yaml
 direction_change_propagation:
-  status: ratified_amendment_v0_1     # owner ratified the SCR contract + the v0.1 input-contract amendment this turn
-  doctrine_changed: >                  # the SCR carry-supplied-or-residualize deriver contract is ratified
-    The SCR deriver contract is ratified: SPLIT (carry-shell + residualizing authored core);
+  status: ratified_amendment_v0_1     # owner ratified the Signal Statement Record contract + the v0.1 input-contract amendment this turn
+  doctrine_changed: >                  # the Signal Statement Record carry-supplied-or-residualize deriver contract is ratified
+    The Signal Statement Record deriver contract is ratified: SPLIT (carry-shell + residualizing authored core);
     pure-but-not-packet-only (caller-supplied preserved_bodies / ecr_posture_refs / authored_interpretation);
     per-slice grain (D5); D2=(b1) event-time residual-default; decision_relevance v0-UNRESOLVED.
     One additive model amendment (D2=b1 to SignalEventTimeReference) is SCHEDULED for the build, not applied.
@@ -320,14 +320,14 @@ direction_change_propagation:
   trigger: architecture_doctrine + lifecycle_boundary
   related: the next derived-record kind after ECR SP-1/2/3/6; steps toward Cleaning/binding
   evidence:
-    - core_spine_v0_signal_content_record_architecture_v0.md (834c930) — brief :66 "like SP-5's deferred finalizer… authored input, residualized when absent"
-    - orca-harness/signal_content/models.py (834c930) — the v0 model + the signal_event_time honesty gap
+    - core_spine_v0_signal_statement_record_architecture_v0.md (834c930) — brief :66 "like SP-5's deferred finalizer… authored input, residualized when absent"
+    - orca-harness/signal_statement/models.py (834c930) — the v0 model + the signal_event_time honesty gap
     - boundary doc decision B (:303) — SP-5 cross-family, provenance-bound, no self-authoring
     - ecr/ SP-6 (6329d71) — the mechanical-with-named-residuals + declared-dormant pattern reused
     - cross-vendor adversarial artifact review (needs-architecture-pass; 6 findings, all adjudicated ACCEPT) + the 3-subagent architecture-pass panel + home adjudication (this turn) — the design basis for Amendment v0.1
   residual: the binding receipt is authored at owner ratification of this architecture, not here
   downstream_surfaces_to_check_on_finalize:
-    - the brief (core_spine_v0_signal_content_record_architecture_v0.md)
+    - the brief (core_spine_v0_signal_statement_record_architecture_v0.md)
     - core_spine_v0_data_and_cleaning_spine_boundary_v0.md
     - the IPF Evidence Unit Standard
     - .agents/workflow-overlay/source-of-truth.md
@@ -339,7 +339,7 @@ direction_change_propagation:
 
 ## Source-read ledger + advisory disclosure
 
-- Sources (pins verified by the panel's fresh reads): `core_spine_v0_signal_content_record_architecture_v0.md` (834c930, controlling), `orca-harness/signal_content/models.py` + `__init__.py` (834c930; 17 model tests green), `orca-harness/ecr/` (deriver/models/__init__; SP-6 at 6329d71 — the reused pattern), `jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md` (the precedent shape), `orca-harness/source_capture/models.py` (`VisibleFact`, `PacketTiming`, packet/slice keys), `core_spine_v0_data_and_cleaning_spine_boundary_v0.md` (SP-5 decision B `:303`; JSG-01 frozen; reserved EvidenceUnit architecture), `orca-harness/tests/unit/test_signal_content_models.py` (the validation discipline). Decisive **negative** finding (all three lenses, grep-confirmed): no authored-classification input record and no SP-5 finalizer mechanism exist anywhere in the harness.
+- Sources (pins verified by the panel's fresh reads): `core_spine_v0_signal_statement_record_architecture_v0.md` (834c930, controlling), `orca-harness/signal_statement/models.py` + `__init__.py` (834c930; 17 model tests green), `orca-harness/ecr/` (deriver/models/__init__; SP-6 at 6329d71 — the reused pattern), `jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md` (the precedent shape), `orca-harness/source_capture/models.py` (`VisibleFact`, `PacketTiming`, packet/slice keys), `core_spine_v0_data_and_cleaning_spine_boundary_v0.md` (SP-5 decision B `:303`; JSG-01 frozen; reserved EvidenceUnit architecture), `orca-harness/tests/unit/test_signal_statement_models.py` (the validation discipline). Decisive **negative** finding (all three lenses, grep-confirmed): no authored-classification input record and no SP-5 finalizer mechanism exist anywhere in the harness.
 - Methods: `workflow-architecture-planning` + `workflow-deep-thinking` reference-loaded; applied after source-context-ready.
 - Advisory sub-lanes (3, owner-authorized, general-purpose): lens A (authored-input-first), lens B (per-field-M1/M2/M3-first), lens C (honesty-under-absence-first). All three independently converged on the SPLIT + residualize-default + no-authored-input-exists; the home thread adjudicated. Lens C contributed the three-state honesty encoding and the `signal_event_time` honesty gap; lenses A+B contributed the frozen-provenance-bound authored-artifact constraint; lens B contributed the per-field table and the absent-vs-uncaptured distinction. Same-vendor panel — a cross-vendor adversarial *artifact* review is recommended before any build. The lane owns this synthesis.
 ```

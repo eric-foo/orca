@@ -11,7 +11,7 @@ scope: >
   cache implementation are out of scope.
 use_when:
   - Deciding whether a new source-family payload may add fields directly to SourceCaptureSlice.
-  - Designing capture, projection, ECR, Signal Content, or Cleaning inputs that need tenant payloads.
+  - Designing capture, projection, ECR, Signal Statement Record, or Cleaning inputs that need tenant payloads.
   - Classifying current metric_observations or demand pins against the long-term lake boundary.
 authority_boundary: retrieval_only
 open_next:
@@ -130,7 +130,7 @@ Core owns:
 - the typed value/posture coupling discipline for observed values;
 - the rule that absence, blocked access, out-of-window, not-attempted, and
   not-applicable states are never stored as observed zeroes;
-- the rule that projection, ECR, Signal Content, Cleaning, and Judgment must
+- the rule that projection, ECR, Signal Statement Record, Cleaning, and Judgment must
   reference back to raw packet/slice/file handles instead of copying payloads
   into a second source of truth.
 
@@ -191,8 +191,8 @@ Capture writes immutable SourceCapturePacket bundle
   -> current fields may still appear on slices as transitional/incumbent
   -> new tenant payloads attach as logical extension envelopes keyed to packet/slice
   -> projection reads raw packet + current fields/envelopes and emits a derived view
-  -> ECR / Signal Content / series derivations read raw-keyed inputs and write receipts
-  -> Cleaning consumes one raw-keyed handle with optional projection/ECR/SCR refs
+  -> ECR / Signal Statement Record / series derivations read raw-keyed inputs and write receipts
+  -> Cleaning consumes one raw-keyed handle with optional projection/ECR/Signal Statement Record refs
   -> Judgment later reads the traceable chain; it does not rewrite capture truth
 ```
 
@@ -217,7 +217,7 @@ This artifact does not:
 - choose embedded-manifest vs sidecar physical storage;
 - choose envelope serialization;
 - choose projection cache engine or materialization;
-- design ECR, Signal Content, Cleaning, Evidence Binding, or Judgment schema;
+- design ECR, Signal Statement Record, Cleaning, Evidence Binding, or Judgment schema;
 - admit fixtures, validate packets, prove source-family coverage, or claim
   readiness;
 - decide whether existing IG or demand fields should be frozen, dual-written,

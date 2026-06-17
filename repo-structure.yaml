@@ -55,7 +55,7 @@ product_lanes:
   - { name: core_spine, status: current }
   - { name: data_capture_spine, status: current }
   - { name: judgment_spine, status: current }
-  - { name: signal_content, status: current }
+  - { name: signal_statement, status: current }
   - { name: ecr, status: current }
   - { name: product_lead, status: current }
   - { name: source_capture_toolbox, status: current }   # pre-existing bound folder

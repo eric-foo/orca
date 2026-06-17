@@ -1,16 +1,16 @@
-# Handoff — Signal Content Record Deriver: Architecture-First Slice (ECR-Consolidation Lane) v0
+# Handoff — Signal Statement Record Deriver: Architecture-First Slice (ECR-Consolidation Lane) v0
 
 ```yaml
 retrieval_header_version: 1
 artifact_role: Cross-lane handoff prompt (architecture commission)
-scope: Cold handoff commissioning the ECR-consolidation lane to ARCHITECT (not yet build) the Signal Content Record deriver — the deferred interpretive extraction step (raw observation -> signal_family + event-core -> filled SignalContentRecord), the next derived-record kind after SP-6.
+scope: Cold handoff commissioning the ECR-consolidation lane to ARCHITECT (not yet build) the Signal Statement Record deriver — the deferred interpretive extraction step (raw observation -> signal_family + event-core -> filled SignalStatementRecord), the next derived-record kind after SP-6.
 use_when:
-  - Picking up the Signal Content Record deriver slice in the ECR-consolidation lane.
+  - Picking up the Signal Statement Record deriver slice in the ECR-consolidation lane.
   - Deciding the derivation/extraction contract before any deriver build.
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/signal_content/core_spine_v0_signal_content_record_architecture_v0.md
-  - orca-harness/signal_content/models.py
+  - docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md
+  - orca-harness/signal_statement/models.py
   - orca-harness/ecr/__init__.py
 ```
 
@@ -24,9 +24,9 @@ files); rely on the **named, pinned source files**, not on a clean tree.
 
 ## 1. Goal Handoff / Active Objective
 
-Produce the **derivation architecture** for the Signal Content Record — the
+Produce the **derivation architecture** for the Signal Statement Record — the
 deferred interpretive extraction step that turns a captured raw observation into
-a filled `SignalContentRecord` (`raw_observation` -> `signal_family` +
+a filled `SignalStatementRecord` (`raw_observation` -> `signal_family` +
 event-core + the optional generic sub-objects), keyed to an existing
 `SourceCapturePacket`. This is the **next derived-record kind after the ECR
 SP-1/2/3/6 source-side derivers**.
@@ -45,7 +45,7 @@ family or content.
 packets, residualize cleanly when the authored input is absent (never invent),
 and re-derive from the still-frozen raw observable rather than migrate a stored
 column.
-`long_term_goal` (horizon only): the Core Spine content layer feeds Cleaning ->
+`long_term_goal` (horizon only): the Core Spine statement layer feeds Cleaning ->
 ECR -> Judgment by reference; this slice is one page of that build-up.
 
 ## 2. Preflight (`orca_start_preflight` — complete before APPLY)
@@ -76,7 +76,7 @@ ECR -> Judgment by reference; this slice is one page of that build-up.
   receipt (see §8).
 - `target`: ONE new architecture/plan doc under `docs/product/` (follow the SP-6
   precedent `docs/product/jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md`);
-  suggested slug `signal_content_record_deriver_architecture_plan_v0.md`. Final
+  suggested slug `signal_statement_record_deriver_architecture_plan_v0.md`. Final
   placement/slug is the lane's call.
 - `source_hierarchy`: `AGENTS.md` -> overlay (`source-of-truth.md`) -> the brief
   (controlling owner doc) -> boundary doc -> model/ECR source.
@@ -93,8 +93,8 @@ ECR -> Judgment by reference; this slice is one page of that build-up.
 
 | Read | Why | Pin |
 | --- | --- | --- |
-| `docs/product/core_spine_v0_signal_content_record_architecture_v0.md` | **Controlling owner doc.** Esp. "Deferred — NOT authorized here" + "Carry-don't-coin + evolution" + the shape. | committed `834c930` |
-| `orca-harness/signal_content/models.py`, `__init__.py` | The built v0 model you derive INTO (`SignalContentRecord`, `ContentReferences`, `Delta`, `Reaction`, `SignalEventTimeReference`, closed `SignalFamily`/`DecisionRelevance`). | committed `834c930` |
+| `docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md` | **Controlling owner doc.** Esp. "Deferred — NOT authorized here" + "Carry-don't-coin + evolution" + the shape. | committed `834c930` |
+| `orca-harness/signal_statement/models.py`, `__init__.py` | The built v0 model you derive INTO (`SignalStatementRecord`, `StatementReferences`, `Delta`, `Reaction`, `SignalEventTimeReference`, closed `SignalFamily`/`DecisionRelevance`). | committed `834c930` |
 | `orca-harness/ecr/` (module + `__init__.py`) and the SP-6 source-visibility deriver | **The pattern to reuse**: M1-carry / M2-derive / M3-residual; "a parallel record the frozen conductor reads, binds no EvidenceUnit". | SP-6 at `6329d71` |
 | `docs/product/jsg01_sp6_source_visibility_derivation_architecture_plan_v0.md` and `..._routing_v0.md` | The SP-6 derivation architecture/routing precedent — match its shape. | verify in tree |
 | The ECR-consolidation v0 plan (e.g. `docs/prompts/reviews/ecr_consolidation_v0_plan_cross_family_review_patch_prompt_v0.md` and its review output) | Where this slice slots in as "the next derived-record kind after SP-6". | verify in tree |
@@ -126,7 +126,7 @@ available. So, against source, decide:
   (an authored-input record? a finalizer like SP-5)?
 - What is the **residualize** path when the authored input is absent or
   low-confidence — `signal_family = RESIDUAL_FAMILY_UNRESOLVED`, `VisibleFact`
-  unknown-with-reason for the content fields — so "not extracted" stays distinct
+  unknown-with-reason for the statement fields — so "not extracted" stays distinct
   from "no such content"?
 
 Treat the **authored-input-exists** premise as a verify-against-source assumption
@@ -135,9 +135,9 @@ Treat the **authored-input-exists** premise as a verify-against-source assumptio
 ## 6. Output Contract — the architecture doc must contain
 
 1. **Extraction contract**: inputs (the packet/slice + raw observation + any
-   authored input), output (a filled `SignalContentRecord`), and the
+   authored input), output (a filled `SignalStatementRecord`), and the
    authored-vs-mechanical split from §5.
-2. **Per-field M1/M2/M3 mapping**: for each `SignalContentRecord` field, whether
+2. **Per-field M1/M2/M3 mapping**: for each `SignalStatementRecord` field, whether
    it is carried (M1), derived (M2), or residual (M3), and from what source.
 3. **Residualize + honesty rules**: unknown family -> `RESIDUAL_FAMILY_UNRESOLVED`;
    absent/uncertain content -> `VisibleFact` unknown-with-reason; never invent
@@ -193,7 +193,7 @@ No code this turn. The doc passes when: it settles §5; every §6 item is presen
 and source-backed; the frozen boundaries (§7) are intact; the DCP receipt (§8)
 is bound; and it **names the build's validation expectations** (e.g. the same
 round-trip / closed-enum / residualize-honestly / key-integrity discipline the
-existing model tests use — `orca-harness/tests/unit/test_signal_content_models.py`).
+existing model tests use — `orca-harness/tests/unit/test_signal_statement_models.py`).
 No readiness, validation-pass, JSG-01-unfreeze, or implementation claim.
 
 ## 11. Assumptions, Unknowns, Blocked Conditions

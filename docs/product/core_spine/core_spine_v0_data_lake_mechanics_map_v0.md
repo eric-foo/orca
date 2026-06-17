@@ -5,7 +5,7 @@ retrieval_header_version: 1
 artifact_role: Product architecture map
 scope: >
   Minimal logical map for how Orca source data moves from raw capture through
-  projection, ECR/SCR, Cleaning, and Judgment while raw capture remains the
+  projection, ECR/Signal Statement Record, Cleaning, and Judgment while raw capture remains the
   source of truth.
 use_when:
   - Planning capture-to-derived-layer data flow.
@@ -26,7 +26,7 @@ stale_if:
   - The Retail/PDP typed-envelope probe is rejected or materially changed.
   - A later accepted storage/manifest/sidecar/projection-cache decision supersedes this logical map.
   - A non-IG envelope probe disproves or changes the packet/slice-keyed boundary.
-  - ECR, SCR, Cleaning, or Judgment ownership changes in a later accepted source.
+  - ECR, Signal Statement Record, Cleaning, or Judgment ownership changes in a later accepted source.
 ```
 
 ## Status
@@ -46,7 +46,7 @@ migration authority.
 orca_start_preflight:
   agents_read: yes
   overlay_read: yes
-  source_pack: custom (payload boundary + source_capture models + ECR/SCR + projection + Cleaning)
+  source_pack: custom (payload boundary + source_capture models + ECR/Signal Statement Record + projection + Cleaning)
   edit_permission: docs-write
   target_scope:
     - docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md
@@ -102,7 +102,7 @@ Shared handle family:
 | Typed envelope | Source-family payload tied to packet/slice | Logical typed payload: family, kind, schema version, pins, body, absence/residual posture | Pick physical storage or become mutable side truth |
 | Projection | Raw + core facts + envelopes | Re-derived row view, loss ledger, receipt | Persist as source truth or decide salience |
 | ECR | Raw packet/slice/file facts | Integrity postures SP-1/2/3/6 | Depend on Cleaning/projection or bind final Evidence Unit schema |
-| SCR | Raw body material + provenance/ECR refs | Per-slice content record by key | Become a second capture-payload home |
+| Signal Statement Record | Raw body material + provenance/ECR refs | Per-slice statement record by key | Become a second capture-payload home |
 | Cleaning | One raw-keyed input handle + optional sibling refs | Transform ledger, cleaned working view, warnings, raw-pull triggers | Decide credibility, independence, similarity effect, exclusion, or strength |
 | Judgment | Raw + derived chain + raw pull-in | Verdicts and decision-use outputs | Rewrite raw capture truth |
 
@@ -116,7 +116,7 @@ Source Capture
        |- new source payloads attach as typed envelopes
   -> Projection view
   -> ECR integrity records
-  -> SCR content records
+  -> Signal Statement Record rows
   -> Cleaning ledger/view
   -> Judgment effects, with raw pull-in when needed
 ```
@@ -132,7 +132,7 @@ until these are true:
 3. The owner chooses envelope physical representation: manifest, sidecar, or
    another immutable/hash-pinned form.
 4. Incumbent fields have a fate: frozen, dual-read, replayed, or legacy-only.
-5. SCR `FamilyDetailBase` is governed so it does not compete with capture-side
+5. Signal Statement Record `FamilyDetailBase` is governed so it does not compete with capture-side
    envelopes.
 
 Do not open Cleaning implementation until the input handle, transform ledger,
@@ -164,7 +164,7 @@ irreversible physical choices wait for the non-IG probe.
   still unbuilt and unproven physically.
 - `SourceCaptureSlice` is already a fat incumbent surface; docs do not
   mechanically block field #6.
-- SCR `FamilyDetailBase` is a latent competing payload home.
+- Signal Statement Record `FamilyDetailBase` is a latent competing payload home.
 - SP-6 archive-slice keying is implemented convention, not a general packet
   field contract.
 
@@ -175,7 +175,7 @@ direction_change_propagation:
   doctrine_changed: >
     Orca now has a minimal planning-only data-lake mechanics map: raw
     SourceCapturePacket is canonical; packet/slice/file keys and typed
-    packet/slice envelopes feed projection, ECR/SCR, Cleaning, and Judgment by
+    packet/slice envelopes feed projection, ECR/Signal Statement Record, Cleaning, and Judgment by
     reference; derived layers write views, receipts, records, or ledgers only;
     physical storage/schema/migration remain deferred.
   trigger: architecture_doctrine
@@ -198,23 +198,23 @@ direction_change_propagation:
     - docs/product/core_spine/core_spine_v0_cleaning_spine_foundation_v0.md
     - orca-harness/source_capture/models.py
     - orca-harness/ecr/
-    - orca-harness/signal_content/
+    - orca-harness/signal_statement/
   intentionally_not_updated:
     - path: orca-harness/source_capture/models.py
       reason: Docs-only map; no code/schema migration or new slice field.
     - path: orca-harness/ecr/
       reason: Existing derivers already follow by-key pure derivation; no code work.
-    - path: orca-harness/signal_content/
-      reason: SCR remains by-key; FamilyDetailBase risk is recorded without code change.
+    - path: orca-harness/signal_statement/
+      reason: Signal Statement Record remains by-key; FamilyDetailBase risk is recorded without code change.
     - path: docs/workflows/orca_repo_map_v0.md
       reason: Existing Data Capture and ECR submaps route to this artifact.
   stale_language_search: >
-    rg -n "data-lake mechanics|SourceCaptureSlice|extension envelope|projection cache|ECR|Signal Content|Cleaning|Judgment|FamilyDetailBase|archive-body slice"
-    docs/product docs/workflows orca-harness/source_capture orca-harness/ecr orca-harness/signal_content
+    rg -n "data-lake mechanics|SourceCaptureSlice|extension envelope|projection cache|ECR|Signal Statement Record|Cleaning|Judgment|FamilyDetailBase|archive-body slice"
+    docs/product docs/workflows orca-harness/source_capture orca-harness/ecr orca-harness/signal_statement
   stale_language_search_result: >
     Executed 2026-06-17 on branch codex/data-lake-mechanics-map. Hits were
     expected in this artifact, payload-boundary/explainer docs, projection/ECR/
-    SCR/Cleaning docs, and current source_capture/ecr/signal_content code. No
+    Signal Statement Record/Cleaning docs, and current source_capture/ecr/signal_statement code. No
     checked live surface converted this map into storage selection, manifest
     migration, projection-cache authorization, a new SourceCaptureSlice-field
     authorization, or implementation readiness.

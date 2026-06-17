@@ -391,7 +391,7 @@ nickname: "crawling graph." The runner is
 | `docs/decisions/orca_doctrine_index_v0.md` | **Doctrine index (router, not authority)** — one place to find every binding doctrine across the kernel, overlay, decision records, and product lanes, with explicit doctrine naming and subset grouping. On conflict the doctrine's own record wins. |
 | `docs/workflows/orca_repo_map_v0.md` | Compact navigation map for bounded source-pack selection and prompt setup. |
 | `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine repo submap. Open before enumerating capture owner docs. |
-| `docs/workflows/ecr_spine_submap_v0.md` | ECR source-side spine repo submap (integrity postures SP-1/2/3/6 + Signal Content Record). Open before enumerating ECR/SCR owner docs. |
+| `docs/workflows/ecr_spine_submap_v0.md` | ECR source-side spine repo submap (integrity postures SP-1/2/3/6 + Signal Statement Record). Open before enumerating ECR/Signal Statement Record owner docs. |
 | `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | Judgment Spine submap. Open before enumerating Judgment owners across `docs/research/judgment-spine/` and `docs/product/judgment_spine_*`. |
 | `docs/product/source_capture_toolbox/retail_pdp_sidecar_operator_playbook_v0.md` | Operator playbook for the bounded Amazon/Sephora/Ulta Retail/PDP CloakBrowser sidecar smoke: canonical URLs, flags, scratch outputs, expected residuals, failure taxonomy, and code-enforceable follow-up flags. |
 
@@ -411,7 +411,7 @@ design) remain gated.
 | `orca-harness/source_capture/adapters/` | Bounded capture adapters (direct HTTP, media/asset, Archive.org, archive.today (`archive_today`: Memento TimeMap locate+body rung, served-time verification, no-gate-defeat STOP on a challenge), browser snapshot, authenticated browser, Reddit API where present, and a header-complete anti-blocking HTTP rung-1 adapter `anti_blocking_http`). CloakBrowser Snapshot anonymous non-persistent v0 now has a live engine and packet runner for one explicitly supplied URL; verify any adapter's presence in code before use. Reddit discovery/consolidation, proxy/session behavior, commercial fetch, broad crawling, storage, dashboards, deployment, and production runtime remain separately gated. |
 | `orca-harness/source_observability/` | Local operator-record posture checker and limitation reporter. |
 | `orca-harness/ecr/` | Evidence Candidate Record source-side integrity postures (SP-1/2/3/6): per-packet/slice derived records keyed to the `SourceCapturePacket`; bind no `EvidenceUnit`; JSG-01 frozen. Boundary context: `docs/product/core_spine/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`. |
-| `orca-harness/signal_content/` | Signal Content Record (v0): the second derived-record kind (content — "what a signal says"), parallel to `ecr/`; wedge-agnostic StrictModel + validators, references packet/ECR by key, no deriver/persistence/binding. Direction: `docs/product/signal_content/core_spine_v0_signal_content_record_architecture_v0.md`. |
+| `orca-harness/signal_statement/` | Signal Statement Record (v0): the second derived-record kind (statement — "what a signal says"), parallel to `ecr/`; wedge-agnostic StrictModel + validators, references packet/ECR by key, no deriver/persistence/binding. Direction: `docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md`. |
 | `orca-harness/schemas/` | Pydantic v2 models for cases, judgments, scoring, and probes (v0.14). |
 | `orca-harness/scoring/` | Deterministic band scorer and mapping table (v0.14 Step A); not judgment-quality proof. |
 | `orca-harness/reports/` | Report-rendering code (case and source-observability reports); generated dry-run outputs under it are gitignored. |
@@ -474,14 +474,14 @@ the owner sources. Do not pre-load all capture artifacts from this map.
 ## ECR Source-Side Spine
 
 The ECR source-side spine spans the integrity postures (ECR SP-1/2/3/6) and the
-sibling content layer (Signal Content Record), their shared deriver discipline,
+sibling statement layer (Signal Statement Record), their shared deriver discipline,
 and the frozen boundary to the JSG-01 conductor. **Open the repo submap first**:
 it is the `retrieval_only` entry that states the cross-kind invariants and routes
-one hop to every owner. Do not pre-load the ECR/SCR owner docs from this map.
+one hop to every owner. Do not pre-load the ECR/Signal Statement Record owner docs from this map.
 
 | Path | Use for |
 | --- | --- |
-| `docs/workflows/ecr_spine_submap_v0.md` | **ECR source-side spine repo submap — open first.** Routes to the SCR direction + deriver plan, the ECR frame + SP-1/2/3 + SP-6 slices, the receipt-translator origin, the schema-evolution doctrine, and the built `orca-harness/ecr/` + `orca-harness/signal_content/` code. States the reference-never-merge / per-kind-grain / carry-or-residualize / re-derive-not-migrate / frozen-conductor invariants. Map only; not validation, readiness, ratification, a JSG-01 unfreeze, or Evidence-Unit binding. |
+| `docs/workflows/ecr_spine_submap_v0.md` | **ECR source-side spine repo submap — open first.** Routes to the Signal Statement Record direction + deriver plan, the ECR frame + SP-1/2/3 + SP-6 slices, the receipt-translator origin, the schema-evolution doctrine, and the built `orca-harness/ecr/` + `orca-harness/signal_statement/` code. States the reference-never-merge / per-kind-grain / carry-or-residualize / re-derive-not-migrate / frozen-conductor invariants. Map only; not validation, readiness, ratification, a JSG-01 unfreeze, or Evidence-Unit binding. |
 
 ## Core Spine Files
 
@@ -490,7 +490,7 @@ one hop to every owner. Do not pre-load the ECR/SCR owner docs from this map.
 | `docs/product/core_spine/core_spine_v0_product_contract.md` | Core Spine product contract and eight primitives. |
 | `docs/product/core_spine/core_spine_v0_information_production_foundation_v0.md` | Manual information-production foundation and Evidence Unit standard. |
 | `docs/product/core_spine/core_spine_v0_data_and_cleaning_spine_boundary_v0.md` | Data Capture/Cleaning/Judgment boundary and Evidence Candidate Record setup context. |
-| `docs/product/signal_content/core_spine_v0_signal_content_record_architecture_v0.md` | Signal Content Record (v0) architecture DIRECTION — the second derived-record kind ("what a signal says"), parallel to the ECR integrity postures and structuring the IPF Evidence Unit content vocabulary; records the owner carrier/lifecycle/decision-relevance-tag decisions and the bounded content-field ratification. Direction only; the final Evidence Unit field architecture stays owner-reserved and JSG-01 frozen. v0 model lives in `orca-harness/signal_content/`. |
+| `docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md` | Signal Statement Record (v0) architecture DIRECTION — the second derived-record kind ("what a signal says"), parallel to the ECR integrity postures and structuring the IPF Evidence Unit content vocabulary; records the owner carrier/lifecycle/decision-relevance-tag decisions and the bounded statement-field ratification. Direction only; the final Evidence Unit field architecture stays owner-reserved and JSG-01 frozen. v0 model lives in `orca-harness/signal_statement/`. |
 | `docs/product/core_spine/core_spine_v0_corroboration_vs_amplification_discipline_v0.md` | Proposed Core Spine design note on placing independent-corroboration vs artificial-amplification discipline across the Cleaning/Judgment boundary; proposed, not validated. |
 | `docs/decisions/daimler_advisory_001_claim_tier_classification_decision_v0.md` | Daimler advisory claim-tier classification decision recording the current no-durable-evidence state, required product-learning receipt before any evidence claim, and blocked buyer-proof/judgment-quality claims. |
 | `docs/product/engagement_logic_registry_v0.md` | Signal-use and engagement interpretation registry. |
@@ -800,7 +800,7 @@ status field. Open the owning doc for authority; this table is navigation only.
 | Data capture spine | `docs/product/data_capture_spine/data_capture_harness_operating_model_architecture_v2.md` | `PROPOSED_ARCHITECTURE_V2` |
 | Judgment spine | `docs/product/judgment_spine/judgment_spine_evidence_ladder_architecture_v0.md` | no status field |
 | ECR | `docs/workflows/ecr_spine_submap_v0.md` | no status field |
-| Signal content | `docs/product/signal_content/core_spine_v0_signal_content_record_architecture_v0.md` | `OWNER_DECIDED_DIRECTION` |
+| Signal Statement Record | `docs/product/signal_statement/core_spine_v0_signal_statement_record_architecture_v0.md` | `OWNER_DECIDED_DIRECTION` |
 | Source capture toolbox | `docs/product/source_capture_toolbox/README.md` | `SOURCE_CAPTURE_ARMORY_README_V0` |
 | Core spine | `docs/product/core_spine/core_spine_v0_product_contract.md` | `PROPOSED_FREEZE` |
 

@@ -182,12 +182,12 @@ move without re-ratification as long as the binding keys and composer contract h
 
 ## Explicitly NOT decided here (the reservation fence)
 
-- The **full ECR/Evidence Unit field architecture** — no content fields, no SCR
-  composition, no corroboration kind, no materiality, no cleaning references, no
+- The **full ECR/Evidence Unit field architecture** — no Signal Statement Record
+  fields or composition, no corroboration kind, no materiality, no cleaning references, no
   standing-field declarations beyond the four ratified reads.
 - The **canonical object name** — `Jsg01EvidenceBinding`/`Jsg01EvidenceRecord` are
   working names scoped to this gate.
-- **Content/SCR composition beyond what JSG-01 reads** — the Signal Content Record
+- **Signal Statement Record composition beyond what JSG-01 reads** — the Signal Statement Record
   is not bound here at all.
 - **D2** / the corroborated SP-6 tier (still deferred; SP-6 may land on residuals —
   expected and acceptable per the ratified coverage note).

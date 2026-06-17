@@ -91,7 +91,7 @@ docs/_inbox/).
 - `docs/` axis: role grammar exactly as bound in
   `.agents/workflow-overlay/artifact-folders.md` (unchanged by this binding).
 - `docs/product/` second-level axis: by lane. Bound lanes: `core_spine/`,
-  `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`,
+  `data_capture_spine/`, `judgment_spine/`, `signal_statement/`, `ecr/`,
   `product_lead/`. Existing bound subfolders (e.g. `source_capture_toolbox/`)
   are unchanged. Files matching no lane may remain at `docs/product/` root
   (bounded residual). Product lanes are bound here. Their `repo-structure.yaml`

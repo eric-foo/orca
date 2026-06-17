@@ -1,7 +1,7 @@
-"""Signal Content Record (v0) deriver -- the carry-supplied-or-residualize pass.
+"""Signal Statement Record (v0) deriver -- the carry-supplied-or-residualize pass.
 
 Per the ratified architecture
-(``docs/product/signal_content_record_deriver_architecture_plan_v0.md`` v0.1),
+(``docs/product/signal_statement/signal_statement_record_deriver_architecture_plan_v0.md`` v0.1),
 the deriver is a PURE function of its FROZEN inputs but is NOT packet-only: the
 verbatim body (``raw_observation``), the ECR posture keys, and the authored
 interpretation are explicit caller-supplied inputs -- the ``SourceCapturePacket``
@@ -28,10 +28,10 @@ from source_capture.models import (
     VisibleFact,
     VisibleFactStatus,
 )
-from signal_content.models import (
-    ContentReferences,
+from signal_statement.models import (
+    StatementReferences,
     DecisionRelevance,
-    SignalContentRecord,
+    SignalStatementRecord,
     SignalEventTimeReference,
     SignalEventTimeStatus,
     SignalFamily,
@@ -50,10 +50,10 @@ _EXTRACTED_ABSENT = "EXTRACTED-BUT-ABSENT"  # reserved; never emitted in v0
 # reversible parser delimiter (a body could legitimately contain this string, so no
 # consumer should reverse-parse ``raw_observation``). A single-body slice -- the
 # common case -- carries its body purely verbatim. (v0 build decision.)
-_BODY_BOUNDARY = "\n\n[signal_content_record: preserved-file boundary]\n\n"
+_BODY_BOUNDARY = "\n\n[signal_statement_record: preserved-file boundary]\n\n"
 
 
-def _content_id(packet_id: str, slice_id: str) -> str:
+def _statement_id(packet_id: str, slice_id: str) -> str:
     """Deterministic, re-derive-stable, collision-resistant id over the FROZEN
     KEY TUPLE only (never the body).
 
@@ -67,7 +67,7 @@ def _content_id(packet_id: str, slice_id: str) -> str:
         sort_keys=True,
         separators=(",", ":"),
     ).encode("utf-8")
-    return "scr::sha256::" + hashlib.sha256(payload).hexdigest()
+    return "signal-statement::sha256::" + hashlib.sha256(payload).hexdigest()
 
 
 def _slice_body(
@@ -98,11 +98,11 @@ def _residual_record(
     slice_id: str,
     raw_observation: str,
     posture_refs: Sequence[str],
-) -> SignalContentRecord:
+) -> SignalStatementRecord:
     """A structurally complete, honestly-residual record: real keys + the verbatim
     body carried, the entire interpretive core residualized at state-1."""
-    return SignalContentRecord(
-        content_id=_content_id(packet_id, slice_id),
+    return SignalStatementRecord(
+        statement_id=_statement_id(packet_id, slice_id),
         signal_family=SignalFamily.RESIDUAL_FAMILY_UNRESOLVED,
         decision_relevance=DecisionRelevance.UNRESOLVED,
         subject_entity=VisibleFact(
@@ -129,7 +129,7 @@ def _residual_record(
             ),
         ),
         raw_observation=raw_observation,
-        references=ContentReferences(
+        references=StatementReferences(
             packet_id=packet_id,
             slice_id=slice_id,
             ecr_posture_ref_ids=list(posture_refs),
@@ -137,14 +137,14 @@ def _residual_record(
     )
 
 
-def derive_signal_content(
+def derive_signal_statement(
     packet: SourceCapturePacket,
     *,
     preserved_bodies: Mapping[str, str],
     ecr_posture_refs: Sequence[str] = (),
     authored_interpretation: object | None = None,
-) -> list[SignalContentRecord]:
-    """Derive the v0 Signal Content Records for a captured packet.
+) -> list[SignalStatementRecord]:
+    """Derive the v0 Signal Statement Records for a captured packet.
 
     One record per source slice that has a supplied body, in slice order. With
     ``authored_interpretation=None`` (the only state that exists in source today)
@@ -161,7 +161,7 @@ def derive_signal_content(
     - ``preserved_bodies`` maps ``PreservedFile.file_id`` -> verbatim body text;
       a thin caller performs the file read (the packet carries only pointers).
     - ``ecr_posture_refs`` are caller-materialized ECR posture keys (default
-      empty; deduped; never synthesized -- the content<->integrity link is
+      empty; deduped; never synthesized -- the statement<->integrity link is
       already carried by the shared ``packet_id`` / ``slice_id``).
     - ``authored_interpretation`` is a declared-but-dormant seam with no producer
       in v0; a non-None value raises rather than silently no-op (the deriver
@@ -174,7 +174,7 @@ def derive_signal_content(
             "authored_interpretation=None."
         )
     posture_refs = list(dict.fromkeys(ecr_posture_refs))
-    records: list[SignalContentRecord] = []
+    records: list[SignalStatementRecord] = []
     for source_slice in packet.source_slices:
         body = _slice_body(source_slice, preserved_bodies)
         if body is None:

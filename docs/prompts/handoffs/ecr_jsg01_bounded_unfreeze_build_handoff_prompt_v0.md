@@ -78,7 +78,7 @@ orca_start_preflight:
   agents_read: required on intake (fresh)
   overlay_read: required on intake (.agents/workflow-overlay/README.md; then review-lanes.md +
     delegated-review-patch.md before commissioning the slice-B cross-family review)
-  source_pack: custom — open_next above + the slice plans the submap routes to + orca-harness/{schemas,ecr,signal_content,tests}
+  source_pack: custom — open_next above + the slice plans the submap routes to + orca-harness/{schemas,ecr,signal_statement,tests}
   edit_permission: implementation-authorized (bounded to slices A-D; docs-write for plans/memo)
   target_scope: orca-harness (finalizer producer, EU-binding slice, packet assembly, tests) + docs/product/ slice plans + docs/decisions/ memo
   dirty_state_checked: required on intake (multi-lane branch; verify input_hashes; drift -> reread)
@@ -106,8 +106,8 @@ commits: implementation commits in the established harness pattern (feat/test/do
   carries the derived fields + a valid FinalizationReceipt (the SP-5 finalizer
   half is already built). JSG-01 stays FROZEN and clears no case."
 - **Already done (do not redo):** SP-1/2/3/6 field schema RATIFIED (closed
-  values + clear-conditions, boundary doc); all four derivers + SCR BUILT and
-  tested (`orca-harness/ecr/`, `orca-harness/signal_content/`); SP-5
+  values + clear-conditions, boundary doc); all four derivers + Signal Statement Record BUILT and
+  tested (`orca-harness/ecr/`, `orca-harness/signal_statement/`); SP-5
   `FinalizationReceipt` model + validate-only, block-don't-repair consumer
   BUILT (`orca-harness/schemas/finalization_models.py`, committed `a37f896`,
   23 tests; binding_hash via canonical_yaml_hash; per-receipt ULID +
@@ -140,7 +140,7 @@ reads — the four derived source-side postures + the FinalizationReceipt —
 onto a case packet, under the ECR invariants (carry-or-residualize;
 re-derive-not-migrate; one-record-per-kind; pure derivation). It must
 explicitly declare what it does NOT decide: the full EU field architecture,
-the canonical object name, content/SCR composition beyond what JSG-01 needs.
+the canonical object name, Signal Statement Record composition beyond what JSG-01 needs.
 Then: cross-family review (delegated-review-patch convention; adversarial
 naming on the review prompt; reviewed_by/authored_by provenance), adjudicate,
 then **STOP for owner ratification** (dated boundary-doc amendment + DCP
