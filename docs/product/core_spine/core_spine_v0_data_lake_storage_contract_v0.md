@@ -32,7 +32,7 @@ authority_boundary: retrieval_only
 
 ## Status
 
-`TARGET_STORAGE_CONTRACT_RECORDED_V0`.
+`TARGET_STORAGE_CONTRACT_RECORDED_V0; BLOCKER_1_DIRECTION_RECORDED_V0`.
 
 This is a planning and architecture contract. It is not implementation
 authority, validation, readiness, physical storage selection, queue design,
@@ -82,7 +82,7 @@ Nothing derived replaces raw truth.
 | Slot | Lake-side responsibility | Must not become | Physical status |
 | --- | --- | --- | --- |
 | Raw Packet Store | Preserve raw `SourceCapturePacket` bundles, stable packet/slice/file handles, `sha256`, and `hash_basis`. | Cleaned source truth, canonical identity, or mutable packet history. | Deferred. |
-| Attachment Record | Carry source-family payload body plus packet identity (`packet_id`), slice identity (`slice_id` when applicable), family, kind, schema version, replay pins, and absence/refusal/residual posture. | Cleaned value, dedupe decision, credibility label, Judgment label, or downstream-use strength. | Deferred; historical docs call this the logical typed-envelope boundary. |
+| Attachment Record | Carry source-family payload body plus packet identity (`packet_id`), slice identity (`slice_id` when applicable), family, kind, schema version, replay pins, and absence/refusal/residual posture. | Cleaned value, dedupe decision, credibility label, Judgment label, or downstream-use strength. | Direction recorded: manifest-indexed immutable attachment bodies; exact serialization, sidecar/member layout, manifest version, backend, and migration remain deferred. Historical docs call this the logical typed-envelope boundary. |
 | Availability Index | Record only that packet/slice/file material is committed and readable by stable keys with checkable refs. | Event bus, scheduler, lane router, retry gate, priority system, or success tracker. | Deferred; by-key scan/query must work before any queue. |
 | Derived Result Store | Hold append-only lane-owned derived records keyed to raw: projection receipts, ECR integrity records, SCR content records, Cleaning ledgers, and Judgment outputs. | Second raw source of truth, merged cross-kind blob, or rewritten or deleted derived history. | Deferred with derived-record physical-home blocker. |
 | Acknowledgement Log | Hold append-only lane-owned completion or acknowledgement facts keyed to raw. | Lake-consumed control flow for scheduling, gating, retrying, or calling another lane. | Deferred with derived-record physical-home blocker. |
@@ -108,9 +108,18 @@ Do not implement storage, manifest changes, Attachment Record serialization,
 projection cache, queue runtime, derived-record persistence, or acknowledgement
 persistence from this contract until these blockers close:
 
-1. Choose the Attachment Record physical representation: manifest child,
-   immutable sidecar, hash-pinned bundle member, or another immutable/checkable
-   form.
+Blocker 1 now has a direction, not an implementation closeout. The accepted
+direction is manifest-indexed immutable Attachment Records: compact
+manifest/index entries point to immutable hash-checkable attachment bodies.
+Exact layout, serialization, manifest version, backend, and migration remain
+deferred.
+
+1. Convert the Attachment Record direction into an implementation contract:
+   compact manifest/index entries with packet/slice/file keys, family, kind,
+   schema version, replay pins, attachment ref, hash, `hash_basis`, and posture
+   summary point to immutable/checkable attachment bodies. Exact sidecar vs
+   bundle-member layout, serialization, manifest version, backend, and migration
+   remain open.
 2. Decide the fate of incumbent direct fields at slice and packet level.
 3. Govern SCR `FamilyDetailBase` so it cannot become a competing raw
    source-family payload home.
@@ -123,6 +132,28 @@ persistence from this contract until these blockers close:
 6. Preserve by-key discovery as authority before any runtime event or queue
    engine is built.
 
+## Blocker 1 Direction
+
+The accepted direction for Attachment Record representation is
+**manifest-indexed immutable attachment bodies**.
+
+This chooses the relationship, not the storage backend or final wire shape:
+
+- A compact manifest or manifest-equivalent packet index entry carries
+  packet/slice/file keys, family, kind, schema version, replay pins,
+  attachment ref, hash, `hash_basis`, and posture summary.
+- The source-family payload body stays in an immutable/checkable attachment
+  body outside the core manifest payload body.
+- The body may later be encoded as a packet member, sidecar, or equivalent
+  immutable/hash-pinned packet material.
+- Availability indexes must be rebuildable from committed packet/attachment
+  keys and hashes.
+- Replacing or correcting an Attachment Record writes a new record; old records
+  are not rewritten in place.
+- Retention and lawful-erasure policy remain later physicalization constraints.
+  This direction does not select WORM behavior, crypto-shredding, or any storage
+  engine.
+
 ## Non-Goals
 
 This contract does not:
@@ -130,6 +161,7 @@ This contract does not:
 - select a storage engine;
 - select Manifest v2;
 - select sidecars;
+- select exact packet-member vs sidecar layout;
 - select Attachment Record serialization;
 - define a projection cache;
 - define a runtime queue or scheduler;
@@ -140,6 +172,69 @@ This contract does not:
 - claim validation, readiness, approval, or acceptance.
 
 ## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Data Lake Storage Contract v0 now records the blocker-1 direction:
+    Attachment Records are manifest-indexed immutable attachment bodies, with
+    compact manifest/index entries pointing to hash-checkable bodies; exact
+    sidecar/bundle-member layout, serialization, manifest version, backend, and
+    migration remain deferred.
+  trigger: architecture_doctrine
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - docs/product/core_spine/core_spine_v0_data_lake_storage_contract_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-loading.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md
+    - docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md
+    - docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md
+    - docs/product/data_capture_spine/source_capture_packet_schema_evolution_architecture_v0.md
+    - orca-harness/source_capture/models.py
+    - orca-harness/source_capture/writer.py
+  intentionally_not_updated:
+    - path: docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md
+      reason: >
+        It remains the parent/core boundary and already marks later storage,
+        manifest, sidecar, or Attachment Record serialization decisions as
+        superseding; this storage contract owns the narrower blocker-1
+        direction.
+    - path: docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md
+      reason: >
+        It remains a mechanics map with the broader physicalization gate; this
+        patch records only the blocker-1 direction in the storage contract.
+    - path: docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md
+      reason: >
+        It remains the accepted logical attachment boundary and explicitly
+        defers physical storage; this storage contract records the
+        physicalization direction without globally renaming historical envelope
+        terminology.
+  stale_language_search: >
+    rg -n "Choose the Attachment Record physical representation|select sidecars|select Attachment Record serialization|manifest-indexed immutable|hash-pinned bundle member|immutable sidecar"
+    docs/product/core_spine/core_spine_v0_data_lake_storage_contract_v0.md
+    docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md
+    docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md
+    docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md
+    docs/workflows/orca_repo_map_v0.md
+  stale_language_search_result: >
+    Executed 2026-06-17 after edits. Storage contract records the new
+    manifest-indexed direction while preserving non-goals against sidecar,
+    serialization, backend, and implementation selection. The repo map routes to
+    the new direction. Core/mechanics/boundary hits remain broader deferred-gate
+    or historical logical-boundary language.
+  non_claims:
+    - not validation
+    - not readiness
+    - not implementation authorization
+    - not physical storage selection
+    - not storage-engine selection
+```
 
 ```yaml
 direction_change_propagation:
@@ -194,3 +289,5 @@ direction_change_propagation:
     - not implementation authorization
     - not physical storage selection
 ```
+
+Older receipts are archived in `docs/decisions/dcp_receipts_archive_v0.md`.
