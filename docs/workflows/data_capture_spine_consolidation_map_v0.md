@@ -55,6 +55,7 @@ stale_if:
 | Check Capture obligations / forbidden outputs | `docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md` |
 | Check tenant/source-family payload attachment boundary | `docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md` |
 | Explain the core-facts vs typed-attachment split in plain language | `docs/product/data_capture_spine/source_capture_core_payload_split_explainer_v0.md` |
+| Check the Data Lake Core Contract boundary | `docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md` |
 | Check logical data-lake mechanics from capture through projection, ECR/SCR, Cleaning, and Judgment | `docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md` |
 | Check Retail/PDP as the first non-IG typed-envelope probe | `docs/product/data_capture_spine/retail_pdp_typed_envelope_probe_v0.md` |
 | Check raw-to-Judgment projection view doctrine | `docs/product/core_spine_v0_projection_doctrine_v0.md` |
@@ -203,6 +204,16 @@ stale_if:
   projection, ECR/SCR, Cleaning, and Judgment flow by key without selecting
   physical storage, schema migration, or projection cache.
 - owner: `docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md`
+
+### Data Lake Core Contract
+
+- summary: Current lake-owned responsibility boundary: raw packet
+  preservation, stable by-key findability, content-free availability facts,
+  source-payload envelope attachment rules, and logical append-only downstream
+  result attachment. It keeps Cleaning, ECR, SCR interpretation, Judgment,
+  orchestration, queue authority, physical storage selection, and
+  fragrance/domain ontology out of lake core.
+- owner: `docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md`
 
 ### Retail/PDP typed-envelope probe
 

@@ -64,6 +64,7 @@ The cross-kind invariants the spine runs on (stated here for orientation only â€
 | Bind what JSG-01 reads onto one case-packet evidence unit (three-key binding + composer) | `orca-harness/evidence_binding/` (ratified contract: boundary doc â†’ "JSG-01-scoped EvidenceUnit binding contract RATIFIED") |
 | Inspect the tests | `orca-harness/tests/unit/test_ecr_*`, `orca-harness/tests/unit/test_signal_content_*`, `orca-harness/tests/unit/test_finalization_models.py`, `orca-harness/tests/unit/test_run_finalization_receipt.py` |
 | Reach the upstream provenance layer (the packet this all keys to) | `docs/workflows/data_capture_spine_consolidation_map_v0.md` (capture submap) |
+| Check the data-lake core boundary for by-key availability and downstream result attachment | `docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md` |
 | Check logical data-lake mechanics across capture, projection, ECR/SCR, Cleaning, and Judgment | `docs/product/core_spine/core_spine_v0_data_lake_mechanics_map_v0.md` |
 
 ## Current Reality Snapshot
@@ -77,6 +78,10 @@ The cross-kind invariants the spine runs on (stated here for orientation only â€
   records the planning-only by-key flow from raw capture through projection,
   ECR/SCR, Cleaning, and Judgment. It does not select storage, schema, or
   implementation.
+- **Data-lake core contract:** `docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md`
+  records the current lake boundary: by-key raw availability, logical
+  append-only derived result attachment, and no lake-owned orchestration,
+  Cleaning, ECR/SCR interpretation, Judgment, or domain ontology.
 
 ## Owners By Layer
 

@@ -13,6 +13,7 @@ use_when:
   - Deciding whether a storage/schema/projection/Cleaning lane is still blocked.
 authority_boundary: retrieval_only
 open_next:
+  - docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md
   - docs/product/data_capture_spine/source_capture_tenant_payload_attachment_boundary_v0.md
   - docs/product/data_capture_spine/source_capture_core_payload_split_explainer_v0.md
   - docs/product/data_capture_spine/retail_pdp_typed_envelope_probe_v0.md
@@ -167,6 +168,14 @@ irreversible physical choices wait for the non-IG probe.
 - SCR `FamilyDetailBase` is a latent competing payload home.
 - SP-6 archive-slice keying is implemented convention, not a general packet
   field contract.
+
+## Current Contract Pointer
+
+Use `docs/product/core_spine/core_spine_v0_data_lake_core_contract_v0.md` for
+the current lake-owned responsibility boundary. This mechanics map remains the
+logical flow map; the core contract refines it by separating lake-owned
+findability from Mechanical Source Projection, keeping availability signals
+content-free, and preserving physical storage as a deferred gate.
 
 ## Direction Change Propagation
 
