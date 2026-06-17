@@ -90,7 +90,10 @@ be smart about meaning.
   and attached payload references by stable handles.
 - Source-family payload attachment rules at the core boundary: keyed scope,
   payload kind, payload schema version, immutable replay inputs, and
-  value/posture coupling.
+  structural value/posture coupling. The lake may require that an observed,
+  absent, refused, blocked, or residual value travels with an explicit posture;
+  it must not interpret what that posture means for ECR, SCR, Cleaning, or
+  Judgment.
 - Logical attachment points for downstream derived results keyed to packet,
   slice, or file references.
 - A content-free availability fact after raw commit: "this packet/slice/file
@@ -123,14 +126,18 @@ The signal must not name which downstream lane should act, what processing is
 required, what priority a lane should assign, or whether previous downstream
 work succeeded.
 
-By-key discovery is the contract authority. A downstream lane must be able to
-find work by scanning or querying committed packet keys even if an event/queue
-message is missed. Any event or queue engine is an optimization over committed
-raw state, not the source of truth.
+By-key discovery is the contract authority. The lake-owned availability surface
+is passive committed state: a downstream lane must be able to find work by
+scanning or querying committed packet keys even if an event/queue message is
+missed. Any event or queue engine is a separate runtime optimization over
+committed raw state, not the source of truth, and must not become a lake-owned
+push, route, or call into a downstream lane.
 
 Downstream completion or acknowledgement may be written as an append-only
 lane-owned fact keyed to raw. The lake must not consume that acknowledgement as
-control flow to gate, retry, or schedule another lane.
+control flow to gate, retry, or schedule another lane. Its physical write path
+is deferred with the derived-record physical home; until that lane closes, this
+is a logical attachment allowance, not an implementation instruction.
 
 ## Result Attachment Contract
 
@@ -145,7 +152,10 @@ The physical home is deferred, but the logical rule is fixed:
 - Each epistemic kind stays separate: projection receipt, ECR integrity record,
   SCR content record, Cleaning transform ledger, and Judgment output are
   siblings, not one merged blob.
-- Re-derivation is preferred over migration when a derived taxonomy changes.
+- Re-derive, never migrate, when a derived taxonomy changes. Corrections,
+  supersession, invalidation, or ignore-prior relationships must be modeled as
+  lane-owned append-only derived metadata keyed back to raw, not by mutating raw
+  truth or rewriting prior derived records in place.
 
 Do not infer physical separation from this section. The physical envelope and
 derived-record storage lane still must choose the actual manifest, sidecar,
@@ -160,7 +170,9 @@ Lake findability means:
 - committed packet lookup;
 - stable handle lookup;
 - manifest/reference traversal;
-- source payload reference discovery.
+- source payload reference discovery. The lake may know a reference's structural
+  family/kind/schema-version keys; it must not understand or validate the
+  payload body's source-family semantics.
 
 Projection means:
 
@@ -205,7 +217,9 @@ Fragrance-specific facts such as notes, accords, concentration, longevity,
 retailer SKU details, review substrate, or source-specific residuals belong in
 source-family payload envelopes or downstream derived records keyed to raw.
 They do not become lake-core fields unless a later owner decision proves a
-cross-family core need under the existing source-family promotion discipline.
+cross-family core need under a cited source-family promotion rule or explicitly
+accepted one-off invariant. Convenience, first-consumer pressure, or one source
+family is not enough.
 
 ## Incumbent Direct Fields
 
@@ -241,7 +255,10 @@ the physicalization lane closes these blockers:
 4. Assign enforcement for write-once raw, no-cleaning-in-lake, append-only
    derived results, and no-new-core-field pressure to deterministic write or
    tool boundaries where possible.
-5. Preserve by-key discovery as authority before any runtime event/queue engine
+5. Choose the physical home and write boundary for projection receipts, ECR
+   records, SCR records, Cleaning ledgers, Judgment outputs, and downstream
+   completion/acknowledgement facts.
+6. Preserve by-key discovery as authority before any runtime event/queue engine
    is built.
 
 ## What This Does Not Select
@@ -267,7 +284,10 @@ direction_change_propagation:
     availability facts, source-payload envelope attachment rules, and logical
     append-only downstream result attachment, while excluding Cleaning, ECR,
     SCR interpretation, Judgment, orchestration, queue authority, physical
-    storage selection, and fragrance/domain ontology from lake core.
+    storage selection, and fragrance/domain ontology from lake core. Post-review
+    hardening keeps that boundary and clarifies passive availability, structural
+    value/posture coupling, re-derive-never-migrate, promotion-rule citation,
+    and derived-record/acknowledgement physical-home blockers.
   trigger: architecture_doctrine
   related_triggers:
     - workflow_authority
@@ -305,12 +325,15 @@ direction_change_propagation:
     docs/product/core_spine docs/product/data_capture_spine docs/workflows/data_capture_spine_consolidation_map_v0.md docs/workflows/ecr_spine_submap_v0.md docs/workflows/orca_repo_map_v0.md
     (run 2026-06-17 in worktree codex/data-lake-core-contract)
   stale_language_search_result: >
-    Expected hits observed in this new contract, the data-lake mechanics map pointer,
+    Executed 2026-06-17 after delegated-review hardening. Expected hits observed
+    in this contract, the data-lake mechanics map pointer,
     data_capture_spine_consolidation_map_v0.md, ecr_spine_submap_v0.md, and
-    orca_repo_map_v0.md. Existing historical/source-family hits remain in payload,
-    Retail/PDP, demand-durability, and storage/projection artifacts; none observed in
-    the searched live routing surfaces contradicts the new lake boundary. The search
-    does not validate implementation or physical storage.
+    orca_repo_map_v0.md. Additional non-contradictory hits are substring hits on
+    prompt-orchestration paths and existing payload, Retail/PDP,
+    demand-durability, storage/projection, Cleaning, and ontology artifacts that
+    preserve deferred physical-storage or source-family boundaries. No checked
+    live routing surface contradicts the new lake boundary. The search does not
+    validate implementation or physical storage.
   non_claims:
     - not validation
     - not readiness
