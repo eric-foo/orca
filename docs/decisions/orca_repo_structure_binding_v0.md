@@ -92,8 +92,11 @@ docs/_inbox/).
   `.agents/workflow-overlay/artifact-folders.md` (unchanged by this binding).
 - `docs/product/` second-level axis: by lane. Bound lanes: `core_spine/`,
   `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`,
-  `product_lead/`. Existing bound subfolders (e.g. `source_capture_toolbox/`)
-  are unchanged. Files matching no lane may remain at `docs/product/` root
+  `product_lead/`, plus the `search/` topic lane added by
+  `docs/decisions/orca_search_product_lane_binding_v0.md` (a deliberate topic
+  vertical beside the function lanes; see that record for the inclusion test and
+  the invariant-#1 note). Existing bound subfolders (e.g.
+  `source_capture_toolbox/`) are unchanged. Files matching no lane may remain at `docs/product/` root
   (bounded residual). Product lanes are bound here. Their `repo-structure.yaml`
   status must match the actual migration state: `planned` before the Phase-2
   apply, `current` only after the apply has run (the apply ran 2026-06-11).

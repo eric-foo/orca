@@ -18,13 +18,13 @@ use_when:
   - Checking the Core/Satellite wall and the query-set taint rule (which seed may feed the blind gate).
 authority_boundary: retrieval_only
 open_next:
-  - docs/product/data_capture_spine/demand_durability_indicator_search_interest_capture_profile_v0.md  # CONSUME — search-interest capture obligations/pins/comparability (authority for §6 pins)
+  - docs/product/search/demand_durability_indicator_search_interest_capture_profile_v0.md  # CONSUME — search-interest capture obligations/pins/comparability (authority for §6 pins)
   - docs/product/data_capture_spine/capture_envelope_durability_delta_spec_v0.md                       # CONSUME — temporal regimes, cold-start, comparability
   - docs/product/data_capture_spine/core_spine_v0_data_capture_spine_obligation_contract_v0.md         # CONSUME — capture envelope of record / obligations
   - docs/product/product_lead/orca_buyer_proof_packet_v0.md                                            # the live Demand-Substrate Hard Gate (G1 cards, AR-04, floor/ceiling, defeater)
-  - docs/product/core_spine/orca_demand_scan_core_spec_v0.md                                           # candidate-observation schema (venue_family/gate_family/costly_behavior enums)
-  - docs/product/product_lead/orca_demand_gate_definition_closures_proposal_v0.md                      # AR-04 unsourced-gap classification
-  - docs/product/product_lead/orca_demand_read_taxonomy_v0.md                                          # search-interest read type (read-grammar basis)
+  - docs/product/search/orca_demand_scan_core_spec_v0.md                                           # candidate-observation schema (venue_family/gate_family/costly_behavior enums)
+  - docs/product/search/orca_demand_gate_definition_closures_proposal_v0.md                      # AR-04 unsourced-gap classification
+  - docs/product/search/orca_demand_read_taxonomy_v0.md                                          # search-interest read type (read-grammar basis)
   - docs/product/data_capture_spine/data_capture_source_access_boundary_decision_v0.md                 # access/ToS posture (capture-spine-owned)
   - docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md                                          # wedge target (currently "US indie/DTC beauty or personal-care"; fragrance is a narrowing — see §2)
 stale_if:
