@@ -44,6 +44,7 @@ stale_if:
 | Know what machinery is built vs a named gap (build-state) | `judgment_spine_machinery_build_state_gap_map_v0.md` | research |
 | Read the SP-5 finalization-receipt contract | `sp5_finalization_receipt_spec_v0.md` | research |
 | Orient after fragrance reconciliation and split current Judgment into core/satellite portions | `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` | product |
+| Fill the first fragrance Level 1 product-learning satellite slots without claiming proof or run authority | `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` | product |
 
 ## Current Reality Snapshot (as of v0, refreshed 2026-06-09; JSG-01 and decomposition pointer refreshed 2026-06-17 — verify each against its owner)
 
@@ -99,6 +100,11 @@ stale_if:
 - summary: Product-learning bridge from the 2026-06-17 fragrance reconciliation into a core/satellite split for future Judgment work portions.
 - status: docs-only product-learning context; not source-of-truth, validation, readiness, or proof.
 - pointer: `docs/product/judgment_spine/judgment_current_state_and_decomposition_v0.md` (product).
+
+### Fragrance Level 1 satellite skeleton
+- summary: Repo-local product-learning skeleton for fragrance-specific casebook, source, evidence, weighting, forecast, decision, reveal, lesson, and receipt slots.
+- status: docs-only product-learning context; not casebook admission, source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
+- pointer: `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` (product).
 
 ## Status Vocabularies (owner-defined — this map points, never redefines)
 

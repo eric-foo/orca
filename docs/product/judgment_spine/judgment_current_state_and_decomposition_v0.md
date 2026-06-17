@@ -21,12 +21,13 @@ open_next:
   - docs/product/judgment_spine/judgment_spine_c2_ledger_read_contract_v0.md
   - docs/product/judgment_spine/judgment_spine_c3_verdict_action_ceiling_contract_v0.md
   - docs/product/judgment_spine/fragrance_level1_product_learning_reconciliation_v0.md
+  - docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md
 stale_if:
   - The evidence ladder changes claim tiers, closeout states, receipt minima, or promotion gates.
   - The conductor changes its no-authority invariant, by-hand cap, or JSG routing.
   - The build-state gap map changes blind-execution, real-run, JSG-01 binding, or case-finder status.
   - The demand-read core, C2, C3, near-half, far-half, or signal-ledger surfaces are accepted, rejected, or materially amended.
-  - A fragrance Level 1 pack is promoted into an accepted Orca docs path.
+  - The fragrance Level 1 satellite skeleton is materially amended, retired, or superseded.
 ```
 
 ## Status
@@ -71,6 +72,7 @@ market-agnostic.
 | Signal-reliability ledger | Proposed schema and discipline | K-of-N report-all signal reliability record, product-learning cap, staleness/provenance | No real rows or source-family admission |
 | Far-half live decision shell | Proposed target architecture | Decision object, shadow/assisted modes, seal-before-disclose, decision memory | Product-learning; no live runtime |
 | Fragrance Level 1 reconciliation | Durable product-learning context | Maps the temp fragrance draft onto current Judgment/demand-read surfaces | Unreceipted product-learning context |
+| Fragrance Level 1 satellite skeleton | Repo-local product-learning skeleton | Reserves fragrance casebook/source/evidence/weighting/forecast/decision/reveal/lesson/receipt slots | No admitted cases, source authority, run, score, or proof |
 
 ## Core Ownership
 
@@ -156,9 +158,10 @@ Smallest sensible sequence:
 
 1. **Core slice:** keep this current-state/decomposition map as the retrieval
    bridge from reconciliation into future portions.
-2. **Fragrance satellite skeleton:** author a repo-local Level 1
-   product-learning pack that imports the core boundaries instead of restating
-   them.
+2. **Fragrance satellite skeleton:** use the repo-local Level 1
+   product-learning skeleton that imports the core boundaries instead of
+   restating them:
+   `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md`.
 3. **Casebook admission slice:** decide and record the first fragrance cases,
    cutoffs, and outcome labels before any run-like language appears.
 4. **Source/evidence slice:** bind source-family candidates and evidence-object
