@@ -17,6 +17,7 @@ stale_if:
   - The evidence ladder changes claim tiers or closeout states.
   - The conductor changes its invariants, the five seams, or the outcome precedence.
   - The current-state/decomposition map or fragrance Level 1 organizers change default mode, SCV loop, readiness gates, or satellite-fill contract.
+  - The Level 1 todo/harness reconciliation map changes active-vs-sibling status for prompt, commission, or harness slices.
   - A contestant-execution runner lands and lifts the by-hand cap (then author v1).
 ```
 
@@ -49,6 +50,7 @@ stale_if:
 | Fill the first fragrance Level 1 product-learning satellite slots without claiming proof or run authority | `docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md` | product |
 | Fill or check the first fragrance Level 1 casebook slots without admitting named cases prematurely | `docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md` | product |
 | Choose which named fragrance Level 1 case to try admitting first | `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md` | product |
+| Map what Level 1 harness pieces are landed, sibling-only, or still missing before choosing the next docs slice | `docs/product/judgment_spine/judgment_level1_todo_harness_reconciliation_v0.md` | product |
 
 ## Current Reality Snapshot (as of v0, refreshed 2026-06-09; JSG-01 and decomposition pointer refreshed 2026-06-17 — verify each against its owner)
 
@@ -56,6 +58,7 @@ stale_if:
 - **By-hand cap is in force:** there is no contestant-execution runner, so JSG-04/05/06 run by-hand and a run **caps at product-learning** (→ conductor, Seam 3).
 - **JSG-01 is UNFROZEN / evaluable, but clears no case until an authorized run evaluates one** — the build-state map records the JSG-01-scoped `EvidenceUnit` binding as built/ratified/realized and the conductor row tracks the owner-dated unfreeze act. Missing or unresolvable owner fields still route to not-cleared; an authorized run remains separate.
 - **Level 1 product-learning now routes backtesting-first by default** — open the current-state/decomposition map and fragrance Level 1 organizers for the product-learning route: historical public fragrance case, frozen cutoff, commission gate, graph/evidence plan, qualitative weighting, forecasts, utility/action, decision log, reveal/evaluation, benchmark comparison, and 25-case first success condition. This is setup/product learning only, not live/client readiness or judgment-quality proof.
+- **Level 1 todo/harness state is now split between active and sibling branches** — open `docs/product/judgment_spine/judgment_level1_todo_harness_reconciliation_v0.md` after the current-state/decomposition map when choosing the next slice; it distinguishes landed organizers, existing product-learning cases, stale sibling-only prompt artifacts, sibling-only commission signal-board work, and missing forecast/action/log/evaluation/receipt pieces.
 - **Current cases are pre-cutoff** and cap at qualitative / product-learning; none is a scoreable fixture. Which cases exist → manifest (the inventory owner); what each can claim → evidence ladder. (This map does not list cases — that would inherit the manifest's drift.)
 - **Judgment-quality lane — where we are / next** (orientation, refreshed 2026-06-10; verify against the lane records, which own the detail):
   - *Tier:* capped at **product-learning** (by-hand); "almost judgment-quality" is a proximity description, **not** a minted tier → `ideal_judgment_quality_run_and_current_position_v0.md`.
@@ -120,6 +123,11 @@ stale_if:
 - summary: Repo-local product-learning screen that reconciles fanout search results against the case-selection doctrine and recommends the first admission attempt without admitting any named case.
 - status: docs-only candidate screen; all named products remain `candidate_pending_selection`, `held`, or rejected for first admission; no source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
 - pointer: `docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md` (product).
+
+### Level 1 todo / harness reconciliation
+- summary: Inventory-backed product-learning work queue for active-lane, sibling-only, and missing Level 1 harness pieces after the fragrance skeleton and sibling prompt/commission work.
+- status: docs-only reconciliation; not prompt adoption, case admission, source-capture authority, run authorization, scoring, validation, readiness, buyer proof, or judgment-quality evidence.
+- pointer: `docs/product/judgment_spine/judgment_level1_todo_harness_reconciliation_v0.md` (product).
 
 ## Status Vocabularies (owner-defined — this map points, never redefines)
 

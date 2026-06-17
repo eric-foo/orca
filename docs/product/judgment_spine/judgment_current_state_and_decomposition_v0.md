@@ -24,6 +24,7 @@ open_next:
   - docs/product/judgment_spine/fragrance_level1_product_learning_satellite_skeleton_v0.md
   - docs/product/judgment_spine/fragrance_level1_casebook_admission_frame_v0.md
   - docs/product/judgment_spine/fragrance_level1_named_case_candidate_screen_v0.md
+  - docs/product/judgment_spine/judgment_level1_todo_harness_reconciliation_v0.md
 stale_if:
   - The evidence ladder changes claim tiers, closeout states, receipt minima, or promotion gates.
   - The conductor changes its no-authority invariant, by-hand cap, or JSG routing.
@@ -193,7 +194,10 @@ Current slice status:
 6. **Next after this cleanup:** prompt-orchestrated commission gate / Level 1 judgment prompts, source registry, outcome-label sheet,
    forecast/action/log/evaluation artifacts, named-case admission attempt,
    source/evidence plan, and per-case product-learning receipt template remain
-   separate slices.
+   separate slices. Use
+   `docs/product/judgment_spine/judgment_level1_todo_harness_reconciliation_v0.md`
+   for the current inventory of landed, sibling-only, and missing Level 1
+   harness pieces before choosing the next slice.
 
 Top-level repo-map updates should stay thin. The repo map should route readers
 to the Judgment consolidation map; the consolidation map remains the correct
