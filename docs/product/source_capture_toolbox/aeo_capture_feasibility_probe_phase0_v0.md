@@ -357,6 +357,31 @@ clearance**).
 - **ChatGPT** stays the only engine exposing the *real* issued query + full pulled
   set from the *actual consumer* surface (see F5 correction above).
 
+## Query-graph run (results — proxy / exploratory, 2026-06-17)
+
+Ran the loop-until-dry mapper (Gemini 2.5 Flash, grounding on) on seed
+"best niche fragrance brands for men 2026": **30 grounded calls** (hit the 30-cap,
+not fully dried; 4 calls lost to transient 503 on a pre-retry build), **30 unique
+fan-out queries**, **38 unique resolved source domains**.
+
+- **Source distribution is a hard power-law.** Ranked by # of distinct queries citing:
+  `reddit.com` 24/26 (92%), `youtube.com` 18, `prosodylondon.com` 17,
+  `highsnobiety.com` 12, `decantx.com` 10, `parfumexquis.us` 10, `esquire.com` 9,
+  then a long tail of one-off brand sites. Reddit's dominance mirrors the ChatGPT
+  capture (cross-engine pattern).
+- **Proxy validity:** several top resolved domains (`prosodylondon`, `apetogentleman`,
+  `argosfragrances`, `aromatrail`, `esquire`, `fragrantica`, `jomashop`) also appeared
+  in the live consumer-AIO probes → the Gemini proxy's source set tracks the real box's.
+- **Recursion shape (confirms the interlinked-but-converging finding):** feeding fan-out
+  queries back surfaced more queries, but they converge (most rounds +0-1 new) and some
+  terminate (no re-grounding). Not an infinite cascade.
+- **Actionable read:** per-source citation *frequency* is the "where does AI visibility
+  come from for this category" signal (a capital-allocation input), not just a domain list.
+
+Tooling: a local `gemini_query_graph_mapper.py` (outside this repo) that loops grounded
+calls, captures `webSearchQueries`, and resolves `vertexaisearch` redirects to real
+publishers. Proxy, not the consumer AIO; ToS-gray; internal research only.
+
 ## Addendum non-claims
 
 Research/feasibility only. The Gemini grounding surface is a **proxy**, not the
