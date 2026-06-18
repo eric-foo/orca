@@ -35,3 +35,6 @@ jobs:
       - name: retrieval header index (forward-only gate)
         working-directory: ${{ github.workspace }}
         run: python .agents/hooks/header_index.py --strict
+      - name: ontology SSOT integrity
+        working-directory: ${{ github.workspace }}
+        run: python .agents/hooks/check_ontology_ssot.py --strict
