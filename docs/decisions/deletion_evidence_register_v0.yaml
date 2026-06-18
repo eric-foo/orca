@@ -1,0 +1,35 @@
+# Deletion-Evidence Register (Phase-2 deletion safety) -- append-only audit trail.
+#
+# Phase-2 (the bloat-cut fan-out) DELETES corpus artifacts. The frozen Orca
+# deletion doctrine requires CENTRAL-ADJUDICATED, TWO-PHASE deletion with NO
+# standing per-lane delete: every deletion of a governed artifact carries an
+# evidence record here and is executed only via a human-merged PR (the central
+# adjudication). Doctrine: docs/decisions/deletion_evidence_doctrine_v0.md.
+# Enforced report-mode now (strict in Phase-3) by
+# .agents/hooks/check_deletion_evidence.py.
+#
+# APPEND-ONLY: add records; never rewrite or remove past records (the audit trail
+# is the point). A record's `phase` advances proposed -> adjudicated -> executed.
+#
+# RECORD SCHEMA (see the doctrine for a worked example):
+#   deletion_id:  stable id, e.g. "del:<area>.<slug>.<n>"
+#   phase:        proposed | adjudicated | executed
+#   targets:      [repo-relative path, ...]   -- the artifact(s) being deleted
+#   evidence:
+#     reverse_ref_check: who/what still references the target(s); confirmed safe to remove
+#     successor:         what replaces it (path/doc) or "none -- pure bloat"
+#     semantic_delta:    what meaning is lost vs preserved by the deletion
+#     rollback:          how to restore (the executing PR/commit; `git revert <sha>`)
+#   adjudicator:  who approved (the human merger of the executing PR)
+#   proposed_by:  the lane/agent that proposed the deletion
+#   proposed_at / adjudicated_at / executed_at:  ISO dates (stamped from git, never invented)
+
+register_version: 0
+
+# Deletions of artifacts under these roots REQUIRE a complete `executed` record
+# here before removal. Extend as the governed corpus grows.
+governed_roots:
+  - orca/product/
+
+# Append records below. Empty at creation -- no deletions yet.
+deletions: []
