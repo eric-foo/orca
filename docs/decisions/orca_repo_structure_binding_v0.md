@@ -51,6 +51,15 @@ execution tranche to add the `orca/` root and supersede this binding's
 and `.agents/workflow-overlay/artifact-folders.md`, the current placement rule
 below remains true for the live tree.
 
+Dated note — spine-first Wave B executing (2026-06-18): the `orca/` root is now
+created and declared in `repo-structure.yaml` `known_top_level`, and
+`.agents/workflow-overlay/artifact-folders.md` now declares `orca/product/` as
+the spine-first product tree. This binding's `docs/product/` by-lane axis is
+being superseded by the `orca/product/` spine axis; both coexist during
+execution. Files move in Wave C (manifest + apply engine under
+`docs/migration/repo_structure_spine_first_v0/`); `docs/product/` is dropped at
+Wave E. No files were moved by Wave B.
+
 ## Provenance (origin, not authority)
 
 The invariant core below is restated from an assessment of a cross-repo draft

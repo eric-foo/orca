@@ -31,7 +31,8 @@ authority_boundary: retrieval_only
 - `docs/product/`: product contracts, product proof plans, core-spine notes, satellite notes, evidence standards, source maps, decision artifacts, memo substrates, evidence appendices, and executive-deck shape drafts.
 - `docs/product/source_capture_toolbox/`: product-facing Source Capture Armory design notes, scoped specs, and gap notes. Existing controlling Data Capture source-access decisions, method plans, and obligation contracts remain at their historical paths unless a later migration decision moves them.
 - `docs/product/search/`: Orca's demand-signal intelligence (search-led) lane - search / answer-engine surfaces (web search / SERP, AI Overviews and other answer engines, zero-click, AEO/GEO, search-interest) PLUS the demand-signal discovery method (scan core, read taxonomy, demand gates) they feed, bound by `docs/decisions/orca_search_product_lane_binding_v0.md`. Membership is set by that record's inclusion test; topic-primacy wins over spine placement for those docs. The method docs are search-led but venue-spanning (consumed across judgment/capture/core spines).
-- `docs/product/` lane subfolders (`core_spine/`, `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`, `product_lead/`, `search/`): the bound second-level axis for product artifacts per `docs/decisions/orca_repo_structure_binding_v0.md` (and, for the `search/` topic lane, `docs/decisions/orca_search_product_lane_binding_v0.md`). New product artifacts use the matching lane; files matching no lane may stay at `docs/product/` root. Existing flat files move only via a migration package, not ad hoc.
+- `docs/product/` lane subfolders (`core_spine/`, `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`, `product_lead/`, `search/`): the bound second-level axis for product artifacts per `docs/decisions/orca_repo_structure_binding_v0.md` (and, for the `search/` topic lane, `docs/decisions/orca_search_product_lane_binding_v0.md`). New product artifacts use the matching lane; files matching no lane may stay at `docs/product/` root. Existing flat files move only via a migration package, not ad hoc. **Being superseded by `orca/product/` (spine-first migration, executing — see below); both coexist until Wave E drops `docs/product/`.**
+- `orca/product/` (repo root): the **spine-first product tree** — target of the in-progress migration bound by `docs/decisions/orca_spine_first_target_structure_binding_v0.md` and authorized by `docs/decisions/orca_spine_first_blocker_authorization_v0.md` (#254). Second-level axis: `spines/` (`foundation/`, `commission_signal_board/`, `scanning/`, `capture/`, `ecr/`, `cleaning/`, `judgment/`, `product_lead/`), `satellites/`, `case_families/`, `shared/`. Per-spine structure is owned by the spine-first binding, not the machine map; `check_placement.py` treats `orca/` as a declared top-level area. Wave B created the root + this authority; Wave C moves the `docs/product/` files in (manifest + apply engine under `docs/migration/repo_structure_spine_first_v0/`); Wave E drops `docs/product/`. `docs/doctrine/` is intentionally NOT created by this migration (owner B3: index/router-only, seeded later).
 - `repo-structure.yaml` (repo root): the machine structure map - router only, consumed by `.agents/hooks/check_placement.py` and agents for navigation. It declares homes and never states rules; this overlay file remains the placement authority and wins on conflict.
 - `docs/research/`: public/source research artifacts, evidence-only lane outputs, synthesis reports, candidate screens, and reject-pattern maps that support Orca product or proof work without becoming product authority by default.
 - `docs/research/judgment-spine/harness/v0_14/smoke_tests/`: Judgment Harness v0.14 no-case smoke-test receipts and operator provenance records. Artifacts in this folder are plumbing evidence only and do not become real-case probe, validation, fixture-admission, product-proof, or judgment-quality evidence by location.
@@ -194,6 +195,66 @@ direction_change_propagation:
     - not readiness
     - not product proof
     - placement of the demand-signal method docs in search/ does not narrow their venue-spanning authority
+    - a green check_placement run is placement shape, not authority
+```
+
+## Direction Change Propagation - Spine-First Migration Wave B (orca/ root + authority)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Spine-first migration Wave B (structural commit): the `orca/` top-level root
+    is created and declared in repo-structure.yaml known_top_level, and
+    artifact-folders.md now declares `orca/product/` as the spine-first product
+    tree (target bound by orca_spine_first_target_structure_binding_v0,
+    authorized by orca_spine_first_blocker_authorization_v0 / #254). The
+    `docs/product/` by-lane axis is being superseded by the `orca/product/` spine
+    axis; both coexist during execution. No files are moved by Wave B (that is
+    Wave C); `docs/product/` remains valid until Wave E drops it. `docs/doctrine/`
+    is intentionally NOT added (owner B3: index/router-only, seeded later, not
+    part of the product-tree move).
+  trigger: architecture_doctrine
+  related_triggers:
+    - output_authority
+    - workflow_authority
+  controlling_sources_updated:
+    - repo-structure.yaml
+    - .agents/workflow-overlay/artifact-folders.md
+    - docs/decisions/orca_repo_structure_binding_v0.md
+    - docs/decisions/orca_search_product_lane_binding_v0.md
+  downstream_surfaces_checked:
+    - docs/workflows/orca_repo_map_v0.md
+    - .agents/hooks/check_placement.py
+    - docs/decisions/orca_spine_first_target_structure_binding_v0.md
+  intentionally_not_updated:
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        docs/product -> orca/product reference rewrites + the orca/ nav section are
+        Wave C (apply engine, live nav) and Wave E (status pointers); Wave B does
+        not touch the map. The repo-map-freshness advisory on the new orca/
+        top-level is acknowledged and deferred to Wave E.
+    - path: .agents/hooks/check_placement.py
+      reason: >
+        No code change needed: classify() treats any non-docs known_top_level dir
+        as a declared area, so adding `orca` to known_top_level.dirs suffices for
+        orca/product/ to be placed.
+    - path: repo-structure.yaml docs_roles + product_lanes (docs/product)
+      reason: >
+        Left intact: docs/product/ is still populated until Wave C moves the files
+        and Wave E drops the role; removing it now would flag the live files.
+  stale_language_search: >
+    rg -n "known_top_level|orca/product" repo-structure.yaml
+    .agents/workflow-overlay/artifact-folders.md (run 2026-06-18, worktree
+    orca-spine-first-execution)
+  stale_language_search_result: >
+    docs/product by-lane bullet + repo-structure.yaml docs_roles/product_lanes
+    remain (intentional, live until Wave C/E); the new orca/product bullet +
+    known_top_level orca entry are the Wave B additions; no surface claims the
+    migration is complete or that files have moved.
+  non_claims:
+    - not validation, readiness, or proof
+    - not file movement (Wave C) or docs/product removal (Wave E)
+    - not creation of docs/doctrine (owner-deferred)
     - a green check_placement run is placement shape, not authority
 ```
 

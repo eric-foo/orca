@@ -27,6 +27,7 @@ known_top_level:
     - .codex
     - .git
     - docs
+    - orca               # spine-first product tree root (orca/product/); created + declared Wave B 2026-06-18. Files populate in Wave C; per-spine structure owned by the spine-first binding, not this map (check_placement treats orca/ as a declared top-level area).
     - orca-harness
   files:
     - .gitignore
