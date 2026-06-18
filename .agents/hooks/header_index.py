@@ -636,9 +636,10 @@ def selftest() -> int:
         # Empty map text -> orphan
         ("empty map text",
          "docs/decisions/foo_v0.md", "", True),
-        # 'not retrieval-indexed' line exempts everything
-        ("not retrieval-indexed line",
-         "docs/some/unmapped/folder/file_v0.md", map_text_nri, False),
+        # 'not retrieval-indexed' prose no longer auto-covers (F2 fix): an
+        # uncovered folder is an orphan even if such a line exists in the map.
+        ("not-retrieval-indexed prose no longer covers",
+         "docs/some/unmapped/folder/file_v0.md", map_text_nri, True),
         # docs/_inbox is C3-exempt -> not orphan
         ("_inbox exempt",
          "docs/_inbox/foo.md", map_text_no_pr, False),

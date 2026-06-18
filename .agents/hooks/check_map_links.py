@@ -213,17 +213,50 @@ def parse_open_next(header_text: str) -> tuple[list[str], int]:
 # C3 helpers: folder coverage decision
 # ---------------------------------------------------------------------------
 
+# Structural-root prefixes too shallow to be a navigation anchor: they never
+# confer coverage on their own (anti-vacuity). Coverage requires a NON-root
+# ancestor area to be declared. See docs/decisions/orca_repo_map_architecture_mgt_v0.md.
+_COVERAGE_ROOT_PREFIXES = frozenset({
+    "orca", "orca/product", "orca/product/spines",
+    "orca/product/satellites", "orca/product/case_families", "orca/product/shared",
+    "docs", ".agents", "orca-harness",
+})
+# NOTE: .agents/workflow-overlay is a *declared area* that holds docs directly
+# (map row exists), so it confers coverage and is NOT a structural root.
+
+# A canonical coverage entry is a backticked path token in the FIRST cell of a
+# map/submap table row ("| `path` | ... |"). Prose, answer-cell paths, and
+# "add X later" debt notes are deliberately NOT canonical entries.
+_FIRST_CELL_PATH_RE = re.compile(r"^\|\s*`([A-Za-z0-9_./-]+?)/?`\s*\|")
+
+
+def _canonical_map_tokens(map_text: str) -> set[str]:
+    """First-cell backticked path tokens from map/submap rows (normalized, no trailing slash)."""
+    return {
+        m.group(1).rstrip("/")
+        for line in map_text.splitlines()
+        if (m := _FIRST_CELL_PATH_RE.match(line))
+    }
+
+
 def dir_is_covered(rel_dir: str, map_text: str) -> bool:
-    """True if rel_dir (POSIX, e.g. "docs/prompts/reviews") appears as a
-    substring of any line in map_text, or if map_text has a line containing
-    "not retrieval-indexed".
+    """True if rel_dir is reachable from the map under the MGT reachability
+    invariant: some canonical first-cell path token is an ANCESTOR-or-self of
+    rel_dir and is NOT a structural root.
+
+    Reachability semantics (docs/decisions/orca_repo_map_architecture_mgt_v0.md):
+    a folder is covered iff it or an ancestor *area* is declared. Structural roots
+    (orca/product, docs, ...) never confer coverage (else the gate is vacuous); a
+    sibling, a child (child-covers-parent), prose, an answer-cell path, or a debt
+    note never confer it either.
 
     Pure function (testable).
     """
-    for line in map_text.splitlines():
-        if rel_dir in line:
-            return True
-        if "not retrieval-indexed" in line.lower():
+    rel = rel_dir.rstrip("/")
+    for e in _canonical_map_tokens(map_text):
+        if e in _COVERAGE_ROOT_PREFIXES:
+            continue
+        if rel == e or rel.startswith(e + "/"):
             return True
     return False
 
@@ -849,24 +882,35 @@ def selftest() -> int:
         print("%s  %-52s  expect=(%s, nr=%d) got=(%s, nr=%d)" % (
             status, label, exp_entries, exp_nr, got_entries, got_nr))
 
-    # --- dir_is_covered cases ---
+    # --- dir_is_covered cases (MGT ancestor-area reachability) ---
     dic_cases = [
-        ("dir appears in map",
+        ("exact folder in first cell",
          "docs/prompts/reviews",
-         "| `docs/prompts/reviews/` | Review prompts. |",
-         True),
-        ("dir substring appears",
-         "docs/review-outputs/adversarial-artifact-reviews",
-         "see docs/review-outputs/adversarial-artifact-reviews/",
-         True),
-        ("not retrieval-indexed line",
+         "| `docs/prompts/reviews/` | Review prompts. |", True),
+        ("ancestor area covers child",
+         "docs/prompts/reviews/sub",
+         "| `docs/prompts/reviews/` | Review prompts. |", True),
+        ("non-root spine ancestor covers",
+         "orca/product/spines/capture/operating_model",
+         "| `orca/product/spines/capture/` | Capture spine. |", True),
+        ("sibling-prefix does NOT cover",
+         "docs/foo",
+         "| `docs/foobar/` | Unrelated. |", False),
+        ("child does NOT cover parent",
+         "docs/x",
+         "| `docs/x/y/` | Child. |", False),
+        ("prose mention does NOT cover",
+         "docs/some/dir",
+         "see docs/some/dir/ later", False),
+        ("answer-cell path does NOT cover",
+         "docs/x/y",
+         "| Question? | `docs/x/y/foo.md` |", False),
+        ("structural root does NOT confer coverage",
+         "orca/product/spines/judgment/demand_read/c2_weighting",
+         "| `orca/product/` | Product tree. |", False),
+        ("not-retrieval-indexed line no longer auto-covers",
          "docs/some/random/dir",
-         "docs/unrelated/foo: not retrieval-indexed",
-         True),
-        ("dir NOT in map",
-         "docs/prompts/architecture",
-         "| `docs/prompts/reviews/` | Review prompts. |",
-         False),
+         "| `docs/hygiene/` | Queues, not retrieval-indexed. |", False),
     ]
     print()
     print("--- dir_is_covered ---")
