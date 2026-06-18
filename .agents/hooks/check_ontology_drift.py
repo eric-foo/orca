@@ -34,6 +34,18 @@ from pathlib import Path
 
 YAML_REL = "orca/product/spines/foundation/ontology/ontology.yaml"
 HARNESS_REL = "orca-harness"
+EXPECTED_BINDINGS = ("CapturePacket", "EvidenceUnit", "Case")
+EXPECTED_REQUIRED_FIELDS = {
+    "CapturePacket": ("manifest_version",),
+    "EvidenceUnit": ("evidence_id", "pre_decision_status"),
+    "Case": ("case_id",),
+}
+EXPECTED_FORBIDS_FIELDS = {
+    "EvidenceUnit": ("claim_tier",),
+}
+EXPECTED_COMPOSED_WITH = {
+    "Case": ("orca-harness/schemas/scoring_models.py:CaseReport",),
+}
 
 
 def repo_root() -> Path:
@@ -52,9 +64,26 @@ def _normalize_module(spec_module: str) -> str:
 
 
 def _defined_here(cls, mod: str) -> bool:
-    """True if cls is defined in module `mod` (tolerates an install package prefix)."""
+    """True if cls is defined in module `mod`."""
     actual = getattr(cls, "__module__", "") or ""
-    return actual == mod or actual.endswith("." + mod)
+    return actual == mod
+
+
+def _string_list(
+    value: object,
+    concept: str,
+    key: str,
+    findings: list[str],
+    *,
+    require_non_empty: bool = False,
+) -> list[str]:
+    if not isinstance(value, list) or (require_non_empty and not value):
+        findings.append("%s: `%s` missing or malformed (drift-check invariant vacuous)" % (concept, key))
+        return []
+    if not all(isinstance(item, str) and item.strip() for item in value):
+        findings.append("%s: `%s` contains a non-string/empty value (drift-check invariant vacuous)" % (concept, key))
+        return []
+    return [item.strip() for item in value]
 
 
 def check_drift(root: Path) -> list[str]:
@@ -69,11 +98,11 @@ def check_drift(root: Path) -> list[str]:
         return []
     try:
         ss = yaml.safe_load(yp.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    bindings = (ss or {}).get("runtime_bindings") or {}
-    if not isinstance(bindings, dict) or not bindings:
-        return []
+    except Exception as exc:
+        return ["ontology.yaml: cannot parse `%s` (%s: %s)" % (YAML_REL, type(exc).__name__, exc)]
+    if not isinstance(ss, dict):
+        return ["ontology.yaml: malformed top-level document (expected mapping)"]
+    bindings = ss.get("runtime_bindings")
 
     if str(harness) not in sys.path:
         sys.path.insert(0, str(harness))
@@ -89,12 +118,23 @@ def check_drift(root: Path) -> list[str]:
             return None, mod, "%s: %s" % (type(e).__name__, e)
 
     findings: list[str] = []
+    if not isinstance(bindings, dict):
+        return ["runtime_bindings: missing or malformed (expected scoped bindings: %s)" % ", ".join(EXPECTED_BINDINGS)]
+    for expected in EXPECTED_BINDINGS:
+        if expected not in bindings:
+            findings.append("%s: runtime binding MISSING (drift-check invariant vacuous)" % expected)
+
     for concept, b in bindings.items():
         if not isinstance(b, dict):
+            findings.append("%s: binding malformed (expected mapping)" % concept)
             continue
-        cls, mod, err = load(b.get("runtime", ""))
+        runtime = b.get("runtime")
+        if not isinstance(runtime, str) or not runtime.strip():
+            findings.append("%s: `runtime` missing or malformed (drift-check invariant vacuous)" % concept)
+            continue
+        cls, mod, err = load(runtime)
         if cls is None:
-            findings.append("%s: binding dangles -- cannot import `%s` (%s)" % (concept, b.get("runtime"), err))
+            findings.append("%s: binding dangles -- cannot import `%s` (%s)" % (concept, runtime, err))
             continue
         if not _defined_here(cls, mod):
             findings.append(
@@ -102,10 +142,26 @@ def check_drift(root: Path) -> list[str]:
                 % (concept, cls.__name__, getattr(cls, "__module__", "?"), mod)
             )
         fields = set(getattr(cls, "model_fields", {}) or {})
-        for f in b.get("requires_fields") or []:
+        requires_fields = _string_list(
+            b.get("requires_fields"), concept, "requires_fields", findings, require_non_empty=True
+        )
+        missing_required_guards = set(EXPECTED_REQUIRED_FIELDS.get(concept, ())) - set(requires_fields)
+        if missing_required_guards:
+            findings.append(
+                "%s: `requires_fields` missing required guard(s): %s"
+                % (concept, ", ".join(sorted(missing_required_guards)))
+            )
+        for f in requires_fields:
             if f not in fields:
                 findings.append("%s: required field `%s` MISSING on `%s` (drift)" % (concept, f, cls.__name__))
-        for f in b.get("forbids_fields") or []:
+        forbids_fields = _string_list(b.get("forbids_fields"), concept, "forbids_fields", findings)
+        missing_forbid_guards = set(EXPECTED_FORBIDS_FIELDS.get(concept, ())) - set(forbids_fields)
+        if missing_forbid_guards:
+            findings.append(
+                "%s: `forbids_fields` missing required guard(s): %s"
+                % (concept, ", ".join(sorted(missing_forbid_guards)))
+            )
+        for f in forbids_fields:
             if f in fields:
                 findings.append(
                     "%s: forbidden field `%s` PRESENT on `%s` (intent violated, e.g. AR-01)"
@@ -118,7 +174,16 @@ def check_drift(root: Path) -> list[str]:
                     "%s: `%s` appears as a field (possible payload-leaking discriminator -- alias-only no longer safe)"
                     % (concept, b.get("name_alias", cls.__name__))
                 )
-        for cspec in b.get("composed_with") or []:
+        else:
+            findings.append("%s: `not_payload_identifier` missing or false (drift-check invariant vacuous)" % concept)
+        composed_with = _string_list(b.get("composed_with", []), concept, "composed_with", findings)
+        missing_composed_guards = set(EXPECTED_COMPOSED_WITH.get(concept, ())) - set(composed_with)
+        if missing_composed_guards:
+            findings.append(
+                "%s: `composed_with` missing required guard(s): %s"
+                % (concept, ", ".join(sorted(missing_composed_guards)))
+            )
+        for cspec in composed_with:
             c2, _, err2 = load(cspec)
             if c2 is None:
                 findings.append("%s: composed_with binding dangles -- cannot import `%s` (%s)" % (concept, cspec, err2))
@@ -177,8 +242,4 @@ def main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main(sys.argv[1:]))
-    except Exception as exc:
-        sys.stderr.write("check_ontology_drift: internal error, allowing: %s\n" % exc)
-        sys.exit(0)
+    sys.exit(main(sys.argv[1:]))
