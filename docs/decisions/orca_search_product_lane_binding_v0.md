@@ -21,7 +21,7 @@ open_next:
   - .agents/workflow-overlay/artifact-folders.md
   - repo-structure.yaml
   - docs/migration/repo_structure_search_lane_v0/runbook.md
-  - docs/product/search/README.md
+  - docs/product/search/README.md # nonresolving: retired without successor; resolve via docs/migration/repo_structure_spine_first_v0/moved_paths_index.md
 stale_if:
   - repo-structure.yaml and this record disagree on the search lane or its status.
   - A later accepted Orca decision supersedes the lane, its inclusion test, or its precedence rule.
@@ -47,6 +47,18 @@ future spine-first placement supersedes this record's physical
 `docs/product/search/` home and topic-primacy precedence. The demand-signal
 method docs keep their venue-spanning authority; only the physical home changes
 during execution.
+
+Spine-first Wave B note (2026-06-18): execution has begun. The 11 `search/` docs
+dissolve by spine function in Wave C (scan-core -> `scanning/scan_core/`; gate
+docs -> `scanning/admissibility_checkability/` + `commission_signal_board/dispatch_rules/`;
+taxonomy -> `foundation/demand_read_taxonomy/`; AEO -> `scanning/source_families/answer_engine/`;
+search-interest profile -> `capture/demand_durability_indicators/search_interest/`).
+`docs/product/search/README.md` is **RETIRED with no successor** (the lane front
+door is superseded by the spine-first binding + the moved-paths index); its one
+durable asset — the cross-spine consumer/dependency map — is reseeded natively as
+bidirectional pointers in the new structure (`foundation/demand_read_taxonomy`,
+`scanning`, `capture/source_families/answer_engine`, `judgment/demand_read`), not
+carried over. Recorded as a search-dissolution line item; handled in Wave C/E.
 
 ## Decision
 

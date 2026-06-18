@@ -28,10 +28,7 @@ authority_boundary: retrieval_only
 - `docs/review-outputs/adversarial-artifact-reviews/`: adversarial artifact review reports.
 - `docs/workflows/`: workflow records, repo maps, validation notes, and operational records owned by Orca.
 - `docs/migration/`: migration and import queue records.
-- `docs/product/`: product contracts, product proof plans, core-spine notes, satellite notes, evidence standards, source maps, decision artifacts, memo substrates, evidence appendices, and executive-deck shape drafts.
-- `docs/product/source_capture_toolbox/`: product-facing Source Capture Armory design notes, scoped specs, and gap notes. Existing controlling Data Capture source-access decisions, method plans, and obligation contracts remain at their historical paths unless a later migration decision moves them.
-- `docs/product/search/`: Orca's demand-signal intelligence (search-led) lane - search / answer-engine surfaces (web search / SERP, AI Overviews and other answer engines, zero-click, AEO/GEO, search-interest) PLUS the demand-signal discovery method (scan core, read taxonomy, demand gates) they feed, bound by `docs/decisions/orca_search_product_lane_binding_v0.md`. Membership is set by that record's inclusion test; topic-primacy wins over spine placement for those docs. The method docs are search-led but venue-spanning (consumed across judgment/capture/core spines).
-- `docs/product/` lane subfolders (`core_spine/`, `data_capture_spine/`, `judgment_spine/`, `signal_content/`, `ecr/`, `product_lead/`, `search/`): the bound second-level axis for product artifacts per `docs/decisions/orca_repo_structure_binding_v0.md` (and, for the `search/` topic lane, `docs/decisions/orca_search_product_lane_binding_v0.md`). New product artifacts use the matching lane; files matching no lane may stay at `docs/product/` root. Existing flat files move only via a migration package, not ad hoc.
+- `orca/product/` (repo root): the **spine-first product tree** for product contracts, product proof plans, core-spine notes, satellite notes, evidence standards, source maps, decision artifacts, memo substrates, evidence appendices, executive-deck shape drafts, Source Capture Toolbox design notes, and demand-signal method/surface docs. The tree is bound by `docs/decisions/orca_spine_first_target_structure_binding_v0.md` and authorized by `docs/decisions/orca_spine_first_blocker_authorization_v0.md` (#254). Second-level axis: `spines/` (`foundation/`, `commission_signal_board/`, `scanning/`, `capture/`, `ecr/`, `cleaning/`, `judgment/`, `product_lead/`), `satellites/`, `case_families/`, `shared/`. Per-spine structure is owned by the spine-first binding, not the machine map; `check_placement.py` treats `orca/` as a declared top-level area. Historical `docs/product/` references resolve through `docs/migration/repo_structure_spine_first_v0/moved_paths_index.md` by design. `docs/doctrine/` is intentionally NOT created by this migration (owner B3: index/router-only, seeded later).
 - `repo-structure.yaml` (repo root): the machine structure map - router only, consumed by `.agents/hooks/check_placement.py` and agents for navigation. It declares homes and never states rules; this overlay file remains the placement authority and wins on conflict.
 - `docs/research/`: public/source research artifacts, evidence-only lane outputs, synthesis reports, candidate screens, and reject-pattern maps that support Orca product or proof work without becoming product authority by default.
 - `docs/research/judgment-spine/harness/v0_14/smoke_tests/`: Judgment Harness v0.14 no-case smoke-test receipts and operator provenance records. Artifacts in this folder are plumbing evidence only and do not become real-case probe, validation, fixture-admission, product-proof, or judgment-quality evidence by location.
@@ -48,8 +45,8 @@ authority_boundary: retrieval_only
   excludes the artifact class.
 - Treat `docs/_inbox/` as scratch only. Nothing in `_inbox` is Orca authority until promoted into an accepted docs folder or overlay file.
 - Track parked or temporary material through `docs/hygiene/queue.md` when it may need promotion, review, archiving, or deletion.
-- Keep product artifacts in `docs/product/` unless they are accepted decision records, prompt artifacts, workflow records, review artifacts, or migration records.
-- Keep research artifacts in `docs/research/` when the primary purpose is source discovery, corpus qualification, evidence gathering, candidate screening, or rejected-source mapping. Promote research conclusions into `docs/product/` or `docs/decisions/` only through a later accepted product or decision artifact.
+- Keep product artifacts in `orca/product/` unless they are accepted decision records, prompt artifacts, workflow records, review artifacts, or migration records.
+- Keep research artifacts in `docs/research/` when the primary purpose is source discovery, corpus qualification, evidence gathering, candidate screening, or rejected-source mapping. Promote research conclusions into `orca/product/` or `docs/decisions/` only through a later accepted product or decision artifact.
 - Do not create implementation folders such as `src`, `app`, `packages`, `tests`, or automation runtimes until explicitly authorized.
 - Orca-local workflow skills live only under `.agents/skills/` and are governed by `.agents/workflow-overlay/skill-adoption.md`; acceptance there is a local freeze, not deployment, and must not edit plugin, user-level, installed, or external skill source.
 - Do not copy or move material from external reference folders unless a later turn explicitly authorizes the import.
@@ -80,7 +77,7 @@ direction_change_propagation:
       reason: dated historical observation, true as of its date.
     - path: docs/workflows/orca_pricing_first_doc_cascade_proposal_v0.md
       reason: historical proposal record (row 7 deferral); current acceptance state now lives in skill-adoption.md; the proposal is not retro-edited.
-    - path: docs/product/product_lead/orca_product_lead_first_icp_wedge_decision_v0.md
+    - path: orca/product/spines/product_lead/icp_wedge/orca_product_lead_first_icp_wedge_decision_v0.md
       reason: already-superseded historical record; its supersede banner governs.
     - path: docs/decisions/orca_icp_wedge_convergence_break_in_first_v0.md
       reason: already-superseded historical record; its supersede banner governs.
@@ -162,7 +159,7 @@ direction_change_propagation:
     - docs/decisions/orca_repo_structure_binding_v0.md        # bound-lanes bullet notes search/
     - repo-structure.yaml                                     # product_lanes += { search } (current once applied)
     - .agents/workflow-overlay/artifact-folders.md            # search accepted-folder entry + lane-subfolder list + this receipt
-    - docs/product/README.md                                  # lane list includes search/
+    - orca/product/README.md                                  # lane list includes search/
     - docs/product/search/README.md                          # lane front-door index (restructured for the expanded lane)
     - docs/workflows/orca_repo_map_v0.md                      # Workstream Status Pointers: search lane row
     - docs/migration/repo_structure_search_lane_v0/           # package: 10-row manifest + idempotent apply/reverse + runbook + reference inventory + moved-paths index
@@ -183,7 +180,7 @@ direction_change_propagation:
       reason: narrative tier per the binding's surface tiering; no product-lane list to amend (same treatment as the Phase-2 move).
     - path: the moved docs' content
       reason: not edited except intra-set full-path references (hash-safe; no inbound hash pins); search/README.md was hand-restructured separately.
-    - path: docs/product/core_spine/orca_ontology_backbone_architecture_v0.md (bare-name "in-flight/not on main" prose)
+    - path: orca/product/spines/foundation/ontology/orca_ontology_backbone_architecture_v0.md (bare-name "in-flight/not on main" prose)
       reason: pre-existing stale status independent of this move (the scan-core spec is already on main); out of scope for this migration.
   stale_language_search: >
     The runbook's apply sequence includes a git-grep reference-resolution check
@@ -195,6 +192,155 @@ direction_change_propagation:
     - not product proof
     - placement of the demand-signal method docs in search/ does not narrow their venue-spanning authority
     - a green check_placement run is placement shape, not authority
+```
+
+## Direction Change Propagation - Spine-First Migration Wave B (orca/ root + authority)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Spine-first migration Wave B (structural commit): the `orca/` top-level root
+    is created and declared in repo-structure.yaml known_top_level, and
+    artifact-folders.md now declares `orca/product/` as the spine-first product
+    tree (target bound by orca_spine_first_target_structure_binding_v0,
+    authorized by orca_spine_first_blocker_authorization_v0 / #254). The
+    `docs/product/` by-lane axis is being superseded by the `orca/product/` spine
+    axis; both coexist during execution. No files are moved by Wave B (that is
+    Wave C); `docs/product/` remains valid until Wave E drops it. `docs/doctrine/`
+    is intentionally NOT added (owner B3: index/router-only, seeded later, not
+    part of the product-tree move).
+  trigger: architecture_doctrine
+  related_triggers:
+    - output_authority
+    - workflow_authority
+  controlling_sources_updated:
+    - repo-structure.yaml
+    - .agents/workflow-overlay/artifact-folders.md
+    - docs/decisions/orca_repo_structure_binding_v0.md
+    - docs/decisions/orca_search_product_lane_binding_v0.md
+  downstream_surfaces_checked:
+    - docs/workflows/orca_repo_map_v0.md
+    - .agents/hooks/check_placement.py
+    - docs/decisions/orca_spine_first_target_structure_binding_v0.md
+  intentionally_not_updated:
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        docs/product -> orca/product reference rewrites + the orca/ nav section are
+        Wave C (apply engine, live nav) and Wave E (status pointers); Wave B does
+        not touch the map. The repo-map-freshness advisory on the new orca/
+        top-level is acknowledged and deferred to Wave E.
+    - path: .agents/hooks/check_placement.py
+      reason: >
+        No code change needed: classify() treats any non-docs known_top_level dir
+        as a declared area, so adding `orca` to known_top_level.dirs suffices for
+        orca/product/ to be placed.
+    - path: repo-structure.yaml docs_roles + product_lanes (docs/product)
+      reason: >
+        Left intact: docs/product/ is still populated until Wave C moves the files
+        and Wave E drops the role; removing it now would flag the live files.
+  stale_language_search: >
+    rg -n "known_top_level|orca/product" repo-structure.yaml
+    .agents/workflow-overlay/artifact-folders.md (run 2026-06-18, worktree
+    orca-spine-first-execution)
+  stale_language_search_result: >
+    docs/product by-lane bullet + repo-structure.yaml docs_roles/product_lanes
+    remain (intentional, live until Wave C/E); the new orca/product bullet +
+    known_top_level orca entry are the Wave B additions; no surface claims the
+    migration is complete or that files have moved.
+  non_claims:
+    - not validation, readiness, or proof
+    - not file movement (Wave C) or docs/product removal (Wave E)
+    - not creation of docs/doctrine (owner-deferred)
+    - a green check_placement run is placement shape, not authority
+```
+
+## Direction Change Propagation - Spine-First Migration Wave E (docs/product authority retirement)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Spine-first migration Wave E (authority retirement): docs/product/ placement
+    authority is removed now that the 217 product files moved to orca/product/
+    (Wave C) and docs/product/ is empty. repo-structure.yaml drops the
+    docs/product docs_role + all docs/product product_lanes (fixing the Wave C
+    home/entry rewrite artifact); artifact-folders.md removes the docs/product,
+    source_capture_toolbox, search, and docs/product lane-subfolder accepted-folder
+    bullets (content now under orca/product/); repo map + STRUCTURE nav route to
+    orca/product/. docs/doctrine/ remains intentionally uncreated (owner B3).
+  trigger: architecture_doctrine
+  related_triggers:
+    - output_authority
+    - workflow_authority
+  controlling_sources_updated:
+    - repo-structure.yaml
+    - .agents/workflow-overlay/artifact-folders.md
+    - docs/STRUCTURE.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - docs/decisions/orca_repo_structure_binding_v0.md
+    - docs/decisions/orca_search_product_lane_binding_v0.md
+    - .agents/hooks/check_placement.py
+    - .agents/hooks/check_map_links.py
+  intentionally_not_updated:
+    - path: historical docs (decisions/reviews/prompts/research/hygiene/migration) BODY docs/product references
+      reason: >
+        Historical body prose / provenance keeps its point-in-time docs/product
+        paths by design (resolved via the spine-first moved_paths_index); not
+        mass-rewritten per owner instruction. The open_next retrieval metadata in
+        these same files WAS repointed to orca/product under the A-prime patch
+        (see the A-prime receipt below); only body prose is preserved.
+        check_map_links --strict now passes.
+  stale_language_search: >
+    rg -n "docs/product" repo-structure.yaml .agents/workflow-overlay/artifact-folders.md
+    (run 2026-06-18, worktree orca-spine-first-execution)
+  stale_language_search_result: >
+    After Wave E, repo-structure.yaml + artifact-folders.md no longer DECLARE
+    docs/product as a live role/lane/accepted-folder. The repo map's
+    retirement/transition prose was reworded by the A-prime patch to drop the
+    dead docs/product token (former C1 finding); historical body prose keeps its
+    point-in-time references, resolved via the moved_paths_index.
+  non_claims:
+    - not validation, readiness, or proof
+    - not migration-complete until PR #255 merges (human-gated)
+    - the prior C1/C2 check_map_links findings are resolved by the A-prime patch (receipt below); a green checker run is link hygiene, not validation or authority
+```
+
+## Direction Change Propagation - Spine-First A-prime (retrieval-metadata repointing)
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    A-prime (owner-authorized 2026-06-18): retrieval metadata must resolve
+    directly; only historical BODY prose stays point-in-time. Refines
+    reference-model-B -- the migration's open_next pointers and the repo map's
+    live references are repointed from docs/product/... to their orca/product/...
+    successors via the moved_paths_index; historical body prose/provenance is
+    still NOT mass-rewritten. check_map_links.py stays strict and was NOT taught
+    index resolution.
+  trigger: workflow_authority
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - docs/workflows/orca_repo_map_v0.md
+    - docs/migration/repo_structure_spine_first_v0/repoint_open_next_to_spine.py
+    - docs/migration/repo_structure_spine_first_v0/moved_paths_index.md
+  bulk_change: >
+    165 historical .md retrieval headers: 335 open_next entries repointed
+    docs/product -> orca/product (C2 surface); 3 repo-map retirement-prose
+    docs/product tokens dropped (C1 surface); docs/product/search/README.md
+    open_next occurrences (2) annotated "# nonresolving:" -> moved_paths_index
+    (retired, no successor).
+  intentionally_not_updated:
+    - path: historical docs body docs/product references (~129 files / ~680 bare refs)
+      reason: point-in-time prose/provenance, resolved via moved_paths_index; not mass-rewritten per owner instruction.
+  validation_observed:
+    - "check_map_links.py --strict: OK (0 findings); annotated nonresolving 30"
+    - "header_index.py --strict: OK (changed durable .md header-bearing + map-reachable)"
+    - "apply_moves.py --dry-run: 0 pending / 217 applied"
+    - "git diff --check: clean; check_placement --check: only pre-existing .github/.githooks/.gitattributes noise"
+  non_claims:
+    - not validation, readiness, or migration proof; link/retrieval hygiene only
+    - not migration-complete until PR #255 merges (human-gated)
 ```
 
 Older receipts archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.

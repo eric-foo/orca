@@ -4,14 +4,14 @@
 retrieval_header_version: 1
 artifact_role: Delegated adversarial code review-and-patch report
 scope: De-correlated adversarial review of the no-live-access Reddit Candidate URL Intake implementation slice (capture_spine.reddit_candidate_intake) plus its unit and contract tests.
-authority_boundary: review_decision_input_only
+authority_boundary: retrieval_only
 review_target_commit: 7d2d2310af3d72f70e326542515f2439932d52b7
 review_branch: ecr-sp3-timing-deriver-slice1
 open_next:
   - docs/prompts/reviews/reddit_candidate_intake_no_live_access_adversarial_code_review_prompt_v0.md
   - .agents/workflow-overlay/delegated-review-patch.md
-  - docs/product/data_capture_spine/data_capture_spine_candidate_url_intake_contract_v0.md
-  - docs/product/data_capture_spine/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
+  - orca/product/spines/capture/contracts/candidate_intake/data_capture_spine_candidate_url_intake_contract_v0.md
+  - orca/product/spines/capture/contracts/candidate_intake/data_capture_spine_reddit_candidate_url_intake_crawler_architecture_v0.md
   - docs/decisions/data_capture_spine_reddit_candidate_url_intake_default_policy_decision_v0.md
 stale_if:
   - Any target file changes after the post-patch hashes recorded below.
