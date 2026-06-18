@@ -13,11 +13,14 @@ must never take unattended:
          flow.
          Landing a PR to main (`gh pr merge <N>`) is CONDITIONALLY allowed: the
          guard queries the PR and allows the merge ONLY when it is mergeStateStatus
-         == CLEAN, every CI check has completed green, and it carries the opt-in
-         `agent-automerge` label. Any other state, a missing/ambiguous PR number,
-         the lower-level `gh api .../merge` form, or any lookup error/timeout
-         FAILS CLOSED (blocks) — and the block message prints the repo-scoped
-         manual `gh pr merge ... --repo` command a human can run from anywhere.
+         == CLEAN, every CI check has completed green, it carries the opt-in
+         `agent-automerge` label, AND the router did NOT flag it
+         `risk/manual-review-required` / `risk/blocked-for-merge-policy` (so a
+         governed deletion or protected-surface PR is never self-merged). Any other
+         state, a missing/ambiguous PR number, the lower-level `gh api .../merge`
+         form, or any lookup error/timeout FAILS CLOSED (blocks) — and the block
+         message prints the repo-scoped manual `gh pr merge ... --repo` command a
+         human can run from anywhere.
 
 This fires in ALL permission modes, including auto-accept / bypassPermissions,
 which is the point: `ask`/`deny` permission rules need a human and go inert in
@@ -58,6 +61,12 @@ REPO_SLUG = "eric-foo/orca"
 # A PR without it never auto-merges (safe default). One-time repo setup to make
 # the label applyable: `gh label create agent-automerge --repo eric-foo/orca`.
 AUTOMERGE_LABEL = "agent-automerge"
+# Router risk labels meaning "a human must land this" (deletions, protected
+# surfaces). The guard honors them so an in-session self-merge cannot override
+# the router's routing -- the same labels the unattended auto-merge bot already
+# respects. Closes the gap where a router-flagged PR (e.g. a governed deletion)
+# could still self-merge on CLEAN + green + agent-automerge alone.
+MANUAL_RISK_LABELS = ("risk/manual-review-required", "risk/blocked-for-merge-policy")
 # Self-imposed ceiling on the PR-state `gh` call, kept below the hook's own
 # settings.json timeout so we fail CLOSED in-script rather than relying on the
 # harness's (unspecified) timeout-kill behavior.
@@ -196,9 +205,10 @@ def _merge_decision(pr_ref, lookup):
     """Decide one `gh pr merge` segment. Return None to ALLOW, else a block reason.
 
     FAIL CLOSED: a missing/ambiguous PR number, any lookup error or timeout, a
-    non-CLEAN mergeStateStatus, an empty/non-green check set, or a missing opt-in
-    label all block. Only an explicit, CLEAN, all-checks-green, `agent-automerge`-
-    labeled PR is allowed to self-merge."""
+    non-CLEAN mergeStateStatus, an empty/non-green check set, a router
+    manual/blocked risk label, or a missing opt-in label all block. Only an
+    explicit, CLEAN, all-checks-green, `agent-automerge`-labeled PR that the
+    router did NOT flag for manual review is allowed to self-merge."""
     if not pr_ref:
         return ("EP-03 merge blocked - needs an explicit PR number "
                 "(`gh pr merge <N>`); a no-arg / branch-name merge fails closed")
@@ -221,10 +231,15 @@ def _merge_decision(pr_ref, lookup):
         return ("EP-03 merge blocked - PR %s has non-green or pending checks"
                 % pr_ref)
     labels = {(l or {}).get("name") for l in (state.get("labels") or [])}
+    blocking = sorted(labels & set(MANUAL_RISK_LABELS))
+    if blocking:
+        return ("EP-03 merge blocked - PR %s carries router label '%s'; it must be "
+                "landed by a human (deletion / protected surface), not self-merged"
+                % (pr_ref, blocking[0]))
     if AUTOMERGE_LABEL not in labels:
         return ("EP-03 merge blocked - PR %s missing opt-in label '%s'"
                 % (pr_ref, AUTOMERGE_LABEL))
-    return None  # CLEAN + all checks green + opt-in label → allow self-merge
+    return None  # CLEAN + green + opt-in label + no manual-risk label → allow self-merge
 
 
 def _shell_block_reason(cmd, lookup=None):
@@ -322,6 +337,9 @@ def _selftest():
                 "labels": [{"name": AUTOMERGE_LABEL}]},              # empty-checkset race
         "105": {"mergeStateStatus": "BLOCKED", "statusCheckRollup": [_green],
                 "labels": [{"name": AUTOMERGE_LABEL}]},              # review/required-check block
+        "106": {"mergeStateStatus": "CLEAN", "statusCheckRollup": [_green],
+                "labels": [{"name": AUTOMERGE_LABEL},
+                           {"name": "risk/manual-review-required"}]},  # router-flagged -> human only
     }
     _fake = lambda pr: _FAKE.get(str(pr))            # unknown PR -> None -> fail closed
 
@@ -338,6 +356,7 @@ def _selftest():
         ("Bash", {"command": "gh pr merge 103"}, True, _fake),                            # pending check
         ("Bash", {"command": "gh pr merge 104"}, True, _fake),                            # empty checkset
         ("Bash", {"command": "gh pr merge 105"}, True, _fake),                            # BLOCKED
+        ("Bash", {"command": "gh pr merge 106"}, True, _fake),                            # router manual-review label -> human only
         ("Bash", {"command": "gh pr merge 999"}, True, _fake),                            # unknown PR -> lookup None
         ("Bash", {"command": "gh pr merge 100"}, True, _raises),                          # lookup raises -> fail closed
         ("PowerShell", {"command": "gh pr merge"}, True, _fake),                          # no explicit PR number
