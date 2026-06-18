@@ -39,7 +39,6 @@ known_top_level:
 # docs/ role grammar (bound in artifact-folders.md; listed here for routing only).
 docs_roles:
   - { home: docs/decisions, entry: docs/decisions/README.md }
-  - { home: docs/product, entry: orca/product/README.md }
   - { home: docs/prompts, entry: docs/prompts }
   - { home: docs/research, entry: docs/research/README.md }
   - { home: docs/review-inputs, entry: docs/review-inputs }
@@ -49,19 +48,9 @@ docs_roles:
   - { home: docs/hygiene, entry: docs/hygiene/queue.md }
   - { home: docs/_inbox, entry: docs/_inbox/README.md }
 
-# docs/product/ second-level lanes (binding: by-lane axis). Phase-2 consolidation
-# applied 2026-06-11 (commit 1b0f3fc): the seven lanes below read current. The
-# `search` topic lane (orca_search_product_lane_binding_v0) was added planned and
-# flipped to current when the search-lane migration landed (#236, 2026-06-18).
-product_lanes:
-  - { name: core_spine, status: current }
-  - { name: data_capture_spine, status: current }
-  - { name: judgment_spine, status: current }
-  - { name: signal_content, status: current }
-  - { name: ecr, status: current }
-  - { name: product_lead, status: current }
-  - { name: source_capture_toolbox, status: current }   # pre-existing bound folder
-  - { name: search, status: current }                   # topic lane (orca_search_product_lane_binding_v0)
+# docs/product/ second-level lanes retired by spine-first migration Wave E.
+# Keep the schema key present; the current product tree is orca/product/.
+product_lanes: []
 
 # Runtime/scratch: excluded from placement evaluation wherever they sit.
 scratch_rules:
