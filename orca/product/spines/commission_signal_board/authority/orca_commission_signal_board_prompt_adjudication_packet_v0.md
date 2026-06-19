@@ -186,7 +186,7 @@ Visible limitations:
 
 ## Source-Family Map
 
-The source map should be hierarchical, with surface (Venue) as the concrete demand-signal surface layer:
+The source map should be hierarchical:
 
 ```text
 source_family -> subfamily -> surface -> observable -> signal_role -> graph_role
@@ -216,7 +216,7 @@ only the lightest complete graph responsibility.
 The board owns:
 
 - seed entities;
-- adjacent brands (Brand), products (Product), and formats;
+- adjacent brands (Brand)/products (Product)/formats;
 - source families and subfamilies to check;
 - creator slices and planned/deferred creator platforms;
 - counterevidence paths;
