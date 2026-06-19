@@ -180,7 +180,7 @@ Phase 1  (parallel "thick neck" — nothing fans out until ALL done)
    W1c  cross-spine dependency graph
    W2   ontology SSOT (promote backbone + cards → ontology.yaml) + EXACT drift-check contract + doc-term/new-term lint
    W-map rebuild-from-tree + map↔tree completeness gate
-   + governance specs: waiver registry · deletion-evidence register · lane-charter template
+   + governance specs: deletion-evidence register  [waiver registry + lane-charter template deferred/not-built — 2026-06-19 owner decision; see Governance artifacts §]
    ▼ [STOP — owner approval before any Phase-2 fan-out]
 Phase 2  W3a propose (read-only, per spine, inbound-ref evidence) → CENTRAL delete adjudication → W3b execute (worktree-isolated, 1 PR/spine)
    ▼
@@ -255,10 +255,10 @@ retrieval-metadata contract likely exempts corpus instances).
 
 ## Governance artifacts the controller owns (build in Phase 1, use in Phase 2)
 
-1. **Waiver registry** — versioned (path / check / reason / owner / recheck-trigger); the only waiver mechanism.
+1. **Waiver registry** — **deferred (build-on-need); NOT required for Phase-2 / W3b** (owner decision 2026-06-19). W3b is a bloat/redundancy cut: every candidate's content is preserved in a named successor, so the strict deletion-evidence gate (#273) simply *passes* on a candidate that carries a record — the only thing a waiver covers (deleting *without* evidence) does not arise here. A general versioned waiver mechanism is revisited only if a later strict-gate flip (Phase-3 W5) needs gate exemptions beyond the link-checker's inline `nonresolving` support.
 2. **Cross-spine dependency graph** (W1c) — inbound-reference map for delete adjudication.
 3. **Deletion-evidence register** — every approved delete needs an entry (reverse-reference evidence + successor path + semantic delta + rollback pointer).
-4. **Lane-charter template** — bounds each Phase-2 execute lane.
+4. **Lane-charter template** — **not built as a separate artifact** (owner decision 2026-06-19, option C). The W3b execute-lane bounds already live in landed surfaces: this plan ("worktree-isolated, 1 PR/spine"), the W3a index's "W3b execute gate" (repo-wide reverse-ref re-verify + surviving-pointer handling), and the strict deletion-evidence gate (#273). A redundancy cut does not warrant a separate template.
 5. **Drift-check contract** — exact conformity for ontology↔runtime: required/extra types, fields, relationships, deprecations, aliases, version-compat.
 
 ## Locked decisions — DO NOT relitigate
@@ -269,7 +269,9 @@ retrieval-metadata contract likely exempts corpus instances).
   `.md` must be map-covered. open_next / inline-links — apply the invariant,
   adapt roots, keep explicit `nonresolving` waiver support. Term-lint — no naive
   prose grep; gate only SSOT-known terms / aliases / deprecated terms / explicit
-  new-term candidates. Waivers — only via the versioned registry.
+  new-term candidates. Waivers — the link-checker `nonresolving` inline support is the
+  current exemption mechanism; a general versioned waiver registry is deferred
+  (build-on-need; 2026-06-19) and is not required for Phase-2 (see Governance artifacts §1).
 - **Deletion = central-adjudicated two-phase.** NO standing per-lane delete.
   Lanes propose; the controller approves only with reverse-reference evidence +
   successor path + semantic delta + rollback pointer (register entry).
