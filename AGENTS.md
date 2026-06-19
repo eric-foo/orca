@@ -55,10 +55,13 @@ guard, and owner steering all stay.
   do not chat-double-ask. Surface a risky assumption or genuine ambiguity (keep);
   do not ask permission for a clear, reversible action you can default (cut).
 - **The harness permission prompts and the protected-action guard ARE the
-  irreversibility gate.** An action they gate -- push, PR, merge, protected-path
-  write, destructive git -- does not also need a chat "say go?"; a reversible
-  action they do not gate does not need one either. Verification reads and owner
-  course-corrections are the valuable friction and remain.
+  irreversibility gate for what they cover.** An action they gate -- push, PR,
+  merge, protected-path write, destructive git -- does not also need a chat "say
+  go?"; a reversible action they do not gate does not need one either. But an action
+  that is hard to reverse or outward-facing yet **not** gated by the harness still
+  needs the relevant owner/safety confirmation -- no harness prompt is not the same
+  as permission. Verification reads and owner course-corrections are the valuable
+  friction and remain.
 - **Load each skill once per thread.** A skill whose contract is already in
   context is not re-invoked to redo by hand what the loaded contract already
   states; apply it.

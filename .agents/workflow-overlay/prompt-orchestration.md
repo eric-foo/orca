@@ -198,13 +198,17 @@ the surface text looks complete — the defect is the skipped contract, not the
 surface. The contract is applied at two depths:
 
 - **Routine prompts** apply the **Orca Prompt Preflight** core (above) inline — no
-  skill reload. For an ordinary, already-scoped, single-target prompt the preflight
-  is the contract; reloading the full skill to redo by hand what the core already
-  states is the ceremony this routing removes.
+  skill reload. The core is how a routine prompt *satisfies* the contract without
+  reloading the skill — not a shorter field set: a repo-aware prompt still owes the
+  full Required Preflight Fields (most carried by the core's deltas plus the
+  referenced `orca_preflight_defaults_v0.md`). Use the routine path only for a
+  prompt that is ordinary, already-scoped, and single-target.
 - **Fused, delegated-review-patch, and novel or cross-lane prompts** author through
   the full **`workflow-prompt-orchestrator`** skill, which owns prompt
-  source-loading and the full preflight/routing contract. These are the cases where
-  the skill's depth earns its cost.
+  source-loading and the full preflight/routing contract. **A prompt is never
+  routine — always use the full skill — when it is doctrine-changing, a review or
+  patch prompt, a cross-recipient or durable handoff/commission, or first-of-kind
+  for its task.** These are the cases where the skill's depth earns its cost.
 
 If `workflow-prompt-orchestrator` is not resolver-available when a case needs it,
 apply this file's full contract or return a visible blocker; this routing default
@@ -452,7 +456,9 @@ Every repo-aware Orca prompt must state:
   before closeout;
 - target files or directories;
 - source hierarchy for the task;
-- edit permission: `read-only`, `patch-only`, or `docs-write`;
+- edit permission: `read-only`, `patch-only`, `docs-write`, or
+  `implementation-authorized` (enum owned by `orca_start_preflight` in
+  `.agents/workflow-overlay/source-loading.md`);
 - output mode: `chat-only`, `file-write`, `review-report`,
   `paste-ready-chat`, or `patch-queue`;
 - required validation gates and where evidence is recorded;
@@ -679,6 +685,14 @@ direction_change_propagation:
   trigger: workflow_authority
   related_triggers:
     - output_authority
+  reviewed_by: >
+    Cross-vendor delegated adversarial artifact review (non-Claude / GPT-family,
+    provisional convention) run and CA-adjudicated 2026-06-19; findings AR-01
+    (six-point core readable as the whole contract), AR-02 (routine/novel boundary
+    self-classifying), AR-03 (irreversibility-gate wording overclaims for ungated
+    hard-to-reverse actions), AR-04 (edit-permission enum inconsistent across
+    surfaces) all accepted and folded in pre-merge. Decision input only, not a
+    bound-lane verdict.
   controlling_sources_updated:
     - AGENTS.md
     - .agents/workflow-overlay/prompt-orchestration.md
