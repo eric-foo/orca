@@ -227,7 +227,7 @@ disagrees with IG), a quality attack where marketing is loudest (Reddit attackin
 quality under a promo push) — is *evidence used to classify* a candidate as
 transient or manufactured. No longer synonymous with "hollow."
 
-**Brand-decision event (DecisionEvent) read** — the monetization unit
+**Brand-decision event (Reading) read** — the monetization unit
 - *What counts:* a **named brand (Brand)'s** live allocation decision — launch /
   reposition; retail or channel entry; restock / sellout; discontinuation /
   moratorium; defend-versus-hype; **event-triggered pricing** (batch-1's Beauty

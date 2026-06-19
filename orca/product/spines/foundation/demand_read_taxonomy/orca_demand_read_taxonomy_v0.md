@@ -164,7 +164,7 @@ on the table.
   amplification, dupe-wave distortion. Acting on someone else's manufactured
   spike commits to demand that was never yours; identifying it protects both real
   reads (owner: this ability is itself decision-critical).
-- **Brand-decision event (DecisionEvent) read** (the monetization unit): a specific brand (Brand)'s
+- **Brand-decision event (Reading) read** (the monetization unit): a specific brand (Brand)'s
   live allocation decision — launch / reposition; retail or channel entry;
   restock / sellout; discontinuation / moratorium; defend-versus-hype;
   event-triggered pricing. The demand-state read (durable / transient /
