@@ -40,7 +40,12 @@ a deletion proposal. When uncertain, no proposal is made.
 
 ## A. Deletion Candidates
 
-### Candidate A-1
+### Candidate A-1 — WITHDRAWN (de-duplicated; owned by doctrine-B)
+
+> Cross-vendor 2nd-eyes (2026-06-19): this target sorts alphabetically into the
+> **doctrine-B** range; the A-half subagent overreached its range. `turn_07_branch_casing.md`
+> is owned by doctrine-B's Candidate 1, so this A-half listing is **withdrawn** to remove the
+> duplicate. Evidence below is retained for reference only — do not double-count it.
 
 ```yaml
 targets:
