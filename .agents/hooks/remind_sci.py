@@ -5,9 +5,15 @@ WHY THIS EXISTS
   The Smallest Complete Intervention (SCI) rule lives in AGENTS.md, near the top
   of a large instruction surface. Over a long session -- and especially while
   authoring durable artifacts, where scope creep is most tempting -- SCI can drift
-  out of active context. This hook re-injects the SCI rule at the write boundary,
-  RIGHT BEFORE a durable artifact is created or edited (PreToolUse), so the rule is
-  top-of-mind exactly when the change is being made.
+  out of active context. This hook re-injects the SCI rule at the COMMIT boundary,
+  right before Claude commits durable artifacts, so the rule is top-of-mind at the
+  moment scope is locked in -- the cheapest point to still amend if the change crept
+  past "smallest complete."
+
+  Placement note: this is a PreToolUse hook matched on the shell tools and gated to
+  `git commit`, so it fires ONLY for commits Claude itself runs through the Bash /
+  PowerShell tool. A human committing in their own terminal is not seen -- add a real
+  git pre-commit hook if you need to cover that path too.
 
   The rule is OWNED by AGENTS.md (-> "Smallest Complete Intervention"). To spare a
   fetch round-trip, this hook carries the rule's text INLINE as a verbatim mirror:
@@ -17,23 +23,29 @@ WHY THIS EXISTS
 
 BOUNDARY
   Advisory only. Emits `additionalContext` and ALWAYS exits 0; it never blocks a
-  write and makes no validation/readiness claim. Forward-only and low-noise: it
-  fires ONLY for writes under the durable artifact folders and stays silent for
-  code, scratch, skill copies, and project config.
+  commit and makes no validation/readiness claim. Forward-only and low-noise: it
+  fires ONLY when a `git commit` has durable-artifact changes pending in the tree,
+  and stays silent for code-only / scratch / config commits.
 
 SCOPE (in: durable artifacts; out: code/scratch/config)
   In  : docs/{decisions,product,prompts,workflows,migration,hygiene,review-inputs,
         review-outputs}/, .agents/workflow-overlay/, orca/product/
   Out : anything containing _scratch; docs/_inbox/; .agents/skills/; .claude/;
         orca-harness/ (and any path not under an in-scope prefix, e.g. .agents/hooks/).
+  Pending changes are read from `git status --porcelain` (staged, unstaged, or
+  untracked), so the nudge fires whether files were staged in a separate step or in
+  the same `git add -A && git commit` one-liner.
 
 MODES
-  remind_sci.py --hook       PreToolUse hook (reads stdin JSON); emit reminder; exit 0
-  remind_sci.py --selftest   pure-function scope cases; exit 0/1
+  remind_sci.py --hook       PreToolUse hook (reads stdin JSON): if the command is a
+                             `git commit` touching durable artifacts, emit reminder; exit 0
+  remind_sci.py --selftest   pure-function scope / commit-detect cases; exit 0/1
 """
 from __future__ import annotations
 
 import json
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -90,6 +102,19 @@ REMINDER = (
     + _SCI_VERBATIM
 )
 
+# --- git commit detection (mirrors guard_protected_actions' segment parsing) ---
+# Self-imposed ceiling on the `git status` call, kept below the hook's settings.json
+# timeout so a slow git never trips a harness-level kill.
+GIT_TIMEOUT = 6
+# `git` invocation allowing -C <path> / -c k=v / global flags before the subcommand.
+_GIT_PREFIX = r"\bgit\b(?:\s+-C\s+\S+|\s+-c\s+\S+|\s+--?\S+)*\s+"
+_COMMIT = re.compile(_GIT_PREFIX + r"commit\b", re.I)
+# Split on shell separators (so `git add -A && git commit` is seen) and drop quoted
+# args first (so a commit MESSAGE -- or an `echo "git commit"` -- is not mistaken
+# for the command itself).
+_SEP = re.compile(r"&&|\|\||[;\n|]")
+_QUOTED = re.compile(r"\"[^\"]*\"|'[^']*'")
+
 
 def repo_root() -> Path:
     """Repo root, derived from this file's location (.agents/hooks/<this>)."""
@@ -123,26 +148,71 @@ def in_scope(relposix: str) -> bool:
     return any(relposix.startswith(x) for x in IN_SCOPE_PREFIXES)
 
 
+def _is_git_commit(command: str) -> bool:
+    """True if any shell segment of `command` is a `git commit` invocation. Quoted
+    args are dropped first so a commit message (or an `echo "git commit"`) cannot
+    false-match; segments are split so `git add -A && git commit` is still seen."""
+    cmd = _QUOTED.sub(" ", command or "")
+    return any(_COMMIT.search(seg) for seg in _SEP.split(cmd))
+
+
+def _durable_from_porcelain(porcelain: str, root: Path) -> list[str]:
+    """Repo-relative durable-artifact paths parsed from `git status --porcelain`.
+    Pure (testable): handles rename/copy `old -> new` (keeps the destination) and
+    reuses the same in_scope filter the write boundary used."""
+    hits = []
+    for line in (porcelain or "").splitlines():
+        if len(line) < 4:
+            continue
+        path = line[3:]
+        if " -> " in path:  # rename/copy: the committed path is the destination
+            path = path.split(" -> ", 1)[1]
+        path = path.strip().strip('"')
+        rel = to_relposix(path, root)
+        if rel and in_scope(rel):
+            hits.append(rel)
+    return hits
+
+
+def _changed_durable_artifacts(root: Path) -> list[str]:
+    """Durable-artifact paths with changes pending in the worktree, via one
+    `git status --porcelain` call. Empty on any git error/timeout -- this hook is
+    advisory and must never block or crash a commit on its own failure."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(root), "status", "--porcelain"],
+            capture_output=True, text=True, timeout=GIT_TIMEOUT,
+        )
+    except Exception:
+        return []
+    if out.returncode != 0:
+        return []
+    return _durable_from_porcelain(out.stdout or "", root)
+
+
 def run_hook(root: Path) -> int:
-    """PreToolUse hook: read the about-to-be-written file from stdin JSON; if it is
-    a durable artifact, inject the SCI reminder as additionalContext BEFORE the
-    write proceeds. Always exit 0 (advisory; never blocks the write)."""
+    """PreToolUse hook: read the about-to-run shell command from stdin JSON; if it is
+    a `git commit` with durable-artifact changes pending, inject the SCI reminder as
+    additionalContext BEFORE the commit runs. Always exit 0 (advisory; never blocks)."""
     try:
         data = json.loads(sys.stdin.read() or "{}")
-        file_path = (data.get("tool_input") or {}).get("file_path")
+        command = (data.get("tool_input") or {}).get("command")
     except (ValueError, AttributeError):
         return 0  # malformed payload -> stay silent, never block
-    if not file_path:
+    if not command or not _is_git_commit(command):
         return 0
-    rel = to_relposix(file_path, root)
-    if rel is None or not in_scope(rel):
-        return 0
+    hits = sorted(set(_changed_durable_artifacts(root)))
+    if not hits:
+        return 0  # code-only / scratch / config commit -> stay silent
+    listed = ", ".join(hits[:8])
+    more = "" if len(hits) <= 8 else " (+%d more)" % (len(hits) - 8)
     print(
         json.dumps(
             {
                 "hookSpecificOutput": {
                     "hookEventName": "PreToolUse",
-                    "additionalContext": "%s\n\n(artifact: %s)" % (REMINDER, rel),
+                    "additionalContext": "%s\n\n(committing durable artifacts: %s%s)"
+                    % (REMINDER, listed, more),
                 }
             }
         )
@@ -152,7 +222,9 @@ def run_hook(root: Path) -> int:
 
 def selftest() -> int:
     ok = True
-    cases = [
+    root = repo_root()
+
+    scope_cases = [
         ("decision doc in scope", "docs/decisions/foo_v0.md", True),
         ("product artifact in scope", "orca/product/spines/x/y_v0.md", True),
         ("overlay in scope", ".agents/workflow-overlay/x.md", True),
@@ -165,12 +237,50 @@ def selftest() -> int:
         ("repo-root file out of scope", "README.md", False),
         ("empty path", "", False),
     ]
-    for label, rel, exp in cases:
+    for label, rel, exp in scope_cases:
         got = in_scope(rel)
         status = "PASS" if got == exp else "FAIL"
         if got != exp:
             ok = False
-        print("%s  %-34s got=%s" % (status, label, got))
+        print("%s  in_scope   %-30s got=%s" % (status, label, got))
+
+    commit_cases = [
+        ("plain commit", "git commit -m 'x'", True),
+        ("add && commit one-liner", "git add -A && git commit -m \"msg\"", True),
+        ("commit with -C / --amend", "git -C . commit --amend", True),
+        ("staged; then commit", "git add docs/x.md; git commit -m 'y'", True),
+        ("status is not a commit", "git status", False),
+        ("log grep is not a commit", "git log --grep=commit", False),
+        ("quoted mention only", "echo 'git commit'", False),
+        ("push is not a commit", "git push origin my-lane", False),
+    ]
+    for label, cmd, exp in commit_cases:
+        got = _is_git_commit(cmd)
+        status = "PASS" if got == exp else "FAIL"
+        if got != exp:
+            ok = False
+        print("%s  is_commit  %-30s got=%s" % (status, label, got))
+
+    porcelain = (
+        " M docs/decisions/foo_v0.md\n"
+        "?? orca/product/spines/x/y_v0.md\n"
+        "A  .agents/hooks/remind_sci.py\n"
+        "R  docs/decisions/old.md -> docs/decisions/new_v0.md\n"
+        " M README.md\n"
+        " M docs/_inbox/note.md\n"
+    )
+    expect = [
+        "docs/decisions/foo_v0.md",
+        "docs/decisions/new_v0.md",
+        "orca/product/spines/x/y_v0.md",
+    ]
+    got_paths = sorted(_durable_from_porcelain(porcelain, root))
+    p_ok = got_paths == sorted(expect)
+    if not p_ok:
+        ok = False
+    print("%s  porcelain  durable-only filter         got=%s"
+          % ("PASS" if p_ok else "FAIL", got_paths))
+
     print()
     print("SELFTEST", "OK" if ok else "FAILED")
     return 0 if ok else 1
