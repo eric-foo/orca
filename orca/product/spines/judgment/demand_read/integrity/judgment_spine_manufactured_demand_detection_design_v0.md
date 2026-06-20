@@ -416,20 +416,31 @@ material / Scale-grade commitment **only if all three hold** —
    + the strip-test): the costly behavior must survive stripping the amplified layer, or the
    "only costly signal inside the coordinated layer" defeater fires.
 
-**Default posture when the gate is not cleared:** the outburst caps at the **recoverable path** —
-a reversible in-window move (`act` small / `phase` / `narrow`), **not** Scale/Commit — until the
-manufactured axis is checked. The **least-recoverable dimension binds** (economic, reputational,
-operational, evidence-contamination; R3b anti-slicing — "a small test that manufactures the
-signal it would read is material, not reversible").
+**Default posture when the gate is not cleared — highest EV, not reflexive caution.** The goal is
+the **highest-expected-value action**, not zero manufactured exposure — so an unconfirmed outburst
+is **not** reflexively shrunk to a timid token. It takes the **largest +EV *recoverable* move** the
+breakout warrants (a recoverable position can still be aggressive — that is how a genuine breakout
+under hype is *captured*, not missed). What the unmet gate withholds is only the **irreversible /
+ruinous** escalation (the ≥2-origin Scale-grade step): there, highest-EV is itself **ruin-averse**
+(an absorbing, bet-the-farm downside makes the long-run EV negative even when the one-shot bet looks
+positive — you do not Scale-commit irreversibly on an unverified spike). The **least-recoverable
+dimension binds** (economic, reputational, operational, evidence-contamination; R3b anti-slicing —
+"a small test that manufactures the signal it would read is material, not reversible"). **Manufactured
+risk is an EV *input* — it lowers the expected payoff and raises the downside odds — not a *veto*.**
+(Qualitative posture — INV-1: no EV is computed or scored; numeric EV would need the owner to lift
+the no-scoring boundary.)
 
 **Why this delivers low-FP and low-FN simultaneously** (the two-sided promise):
 - **Low false-positive:** you do **not** Scale into bucket-(2) on a spike whose costly behavior is
   all inside the paid layer. The strictest bar applies exactly where manufacturing is most likely.
-- **Low false-negative:** you are **not** frozen by the presence of hype. You still **act in-window
-  on the recoverable path**, and you **monitor to earn the durable upgrade** if independent costly
-  behavior persists under the amplification — bucket (3) is captured, just *earned* rather than
-  *assumed*. The FP/FN asymmetry is **bounded** (a gate that never clears is inert); **running the
-  discriminator is the unlock**.
+- **Low false-negative (the breakout half — load-bearing):** hype does **not** freeze you. You take
+  the **largest +EV recoverable position** in-window (not a token), and you **monitor to earn the
+  irreversible upgrade** as independent costly behavior persists — bucket (3) is *captured*, just
+  *earned* rather than *assumed*. **Seed-then-real is explicit:** a manufactured *start* is **not a
+  permanent disqualification** — amplification can ignite real demand, so a seeded spike that
+  *consolidates* into real costly behavior earns its way up the ceiling rather than being discounted
+  forever. **Missing a real breakout is a real cost the EV weighs**, not a free default; running the
+  discriminator is the unlock for the irreversible step.
 
 ## Honest Limits (what is undetectable; why forward/live; the arms-race)
 
@@ -477,9 +488,13 @@ signal it would read is material, not reversible").
   expensive thing amplifiers avoid); **(c) a sharpenable judgment competency over cases**, not a
   solved threshold (the discipline note's explicit posture). The arms-race is **won on the
   cost-asymmetry, not on out-listing the adversary.**
-- **Asymmetric-error posture is deliberate.** The read accepts some false "suspected" labels
-  (discount) over false "clean" passes when the action is irreversible; the asymmetry is **bounded**
-  and hardens toward a cap only as the bet becomes un-undoable — verification is the unlock.
+- **Highest-EV posture, not reflexive caution (the asymmetry is ruin-shaped, not fake-shaped).** The
+  read optimizes for the **highest-EV action**, not for zero manufactured exposure. It leans **into**
+  +EV recoverable breakout bets under manufactured uncertainty (missing a real breakout is a real
+  cost — and a manufactured start can consolidate into real demand); it stays conservative **only**
+  as the bet becomes **irreversible / ruinous** (where highest EV is itself ruin-averse). Manufactured
+  risk is an **EV input, not a veto**; verification is the unlock that opens the irreversible step.
+  (Qualitative — INV-1; no EV score.)
 - **Reimbursement / paid-genuine-purchase — settled at the demand and action layer, not the review
   layer.** The hardest case (verified + real-purchase + non-templated from aged accounts → no
   review-level tell fires) and it **is** the dangerous middle. It is **not** settled by a better
@@ -488,8 +503,9 @@ signal it would read is material, not reversible").
   reuse, unless the broker fully partitions the pool (the expensive evasion that shrinks the
   operation); **(b)** **persistence over a longitudinal corpus** — it buys a *burst*, not sustained
   independent costly behavior (the Amazon cohort reverted in weeks); this needs the forward-captured
-  time series, which is unbacktestable; and **(c)** the **outburst action-cap** — an
-  undetectable-but-unconfirmed burst caps at the recoverable path, never Scale. Verified-purchase
+  time series, which is unbacktestable; and **(c)** the **EV-sized action posture** — an
+  undetectable-but-unconfirmed burst still earns the largest +EV *recoverable* bet (you do not miss
+  the breakout), but not the irreversible Scale step until it's earned. Verified-purchase
   share remains a **low-side flag, never a high-side clearance**. Honest ceiling: an operator who
   *subsidizes real repeat purchase across venues for months* defeats all three — but that costs ~
   what real demand costs, so **it reads as real demand and is not chased** (you are getting real
