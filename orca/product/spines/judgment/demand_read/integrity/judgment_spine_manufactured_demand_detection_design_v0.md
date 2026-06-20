@@ -492,8 +492,9 @@ signal it would read is material, not reversible").
   undetectable-but-unconfirmed burst caps at the recoverable path, never Scale. Verified-purchase
   share remains a **low-side flag, never a high-side clearance**. Honest ceiling: an operator who
   *subsidizes real repeat purchase across venues for months* defeats all three — but that costs ~
-  what real demand costs ("real while subsidized; watch for the subsidy ending"), the cost-asymmetry
-  endgame, not a free win.
+  what real demand costs, so **it reads as real demand and is not chased** (you are getting real
+  repeat purchase; the normal persistence monitor catches a later collapse if the subsidy ends).
+  The cost-asymmetry endgame, not a free win.
 
 ## Core / Satellite Boundary
 

@@ -200,11 +200,16 @@ no gate defeated. A retailer that recons NO-GO/PARTIAL is recorded as such.
 - **Ego-graph hop budget / seed size** — the exact "top N%" and reviewer-hop cap (a corpus-scope
   parameter; owner/capture-lane tunable).
 - **Candidate retailer extensions — Target, Walmart** (Bazaarvoice / PowerReviews-backed, "verified
-  buyer" badges, `review_record`-compatible): worth adding when the subniche's demand sits in mass /
-  Target-exclusive / drugstore channels (more retailers also strengthen the within-category
-  co-review graph). Each needs its own adapter + GO/PARTIAL/NO-GO recon + ToS posture; subniche-fit
-  and recon gate the decision — not "scrape every retailer." The Retail/PDP projection contract
-  (currently Amazon/Sephora/Ulta) extends with them.
+  buyer" badges, `review_record`-compatible). **Add only where the retailer is strong for *online*
+  reviews in the target subniche** — the focus is the online review substrate, not in-store. General
+  assessment (per-SKU online review strength is a recon question): **Target.com** is a genuine online
+  masstige / clean-beauty channel with substantial review volume — a solid add for mass / masstige /
+  clean subniches; **Walmart.com** carries high drugstore/mass review *volume* but is value-skewed and
+  lower signal-richness — add only for drugstore/mass subniches; for prestige / clinical /
+  indie-prestige, Sephora/Ulta/Amazon dominate and these add little. More retailers also strengthen
+  the within-category co-review graph. Each needs its own adapter + GO/PARTIAL/NO-GO recon + ToS
+  posture; **subniche-fit + online-review strength** gate the decision — not "scrape every retailer."
+  The Retail/PDP projection contract (currently Amazon/Sephora/Ulta) extends with them.
 
 ## Claim Classification
 
