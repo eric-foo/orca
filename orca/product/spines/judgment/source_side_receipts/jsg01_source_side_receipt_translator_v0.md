@@ -443,8 +443,8 @@ direction_change_propagation:
     same name, different shape. SP-6 `source_visibility_posture` is not a literal
     name collision but DUPLICATES the Armory's existing access_posture +
     archive_history_posture + re_capture_relationship VisibleFacts. The Source
-    Capture Armory's SourceCapturePacket (CapturePacket) is the implemented,
-    obligation-contract-bound source-side producer; this translator coined parallel docs
+    Capture Armory (SourceCapturePacket (CapturePacket), obligation-contract-bound) is the
+    implemented source-side producer; this translator coined parallel docs
     vocabulary and adapted to the downstream harness EvidenceUnit instead of
     binding the upstream SourceCapturePacket. FLAGGED as a material acceptance
     risk: before ratification + re-review, the translator should bind/reference
