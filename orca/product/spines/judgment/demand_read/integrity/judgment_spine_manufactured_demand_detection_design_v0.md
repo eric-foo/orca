@@ -423,12 +423,18 @@ breakout warrants (a recoverable position can still be aggressive — that is ho
 under hype is *captured*, not missed). What the unmet gate withholds is only the **irreversible /
 ruinous** escalation (the ≥2-origin Scale-grade step): there, highest-EV is itself **ruin-averse**
 (an absorbing, bet-the-farm downside makes the long-run EV negative even when the one-shot bet looks
-positive — you do not Scale-commit irreversibly on an unverified spike). The **least-recoverable
-dimension binds** (economic, reputational, operational, evidence-contamination; R3b anti-slicing —
-"a small test that manufactures the signal it would read is material, not reversible"). **Manufactured
-risk is an EV *input* — it lowers the expected payoff and raises the downside odds — not a *veto*.**
-(Qualitative posture — INV-1: no EV is computed or scored; numeric EV would need the owner to lift
-the no-scoring boundary.)
+positive — you do not Scale-commit irreversibly on an unverified spike). **Irreversibility must be a
+demonstrable property of the *action*** (a sunk, unrecoverable commitment you cannot unwind) — **not a
+synonym for our uncertainty about the demand.** Being *unsure* a spike is real does **not** make the
+action irreversible, and uncertainty **may not be relabeled as irreversibility to justify caution**.
+Demand uncertainty **sizes** the recoverable bet (an EV input); only the action's own **provable**
+unrecoverability triggers the ruin floor. The **least-recoverable dimension binds** (economic,
+reputational, operational, evidence-contamination; R3b anti-slicing — "a small test that manufactures
+the signal it would read is material, not reversible"). **Manufactured risk is an EV *input* — it
+lowers the expected payoff and raises the downside odds — not a *veto*.** (Qualitative posture: the
+**best action on all available current evidence** — the spine's measurement target, right-sized action
+under evidence constraints — reasoned per-case, **not** a computed `P×payoff` model. INV-1 holds; owner
+confirmed qualitative, not numeric.)
 
 **Why this delivers low-FP and low-FN simultaneously** (the two-sided promise):
 - **Low false-positive:** you do **not** Scale into bucket-(2) on a spike whose costly behavior is
@@ -492,7 +498,8 @@ the no-scoring boundary.)
   read optimizes for the **highest-EV action**, not for zero manufactured exposure. It leans **into**
   +EV recoverable breakout bets under manufactured uncertainty (missing a real breakout is a real
   cost — and a manufactured start can consolidate into real demand); it stays conservative **only**
-  as the bet becomes **irreversible / ruinous** (where highest EV is itself ruin-averse). Manufactured
+  as the bet becomes **demonstrably irreversible / ruinous** (a *provable* property of the action,
+  **not** mere demand-uncertainty — where highest EV is itself ruin-averse). Manufactured
   risk is an **EV input, not a veto**; verification is the unlock that opens the irreversible step.
   (Qualitative — INV-1; no EV score.)
 - **Reimbursement / paid-genuine-purchase — settled at the demand and action layer, not the review
