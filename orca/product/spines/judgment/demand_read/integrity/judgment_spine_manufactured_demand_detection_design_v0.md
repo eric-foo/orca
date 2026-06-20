@@ -30,7 +30,8 @@ open_next:
   - orca/product/spines/cleaning/contracts/core_spine_v0_corroboration_vs_amplification_discipline_v0.md      # the wedge competency: independent corroboration vs artificial amplification; Signal-Integrity ownership; non-destructive dedup
   - orca/product/shared/engagement_registry/engagement_logic_registry_v0.md                                   # the seed pattern table (bot-like, copied-phrase, burst-after-prompt, affiliate push) this catalogue organizes by mechanism class
   - orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_v0.md                                # the >=2-independent-converging-origin bar + the manufactured-defeater the outburst-gate fuses
-  - orca/product/satellites/beauty/beauty_venue_card_set_v0.md                                                # the satellite deck that owns the specific beauty venue tells (card 11 = INCIDecoder wind-caller exemplar)
+  - orca/product/satellites/beauty/beauty_manufactured_demand_tells_v0.md                                     # the beauty satellite companion: per-venue manufactured-demand tells + documented case exemplars (2026-06-20)
+  - orca/product/satellites/beauty/beauty_venue_card_set_v0.md                                                # the capped beauty venue card-set (production hints; distinct asset — does NOT carry the manufactured-demand tells; card 11 = INCIDecoder wind-caller exemplar)
   - docs/research/manufactured-demand/orca_manufactured_demand_beauty_external_research_v0.md                 # external evidence-only research folded 2026-06-20 (cases, tells, reliability hierarchy, prevalence-unknown)
 stale_if:
   - The owner adjudicates the demand-read taxonomy and amends the Integrity layer or the durable/transient/manufactured states.
@@ -67,7 +68,10 @@ fold the scaffold was built for (see §"What the External Research Adds"). The o
 within the fabrication / concealed-connection families — a sub-type, not a new top-level class.
 The owner's **additional in-thread detection ideas** remain outstanding; the report stands in as
 the external input. Beauty-specific case tells (Sunday Riley/Sephora, Hismile, Charlotte Tilbury,
-…) are **satellite-owned** — queued for the beauty deck, not minted into this core note.
+…) are **satellite-owned** and have now **landed** in the beauty satellite companion
+(`orca/product/satellites/beauty/beauty_manufactured_demand_tells_v0.md`, 2026-06-20) — a
+**separate** artifact, NOT the capped venue card-set (which is 12/12 and venue-production-scoped;
+expanding it is an owner decision on its promotion record), not minted into this core note.
 
 ## Why This Exists (the differentiator, and the gap it fills)
 
@@ -547,7 +551,7 @@ judgment_spine_claim_classification:
   execution_quality_state: no demand read run, no integrity disposition emitted, no discriminator executed, no case run
   closeout_state: no_durable_evidence
   claim_cap: design input / product-learning context only
-  weakest_missing_or_failed_gate: no integrity read exists to test against; manufactured detection is forward/live and not backtestable; review of this design not yet run; the external research is unverified evidence-only context (not validation); the owner's additional in-thread ideas remain outstanding; beauty-specific case tells deferred to the satellite deck
+  weakest_missing_or_failed_gate: no integrity read exists to test against; manufactured detection is forward/live and not backtestable; review of this design not yet run; the external research is unverified evidence-only context (not validation); the owner's additional in-thread ideas remain outstanding; beauty-specific case tells landed in the beauty satellite companion (separate from the capped venue card-set)
   receipt_artifact_or_gap: first real test comes from a forward/live by-hand demand read emitting an integrity disposition against this catalogue (owner-gated; not authorized here)
   non_claims:
     - not validation unless separately proven
