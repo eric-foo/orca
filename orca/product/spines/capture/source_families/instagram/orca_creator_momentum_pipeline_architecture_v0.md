@@ -27,7 +27,7 @@ stale_if:
 status: PROPOSED — target architecture; cross-vendor review folded (AR-01..05 CA-adjudicated); capture-shape contract revised; owner adoption + gates pending
 ```
 
-# Orca Creator (WindCaller)-Momentum Pipeline — Target Architecture (PROPOSED, v0)
+# Orca Creator-Momentum Pipeline — Target Architecture (PROPOSED, v0)
 
 ## Result
 
