@@ -14,7 +14,7 @@
 
 This artifact executes only the owner-authorized `jb` Client 0 evidence slice.
 It uses public, inspectable, market-level sources to dry-run the Core Spine v0
-information chain for the locked `jb` decision question (DecisionEvent).
+information chain for the locked `jb` decision question.
 
 This artifact does not execute the shadow satellite, the backtest replay, or
 the full proof outcome report. It does not validate external willingness to

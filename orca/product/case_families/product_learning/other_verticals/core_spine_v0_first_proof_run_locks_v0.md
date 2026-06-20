@@ -114,7 +114,7 @@ calibration lesson, proof result, or memo draft has been produced.
 
 Lock status: complete for pre-evidence framing.
 
-Decision question (DecisionEvent):
+Decision question:
 
 > Which finance-career avatar, pain wedge, copy angle, pricing/package, and
 > workflow bet has the strongest public market pull?
