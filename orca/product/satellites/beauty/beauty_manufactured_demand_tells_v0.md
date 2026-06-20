@@ -77,7 +77,7 @@ decision on the promotion record** — flagged, not taken here.
 
 ### Class B — Review-stuffing / fake reviews + insider / staged-independence  (Tier 1–2)
 - **Beauty surfaces / tells:** Sephora, Ulta, and Amazon beauty reviews — velocity bursts decoupled
-  from independent traffic; templated language; 5★ walls; **shared-reviewer / co-review network
+  from independent traffic; templated language; **a 5★ launch wall that later decays to 1★** (post-campaign *shift*, not a static bimodal shape — polarizing genuine products are bimodal without manufacturing); **shared-reviewer / co-review network
   overlap** (the strongest public-data tell — see the core design's §"What the External Research
   Adds"). **Insider / staged-independence:** employees/managers posting as ordinary customers
   (*Sunday Riley* — employees posting Sephora reviews under false identities, VPN after IP-based

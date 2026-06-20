@@ -174,7 +174,7 @@ without changing the classes here.
 
 ### Class B — Review-stuffing / fake reviews (incl. insider / staged-independence)  (bucket 1 → 2; review surfaces)
 - **Present-fingerprint:** review-velocity spike **decoupled from independent traffic/sales**;
-  templated or near-duplicate language; rating bimodality (5★ wall with no middle); **shared-reviewer
+  templated or near-duplicate language; **a 5★ launch wall that later decays to 1★** (the post-campaign *shift* — **not** a static bimodal *shape*, which genuinely polarizing products produce without manufacturing); **shared-reviewer
   / co-review network overlap** (the same small pool across unrelated products — empirically the
   *strongest* public-data tell, beats text; see §"What the External Research Adds"); incentivized-
   without-disclosure. **Insider / staged-independence** sub-type: employees/managers posting as

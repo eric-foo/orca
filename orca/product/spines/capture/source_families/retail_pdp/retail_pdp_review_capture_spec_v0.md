@@ -72,10 +72,10 @@ source-visible fields below where the retailer exposes them; residualize when ab
 | `source_native_review_id` | link/dedup key (downstream) | stable per-review key | Bazaarvoice/Apollo/Amazon expose a review id |
 | `product_sku_key` (→ the PDP slice/variant) | ties review to the SKU | ties review to the product node | use the projection contract's variant binding |
 | `reviewer_display_name` + `source_native_reviewer_id` | — | **the co-review graph key** (account → products) | Bazaarvoice author id; Amazon profile id; Ulta Apollo author ref |
-| `rating` (stars) | sentiment level | **rating bimodality** input | — |
+| `rating` (stars) | sentiment level | post-campaign sentiment-**shift** input (not static bimodality — see histogram note) | — |
 | `review_timestamp` (posted date/time) | **velocity + persistence** | **burst alignment** (timing) | preserve native precision (date vs datetime) |
 | `review_text_verbatim` (+ `title`) | pain-point / content shift | **templated/duplicate language** | preserve bytes, not paraphrase |
-| `verified_purchase_flag` | — | **verified-purchase share** (low = flag; reimbursement caveat below) | Amazon/Bazaarvoice expose |
+| `verified_purchase_flag` | — | **verified-purchase share** — strong **low-side flag**, but **not** a high-side clearance (reimbursement makes fakes *verified*) | Amazon explicit; Bazaarvoice/PowerReviews "verified buyer" common; **coverage varies per retailer — residualize where absent** |
 | `incentive_disclosure_flag` (e.g. "received free sample", sweepstakes) | — | **incentive distortion** | capture only if source-exposed |
 | `syndication_source_flag` (native vs syndicated review) | — | **de-correlation** (a syndicated review echoed across retailers is **one** review, not independent corroboration) | **Bazaarvoice exposes syndication source** — high value |
 | `helpful_votes` / `total_votes` | engagement quality | vote-manipulation context | — |
@@ -86,8 +86,12 @@ source-visible fields below where the retailer exposes them; residualize when ab
 
 Extend the **aggregate** substrate (in addition to the current count + rating):
 
-- `rating_distribution_histogram` (5/4/3/2/1 counts) — the **bimodality** input (a 5★ wall + 1★
-  wall with no middle); Bazaarvoice and Amazon expose the breakdown.
+- `rating_distribution_histogram` (5/4/3/2/1 counts) — for the **demand** read (sentiment spread)
+  and the **post-campaign rating *shift*** (a 5★ launch wall that later deteriorates to 1★ — the
+  meaningful integrity signal, per the Amazon decay finding). **Not** a static-bimodality verdict:
+  genuinely polarizing products (a strong active some react to) are bimodal *without* any
+  manufacturing, so static shape is **not** trusted as a tell. Bazaarvoice and Amazon expose the
+  breakdown.
 - `review_cadence` is **derivable** from the per-review timestamps (do not store a separate
   computed series in raw — it is a re-derivable view).
 
@@ -128,7 +132,7 @@ view**, re-derivable from raw — they are not a second raw store.
 category, legitimate co-review is *common* (a skincare enthusiast really does review ten serums),
 so within-category overlap is **noisier than the cross-industry signal** and is **not dispositive
 alone** — it separates a broker roster from a genuine community only when combined with timing
-sync, rating bimodality, account-youth, and verified-purchase share. Evadable by a broker who
+sync, the post-campaign rating shift, account-youth, and verified-purchase share. Evadable by a broker who
 spreads across category-diverse accounts (costs them efficiency). This is a *judgment*
 calibration; capture just preserves the fields.
 
