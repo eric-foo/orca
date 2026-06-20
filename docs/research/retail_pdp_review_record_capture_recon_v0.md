@@ -10,7 +10,6 @@ use_when:
   - Preparing the minimal retail_pdp review_record adapter scope after Attachment Record storage binding is locked.
 authority_boundary: retrieval_only
 open_next:
-  - docs/prompts/handoffs/retail_pdp_review_capture_commission_prompt_v0.md
   - orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md
   - orca-harness/source_capture/retail_pdp_projection.py
@@ -44,6 +43,8 @@ Controlling and support inputs:
 - Attachment Record contracts: `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_core_contract_v0.md`, `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_storage_contract_v0.md`, `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md`.
 - Existing harness code: `orca-harness/source_capture/retail_pdp_projection.py`, `orca-harness/runners/run_source_capture_cloakbrowser_packet.py`, `orca-harness/runners/run_source_capture_http_packet.py`, `orca-harness/runners/run_source_capture_durability_series.py`, `orca-harness/source_capture/models.py`.
 
+Retrievability note: the commission prompt, the branch-only review capture spec, and the branch-only manufactured-demand design above live only in the `.claude/worktrees/distracted-ishizaka-01eff5` local worktree. They are not tracked on this branch (`codex/retail-pdp-review-recon`) or on `origin/main`, so a fresh reader on this branch cannot open them; treat their content as reported, not retrievable here. By contrast, the retail PDP projection contract, the Attachment Record implementation contract, and `retail_pdp_projection.py` cited above are tracked and retrievable on this branch.
+
 ## Reuse Inventory
 
 Existing reusable substrate:
@@ -61,7 +62,9 @@ Missing or deferred substrate:
 
 ## Live Recon Packets
 
-All packet artifacts are local scratch under `orca-harness/_test_runs/retail_pdp_review_recon_20260620/`.
+All packet artifacts are local scratch under `orca-harness/_test_runs/retail_pdp_review_recon_20260620/`, which is gitignored and untracked. The byte counts, row counts, and packet IDs in the table below are reported from that local scratch; they are not committed and cannot be independently reproduced or verified from this branch. Treat them as reported evidence, not repo-verifiable fixtures.
+
+The `Verdict` column records source-access verdicts for scoping only — whether per-review fields are source-visible without gate defeat (`GO`/`PARTIAL_GO`/`NO_GO`). They are not build authorization; build readiness is governed by the `RECON_COMPLETE_BUILD_NOT_READY` status above and the Blockers below.
 
 | Target | Packet | Observed access / source shape | Verdict |
 | --- | --- | --- | --- |
