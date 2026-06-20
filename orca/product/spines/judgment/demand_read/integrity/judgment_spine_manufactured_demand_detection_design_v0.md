@@ -480,6 +480,20 @@ signal it would read is material, not reversible").
 - **Asymmetric-error posture is deliberate.** The read accepts some false "suspected" labels
   (discount) over false "clean" passes when the action is irreversible; the asymmetry is **bounded**
   and hardens toward a cap only as the bet becomes un-undoable — verification is the unlock.
+- **Reimbursement / paid-genuine-purchase — settled at the demand and action layer, not the review
+  layer.** The hardest case (verified + real-purchase + non-templated from aged accounts → no
+  review-level tell fires) and it **is** the dangerous middle. It is **not** settled by a better
+  review detector (none exists from public data); it is settled by what reimbursement **cannot**
+  fix: **(a)** the within-category **co-review roster graph** — it cleans each review but not roster
+  reuse, unless the broker fully partitions the pool (the expensive evasion that shrinks the
+  operation); **(b)** **persistence over a longitudinal corpus** — it buys a *burst*, not sustained
+  independent costly behavior (the Amazon cohort reverted in weeks); this needs the forward-captured
+  time series, which is unbacktestable; and **(c)** the **outburst action-cap** — an
+  undetectable-but-unconfirmed burst caps at the recoverable path, never Scale. Verified-purchase
+  share remains a **low-side flag, never a high-side clearance**. Honest ceiling: an operator who
+  *subsidizes real repeat purchase across venues for months* defeats all three — but that costs ~
+  what real demand costs ("real while subsidized; watch for the subsidy ending"), the cost-asymmetry
+  endgame, not a free win.
 
 ## Core / Satellite Boundary
 

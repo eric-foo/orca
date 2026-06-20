@@ -123,6 +123,14 @@ all products. Bound the capture as an **in-niche ego-graph**, not an industry cr
 3. **Stop** = bounded, measured, commissioned-set volume; no unbounded crawl; no second hop unless
    separately authorized.
 
+**Pre-positioning (forward-only option value).** Because manufactured detection is **forward-only**
+and the decay/persistence series **cannot be reconstructed later** (reviews get deleted/edited;
+timestamps are point-in-time), capturing a **bounded in-subniche roster on a bounded cadence** —
+*before* a specific target exists — has real option value: it builds the longitudinal substrate the
+persistence read depends on. Discipline: a **named bounded roster** (not "everything") on
+**periodic attended / self-terminating runs** (the demand-durability cadence shape), **not a
+standing crawler** (the thesis's no-standing-monitor boundary). Capture execution stays owner-gated.
+
 **Lake-bloat is bounded by this scope, not by lake mechanics.** Raw review records are text (not
 media) and land **once, append-only, by key** as Attachment Records (below). The compact co-review
 **edges** (`reviewer_id × product × timestamp × rating × verified`) are a **derived/projection
@@ -191,6 +199,12 @@ no gate defeated. A retailer that recons NO-GO/PARTIAL is recorded as such.
   behind the existing writer seam (smallest-complete call — capture-lane owned).
 - **Ego-graph hop budget / seed size** — the exact "top N%" and reviewer-hop cap (a corpus-scope
   parameter; owner/capture-lane tunable).
+- **Candidate retailer extensions — Target, Walmart** (Bazaarvoice / PowerReviews-backed, "verified
+  buyer" badges, `review_record`-compatible): worth adding when the subniche's demand sits in mass /
+  Target-exclusive / drugstore channels (more retailers also strengthen the within-category
+  co-review graph). Each needs its own adapter + GO/PARTIAL/NO-GO recon + ToS posture; subniche-fit
+  and recon gate the decision — not "scrape every retailer." The Retail/PDP projection contract
+  (currently Amazon/Sephora/Ulta) extends with them.
 
 ## Claim Classification
 
