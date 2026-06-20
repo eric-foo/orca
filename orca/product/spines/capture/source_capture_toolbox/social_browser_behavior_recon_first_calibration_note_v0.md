@@ -126,6 +126,11 @@ The IG model is already mostly directionally correct:
    and viewport/content-shape failure.
 6. TikTok/YouTube have no source-backed route, substrate, threshold, viewport,
    or receipt expectations to inherit from IG.
+7. Browser fingerprint and interaction-shape variables are not yet carried as
+   explicit recon dimensions: TLS/JA4/HTTP2/header parity, direct-HTTP client
+   choice, headed/headless/browser-context differences, mouse/scroll/click
+   shape, item-open ratio, dwell-time distribution, and silent empty-response
+   detection.
 
 ## Proposed Change Set
 
@@ -138,6 +143,7 @@ The IG model is already mostly directionally correct:
 | 5. Consolidate block taxonomy | Patch IG docs; optionally later generalize as source-capture receipt vocabulary after more sources | Runner already detects `redirected_to_login`, `rate_limited_429_interstitial`, and `network_security_block`; the shape contract requires distinct non-observed reasons. | Prevents login redirect, rate limit, auth gate, missing signal, and viewport failure from collapsing into generic failure. | Shared vocabulary could overreach if treated as platform-equivalent thresholds. | IG receipts that map each observed failure to one token without fake success. | Docs patch now; shared taxonomy later only after recon. |
 | 6. Keep stable-lane discipline explicit | Patch IG envelope / sustainability plan only | Current envelope says two stable egress lanes, no per-request rotation, and no multiple accounts on one egress as throughput. | Reduces bot-like run shape and false capacity assumptions. | May slow capture; that is acceptable because durability is the point. | Two-lane isolation + additivity receipts. | Owner authorizes Stage 0/3 live lane checks. |
 | 7. Recon-first TikTok/YouTube gate | Patch this note into future routing; do not patch platform thresholds | Capture playbook says recipe cards are authored by probes; recon index says TikTok has no technical recon and social cards are speculative until probed. | Blocks the dangerous shared-controller overclaim while preserving candidate reusable primitives. | Slower cross-platform expansion. | TikTok/YouTube probe-authored recipe cards or recon-index entries with a `GO` / `PARTIAL` / `NO-GO` / `CATALOG_GAP` verdict, source-native evidence, substrate, route, access posture, request-rate ceiling, stop taxonomy, and receipts. | Separate recon commission per platform. |
+| 8. Add fingerprint and interaction-shape recon dimensions | Patch future IG docs/scoping and TT/YT recon prompts as variables to measure, not defaults to run | Direct HTTP, browser-context XHR, headed/headless browser posture, and human interaction shape can change whether browser-behavior reads return source-native content or silent empty responses. | Prevents false NO-GO/empty-grid diagnoses and keeps burn-risk controls visible without hard-coding evasion behavior. | Can drift into anti-detect mimicry if turned into blanket defaults like fixed dwell percentages or TLS impersonation everywhere. | Tiny canary receipts comparing relevant route/client shapes, including TLS/HTTP client family, browser/runtime context, interaction shape, item-open ratio, dwell distribution, request count, and silent-empty outcome. | Docs/prompt variable only; any live probe or runtime change remains separately authorized. |
 
 ## Platform Generalization
 
@@ -149,7 +155,8 @@ Recommended architecture:
   cluster gaps, stop-on-wall, full quiet cooldown, and honest receipt outcomes
   with opaque stop reasons.
 - Platform profile: every threshold, viewport, enumeration route,
-  block-token taxonomy, egress/lane model, access posture, and
+  block-token taxonomy, egress/lane model, access posture, HTTP/TLS client
+  shape, browser/runtime context, interaction/dwell behavior, and
   route-specific receipt field lives in a platform profile. IG may fill initial
   values from current evidence. TikTok/YouTube profiles remain unfilled until
   recon.
@@ -163,6 +170,7 @@ Recommended architecture:
 | Viewport / route behavior | `known`: IG DOM grid is viewport-sensitive; JSON fallback matters. | `do_not_generalize`: substrate unknown. | `do_not_generalize`: substrate unknown. |
 | Cooldown | `known`: fully quiet after wall; exact decay unpinned. | `unknown`: recon required. | `unknown`: recon required. |
 | Receipts | `known`: must preserve blocks, partials, no-signal, request model, stop reason, and route evidence. | `known primitive only`: receipts required; fields must be source-specific after recon. | `known primitive only`: receipts required; fields must be source-specific after recon. |
+| Fingerprint / interaction shape | `unmeasured`: treat TLS/HTTP client shape, browser runtime, mouse/scroll/click shape, item-open ratio, dwell distribution, and silent-empty behavior as canary variables, not defaults. | `do_not_generalize`: no TT source. | `do_not_generalize`: no YT source. |
 | Shared controller eligibility | IG can seed primitives and IG profile. | Recon-first only. | Recon-first only. |
 
 ## Required Propagation Surfaces If Accepted
@@ -178,11 +186,12 @@ Prepare for later implementation scoping, not now:
 - Source Capture Packet / receipt schema surfaces if run-level fields become
   persisted packet fields.
 - Any future IG implementation-scoping prompt for JSON fallback, per-run receipt
-  ledger, or session-shape controls.
+  ledger, session-shape controls, or fingerprint/interaction-shape canaries.
 
 Do not patch now:
 
-- TikTok/YouTube thresholds, profile values, route defaults, or access posture.
+- TikTok/YouTube thresholds, profile values, route defaults, access posture,
+  HTTP/TLS client defaults, or interaction/dwell defaults.
 - Source-access boundary, wind-caller carve-out, anti-block ladder, or capture
   playbook doctrine. This recommendation consumes those sources; it does not
   amend them.
@@ -208,7 +217,9 @@ Write an IG-only docs patch that:
 2. tightens cooldown / abort semantics;
 3. names viewport and JSON-fallback route discipline;
 4. adds run-level receipt fields to the sustainability-plan ledger;
-5. repeats the explicit non-generalization gate for TikTok/YouTube.
+5. repeats the explicit non-generalization gate for TikTok/YouTube;
+6. records browser fingerprint and interaction-shape variables as canary
+   dimensions, not default behavior.
 
 After that, commission separate TikTok and YouTube recon prompts before filling
 any platform profile values.
