@@ -64,10 +64,10 @@ R2 landed the lake's authority + workflow substance:
   implementation), the additive medallion/gold-readiness contract that
   locks bronze/silver/pre-gold/gold-ready/gold semantics, the
   physicality-location contract (external data root, directory grammar, location
-  invariants, durable record names, fail-closed resolution), and the two
+  invariants, durable record names, fail-closed resolution), and the three
   blocker-resolution decision contracts (raw admission + key grammar; write-boundary
-  enforcement) that close the gating physicalization blockers — all without
-  authorizing backend, queue, runtime, or Judgment behavior.
+  enforcement; derived layout + index rebuild) that close the gating physicalization
+  blockers — all without authorizing backend, queue, runtime, or Judgment behavior.
 - `workflows/` — the canonical mechanics map (the version co-authored with the
   contracts, confirmed canonical via a 3-way reconciliation), which **supersedes
   and retires** the transitional `orca/product/shared/data_lake_mechanics/` copy.

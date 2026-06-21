@@ -209,6 +209,10 @@ second source of truth.
   fails if the destination already exists. The exact marker mechanism is
   implementation; the per-root-identity intent is contract-level. See the
   write-boundary enforcement decision contract.
+- Drive-letter volatility: the configured root's drive letter may change at any time
+  (removable media); never rely on the letter. The resolver + per-root marker identify
+  the root by identity, not by letter. A stable mount path or volume ID is an acceptable
+  operator convenience, not a requirement.
 - Config file format, loader, env/file merge mechanics, and validation tooling are
   implementation and remain deferred.
 
@@ -276,16 +280,19 @@ Resolution status (updated as blocker-resolution decisions land 2026-06-21):
    derived/ack, no-new-core-field pressure — **RESOLVED** by the write-boundary
    enforcement decision contract.
 4. Physical home + write boundary for projection/ECR/SCR/Cleaning/Judgment derived
-   records, acknowledgements, and decision-evidence assembly receipts — OPEN (gated on
-   the key grammar; next wave).
+   records, acknowledgements, and decision-evidence assembly receipts — **RESOLVED** by
+   the derived-layout + index-rebuild decision contract.
 5. Index rebuild command + the guarantee that all of `indexes/` rebuilds from
-   committed keys/hashes — OPEN (next wave).
+   committed keys/hashes — **RESOLVED** by the derived-layout + index-rebuild decision
+   contract (availability now; derived_retrieval rebuild governance-gated/build-deferred).
 6. Access/audit/retention guardrails + allowed source-family identifier scopes for
    actor-related on-demand retrieval — **RESOLVED** (owner-adopted actor-retrieval
    governance decision, 2026-06-21); `derived_retrieval` is governance-unblocked but
    build-deferred.
 7. Mechanical derivation owner + profile/version contract (baselines, windows,
-   cohorts, thresholds) for movement threshold-crossing records — OPEN (next wave).
+   cohorts, thresholds) for movement threshold-crossing records — **PARKED** (feature
+   gated on data feasibility, not architecture; the foundation preserves on-demand
+   derivability — see the derived-layout contract's on-demand analysis section).
 8. Migration/replay policy for incumbent direct fields — directional (Storage Contract
    Blocker 2 direction recorded); mechanics build-deferred.
 9. Govern SCR `FamilyDetailBase` so it cannot become a competing raw source-family
