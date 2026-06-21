@@ -15,6 +15,7 @@ scope: >
 use_when:
   - Commissioning or running an authorized demand scan (backward or forward mode).
   - Checking what a scan hunts, what it emits, to whom, and under which mode obligations.
+  - Promoting precursor signals into rich candidate observations after MGT minimum evidence is met.
   - Adjudicating this spec (commissioning ICP / product-direction lane; owner signs adoption).
 authority_boundary: retrieval_only
 open_next:
@@ -144,6 +145,10 @@ six-step structure. A scan is a **guide-governed walk with a recognition
 grammar and an emission schema bound on top**: the vertical exploration guide
 owns how a walk moves (steps, caps, stop rules, Walker Equipment Kit,
 provenance memory); this spec owns what the walk hunts and what it emits.
+
+The scanning README and MGT intelligent-walk operating model are the cold-start
+front door. This spec is the richer promoted-observation schema and gate-prep
+surface; it should not be forced onto every precursor or low-level move.
 
 - A scan RUNS ONLY under explicit authorization (a batch plan in backward
   mode; an authorized candidate-scan lane in forward mode). No step runs
@@ -284,6 +289,10 @@ direct a different scan-time classification rule.*
   outreach or contact lists (Tier 3, absolute); no audience / follower-graph
   analysis (Tier 2, deferred-gated); LinkedIn stays org-level (unchanged).
 
+Precursor signals may route the walk, explain a pivot, or justify a later
+`capture_request`, but they do not mint a candidate unless the promotion and
+candidate-entry rules below are met.
+
 ## 2. Walk Order
 
 How a scan consumes the venue layer. For a vertical with a promoted card set
@@ -308,10 +317,15 @@ then the provenance grep (`rg -l "Screen Provenance|Venue Provenance" docs/`).
   without stated reason.
 - **Discovery beyond the cards** follows the guide's Steps 1–3 (defaults
   pass, hub-finding, expand-on-signal) under its caps and stop rules; newly
-  productive venues land in the scan's provenance block, never appended to
-  any standing list.
+  productive precursor surfaces or venues land in the scan's provenance block,
+  never appended to any standing list.
 
 ## 3. Candidate Observation Schema
+
+Precursor signals stay in the MGT/minimum-evidence layer until they are worth
+carrying for downstream gate or capture evaluation. Promotion into this richer
+schema requires the signal to tie to a URL, decision window or candidate, and a
+possible gate role; a precursor by itself is not gate proof.
 
 Two record shapes: the **observation (Observation)** (one venue × one signal) and the
 **candidate entry** (one brand × one decision, aggregating observations).
@@ -512,9 +526,10 @@ evidence.
 
 ### To capture (step 3)
 
-Per candidate entry, the scan emits a **capture-needs list**: venue + URL set
-+ which observation and which gate column the capture would support + the
-window (cutoff-bounded for backward; freshness-bounded for forward).
+Per candidate entry, the scan emits a **capture_request** (the shared scanning
+vocabulary term for the older "capture-needs list"): venue + URL set + which
+observation and which gate column the capture would support + the window
+(cutoff-bounded for backward; freshness-bounded for forward).
 Boundaries, all hard:
 
 - Per-venue route bindings are capture-lane-owned. The scan CITES the
