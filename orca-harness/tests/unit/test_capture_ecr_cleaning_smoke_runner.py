@@ -831,6 +831,47 @@ def test_periodic_audit_flags_projection_source_visible_field_drift(tmp_path: Pa
     )
 
 
+def test_periodic_audit_flags_cleaning_projection_ref_row_unresolved(tmp_path: Path) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    cleaning_path = Path(smoke_outputs["cleaning_packet"])
+    cleaning_payload = _load_json(cleaning_path)
+    cleaning_payload["handles"][0]["projection_ref"]["row_id"] = "missing_fixture_row"
+    _write_json(cleaning_path, cleaning_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_projection_ref_row_unresolved"
+        and finding["owner_candidate"] == "cleaning_or_projection"
+        and finding["details"] == {"row_id": "missing_fixture_row"}
+        for finding in report["findings"]
+    )
+
 def test_periodic_audit_promotes_lane_a_smoke_findings_to_status(tmp_path: Path) -> None:
     retail_packet_dir = _write_retail_packet_dir(
         tmp_path,

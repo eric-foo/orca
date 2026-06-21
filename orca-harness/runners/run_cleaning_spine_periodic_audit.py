@@ -140,6 +140,7 @@ def run_cleaning_spine_periodic_audit(
     lane_a = _run_lane_a_existing_package_checks(
         lane_a_outputs=lane_a_outputs,
         packet_index=packet_index,
+        source_entries=source_entries,
         findings=findings,
     )
 
@@ -267,6 +268,7 @@ def _run_lane_a_existing_package_checks(
     *,
     lane_a_outputs: dict[str, Path],
     packet_index: dict[str, dict[str, Any]],
+    source_entries: Sequence[dict[str, Any]],
     findings: list[dict[str, Any]],
 ) -> dict[str, Any]:
     result: dict[str, Any] = {}
@@ -298,10 +300,24 @@ def _run_lane_a_existing_package_checks(
         )
         result["cleaning_packet"] = cleaning_packet
         result["cleaning_handle_count"] = len(cleaning_packet.handles)
+        projection_ref_packet_ids = {
+            handle.projection_ref.packet_id
+            for handle in cleaning_packet.handles
+            if handle.projection_ref is not None
+        }
+        projection_row_index = _build_projection_row_index(
+            source_entries=source_entries,
+            packet_index=packet_index,
+            needed_packet_ids=projection_ref_packet_ids,
+            findings=findings,
+            lane="lane_a_existing_package",
+        )
+        result["projection_ref_packets_checked"] = len(projection_row_index)
         _verify_cleaning_packet_traceability(
             cleaning_packet=cleaning_packet,
             ecr_receipts=ecr_receipts,
             packet_index=packet_index,
+            projection_row_index=projection_row_index,
             findings=findings,
             lane="lane_a_existing_package",
         )
@@ -566,11 +582,172 @@ def _verify_packet_preserved_files(
             )
 
 
+
+def _build_projection_row_index(
+    *,
+    source_entries: Sequence[dict[str, Any]],
+    packet_index: dict[str, dict[str, Any]],
+    needed_packet_ids: set[str],
+    findings: list[dict[str, Any]],
+    lane: str,
+) -> dict[str, dict[str, str]]:
+    row_index: dict[str, dict[str, str]] = {}
+    if not needed_packet_ids:
+        return row_index
+    source_label_packet_ids = {
+        str(record.get("source_label")): packet_id
+        for packet_id, record in packet_index.items()
+    }
+    for entry in source_entries:
+        packet_id = source_label_packet_ids.get(entry["source_label"])
+        if packet_id not in needed_packet_ids:
+            continue
+        try:
+            if entry["source_type"] == "retail":
+                projection = RetailPdpProjectionPacket.model_validate(
+                    _load_json_object(entry["projection_json"], f"{entry['source_label']} projection")
+                )
+                if projection.packet_id != packet_id:
+                    raise ValueError(
+                        f"projection packet_id {projection.packet_id!r} does not match "
+                        f"packet {packet_id!r}"
+                    )
+                row_index[packet_id] = {
+                    row.row_id: str(row.row_kind)
+                    for row in projection.rows
+                }
+            elif entry["source_type"] == "instagram":
+                projection = IgCreatorMomentumProjectionPacket.model_validate(
+                    _load_json_object(entry["projection_json"], f"{entry['source_label']} projection")
+                )
+                if projection.packet_id != packet_id:
+                    raise ValueError(
+                        f"projection packet_id {projection.packet_id!r} does not match "
+                        f"packet {packet_id!r}"
+                    )
+                row_index[packet_id] = {
+                    row.row_id: str(row.row_kind)
+                    for row in projection.rows
+                }
+            elif entry["source_type"] == "reddit":
+                artifact = _load_json_object(
+                    entry["consolidation_json"],
+                    f"{entry['source_label']} consolidation",
+                )
+                consolidation = artifact.get("reddit_thread_consolidation")
+                if not isinstance(consolidation, dict):
+                    raise ValueError("reddit consolidation missing reddit_thread_consolidation")
+                source_packet = consolidation.get("source_packet")
+                if not isinstance(source_packet, dict) or source_packet.get("packet_id") != packet_id:
+                    raise ValueError("reddit consolidation packet_id does not match packet")
+                rows: dict[str, str] = {}
+                if isinstance(consolidation.get("post"), dict):
+                    rows["post"] = "post"
+                comments = consolidation.get("comments", [])
+                if comments is None:
+                    comments = []
+                if not isinstance(comments, list):
+                    raise ValueError("reddit consolidation comments must be a list")
+                for comment_index, comment in enumerate(comments, start=1):
+                    if not isinstance(comment, dict):
+                        raise ValueError("reddit consolidation comment must be an object")
+                    row_id = comment.get("row_id")
+                    if not isinstance(row_id, str) or not row_id.strip():
+                        row_id = f"comment_{comment_index:04d}"
+                    rows[row_id] = "comment"
+                row_index[packet_id] = rows
+            else:
+                raise ValueError(f"unsupported source type: {entry['source_type']}")
+        except Exception as exc:
+            _finding(
+                findings,
+                lane=lane,
+                severity="major",
+                code="projection_row_index_unavailable",
+                owner_candidate="projection_or_fixture",
+                source_label=entry["source_label"],
+                packet_id=packet_id,
+                message=str(exc),
+            )
+    return row_index
+
+
+def _verify_cleaning_projection_ref(
+    *,
+    handle_id: str,
+    projection_ref: dict[str, Any] | None,
+    projection_row_index: dict[str, dict[str, str]],
+    findings: list[dict[str, Any]],
+    lane: str,
+) -> None:
+    if projection_ref is None:
+        return
+    packet_id = projection_ref["packet_id"]
+    row_id = projection_ref.get("row_id")
+    if not isinstance(row_id, str) or not row_id.strip():
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_projection_ref_row_missing",
+            owner_candidate="cleaning",
+            packet_id=packet_id,
+            handle_id=handle_id,
+            message="Cleaning projection_ref is missing row_id.",
+        )
+        return
+    packet_rows = projection_row_index.get(packet_id)
+    if packet_rows is None:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_projection_ref_packet_unresolved",
+            owner_candidate="cleaning_or_projection",
+            packet_id=packet_id,
+            handle_id=handle_id,
+            message="Cleaning projection_ref packet_id has no indexed projection artifact.",
+        )
+        return
+    actual_row_kind = packet_rows.get(row_id)
+    if actual_row_kind is None:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_projection_ref_row_unresolved",
+            owner_candidate="cleaning_or_projection",
+            packet_id=packet_id,
+            handle_id=handle_id,
+            message="Cleaning projection_ref row_id is absent from the indexed projection artifact.",
+            details={"row_id": row_id},
+        )
+        return
+    expected_row_kind = projection_ref.get("row_kind")
+    if isinstance(expected_row_kind, str) and expected_row_kind and expected_row_kind != actual_row_kind:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_projection_ref_row_kind_mismatch",
+            owner_candidate="cleaning_or_projection",
+            packet_id=packet_id,
+            handle_id=handle_id,
+            message="Cleaning projection_ref row_kind differs from indexed projection artifact.",
+            details={
+                "row_id": row_id,
+                "projection_ref_row_kind": expected_row_kind,
+                "indexed_row_kind": actual_row_kind,
+            },
+        )
+
+
 def _verify_cleaning_packet_traceability(
     *,
     cleaning_packet: CleaningPacket,
     ecr_receipts: dict[str, Any],
     packet_index: dict[str, dict[str, Any]],
+    projection_row_index: dict[str, dict[str, str]],
     findings: list[dict[str, Any]],
     lane: str,
 ) -> None:
@@ -613,6 +790,17 @@ def _verify_cleaning_packet_traceability(
                 handle_id=handle.handle_id,
                 message="Cleaning handle ECR ref does not resolve to Lane A receipt.",
             )
+        _verify_cleaning_projection_ref(
+            handle_id=handle.handle_id,
+            projection_ref=(
+                handle.projection_ref.model_dump(mode="json")
+                if handle.projection_ref is not None
+                else None
+            ),
+            projection_row_index=projection_row_index,
+            findings=findings,
+            lane=lane,
+        )
         _verify_cleaning_raw_anchor(
             handle_id=handle.handle_id,
             raw_anchor=handle.raw_anchor.model_dump(mode="json"),
