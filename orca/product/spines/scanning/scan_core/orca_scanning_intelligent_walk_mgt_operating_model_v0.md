@@ -137,6 +137,18 @@ branch; they do not automatically end the whole run while another declared or
 freshly surfaced frontier has non-trivial expected value and the run remains
 inside caps.
 
+A scan is **explicitly declared** MGT when the scan authorization or commission
+document invokes this operating model and the branch-aware rule by name. The
+declaration must appear in the authorizing commission, not be asserted at
+runtime by the walk itself. An authorized scan that does not carry an explicit
+MGT declaration uses the ordinary dry rule.
+
+A **run cap** (move budget, read limit, or equivalent) must be stated in any
+MGT scan commission. Caps are the primary enforcement mechanism that makes
+branch-aware pivot behavior bounded rather than open-ended. A scan commission
+without a stated cap does not qualify as a bounded intelligent walk under this
+model and must not invoke the branch-aware dry rule.
+
 ## Shared Vocabulary
 
 Source-family lanes should emit into this vocabulary instead of inventing
@@ -163,6 +175,11 @@ claim-ladder, packet, or buyer-proof vocabulary.
 Quotas are collection hygiene, not inference. A scan may set collection
 coverage targets, but a quota does not decide whether demand is real, durable,
 manufactured, or action-worthy.
+
+Promote a move note to an observation when the signal is worth carrying for
+downstream gate or capture evaluation: it ties to a specific URL and a possible
+gate role, decision window, or candidate. Do not promote every observed item;
+do not suppress signal that may support a candidate entry.
 
 Minimum promotion from move note to observation:
 
