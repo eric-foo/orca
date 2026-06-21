@@ -23,11 +23,21 @@ open_next:
   - docs/decisions/orca_mini_god_tier_doctrine_v0.md
   - orca-harness/source_capture/screening_read.py
   - orca-harness/source_capture/screening_browser_read.py
+superseded_by:
+  - docs/workflows/single_acquisition_screened_capture_probe_spec_v0.md
 stale_if:
   - The screening-read API, capture packet boundary, or no-packet/no-ECR contract changes.
   - The owner changes the source-access posture for screening or capture.
   - A later architecture decision adopts a hybrid commit-gate design.
 ```
+
+> **Supersession note (2026-06-21).** This prompt is retained as the historical
+> strategy-adjudication input. Its starting hypothesis of "screen-gated capture
+> now, single-read delayed commit later" is no longer the target recommendation
+> after the owner made site-count minimization a core goal. Use
+> `docs/workflows/single_acquisition_screened_capture_probe_spec_v0.md` for the
+> current target default: single-acquisition screened capture, with screen-gated
+> separate capture as fallback.
 
 Paste the body below into ChatGPT or another external reasoning model.
 
