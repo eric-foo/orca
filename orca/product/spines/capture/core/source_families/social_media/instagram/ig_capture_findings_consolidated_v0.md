@@ -4,7 +4,7 @@ artifact_role: consolidated capture findings (non-authorizing)
 scope: >
   Single consolidated statement of what is currently known about capturing the IG
   (Instagram) wind-caller (WindCaller) / creator-momentum signal — calls (Call), profile stats, and
-  reel/video view counts — across the per-source recons and the shipped
+  reel/video view counts, and no-hover profile-grid DOM engagement — across the per-source recons and the shipped
   calls-capture build. Supersedes scattered per-doc claims where they conflict,
   and records the corrections made along the way. Non-authorizing: a findings
   consolidation, not a build go, validation, or commercial authorization.
@@ -15,6 +15,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/instagram/ig_profile_grid_dom_engagement_recon_and_spec_v0.md
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_reel_viewcount_capture_feasibility_recon_v0.md
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_wind_caller_capture_feasibility_recon_v0.md
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_wind_caller_calls_capture_build_architecture_v0.md
@@ -26,7 +27,8 @@ stale_if:
     viewport(s) no longer expose post/reel permalinks.
   - A fuller H5/R run pins the at-pace ceiling, exact pace threshold, or throttle decay time.
   - The reel-view-count build ships (moves that signal from feasibility-proven to built).
-status: CONSOLIDATED — calls+stats SHIPPED logged-out; reel view-count FEASIBILITY-PROVEN logged-out; route/viewport addendum 2026-06-17; scale first-measured, with at-pace ceiling still open
+  - IG profile/reels grid DOM stops carrying hidden no-hover like/comment counts under media anchors.
+status: CONSOLIDATED — calls+stats SHIPPED logged-out; reel view-count FEASIBILITY-PROVEN logged-out; no-hover grid engagement PARTIAL-GO for reels; scale first-measured, with at-pace ceiling still open
 ```
 
 # Instagram Capture Findings — Consolidated (v0)
@@ -42,7 +44,10 @@ one bounded logged-out `@hyram` max-4 smoke capture. A residential proxy route r
 `web_profile_info` 200 and profile-grid permalinks at measured viewport(s). Owner-created session
 state on current egress also returned `web_profile_info` 200, so an own-session route is technically
 viable as a fallback/probe candidate, but it is not the default product path and its account risk and
-sustained cadence remain unmeasured.
+sustained cadence remain unmeasured. A 2026-06-21 existing-Chrome DOM diagnostic adds a narrower
+optimization finding: visible reels-grid media anchors can carry enough DOM text before hover to
+extract views, likes, and comment counts keyed by shortcode, but this is not yet proven in a fresh
+logged-out/proxy route or for static posts.
 
 ## Signal-by-signal
 
@@ -51,6 +56,7 @@ sustained cadence remain unmeasured.
 | **Calls** — verbatim caption + likes + comments + date + `#ad` flag, per post/reel | post/reel page **`og:description`** meta | **logged-out route** | **BUILT + prior validated** (runner; 832 tests pass; live `@hyram` 6/6); 2026-06-17 probes found profile-enumeration viewport fragility | calls recon + build arch; `run_source_capture_ig_calls_packet.py` (merged); 2026-06-17 route/viewport addendum |
 | **Profile stats** — followers / following / post counts (snapshot) | profile **`og:description`** + `web_profile_info` JSON | **logged-out** | capturable now; **historical series** = Social Blade (free, recent window) or self-logging over time | calls recon + build arch |
 | **Reel / video view counts** — `video_view_count` per media | **profile-feed JSON** (`web_profile_info` + grid `graphql/query`), follow `end_cursor` for depth | **logged-out** | **FEASIBILITY-PROVEN** (deep: 25 pages, 365 media back to 2017, no wall/`429`); **build deferred** | reel-viewcount recon (this lane) |
+| **Visible-grid engagement snapshot** — views + likes + comments for visible reels | profile/reels grid **media-anchor DOM**: rendered anchor text for views; hidden numeric leaf text for likes/comments | existing Chrome diagnostic only | **PARTIAL-GO for reels no-hover** (`66/66` visible anchors parsed on `@vanzzcoser` `/reels/`); fresh logged-out/proxy and static posts open | grid DOM engagement recon/spec |
 | **Media / video bytes** | n/a | — | **OUT of scope** — never probed; not captured | — |
 
 ## Auth / route posture (the load-bearing conclusion)
@@ -83,6 +89,10 @@ sustained cadence remain unmeasured.
 - **Reel view counts** → capture the **profile-feed response bodies** during enumeration
   (`web_profile_info` first page) and **follow the grid `end_cursor`** via `graphql/query`
   (`doc_id=7950326061742207`, `id`=user_id) for depth; parse `video_view_count` per `shortcode`.
+- **Visible-grid engagement snapshot** → for currently rendered reels, parse the media-anchor DOM
+  without hover: visible anchor text gives the reel view count; hidden numeric leaf text can give
+  likes and comments. Key by shortcode/permalink, never by grid index. Treat this as a surface
+  monitoring route, not a replacement for per-item caption/date/comment-text capture.
 - **Deep history** → cursor pagination, not UI scroll (see Corrections #3).
 
 ## Corrections log (claims overturned by measurement)
@@ -103,6 +113,11 @@ sustained cadence remain unmeasured.
    proxy probes at `768x1024` and `1280x1200` produced 12 rendered profile-grid permalinks with no
    extra settle/scroll. The correct finding is viewport/layout sensitivity, with JSON as the backup
    enumerator.
+5. **"No-hover grid DOM only exposes views"** → **WRONG/incomplete for the observed reels grid.**
+   The first compact pack inspected rendered text only and saw views. A deeper no-hover DOM check
+   found hidden numeric leaf text under each media anchor; on `@vanzzcoser` `/reels/`, `66/66`
+   visible anchors parsed likes/comments before hover. Static posts and a fresh logged-out/proxy
+   route are still open.
 
 ## Build status
 
@@ -126,6 +141,10 @@ sustained cadence remain unmeasured.
   logged-out runner to capture profile-feed response bodies + follow the grid cursor, parsing
   `video_view_count` per `shortcode` onto the call slices. Needs the runner to **expose response
   bodies** and **follow the cursor**. **Separate, deferred, needs an explicit build go.**
+- **No-hover grid engagement capture: SPEC ONLY** — feasibility partially proven on one existing
+  Chrome reels grid. A build would extract media-anchor DOM records directly from explicit
+  profile/reels URLs and emit shortcode-keyed observations with route context and parse statuses.
+  It is not a runner packet, not proxy-proven, not scale-proven, and not static-post-proven.
 
 ## Residuals / not-proven
 
@@ -145,6 +164,9 @@ sustained cadence remain unmeasured.
 - **Proxy-backed packet evidence is smoke-level only.** The 2026-06-17 runner packet proves one
   `@hyram` logged-out proxy run can capture recent calls and profile-feed JSON through the patched
   runner. It is not sustained-cadence, mobile-data, account/session, or at-scale validation.
+- **No-hover grid engagement evidence is narrower than the runner evidence.** It is one existing
+  Chrome diagnostic on `@vanzzcoser` `/reels/`, not a fresh logged-out proxy probe, not a packet, and
+  not a static-post finding.
 - **Reel view counts are cumulative-at-capture**, not a time series — momentum requires the
   repeated-over-time harvesting the carve-out authorizes.
 - **Image posts** carry no `video_view_count`; some values are `0`.
