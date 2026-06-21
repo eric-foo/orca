@@ -217,6 +217,10 @@ def test_ecr_derivation_writes_a_completion_marker_and_is_complete(tmp_path: Pat
 
     marker = root.path / "derived" / pid / ECR_COMPLETION_LANE / record_name
     assert marker.is_file()
+    assert json.loads(marker.read_text(encoding="utf-8")) == {
+        "member_lanes": sorted(ECR_LANES.values()),
+        "record_id": record_name,
+    }
     assert root.is_record_set_complete(
         subtree="derived",
         raw_anchor=pid,

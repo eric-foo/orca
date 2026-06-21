@@ -24,28 +24,33 @@ def _capture(root: DataLakeRoot, tmp_path: Path, body: str):
 
 def _snapshot(index_dir: Path) -> dict[str, bytes]:
     return {
-        str(p.relative_to(index_dir)): p.read_bytes()
+        p.relative_to(index_dir).as_posix(): p.read_bytes()
         for p in sorted(index_dir.rglob("*"))
         if p.is_file()
     }
 
 
 def test_indexes_rebuild_byte_identical_from_authoritative_truth(tmp_path: Path) -> None:
-    # Prove-rebuildability: indexes/ holds no unique truth. Wiping the ENTIRE cache
-    # tier and rebuilding from the authoritative raw/ (+ derived/) yields
-    # byte-identical entries. When a new index kind gains a rebuilder, rebuild it
-    # in the wipe-then-rebuild step below so this proof keeps covering every index.
+    # Prove-rebuildability for every populated index kind in this fixture:
+    # indexes/availability holds no unique truth. Wiping the ENTIRE cache tier
+    # and rebuilding from authoritative raw/ yields byte-identical entries.
+    # indexes/derived_retrieval is build-deferred and empty here; if it starts
+    # carrying files, this test must grow a rebuilder before the claim survives.
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
-    for body in ("alpha", "beta", "gamma"):
-        _capture(root, tmp_path, body)
+    packet_ids = [_capture(root, tmp_path, body).packet.packet_id for body in ("alpha", "beta", "gamma")]
 
     indexes = root.path / "indexes"
+    derived_retrieval = indexes / "derived_retrieval"
+    assert derived_retrieval.is_dir()
+    assert not any(derived_retrieval.rglob("*")), (
+        "derived_retrieval has no current rebuilder; populate and rebuild it before claiming coverage"
+    )
     before = _snapshot(indexes)
-    assert before, "expected availability index entries before the wipe"
+    assert set(before) == {f"availability/{packet_id}.json" for packet_id in packet_ids}
 
     shutil.rmtree(indexes)  # wipe the entire cache tier
     assert root.rebuild_availability() == 3
-    # future index kinds: rebuild them here too (e.g. derived_retrieval)
+    # future populated index kinds: rebuild them here too (e.g. derived_retrieval)
 
     after = _snapshot(root.path / "indexes")
     assert after == before, "an index did not rebuild byte-identically -> it is smuggling non-rebuildable state"

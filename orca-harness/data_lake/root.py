@@ -479,10 +479,12 @@ class DataLakeRoot:
     ) -> dict[str, Path]:
         """Append a set of sibling records as one derivation with all-or-nothing
         completion semantics. Writes every member record, then a completion marker
-        (in ``completion_lane``) listing the member lanes -- the marker is the LAST
-        create, so a crash mid-set leaves no marker and the partial set is
-        detectable as incomplete via ``is_record_set_complete`` (and is
-        re-derivable). Fail-closed preflight: none of the member targets nor the
+        (in ``completion_lane``) listing the member lanes -- the marker is the last
+        create in process order. A crash before the marker leaves no marker; a
+        filesystem crash around final publish may still leave any subset of
+        directory entries durable, so consumers must use
+        ``is_record_set_complete`` to reject marker-present/member-missing sets.
+        Fail-closed preflight: none of the member targets nor the
         marker may already exist, so a colliding ``record_id`` never produces a new
         partial. Returns ``{member_lane: path}`` (the marker path is not returned).
 
@@ -539,6 +541,11 @@ class DataLakeRoot:
         """True iff the completion marker for this set exists AND every member lane
         it names has its record present. Lets a consumer reject a partial
         (crash-interrupted or in-flight) derivation; fail-closed on any anomaly."""
+        if subtree not in _APPENDABLE_SUBTREES:
+            raise DataLakeRootError(
+                f"is_record_set_complete subtree must be one of {_APPENDABLE_SUBTREES}: {subtree!r}"
+            )
+        self._reverify()
         _validate_segment(raw_anchor, role="raw_anchor")
         _validate_segment(record_id, role="record_id")
         _validate_segment(completion_lane, role="completion_lane")
@@ -547,15 +554,20 @@ class DataLakeRoot:
             return False
         try:
             body = json.loads(marker.read_text(encoding="utf-8"))
-            member_lanes = body["member_lanes"]
-        except (OSError, ValueError, KeyError):
+        except (OSError, ValueError):
             return False
+        if not isinstance(body, dict) or body.get("record_id") != record_id:
+            return False
+        member_lanes = body.get("member_lanes")
         if not isinstance(member_lanes, list) or not member_lanes:
             return False
         for lane in member_lanes:
             if not isinstance(lane, str):
                 return False
-            _validate_segment(lane, role="lane")
+            try:
+                _validate_segment(lane, role="lane")
+            except DataLakeRootError:
+                return False
             if not self._within(subtree, raw_anchor, lane, record_id).is_file():
                 return False
         return True

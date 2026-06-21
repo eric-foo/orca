@@ -5,9 +5,10 @@ thin adapter reads a committed packet by key, runs the four pure ECR derivers,
 and appends each epistemic kind's posture list as a sibling derived record at
 ``derived/<packet_id>/ecr_<kind>/<record_id>.json``. The four siblings of one
 derivation are written as an all-or-nothing set (``DataLakeRoot.append_record_set``)
-with a completion marker in ``ecr_set`` written last, so a crash mid-derivation
-leaves a detectable *incomplete* set rather than a half-written derivation that
-looks complete. Re-derive = a new sibling set (fresh ``record_id``).
+with a completion marker in ``ecr_set`` written last in process order. Crash or
+post-crash durable states are detectable as incomplete unless the marker exists
+and every member it names is present. Re-derive = a new sibling set (fresh
+``record_id``).
 
 Boundary: this persists already-authorized deriver output only. It binds no
 ``EvidenceUnit``, runs no SP-5 finalizer, and performs no Cleaning or Judgment;

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -90,6 +91,54 @@ def test_missing_member_reads_incomplete(tmp_path: Path) -> None:
     assert not root.is_record_set_complete(
         subtree="derived", raw_anchor=_RA, record_id="r1.json", completion_lane="set_marker"
     )
+
+
+def test_marker_record_id_mismatch_reads_incomplete(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    root.append_record_set(
+        subtree="derived",
+        raw_anchor=_RA,
+        record_id="r1.json",
+        members={"lane_a": b"a\n", "lane_b": b"b\n"},
+        completion_lane="set_marker",
+    )
+    marker = root.path / "derived" / _RA / "set_marker" / "r1.json"
+    marker.write_text(
+        json.dumps({"record_id": "other.json", "member_lanes": ["lane_a", "lane_b"]}) + "\n",
+        encoding="utf-8",
+    )
+
+    assert not root.is_record_set_complete(
+        subtree="derived", raw_anchor=_RA, record_id="r1.json", completion_lane="set_marker"
+    )
+
+
+def test_marker_invalid_member_lane_reads_incomplete(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    root.append_record_set(
+        subtree="derived",
+        raw_anchor=_RA,
+        record_id="r1.json",
+        members={"lane_a": b"a\n"},
+        completion_lane="set_marker",
+    )
+    marker = root.path / "derived" / _RA / "set_marker" / "r1.json"
+    marker.write_text(
+        json.dumps({"record_id": "r1.json", "member_lanes": ["../escape"]}) + "\n",
+        encoding="utf-8",
+    )
+
+    assert not root.is_record_set_complete(
+        subtree="derived", raw_anchor=_RA, record_id="r1.json", completion_lane="set_marker"
+    )
+
+
+def test_is_record_set_complete_rejects_non_appendable_subtree(tmp_path: Path) -> None:
+    root = _root(tmp_path)
+    with pytest.raises(DataLakeRootError, match="subtree"):
+        root.is_record_set_complete(
+            subtree="raw", raw_anchor=_RA, record_id="r1.json", completion_lane="set_marker"
+        )
 
 
 def test_absent_set_reads_incomplete(tmp_path: Path) -> None:
