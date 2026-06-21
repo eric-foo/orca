@@ -613,10 +613,13 @@ def _build_projection_row_index(
                         f"projection packet_id {projection.packet_id!r} does not match "
                         f"packet {packet_id!r}"
                     )
-                row_index[packet_id] = {
-                    row.row_id: str(row.row_kind)
-                    for row in projection.rows
-                }
+                row_index[packet_id] = _projection_rows_by_id(
+                    packet_id=packet_id,
+                    source_label=str(entry["source_label"]),
+                    rows=((row.row_id, str(row.row_kind)) for row in projection.rows),
+                    findings=findings,
+                    lane=lane,
+                )
             elif entry["source_type"] == "instagram":
                 projection = IgCreatorMomentumProjectionPacket.model_validate(
                     _load_json_object(entry["projection_json"], f"{entry['source_label']} projection")
@@ -626,10 +629,13 @@ def _build_projection_row_index(
                         f"projection packet_id {projection.packet_id!r} does not match "
                         f"packet {packet_id!r}"
                     )
-                row_index[packet_id] = {
-                    row.row_id: str(row.row_kind)
-                    for row in projection.rows
-                }
+                row_index[packet_id] = _projection_rows_by_id(
+                    packet_id=packet_id,
+                    source_label=str(entry["source_label"]),
+                    rows=((row.row_id, str(row.row_kind)) for row in projection.rows),
+                    findings=findings,
+                    lane=lane,
+                )
             elif entry["source_type"] == "reddit":
                 artifact = _load_json_object(
                     entry["consolidation_json"],
@@ -641,9 +647,9 @@ def _build_projection_row_index(
                 source_packet = consolidation.get("source_packet")
                 if not isinstance(source_packet, dict) or source_packet.get("packet_id") != packet_id:
                     raise ValueError("reddit consolidation packet_id does not match packet")
-                rows: dict[str, str] = {}
+                rows: list[tuple[str, str]] = []
                 if isinstance(consolidation.get("post"), dict):
-                    rows["post"] = "post"
+                    rows.append(("post", "post"))
                 comments = consolidation.get("comments", [])
                 if comments is None:
                     comments = []
@@ -655,8 +661,14 @@ def _build_projection_row_index(
                     row_id = comment.get("row_id")
                     if not isinstance(row_id, str) or not row_id.strip():
                         row_id = f"comment_{comment_index:04d}"
-                    rows[row_id] = "comment"
-                row_index[packet_id] = rows
+                    rows.append((row_id, "comment"))
+                row_index[packet_id] = _projection_rows_by_id(
+                    packet_id=packet_id,
+                    source_label=str(entry["source_label"]),
+                    rows=rows,
+                    findings=findings,
+                    lane=lane,
+                )
             else:
                 raise ValueError(f"unsupported source type: {entry['source_type']}")
         except Exception as exc:
@@ -670,6 +682,39 @@ def _build_projection_row_index(
                 packet_id=packet_id,
                 message=str(exc),
             )
+    return row_index
+
+
+def _projection_rows_by_id(
+    *,
+    packet_id: str,
+    source_label: str,
+    rows: Iterable[tuple[str, str]],
+    findings: list[dict[str, Any]],
+    lane: str,
+) -> dict[str, str]:
+    row_index: dict[str, str] = {}
+    row_counts: dict[str, int] = {}
+    for row_id, row_kind in rows:
+        row_counts[row_id] = row_counts.get(row_id, 0) + 1
+        if row_counts[row_id] == 1:
+            row_index[row_id] = row_kind
+
+    duplicate_row_ids = sorted(
+        row_id for row_id, count in row_counts.items() if count > 1
+    )
+    if duplicate_row_ids:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="projection_row_index_ambiguous",
+            owner_candidate="projection_or_consolidation",
+            source_label=source_label,
+            packet_id=packet_id,
+            message="Projection artifact contains duplicate row_id values.",
+            details={"duplicate_row_ids": duplicate_row_ids},
+        )
     return row_index
 
 

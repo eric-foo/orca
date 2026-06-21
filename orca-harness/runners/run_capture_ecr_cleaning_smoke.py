@@ -21,6 +21,7 @@ from cleaning.models import (  # noqa: E402
     CleaningInputHandle,
     CleaningPacket,
     CleaningPreservationCheck,
+    CleaningProjectionRef,
     CleaningRawAnchor,
     CleaningRuleScope,
     CleaningTransform,
@@ -43,6 +44,9 @@ from ecr.models import (  # noqa: E402
 from harness_utils import hash_file, utc_now_z  # noqa: E402
 from source_capture.models import PreservedFile, SourceCapturePacket  # noqa: E402
 from source_capture.ig_projection import IgCreatorMomentumProjectionPacket  # noqa: E402
+from source_capture.reddit_consolidation import (  # noqa: E402
+    REDDIT_THREAD_CONSOLIDATION_SCHEMA_VERSION,
+)
 from source_capture.retail_pdp_projection import RetailPdpProjectionPacket  # noqa: E402
 
 
@@ -710,6 +714,14 @@ def _reddit_handle(
             hash_basis=raw_file.hash_basis,
             anchor_kind=anchor_kind,
             anchor_value=anchor_value,
+        ),
+        projection_ref=CleaningProjectionRef(
+            projection_method="old_reddit_thread_consolidation_row_view",
+            projection_version=REDDIT_THREAD_CONSOLIDATION_SCHEMA_VERSION,
+            certification="view_only; not_cleaned; not_normalized; not_judgment_ready",
+            packet_id=packet.packet_id,
+            row_id=row_id,
+            row_kind=row_kind,
         ),
         ecr_ref=ecr_ref,
     )

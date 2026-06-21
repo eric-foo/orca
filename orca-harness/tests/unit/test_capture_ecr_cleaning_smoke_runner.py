@@ -104,7 +104,17 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_retail_and_reddit(
     assert len(retail_handles) == len(retail_projection.rows)
     assert len(reddit_handles) == 3
     assert all(handle.projection_ref is not None for handle in retail_handles)
-    assert all(handle.projection_ref is None for handle in reddit_handles)
+    assert all(handle.projection_ref is not None for handle in reddit_handles)
+    assert {
+        handle.projection_ref.row_id
+        for handle in reddit_handles
+        if handle.projection_ref is not None
+    } == {"post", "comment_0001", "comment_0002"}
+    assert {
+        handle.projection_ref.row_kind
+        for handle in reddit_handles
+        if handle.projection_ref is not None
+    } == {"post", "comment"}
     assert all(handle.ecr_ref is not None for handle in cleaning_packet.handles)
     assert all(
         handle.ecr_ref.packet_id == handle.raw_anchor.packet_id
@@ -901,6 +911,137 @@ def test_periodic_audit_flags_cleaning_projection_ref_row_unresolved(tmp_path: P
         and finding["code"] == "cleaning_projection_ref_row_unresolved"
         and finding["owner_candidate"] == "cleaning_or_projection"
         and finding["details"] == {"row_id": "missing_fixture_row"}
+        for finding in report["findings"]
+    )
+
+def test_periodic_audit_flags_reddit_cleaning_projection_ref_row_unresolved(
+    tmp_path: Path,
+) -> None:
+    reddit_packet_dir = _write_reddit_packet_dir(tmp_path, NORMAL_THREAD_HTML)
+    reddit_consolidation = consolidate_reddit_packet(
+        packet_or_manifest_path=reddit_packet_dir,
+        output_directory=tmp_path / "reddit_consolidation",
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        reddit_packet_dir=reddit_packet_dir,
+        reddit_consolidation_path=Path(reddit_consolidation["json_path"]),
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    cleaning_path = Path(smoke_outputs["cleaning_packet"])
+    cleaning_payload = _load_json(cleaning_path)
+    for handle in cleaning_payload["handles"]:
+        if handle["handle_id"].endswith(":comment_0001"):
+            handle["projection_ref"]["row_id"] = "missing_reddit_row"
+            break
+    else:
+        pytest.fail("expected reddit comment handle")
+    _write_json(cleaning_path, cleaning_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_projection_ref_row_unresolved"
+        and finding["details"] == {"row_id": "missing_reddit_row"}
+        for finding in report["findings"]
+    )
+
+
+def test_periodic_audit_flags_instagram_cleaning_projection_ref_row_unresolved(
+    tmp_path: Path,
+) -> None:
+    instagram_packet_dir = _write_instagram_packet_dir(tmp_path)
+    instagram_projection_path = tmp_path / "instagram_projection" / "ig_projection.json"
+    write_ig_creator_momentum_projection(
+        packet_or_manifest_path=instagram_packet_dir,
+        output_path=instagram_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        instagram_handle="hyram",
+        instagram_packet_dir=instagram_packet_dir,
+        instagram_projection_path=instagram_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    cleaning_path = Path(smoke_outputs["cleaning_packet"])
+    cleaning_payload = _load_json(cleaning_path)
+    cleaning_payload["handles"][0]["projection_ref"]["row_id"] = "missing_ig_row"
+    _write_json(cleaning_path, cleaning_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_projection_ref_row_unresolved"
+        and finding["details"] == {"row_id": "missing_ig_row"}
+        for finding in report["findings"]
+    )
+
+
+def test_periodic_audit_flags_duplicate_projection_row_ids(tmp_path: Path) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    projection = _load_json(retail_projection_path)
+    duplicate_row_id = projection["rows"][0]["row_id"]
+    projection["rows"][1]["row_id"] = duplicate_row_id
+    _write_json(retail_projection_path, projection)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "projection_row_index_ambiguous"
+        and finding["details"] == {"duplicate_row_ids": [duplicate_row_id]}
         for finding in report["findings"]
     )
 
