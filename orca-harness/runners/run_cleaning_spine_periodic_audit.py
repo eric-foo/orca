@@ -604,8 +604,8 @@ def _build_projection_row_index(
     needed_packet_ids: set[str],
     findings: list[dict[str, Any]],
     lane: str,
-) -> dict[str, dict[str, str]]:
-    row_index: dict[str, dict[str, str]] = {}
+) -> dict[str, dict[str, dict[str, Any]]]:
+    row_index: dict[str, dict[str, dict[str, Any]]] = {}
     if not needed_packet_ids:
         return row_index
     source_label_packet_ids = {
@@ -629,7 +629,10 @@ def _build_projection_row_index(
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
-                    rows=((row.row_id, str(row.row_kind)) for row in projection.rows),
+                    rows=(
+                        (row.row_id, str(row.row_kind), row.source_visible_fields)
+                        for row in projection.rows
+                    ),
                     findings=findings,
                     lane=lane,
                 )
@@ -645,7 +648,10 @@ def _build_projection_row_index(
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
-                    rows=((row.row_id, str(row.row_kind)) for row in projection.rows),
+                    rows=(
+                        (row.row_id, str(row.row_kind), row.source_visible_fields)
+                        for row in projection.rows
+                    ),
                     findings=findings,
                     lane=lane,
                 )
@@ -660,9 +666,9 @@ def _build_projection_row_index(
                 source_packet = consolidation.get("source_packet")
                 if not isinstance(source_packet, dict) or source_packet.get("packet_id") != packet_id:
                     raise ValueError("reddit consolidation packet_id does not match packet")
-                rows: list[tuple[str, str]] = []
+                rows: list[tuple[str, str, dict[str, Any]]] = []
                 if isinstance(consolidation.get("post"), dict):
-                    rows.append(("post", "post"))
+                    rows.append(("post", "post", {}))
                 comments = consolidation.get("comments", [])
                 if comments is None:
                     comments = []
@@ -674,7 +680,7 @@ def _build_projection_row_index(
                     row_id = comment.get("row_id")
                     if not isinstance(row_id, str) or not row_id.strip():
                         row_id = f"comment_{comment_index:04d}"
-                    rows.append((row_id, "comment"))
+                    rows.append((row_id, "comment", {}))
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
@@ -702,16 +708,19 @@ def _projection_rows_by_id(
     *,
     packet_id: str,
     source_label: str,
-    rows: Iterable[tuple[str, str]],
+    rows: Iterable[tuple[str, str, dict[str, Any]]],
     findings: list[dict[str, Any]],
     lane: str,
-) -> dict[str, str]:
-    row_index: dict[str, str] = {}
+) -> dict[str, dict[str, Any]]:
+    row_index: dict[str, dict[str, Any]] = {}
     row_counts: dict[str, int] = {}
-    for row_id, row_kind in rows:
+    for row_id, row_kind, source_visible_fields in rows:
         row_counts[row_id] = row_counts.get(row_id, 0) + 1
         if row_counts[row_id] == 1:
-            row_index[row_id] = row_kind
+            row_index[row_id] = {
+                "row_kind": row_kind,
+                "source_visible_fields": source_visible_fields,
+            }
 
     duplicate_row_ids = sorted(
         row_id for row_id, count in row_counts.items() if count > 1
@@ -735,7 +744,7 @@ def _verify_cleaning_projection_ref(
     *,
     handle_id: str,
     projection_ref: dict[str, Any] | None,
-    projection_row_index: dict[str, dict[str, str]],
+    projection_row_index: dict[str, dict[str, dict[str, Any]]],
     findings: list[dict[str, Any]],
     lane: str,
 ) -> None:
@@ -768,8 +777,8 @@ def _verify_cleaning_projection_ref(
             message="Cleaning projection_ref packet_id has no indexed projection artifact.",
         )
         return
-    actual_row_kind = packet_rows.get(row_id)
-    if actual_row_kind is None:
+    actual_row = packet_rows.get(row_id)
+    if actual_row is None:
         _finding(
             findings,
             lane=lane,
@@ -782,6 +791,7 @@ def _verify_cleaning_projection_ref(
             details={"row_id": row_id},
         )
         return
+    actual_row_kind = actual_row.get("row_kind")
     expected_row_kind = projection_ref.get("row_kind")
     if isinstance(expected_row_kind, str) and expected_row_kind and expected_row_kind != actual_row_kind:
         _finding(
@@ -806,7 +816,7 @@ def _verify_cleaning_packet_traceability(
     cleaning_packet: CleaningPacket,
     ecr_receipts: dict[str, Any],
     packet_index: dict[str, dict[str, Any]],
-    projection_row_index: dict[str, dict[str, str]],
+    projection_row_index: dict[str, dict[str, dict[str, Any]]],
     findings: list[dict[str, Any]],
     lane: str,
 ) -> None:
@@ -815,6 +825,7 @@ def _verify_cleaning_packet_traceability(
         for receipt in ecr_receipts.get("receipts", [])
         if isinstance(receipt, dict)
     }
+    handle_by_id = {handle.handle_id: handle for handle in cleaning_packet.handles}
     for handle in cleaning_packet.handles:
         if handle.relation.value != "keyed_siblings_over_raw":
             _finding(
@@ -886,6 +897,145 @@ def _verify_cleaning_packet_traceability(
             findings=findings,
             lane=lane,
         )
+    for entry in cleaning_packet.transform_ledger:
+        _verify_cleaning_transform_original_value(
+            entry=entry,
+            handle_by_id=handle_by_id,
+            projection_row_index=projection_row_index,
+            packet_index=packet_index,
+            findings=findings,
+            lane=lane,
+        )
+
+
+def _verify_cleaning_transform_original_value(
+    *,
+    entry: Any,
+    handle_by_id: dict[str, Any],
+    projection_row_index: dict[str, dict[str, dict[str, Any]]],
+    packet_index: dict[str, dict[str, Any]],
+    findings: list[dict[str, Any]],
+    lane: str,
+) -> None:
+    original_value = entry.transform.original_value
+    if original_value is None:
+        return
+    if not isinstance(original_value, str) or not original_value.strip():
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_transform_original_value_empty",
+            owner_candidate="cleaning",
+            handle_id=entry.input_handle_id,
+            message="Cleaning transform original_value must be non-empty when present.",
+        )
+        return
+
+    handle = handle_by_id.get(entry.input_handle_id)
+    if handle is None:
+        return
+    if _transform_original_value_in_projection(
+        original_value=original_value,
+        projection_ref=handle.projection_ref,
+        projection_row_index=projection_row_index,
+    ):
+        return
+    if _transform_original_value_in_raw(
+        original_value=original_value,
+        raw_anchor=handle.raw_anchor.model_dump(mode="json"),
+        packet_index=packet_index,
+    ):
+        return
+
+    _finding(
+        findings,
+        lane=lane,
+        severity="major",
+        code="cleaning_transform_original_value_unresolved",
+        owner_candidate="cleaning",
+        packet_id=handle.raw_anchor.packet_id,
+        handle_id=entry.input_handle_id,
+        message="Cleaning transform original_value does not resolve to projection fields or raw bytes.",
+        details={
+            "method_or_rule": entry.transform.method_or_rule,
+            "original_value": original_value,
+            "projection_ref": (
+                handle.projection_ref.model_dump(mode="json")
+                if handle.projection_ref is not None
+                else None
+            ),
+        },
+    )
+
+
+def _transform_original_value_in_projection(
+    *,
+    original_value: str,
+    projection_ref: Any,
+    projection_row_index: dict[str, dict[str, dict[str, Any]]],
+) -> bool:
+    if projection_ref is None:
+        return False
+    packet_rows = projection_row_index.get(projection_ref.packet_id)
+    if packet_rows is None:
+        return False
+    row_id = projection_ref.row_id
+    if not isinstance(row_id, str) or not row_id.strip():
+        return False
+    row_record = packet_rows.get(row_id)
+    if row_record is None:
+        return False
+    return original_value in set(
+        _source_visible_text_values(row_record.get("source_visible_fields", {}))
+    )
+
+
+def _source_visible_text_values(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, bool):
+        return ["true" if value else "false", str(value)]
+    if isinstance(value, (int, float)):
+        return [str(value)]
+    if isinstance(value, dict):
+        values: list[str] = []
+        for item in value.values():
+            values.extend(_source_visible_text_values(item))
+        return values
+    if isinstance(value, list):
+        values = []
+        for item in value:
+            values.extend(_source_visible_text_values(item))
+        return values
+    return []
+
+
+def _transform_original_value_in_raw(
+    *,
+    original_value: str,
+    raw_anchor: dict[str, Any],
+    packet_index: dict[str, dict[str, Any]],
+) -> bool:
+    packet_record = packet_index.get(raw_anchor["packet_id"])
+    if packet_record is None:
+        return False
+    packet: SourceCapturePacket = packet_record["packet"]
+    packet_dir: Path = packet_record["packet_dir"]
+    preserved_file = next(
+        (item for item in packet.preserved_files if item.file_id == raw_anchor["file_id"]),
+        None,
+    )
+    if preserved_file is None:
+        return False
+    try:
+        raw_path = _contained_packet_path(packet_dir, preserved_file.relative_packet_path)
+        raw_text = raw_path.read_bytes().decode("utf-8", errors="replace")
+    except Exception:
+        return False
+    return original_value in raw_text
 
 
 def _verify_failed_capture_handle_raw_pull_trigger(

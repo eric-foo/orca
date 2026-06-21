@@ -462,6 +462,89 @@ def test_runner_opt_in_cleaning_transform_smoke_writes_one_ledger_entry(tmp_path
     assert summary["counts"]["cleaning_transform_entries"] == 1
 
 
+def test_periodic_audit_accepts_transform_original_value_from_projection(tmp_path: Path) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+        include_cleaning_transform_smoke=True,
+    )
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "pass"
+    assert not any(
+        finding["code"] == "cleaning_transform_original_value_unresolved"
+        for finding in report["findings"]
+    )
+
+
+def test_periodic_audit_flags_transform_original_value_not_from_projection_or_raw(
+    tmp_path: Path,
+) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+        include_cleaning_transform_smoke=True,
+    )
+    cleaning_path = Path(smoke_outputs["cleaning_packet"])
+    cleaning_payload = _load_json(cleaning_path)
+    cleaning_payload["transform_ledger"][0]["transform"]["original_value"] = (
+        "invented original text absent from raw and projection"
+    )
+    _write_json(cleaning_path, cleaning_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_transform_original_value_unresolved"
+        and finding["owner_candidate"] == "cleaning"
+        and finding["details"]["original_value"]
+        == "invented original text absent from raw and projection"
+        for finding in report["findings"]
+    )
+
 def test_transform_smoke_fails_without_source_visible_string(tmp_path: Path) -> None:
     retail_packet_dir = _write_retail_packet_dir(tmp_path)
     retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
