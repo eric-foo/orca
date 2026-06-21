@@ -204,10 +204,12 @@ def write_local_source_capture_packet(
     receipt_path.write_text(render_receipt(packet), encoding="utf-8", newline="\n")
 
     if data_root is not None:
-        # Atomically publish the completed staging dir to raw/<packet_id>.
+        # Atomically publish the completed staging dir to raw/<packet_id>, then
+        # record the content-free availability fact (rebuildable from raw).
         output_directory = data_root.publish_raw_packet(output_directory, packet_id)
         manifest_path = output_directory / "manifest.json"
         receipt_path = output_directory / "receipt.md"
+        data_root.record_availability(packet_id)
 
     return PacketWriteResult(
         output_directory=str(output_directory.resolve()),

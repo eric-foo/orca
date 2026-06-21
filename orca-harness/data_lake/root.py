@@ -31,7 +31,7 @@ import os
 import re
 from pathlib import Path
 
-from harness_utils import generate_ulid, utc_now_z
+from harness_utils import generate_ulid, hash_file, utc_now_z
 
 ROOT_MARKER_FILENAME = ".orca-data-root"
 ROOT_MARKER_CONTRACT_VERSION = "v0"
@@ -170,6 +170,36 @@ def _atomic_create(target: Path, data: bytes) -> None:
             tmp.unlink()
         except FileNotFoundError:
             pass
+
+
+def _atomic_replace(target: Path, data: bytes) -> None:
+    """Create-or-replace atomic write for a rebuildable index entry. Replace is
+    acceptable here (unlike records) because indexes/ is disposable and is
+    regenerated from committed raw."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.parent / f".{target.name}.{generate_ulid()}.tmp"
+    with open(tmp, "xb") as handle:
+        handle.write(data)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, target)
+
+
+def _availability_entry_from_raw(packet_id: str, container: Path) -> dict:
+    """A content-free availability entry derived purely from committed raw, so
+    the whole index is rebuildable from raw + hashes."""
+    manifest = container / "manifest.json"
+    if not manifest.is_file():
+        raise DataLakeRootError(f"committed raw packet missing manifest.json: {packet_id}")
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    return {
+        "packet_id": packet_id,
+        "source_family": data.get("source_family"),
+        "source_surface": data.get("source_surface"),
+        "raw_path": f"raw/{packet_id}",
+        "manifest_relpath": f"raw/{packet_id}/manifest.json",
+        "manifest_sha256": hash_file(manifest),
+    }
 
 
 def _production_candidate(
@@ -400,3 +430,70 @@ class DataLakeRoot:
         target = self._within(subtree, raw_anchor, lane, record_id)
         _atomic_create(target, data)
         return target
+
+    # -- availability index (content-free, rebuildable) ---------------------
+
+    def record_availability(self, packet_id: str) -> Path:
+        """Record the content-free committed-by-key availability fact for a
+        committed raw packet, derived solely from raw/<packet_id>/manifest.json
+        (so the whole index is rebuildable). Index entry: create-or-replace."""
+        self._reverify()
+        _validate_packet_id(packet_id)
+        container = self._within("raw", packet_id)
+        if not container.is_dir():
+            raise DataLakeRootError(
+                f"cannot record availability; raw packet not committed: {packet_id}"
+            )
+        entry = _availability_entry_from_raw(packet_id, container)
+        target = self._within("indexes", "availability", f"{packet_id}.json")
+        _atomic_replace(target, (json.dumps(entry, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+        return target
+
+    def find_packet(self, packet_id: str) -> Path | None:
+        """Return the committed raw packet container by key, or None."""
+        _validate_packet_id(packet_id)
+        container = self._within("raw", packet_id)
+        return container if container.is_dir() else None
+
+    def read_availability(self, packet_id: str) -> dict | None:
+        """Return the availability entry for a packet by key, or None."""
+        _validate_packet_id(packet_id)
+        target = self._within("indexes", "availability", f"{packet_id}.json")
+        if not target.is_file():
+            return None
+        return json.loads(target.read_text(encoding="utf-8"))
+
+    def list_available(self, *, source_family: str | None = None) -> list[str]:
+        """List committed packet ids by key, optionally filtered by source family."""
+        avail = self._path / "indexes" / "availability"
+        if not avail.is_dir():
+            return []
+        out: list[str] = []
+        for entry_file in sorted(avail.glob("*.json")):
+            entry = json.loads(entry_file.read_text(encoding="utf-8"))
+            if source_family is None or entry.get("source_family") == source_family:
+                out.append(entry["packet_id"])
+        return out
+
+    def rebuild_availability(self) -> int:
+        """Rebuild indexes/availability entirely from committed raw packets
+        (delete + regenerate), proving the index is non-authoritative and
+        rebuildable. Returns the number of packets indexed."""
+        self._reverify()
+        avail = self._path / "indexes" / "availability"
+        if avail.is_dir():
+            for entry_file in avail.glob("*.json"):
+                entry_file.unlink()
+        avail.mkdir(parents=True, exist_ok=True)
+        raw_dir = self._path / "raw"
+        count = 0
+        if raw_dir.is_dir():
+            for container in sorted(raw_dir.iterdir()):
+                if (
+                    container.is_dir()
+                    and _CROCKFORD_26.fullmatch(container.name)
+                    and (container / "manifest.json").is_file()
+                ):
+                    self.record_availability(container.name)
+                    count += 1
+        return count
