@@ -36,6 +36,7 @@ from ecr.deriver import (  # noqa: E402
 )
 from harness_utils import hash_file, utc_now_z  # noqa: E402
 from source_capture.models import PreservedFile, SourceCapturePacket  # noqa: E402
+from source_capture.ig_projection import IgCreatorMomentumProjectionPacket  # noqa: E402
 from source_capture.retail_pdp_projection import RetailPdpProjectionPacket  # noqa: E402
 
 
@@ -93,8 +94,9 @@ def run_capture_ecr_cleaning_smoke(
 
     retail_entries = _entry_list(manifest, "retail")
     reddit_entries = _entry_list(manifest, "reddit")
-    if not retail_entries and not reddit_entries:
-        raise ValueError("smoke manifest must name at least one retail or reddit source")
+    instagram_entries = _entry_list(manifest, "instagram")
+    if not retail_entries and not reddit_entries and not instagram_entries:
+        raise ValueError("smoke manifest must name at least one retail, reddit, or instagram source")
 
     output_dir = output_dir.resolve()
     output_paths = {
@@ -141,6 +143,17 @@ def run_capture_ecr_cleaning_smoke(
         receipts.append(result["ecr_receipt"])
         source_summaries.append(result["source_summary"])
 
+    for index, entry in enumerate(instagram_entries, start=1):
+        result = _process_instagram_entry(
+            entry=entry,
+            index=index,
+            manifest_dir=manifest_dir,
+            findings=findings,
+        )
+        handles.extend(result["handles"])
+        receipts.append(result["ecr_receipt"])
+        source_summaries.append(result["source_summary"])
+
     transform_ledger = (
         _cleaning_transform_smoke_entries(transform_candidates)
         if include_cleaning_transform_smoke
@@ -163,6 +176,7 @@ def run_capture_ecr_cleaning_smoke(
         "counts": {
             "retail_sources": len(retail_entries),
             "reddit_sources": len(reddit_entries),
+            "instagram_sources": len(instagram_entries),
             "ecr_receipts": len(receipts),
             "cleaning_handles": len(cleaning_packet.handles),
             "cleaning_transform_entries": len(cleaning_packet.transform_ledger),
@@ -409,6 +423,239 @@ def _process_reddit_entry(
         },
     }
 
+
+def _process_instagram_entry(
+    *,
+    entry: dict[str, Any],
+    index: int,
+    manifest_dir: Path,
+    findings: list[dict[str, Any]],
+) -> dict[str, Any]:
+    handle = _optional_text(entry, "handle") or f"instagram_{index}"
+    source_label = _optional_text(entry, "source_label") or f"instagram:{handle}"
+    packet_dir = _resolve_manifest_path(manifest_dir, entry, "packet_dir")
+    projection_path = _resolve_manifest_path(manifest_dir, entry, "projection_json")
+
+    packet = _load_packet(packet_dir)
+    projection = IgCreatorMomentumProjectionPacket.model_validate(
+        _load_json_object(projection_path, f"{source_label} projection")
+    )
+    if projection.packet_id != packet.packet_id:
+        raise ValueError(
+            f"{source_label} projection packet_id {projection.packet_id!r} "
+            f"does not match packet {packet.packet_id!r}"
+        )
+
+    ecr_receipt, ecr_ref = _derive_ecr_receipt(
+        packet=packet,
+        packet_dir=packet_dir,
+        source_label=source_label,
+    )
+
+    structure_preserved = bool(projection.loss_ledger.structure_preserved)
+    base_handles = cleaning_input_handles_from_projection_rows(
+        source_family=packet.source_family,
+        source_surface=packet.source_surface,
+        projection_packet=projection,
+        handle_id_prefix=f"instagram:{_handle_token(handle)}:{packet.packet_id}",
+    )
+    _verify_instagram_projection_anchors(
+        packet_dir=packet_dir,
+        packet=packet,
+        projection=projection,
+        source_label=source_label,
+        findings=findings,
+    )
+
+    trace_notes = _instagram_handle_trace_notes(
+        structure_preserved=structure_preserved,
+        projection_residuals=projection.residuals,
+    )
+    handles: list[CleaningInputHandle] = []
+    for raw_handle in base_handles:
+        handle_payload = raw_handle.model_dump(mode="json")
+        handles.append(
+            CleaningInputHandle.model_validate(
+                {
+                    **handle_payload,
+                    "ecr_ref": ecr_ref.model_dump(mode="json"),
+                    "residuals": _dedupe_preserve_order(
+                        [*handle_payload.get("residuals", []), *trace_notes["residuals"]]
+                    ),
+                    "warnings": _dedupe_preserve_order(
+                        [*handle_payload.get("warnings", []), *trace_notes["warnings"]]
+                    ),
+                    "raw_pull_triggers": _dedupe_preserve_order(
+                        [
+                            *handle_payload.get("raw_pull_triggers", []),
+                            *trace_notes["raw_pull_triggers"],
+                        ]
+                    ),
+                }
+            )
+        )
+
+    if not structure_preserved:
+        findings.append(
+            {
+                "code": "instagram_structure_not_preserved",
+                "source_label": source_label,
+                "packet_id": packet.packet_id,
+                "residuals": projection.residuals,
+            }
+        )
+
+    return {
+        "handles": handles,
+        "ecr_receipt": ecr_receipt,
+        "source_summary": {
+            "source_label": source_label,
+            "packet_id": packet.packet_id,
+            "packet_dir": str(packet_dir),
+            "projection_json": str(projection_path),
+            "handle_count": len(handles),
+            "projection_method": projection.projection_method,
+            "projection_version": projection.projection_version,
+            "structure_preserved": structure_preserved,
+            "projection_residuals": projection.residuals,
+            "row_count": len(projection.rows),
+        },
+    }
+
+
+def _verify_instagram_projection_anchors(
+    *,
+    packet_dir: Path,
+    packet: SourceCapturePacket,
+    projection: IgCreatorMomentumProjectionPacket,
+    source_label: str,
+    findings: list[dict[str, Any]],
+) -> None:
+    packet_slice_files_by_id = {
+        source_slice.slice_id: set(source_slice.preserved_file_ids)
+        for source_slice in packet.source_slices
+    }
+    packet_file_ids = {preserved_file.file_id for preserved_file in packet.preserved_files}
+    checked_json_payloads: dict[tuple[str, str, str], Any] = {}
+    for row in projection.rows:
+        if row.raw_ref.packet_id != packet.packet_id:
+            raise ValueError(
+                f"{source_label} projection row {row.row_id!r} raw_ref packet_id "
+                f"{row.raw_ref.packet_id!r} does not match packet {packet.packet_id!r}"
+            )
+        if row.raw_ref.slice_id not in packet_slice_files_by_id:
+            raise ValueError(
+                f"{source_label} projection row {row.row_id!r} raw_ref slice_id "
+                f"{row.raw_ref.slice_id!r} is absent from packet {packet.packet_id!r}"
+            )
+        if row.raw_anchor.file_id not in packet_file_ids:
+            raise ValueError(
+                f"{source_label} projection row {row.row_id!r} raw_anchor file_id "
+                f"{row.raw_anchor.file_id!r} is absent from packet {packet.packet_id!r}"
+            )
+        key = (
+            row.raw_anchor.file_id,
+            row.raw_anchor.relative_packet_path,
+            row.raw_anchor.sha256,
+        )
+        if key not in checked_json_payloads:
+            _raw_file, raw_path = _verified_preserved_file(
+                packet_dir=packet_dir,
+                packet=packet,
+                file_id=row.raw_anchor.file_id,
+                expected_relative_packet_path=row.raw_anchor.relative_packet_path,
+                expected_sha256=row.raw_anchor.sha256,
+            )
+            checked_json_payloads[key] = _load_json_bytes(
+                raw_path.read_bytes(),
+                findings=findings,
+                finding_context={
+                    "code": "instagram_row_anchor_unverified",
+                    "source_label": source_label,
+                    "packet_id": packet.packet_id,
+                    "row_id": row.row_id,
+                    "row_kind": row.row_kind,
+                    "anchor_kind": "json_pointer",
+                    "anchor_value": row.raw_anchor.json_pointer,
+                },
+            )
+
+        if row.raw_anchor.json_pointer and not _json_pointer_exists(
+            checked_json_payloads[key],
+            row.raw_anchor.json_pointer,
+        ):
+            findings.append(
+                {
+                    "code": "instagram_row_anchor_unverified",
+                    "source_label": source_label,
+                    "packet_id": packet.packet_id,
+                    "row_id": row.row_id,
+                    "row_kind": row.row_kind,
+                    "anchor_kind": "json_pointer",
+                    "anchor_value": row.raw_anchor.json_pointer,
+                    "reason": "json_pointer_absent_from_raw",
+                }
+            )
+
+
+def _load_json_bytes(
+    raw_bytes: bytes,
+    *,
+    findings: list[dict[str, Any]],
+    finding_context: dict[str, Any],
+) -> Any:
+    try:
+        return json.loads(raw_bytes)
+    except json.JSONDecodeError:
+        findings.append({**finding_context, "reason": "raw_json_malformed"})
+        return None
+
+
+def _json_pointer_exists(payload: Any, pointer: str) -> bool:
+    if pointer == "":
+        return True
+    if not pointer.startswith("/"):
+        return False
+    current = payload
+    for raw_token in pointer.split("/")[1:]:
+        token = raw_token.replace("~1", "/").replace("~0", "~")
+        if isinstance(current, dict):
+            if token not in current:
+                return False
+            current = current[token]
+            continue
+        if isinstance(current, list) and token.isdigit():
+            index = int(token)
+            if index >= len(current):
+                return False
+            current = current[index]
+            continue
+        return False
+    return True
+
+
+def _instagram_handle_trace_notes(
+    *,
+    structure_preserved: bool,
+    projection_residuals: Sequence[str],
+) -> dict[str, list[str]]:
+    warnings: list[str] = []
+    residuals: list[str] = []
+    raw_pull_triggers: list[str] = []
+
+    if not structure_preserved:
+        warnings.append("instagram_structure_not_preserved")
+        residuals.extend(
+            f"instagram_structure_not_preserved:{residual}"
+            for residual in projection_residuals
+        )
+        raw_pull_triggers.append("inspect_raw_before_instagram_use:instagram_structure_not_preserved")
+
+    return {
+        "warnings": _dedupe_preserve_order(warnings),
+        "residuals": _dedupe_preserve_order(residuals),
+        "raw_pull_triggers": _dedupe_preserve_order(raw_pull_triggers),
+    }
 
 def _reddit_handle(
     *,

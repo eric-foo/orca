@@ -14,6 +14,9 @@ from runners.run_capture_ecr_cleaning_smoke import (
 )
 from source_capture.models import (
     CaptureModeCategory,
+    CoverageWindow,
+    MetricObservation,
+    MetricPosture,
     PacketTiming,
     PreservedFile,
     ReceiptMetadata,
@@ -24,6 +27,7 @@ from source_capture.models import (
     not_attempted,
     unknown_with_reason,
 )
+from source_capture.ig_projection import write_ig_creator_momentum_projection
 from source_capture.reddit_consolidation import consolidate_reddit_packet
 from source_capture.retail_pdp_projection import write_retail_pdp_projection
 from source_capture.writer import write_local_source_capture_packet
@@ -65,6 +69,7 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_retail_and_reddit(
     assert summary["counts"] == {
         "retail_sources": 1,
         "reddit_sources": 1,
+        "instagram_sources": 0,
         "ecr_receipts": 2,
         "cleaning_handles": len(cleaning_packet.handles),
         "cleaning_transform_entries": 0,
@@ -119,6 +124,72 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_retail_and_reddit(
     )
     assert "not_capture_execution" in summary["non_claims"]
 
+
+def test_runner_writes_ecr_receipts_and_cleaning_packet_for_instagram(
+    tmp_path: Path,
+) -> None:
+    instagram_packet_dir = _write_instagram_packet_dir(tmp_path)
+    instagram_projection_path = tmp_path / "instagram_projection" / "ig_projection.json"
+    instagram_projection = write_ig_creator_momentum_projection(
+        packet_or_manifest_path=instagram_packet_dir,
+        output_path=instagram_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        instagram_handle="hyram",
+        instagram_packet_dir=instagram_packet_dir,
+        instagram_projection_path=instagram_projection_path,
+    )
+
+    outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+
+    ecr_receipts = _load_json(Path(outputs["ecr_source_side_receipts"]))
+    cleaning_packet = CleaningPacket.model_validate(
+        _load_json(Path(outputs["cleaning_packet"]))
+    )
+    summary = _load_json(Path(outputs["smoke_summary"]))
+
+    assert summary["counts"] == {
+        "retail_sources": 0,
+        "reddit_sources": 0,
+        "instagram_sources": 1,
+        "ecr_receipts": 1,
+        "cleaning_handles": len(instagram_projection.rows),
+        "cleaning_transform_entries": 0,
+    }
+    assert len(ecr_receipts["receipts"]) == 1
+    assert ecr_receipts["receipts"][0]["source_label"] == "instagram:hyram"
+    assert set(ecr_receipts["receipts"][0]["postures"]) == {
+        "identity",
+        "inspectability",
+        "timing",
+        "source_visibility",
+    }
+    assert len(cleaning_packet.handles) == len(instagram_projection.rows)
+    assert all(handle.projection_ref is not None for handle in cleaning_packet.handles)
+    assert all(handle.ecr_ref is not None for handle in cleaning_packet.handles)
+    assert all(
+        handle.ecr_ref.packet_id == handle.raw_anchor.packet_id
+        for handle in cleaning_packet.handles
+        if handle.ecr_ref is not None
+    )
+    assert all(handle.raw_anchor.anchor_kind == "json_pointer" for handle in cleaning_packet.handles)
+    follower_handle = next(
+        handle
+        for handle in cleaning_packet.handles
+        if handle.projection_ref and handle.projection_ref.row_kind == "ig_creator_metric"
+    )
+    assert follower_handle.raw_anchor.json_pointer == "/follower_count"
+    instagram_source = next(
+        source for source in summary["sources"] if source["source_label"] == "instagram:hyram"
+    )
+    assert instagram_source["handle_count"] == len(instagram_projection.rows)
+    assert instagram_source["row_count"] == len(instagram_projection.rows)
+    assert instagram_source["structure_preserved"] is True
+    assert summary["findings"] == []
 
 def test_retail_capture_validity_flags_error_page_without_blocking(tmp_path: Path) -> None:
     retail_packet_dir = _write_retail_packet_dir(
@@ -444,7 +515,7 @@ def test_runner_refuses_empty_manifest_and_existing_outputs(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="at least one retail or reddit source"):
+    with pytest.raises(ValueError, match="at least one retail, reddit, or instagram source"):
         run_capture_ecr_cleaning_smoke(
             smoke_manifest_path=empty_manifest,
             output_dir=tmp_path / "empty_outputs",
@@ -627,6 +698,9 @@ def _write_smoke_manifest(
     retail_projection_path: Path | None = None,
     reddit_packet_dir: Path | None = None,
     reddit_consolidation_path: Path | None = None,
+    instagram_handle: str | None = None,
+    instagram_packet_dir: Path | None = None,
+    instagram_projection_path: Path | None = None,
 ) -> Path:
     manifest: dict[str, object] = {"run_id": "fixture_real_data_shape_smoke"}
     if retail_packet_dir is not None and retail_projection_path is not None:
@@ -644,9 +718,188 @@ def _write_smoke_manifest(
                 "consolidation_json": str(reddit_consolidation_path),
             }
         ]
+    if instagram_packet_dir is not None and instagram_projection_path is not None:
+        manifest["instagram"] = [
+            {
+                "handle": instagram_handle or "instagram_fixture",
+                "packet_dir": str(instagram_packet_dir),
+                "projection_json": str(instagram_projection_path),
+            }
+        ]
     path = tmp_path / f"smoke_manifest_{len(list(tmp_path.glob('smoke_manifest_*.json')))}.json"
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _write_instagram_packet_dir(tmp_path: Path) -> Path:
+    capture_time = "2026-06-16T20:32:17Z"
+    profile_raw = {
+        "profile_url": "https://www.instagram.com/hyram/",
+        "stats": {"followers": "724K", "following": "2,339", "posts": "321"},
+    }
+    momentum_raw = {
+        "username": "hyram",
+        "numeric_id": "5802114508",
+        "follower_count": 724000,
+        "metric_registry_version": "ig_creator_momentum_metrics_v0",
+        "identity_conflict_policy_version": "ig_numeric_id_username_policy_v0",
+        "media": {
+            "AAA": {
+                "shortcode": "AAA",
+                "is_video": False,
+                "video_view_count": None,
+                "like_count": 1693,
+                "comment_count": 26,
+                "caption": "caption omitted from projection rows",
+                "taken_at_timestamp": 1722470400,
+            }
+        },
+    }
+    call_raw = {
+        "url": "https://www.instagram.com/hyram/p/AAA/",
+        "status": "captured",
+        "likes": 1693,
+        "comments": 26,
+        "date": "August 1, 2024",
+        "is_ad": False,
+        "caption_truncated": False,
+    }
+    raw_file_bytes_by_file_id = {
+        "file_01": json.dumps(profile_raw, sort_keys=True).encode("utf-8"),
+        "file_02": json.dumps(momentum_raw, sort_keys=True).encode("utf-8"),
+        "file_03": json.dumps(call_raw, sort_keys=True).encode("utf-8"),
+    }
+    timing = PacketTiming(
+        source_publication_or_event=unknown_with_reason(
+            "profile slice is the enumeration source"
+        ),
+        source_edit_or_version=unknown_with_reason("not inferred"),
+        capture_time=known_fact(capture_time),
+        recapture_time=not_applicable("no prior capture"),
+        cutoff_posture=unknown_with_reason("not supplied"),
+    )
+    call_timing = timing.model_copy(
+        update={"source_publication_or_event": known_fact("August 1, 2024")}
+    )
+    packet = SourceCapturePacket(
+        packet_id="01TESTIGSMOKE",
+        manifest_version="source_capture_packet_manifest_v1",
+        obligation_contract_version="core_spine_v0_data_capture_spine_obligation_contract_v0",
+        source_family="instagram_creator",
+        source_surface="ig_calls_browser_snapshot",
+        source_locator=known_fact("https://www.instagram.com/hyram/"),
+        requested_decision_context=known_fact("IG Cleaning smoke fixture."),
+        capture_context=known_fact("logged-out IG wind-caller calls capture fixture"),
+        actor_audience_context=known_fact("public creator fixture"),
+        capture_mode=CaptureModeCategory.AUTOMATED_EXTRACTION,
+        operator_category="capture_ecr_cleaning_smoke_test_operator",
+        session_identity="01TESTIGSESSION",
+        timing=timing,
+        access_posture=known_fact("ig_logged_out_browser_snapshot"),
+        archive_history_posture=not_attempted(
+            "IG calls runner does not query archive or history services"
+        ),
+        media_modality_posture=known_fact("og:description and profile-feed JSON checked"),
+        re_capture_relationship=not_applicable("no prior packet"),
+        source_slices=[
+            SourceCaptureSlice(
+                slice_id="ig_profile_00",
+                locator=known_fact("https://www.instagram.com/hyram/"),
+                timing=timing,
+                access_posture=known_fact("ig_logged_out_browser_snapshot"),
+                archive_history_posture=not_attempted(
+                    "IG calls runner does not query archive or history services"
+                ),
+                media_modality_posture=known_fact("og:description and profile-feed JSON checked"),
+                re_capture_relationship=not_applicable("no prior packet"),
+                preserved_file_ids=["file_01", "file_02"],
+                metric_observations=[
+                    MetricObservation(
+                        metric="follower_count",
+                        posture=MetricPosture.OBSERVED,
+                        value=724000,
+                        coverage_window=CoverageWindow(end=capture_time),
+                    )
+                ],
+            ),
+            SourceCaptureSlice(
+                slice_id="ig_call_01",
+                locator=known_fact("https://www.instagram.com/hyram/p/AAA/"),
+                timing=call_timing,
+                access_posture=known_fact("ig_logged_out_browser_snapshot"),
+                archive_history_posture=not_attempted(
+                    "IG calls runner does not query archive or history services"
+                ),
+                media_modality_posture=known_fact("og:description and profile-feed JSON checked"),
+                re_capture_relationship=not_applicable("no prior packet"),
+                preserved_file_ids=["file_03"],
+                metric_observations=[
+                    MetricObservation(
+                        metric="like_count",
+                        posture=MetricPosture.OBSERVED,
+                        value=1693,
+                        coverage_window=CoverageWindow(end=capture_time),
+                    ),
+                    MetricObservation(
+                        metric="comment_count",
+                        posture=MetricPosture.OBSERVED,
+                        value=26,
+                        coverage_window=CoverageWindow(end=capture_time),
+                    ),
+                    MetricObservation(
+                        metric="view_count",
+                        posture=MetricPosture.NOT_APPLICABLE,
+                        reason="IG profile-feed JSON marks this media as non-video",
+                        coverage_window=CoverageWindow(end=capture_time),
+                    ),
+                ],
+            ),
+        ],
+        preserved_files=[
+            _preserved_file(
+                "file_01",
+                "raw/01_ig_profile.json",
+                raw_file_bytes_by_file_id["file_01"],
+            ),
+            _preserved_file(
+                "file_02",
+                "raw/02_ig_profile_momentum.json",
+                raw_file_bytes_by_file_id["file_02"],
+            ),
+            _preserved_file(
+                "file_03",
+                "raw/03_ig_call_01.json",
+                raw_file_bytes_by_file_id["file_03"],
+            ),
+        ],
+        receipt_metadata=ReceiptMetadata(
+            title="Source Capture Packet Receipt",
+            generated_at="2026-06-16T20:33:46Z",
+            summary="unit test IG source capture packet",
+            non_claims=["not Cleaning", "not Judgment"],
+        ),
+    )
+    packet_dir = tmp_path / "instagram_packet"
+    for preserved_file in packet.preserved_files:
+        file_path = packet_dir / preserved_file.relative_packet_path
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_bytes(raw_file_bytes_by_file_id[preserved_file.file_id])
+    (packet_dir / "manifest.json").write_text(
+        json.dumps(packet.model_dump(mode="json"), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return packet_dir
+
+
+def _preserved_file(file_id: str, relative_path: str, body: bytes) -> PreservedFile:
+    return PreservedFile(
+        file_id=file_id,
+        original_path=relative_path,
+        relative_packet_path=relative_path,
+        sha256=hashlib.sha256(body).hexdigest(),
+        hash_basis="raw_stored_bytes",
+        size_bytes=len(body),
+    )
 
 
 def _write_reddit_packet_dir(tmp_path: Path, html: str) -> Path:
