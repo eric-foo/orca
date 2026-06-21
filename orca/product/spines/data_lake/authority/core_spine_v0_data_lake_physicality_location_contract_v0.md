@@ -16,6 +16,8 @@ use_when:
   - Scoping data-root configuration, fail-closed resolution, or directory placement.
   - Naming a durable Data Lake record and checking it does not leak gold/Judgment/actor semantics.
 open_next:
+  - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_raw_admission_key_grammar_contract_v0.md
+  - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_write_boundary_enforcement_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_storage_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_core_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_medallion_gold_readiness_contract_v0.md
@@ -189,17 +191,24 @@ second source of truth.
 
 - One required resolvable pointer: `ORCA_DATA_ROOT` -> an external absolute path.
   The contract names no drive letter; the local example is `F:\orca-data`.
-- Resolution precedence (contract shape, not loader implementation): explicit /
-  per-run override -> environment variable -> optional config-file fallback. A
-  test-fixture override is always available and points at a temp/sandbox root.
+- Resolution precedence (contract shape, not loader implementation): production
+  precedence is explicit / per-run override -> environment variable -> optional
+  config-file fallback. A test root is injected only in test mode as an explicit test
+  input; it is never a production precedence tier or runtime fallback (a test override
+  placed after config would be a silent-write hazard). See the write-boundary
+  enforcement decision contract.
 - **Fail-closed.** Tools refuse to write and surface the failure when the root is:
   unset, unresolvable, **not mounted** (removable media absent), inside the repo
   working tree, or **missing its expected root marker**. There is no silent or
   fallback write.
 - Root-identity check: because drive letters are reassignable (especially for
   removable media), resolution must confirm the path is actually the Orca data root
-  (e.g., an expected root-marker file) before writing, not merely that some path at
-  that letter exists. The marker mechanism is deferred; the intent is contract-level.
+  before writing, not merely that some path at that letter exists. The marker is a
+  per-root identity (a root-local marker carrying a `root_uuid` compared against the
+  configured/expected root identity), and writes use atomic write-then-rename that
+  fails if the destination already exists. The exact marker mechanism is
+  implementation; the per-root-identity intent is contract-level. See the
+  write-boundary enforcement decision contract.
 - Config file format, loader, env/file merge mechanics, and validation tooling are
   implementation and remain deferred.
 
@@ -257,23 +266,35 @@ what it foregoes:
 
 ## Implementation Blockers
 
-These must remain closed before storage implementation:
+Resolution status (updated as blocker-resolution decisions land 2026-06-21):
 
-1. Packet-admission criteria + packet/slice/object/event key rules (gates raw path grammar).
-2. Attachment Record physical representation (Attachment Record implementation direction).
+1. Packet-admission criteria + packet/slice/object/event key rules — **RESOLVED** by
+   the raw admission + key grammar decision contract.
+2. Attachment Record physical representation — directional (Attachment Record
+   implementation contract); exact layout/serialization build-deferred.
 3. Enforcement assignment for write-once raw, no-cleaning-in-lake, append-only
-   derived/ack, and no-new-core-field pressure, to deterministic write or tool boundaries.
+   derived/ack, no-new-core-field pressure — **RESOLVED** by the write-boundary
+   enforcement decision contract.
 4. Physical home + write boundary for projection/ECR/SCR/Cleaning/Judgment derived
-   records, acknowledgements, and decision-evidence assembly receipts.
-5. Index rebuild command + the guarantee that all of `indexes/` rebuilds from committed keys/hashes.
+   records, acknowledgements, and decision-evidence assembly receipts — OPEN (gated on
+   the key grammar; next wave).
+5. Index rebuild command + the guarantee that all of `indexes/` rebuilds from
+   committed keys/hashes — OPEN (next wave).
 6. Access/audit/retention guardrails + allowed source-family identifier scopes for
-   actor-related on-demand retrieval.
+   actor-related on-demand retrieval — **RECOMMENDATION PENDING OWNER ADJUDICATION**
+   (actor-retrieval governance recommendation); `derived_retrieval` stays blocked
+   until the owner, with legal/privacy review, adopts.
 7. Mechanical derivation owner + profile/version contract (baselines, windows,
-   cohorts, thresholds) for movement threshold-crossing records.
-8. Migration/replay policy for incumbent direct fields (Storage Contract Blocker 2 direction recorded; mechanics deferred).
-9. Govern SCR `FamilyDetailBase` so it cannot become a competing raw source-family payload home.
-10. By-key discovery preserved as authority before any queue/event engine.
-11. Config fail-closed behavior + root-marker identity check + test-fixture override mechanism.
+   cohorts, thresholds) for movement threshold-crossing records — OPEN (next wave).
+8. Migration/replay policy for incumbent direct fields — directional (Storage Contract
+   Blocker 2 direction recorded); mechanics build-deferred.
+9. Govern SCR `FamilyDetailBase` so it cannot become a competing raw source-family
+   payload home — **RESOLVED** by the write-boundary enforcement decision contract.
+10. By-key discovery preserved as authority before any queue/event engine —
+    **RESOLVED** (affirmed) by the write-boundary enforcement decision contract.
+11. Config fail-closed behavior + root-marker identity check + test-mode override —
+    **RESOLVED** by the write-boundary enforcement decision contract (test override is
+    test-mode-only, not a production fallback).
 
 ## What This Does Not Select
 
