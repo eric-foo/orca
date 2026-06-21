@@ -14,6 +14,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - docs/decisions/screening_reddit_read_route_decision_v0.md
+  - docs/workflows/screening_read_reusable_findings_v0.md
   - orca-harness/source_capture/screening_read.py
   - orca-harness/source_capture/screening_browser_read.py
   - orca-harness/source_capture/screening_extraction.py
@@ -107,7 +108,11 @@ screenshots, packet paths, manifests, or ECR fields.
 retain `/cdn-cgi/challenge-platform/` scripts in the DOM; classifying the DOM
 would false-positive `BLOCK_SHELL` after the visible page is usable.
 
-Old Reddit extraction is locator-targeted and range-sane. Candidate rows come
+Structured listing extraction is now generalized in
+`docs/workflows/screening_read_reusable_findings_v0.md` and implemented by
+`StructuredListingExtractionSpec` / `extract_structured_listing_candidates(...)`.
+
+Old Reddit extraction is one spec over that pattern: locator-targeted and range-sane. Candidate rows come
 from old Reddit result containers (`thing` or `search-result`) and title anchors
 (`title` or `search-title`). Submission date comes from the targeted `<time>`
 inside that candidate container. Do not compute `min()` over all page datetimes:

@@ -356,7 +356,7 @@ do not block by default. Open these in order:
 | Is bounded graph/frontier scouting accepted? | `orca/product/spines/scanning/source_families/reddit/data_capture_spine_reddit_graph_frontier_lane_architecture_v0.md` |
 | How should old Reddit search/listing HTML be saved, parsed, and interpreted? | `docs/workflows/reddit_candidate_intake_old_reddit_search_surface_handling_v0.md` |
 | What are the proxy and anti-blocking hard stops? | `orca/product/spines/capture/core/source_capture_toolbox/reddit_precommercial_capture_consolidation_success_signal_architecture_v0.md` |
-| What is implemented now? | `docs/workflows/screening_read_service_build_receipt_v0.md`, `orca/product/spines/capture/core/source_capture_toolbox/README.md`, then `orca-harness/README.md` and the named runner/adapter files |
+| What is implemented now? | `docs/workflows/screening_read_service_build_receipt_v0.md`, `docs/workflows/screening_read_reusable_findings_v0.md`, `orca/product/spines/capture/core/source_capture_toolbox/README.md`, then `orca-harness/README.md` and the named runner/adapter files |
 
 Current map-level summary: CloakBrowser is the approved primary anti-blocking
 route for bounded pre-commercial Reddit capture, and residential/rotating
@@ -371,7 +371,6 @@ scoring. For no-live operator-supplied old Reddit HTML pilots, open
 before interpreting empty results, `search-title` anchors, raw HTML input
 hygiene, or candidate-subreddit discovery with visible volume.
 
-
 For screening posture, the capture-harness service is now wired on the PR branch:
 `source_capture.screening_read.screening_read(...)` covers bounded public
 Reddit/direct/anti-block HTTP reads, while
@@ -379,6 +378,10 @@ Reddit/direct/anti-block HTTP reads, while
 browser/interstitial reads and returns visible text only. These are
 orchestrator-invoked, not walker-direct; no packet, manifest, ECR, Cleaning, or
 Judgment output.
+For same-shaped listing pages, reuse `StructuredListingExtractionSpec` and the
+row-local locator/range-sanity pattern in
+`docs/workflows/screening_read_reusable_findings_v0.md`.
+
 Reddit Candidate URL Intake is also the bounded first-contact sourcing path for
 declared Reddit source surfaces when a run envelope and live access
 authorization are supplied. The implemented runner is

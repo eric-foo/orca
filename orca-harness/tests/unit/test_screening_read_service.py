@@ -7,7 +7,11 @@ from unittest.mock import patch
 from source_capture.adapters.anti_blocking_http import AntiBlockingHttpCaptureSuccess
 from source_capture.adapters.direct_http import DirectHttpCaptureSuccess
 from source_capture.block_shell import CaptureBodyClass
-from source_capture.screening_extraction import extract_old_reddit_thread_candidates
+from source_capture.screening_extraction import (
+    StructuredListingExtractionSpec,
+    extract_old_reddit_thread_candidates,
+    extract_structured_listing_candidates,
+)
 from source_capture.screening_read import (
     RATE_CEILING_NOTE,
     ScreeningReadDispatch,
@@ -255,6 +259,66 @@ def test_old_reddit_post_date_range_sanity_marks_candidate_out_of_range() -> Non
     assert rows[0].submission_datetime_state == "out_of_range"
     assert "before range minimum" in (rows[0].submission_datetime_detail or "")
 
+
+def test_structured_listing_extractor_generalizes_row_scoped_dates() -> None:
+    html = """
+    <html><body>
+      <aside><time datetime="2011-03-01T00:00:00Z">site launched</time></aside>
+      <article class="listing-card">
+        <a class="listing-title" href="https://example.com/forums/topic-123?ref=listing">Topic 123</a>
+        <time class="published-at" datetime="2026-06-20T12:00:00Z">Jun 20</time>
+      </article>
+    </body></html>
+    """
+
+    rows = extract_structured_listing_candidates(
+        body_text=html,
+        spec=StructuredListingExtractionSpec(
+            container_classes=("listing-card",),
+            anchor_classes=("listing-title",),
+            href_must_contain=("/forums/",),
+            datetime_classes=("published-at",),
+            datetime_label="published datetime",
+        ),
+        item_min_datetime="2025-01-01T00:00:00Z",
+        item_max_datetime="2026-06-21T23:59:59Z",
+    )
+
+    assert len(rows) == 1
+    assert rows[0].item_url == "https://example.com/forums/topic-123?ref=listing"
+    assert rows[0].title == "Topic 123"
+    assert rows[0].source_container_class == "listing-card"
+    assert rows[0].item_datetime == "2026-06-20T12:00:00Z"
+    assert rows[0].item_datetime_state == "known"
+
+
+def test_structured_listing_extractor_marks_row_datetime_out_of_range() -> None:
+    html = """
+    <html><body>
+      <article class="listing-card">
+        <a class="listing-title" href="https://example.com/forums/topic-201">Topic 201</a>
+        <time class="published-at" datetime="2011-03-01T00:00:00Z">old</time>
+      </article>
+    </body></html>
+    """
+
+    rows = extract_structured_listing_candidates(
+        body_text=html,
+        spec=StructuredListingExtractionSpec(
+            container_classes=("listing-card",),
+            anchor_classes=("listing-title",),
+            href_must_contain=("/forums/",),
+            datetime_classes=("published-at",),
+            datetime_label="published datetime",
+        ),
+        item_min_datetime="2025-01-01T00:00:00Z",
+        item_max_datetime="2026-06-21T23:59:59Z",
+    )
+
+    assert len(rows) == 1
+    assert rows[0].item_datetime == "2011-03-01T00:00:00Z"
+    assert rows[0].item_datetime_state == "out_of_range"
+    assert "published datetime is before range minimum" in (rows[0].item_datetime_detail or "")
 
 def test_screen_light_record_has_no_packet_or_ecr_fields() -> None:
     fields = {field.name for field in ScreeningReadRecord.__dataclass_fields__.values()}

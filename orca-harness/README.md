@@ -46,8 +46,11 @@ result = screening_browser_read(url="https://example.com/public-page", dispatch=
 These entries are orchestrator-invoked, public-only, human-rate, and screen-light
 only. They do not stage packets, write manifests, return packet paths, touch ECR,
 or run as a standing service/crawler/scheduler. Browser screening reads classify
-`block_shell` on visible text, not full DOM. Build receipt:
-`docs/workflows/screening_read_service_build_receipt_v0.md`.
+`block_shell` on visible text, not full DOM. Same-shaped listing pages can reuse
+`StructuredListingExtractionSpec` and `extract_structured_listing_candidates(...)` for
+row-local title/date extraction. Build receipt:
+`docs/workflows/screening_read_service_build_receipt_v0.md`; reusable findings:
+`docs/workflows/screening_read_reusable_findings_v0.md`.
 
 ## Source Capture Packet
 
