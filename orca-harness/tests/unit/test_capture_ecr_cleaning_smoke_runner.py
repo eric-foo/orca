@@ -878,6 +878,96 @@ def test_periodic_audit_passes_for_fixture_capture_projection_cleaning(
     assert "not_live_capture" in report["non_claims"]
 
 
+def test_periodic_audit_supported_source_families_have_adapter_coverage() -> None:
+    audit_runner._validate_source_family_adapter_contract()
+    assert audit_runner.SUPPORTED_SOURCE_FAMILIES == ("retail", "reddit", "instagram")
+    for source_family in audit_runner.SUPPORTED_SOURCE_FAMILIES:
+        adapter = audit_runner._SOURCE_FAMILY_AUDIT_ADAPTERS[source_family]
+        assert adapter["row_kinds"]
+        assert adapter["anchor_kinds"]
+
+
+def test_periodic_audit_flags_projection_row_kind_outside_source_family_adapter() -> None:
+    findings: list[dict[str, object]] = []
+
+    row_index = audit_runner._projection_rows_by_id(
+        packet_id="packet_001",
+        source_label="retail:fixture",
+        source_type="retail",
+        rows=[
+            ("row_1", "retail_pdp_product", {"product_name": "Fixture"}),
+            ("row_2", "ig_creator_metric", {"followers": "724K"}),
+        ],
+        findings=findings,
+        lane="lane_a_existing_package",
+    )
+
+    assert row_index["row_2"]["row_kind"] == "ig_creator_metric"
+    assert any(
+        finding["code"] == "projection_row_kind_unsupported_for_source_family"
+        and finding["owner_candidate"] == "projection_or_audit_adapter"
+        and finding["details"] == {
+            "source_type": "retail",
+            "unsupported_row_kinds": ["ig_creator_metric"],
+            "allowed_row_kinds": sorted(
+                audit_runner._SOURCE_FAMILY_AUDIT_ADAPTERS["retail"]["row_kinds"]
+            ),
+        }
+        for finding in findings
+    )
+
+
+def test_periodic_audit_flags_anchor_kind_outside_source_family_adapter(
+    tmp_path: Path,
+) -> None:
+    instagram_packet_dir = _write_instagram_packet_dir(tmp_path)
+    instagram_projection_path = tmp_path / "instagram_projection" / "ig_projection.json"
+    write_ig_creator_momentum_projection(
+        packet_or_manifest_path=instagram_packet_dir,
+        output_path=instagram_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        instagram_handle="hyram",
+        instagram_packet_dir=instagram_packet_dir,
+        instagram_projection_path=instagram_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    cleaning_path = Path(smoke_outputs["cleaning_packet"])
+    cleaning_payload = _load_json(cleaning_path)
+    cleaning_payload["handles"][0]["raw_anchor"]["anchor_kind"] = "text_pattern"
+    cleaning_payload["handles"][0]["raw_anchor"]["anchor_value"] = "724K"
+    _write_json(cleaning_path, cleaning_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_anchor_kind_unsupported_for_source_family"
+        and finding["owner_candidate"] == "cleaning_or_audit_adapter"
+        and finding["details"] == {
+            "source_family": "instagram_creator",
+            "source_type": "instagram",
+            "anchor_kind": "text_pattern",
+            "allowed_anchor_kinds": ["json_pointer"],
+        }
+        for finding in report["findings"]
+    )
+
+
 def test_periodic_audit_execution_does_not_open_network_socket(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

@@ -48,6 +48,38 @@ LANE_B_CLEANING_DIR = "lane_b_cleaning_rebuild"
 SCHEMA_VERSION = "cleaning_spine_periodic_audit_v0"
 BLOCKING_SEVERITIES = frozenset({"blocker", "major"})
 SUPPORTED_SOURCE_FAMILIES = ("retail", "reddit", "instagram")
+_ANCHOR_VALIDATOR_KINDS = frozenset(
+    {"file", "json_pointer", "html_selector", "script_index", "text_pattern"}
+)
+_SOURCE_FAMILY_AUDIT_ADAPTERS: dict[str, dict[str, frozenset[str]]] = {
+    "retail": {
+        "row_kinds": frozenset(
+            {
+                "retail_pdp_product",
+                "retail_embedded_structured_json",
+                "retail_variant_offer",
+                "retail_review_substrate",
+                "retail_carried_module",
+            }
+        ),
+        "anchor_kinds": frozenset(
+            {"file", "json_pointer", "html_selector", "script_index", "text_pattern"}
+        ),
+    },
+    "reddit": {
+        "row_kinds": frozenset({"post", "comment"}),
+        "anchor_kinds": frozenset({"file", "text_pattern"}),
+    },
+    "instagram": {
+        "row_kinds": frozenset({"ig_creator_metric", "ig_media_metric"}),
+        "anchor_kinds": frozenset({"json_pointer"}),
+    },
+}
+_CLEANING_SOURCE_FAMILY_TO_AUDIT_SOURCE = {
+    "retail_pdp": "retail",
+    "reddit_thread": "reddit",
+    "instagram_creator": "instagram",
+}
 
 NON_CLAIMS = [
     "not_live_capture",
@@ -136,6 +168,7 @@ def run_cleaning_spine_periodic_audit(
     generated_at = utc_now_z()
     findings: list[dict[str, Any]] = []
     packet_index: dict[str, dict[str, Any]] = {}
+    _validate_source_family_adapter_contract()
 
     source_entries = _source_entries(smoke_manifest, smoke_manifest_dir)
     if not source_entries:
@@ -596,6 +629,36 @@ def _verify_packet_preserved_files(
             )
 
 
+def _validate_source_family_adapter_contract() -> None:
+    adapter_families = set(_SOURCE_FAMILY_AUDIT_ADAPTERS)
+    supported_families = set(SUPPORTED_SOURCE_FAMILIES)
+    if adapter_families != supported_families:
+        raise ValueError(
+            "source-family audit adapters must match SUPPORTED_SOURCE_FAMILIES: "
+            f"adapters={sorted(adapter_families)} supported={sorted(supported_families)}"
+        )
+    mapped_sources = set(_CLEANING_SOURCE_FAMILY_TO_AUDIT_SOURCE.values())
+    if not supported_families.issubset(mapped_sources) or not mapped_sources.issubset(
+        supported_families
+    ):
+        raise ValueError(
+            "Cleaning source_family mapping must resolve exactly to supported audit sources: "
+            f"mapped={sorted(mapped_sources)} supported={sorted(supported_families)}"
+        )
+    for source_family, adapter in _SOURCE_FAMILY_AUDIT_ADAPTERS.items():
+        row_kinds = adapter.get("row_kinds", frozenset())
+        anchor_kinds = adapter.get("anchor_kinds", frozenset())
+        if not row_kinds:
+            raise ValueError(f"source-family audit adapter {source_family!r} has no row_kinds")
+        if not anchor_kinds:
+            raise ValueError(f"source-family audit adapter {source_family!r} has no anchor_kinds")
+        unsupported_anchor_kinds = sorted(anchor_kinds - _ANCHOR_VALIDATOR_KINDS)
+        if unsupported_anchor_kinds:
+            raise ValueError(
+                f"source-family audit adapter {source_family!r} names anchor kind(s) "
+                f"without validators: {unsupported_anchor_kinds}"
+            )
+
 
 def _build_projection_row_index(
     *,
@@ -629,6 +692,7 @@ def _build_projection_row_index(
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
+                    source_type=entry["source_type"],
                     rows=(
                         (row.row_id, str(row.row_kind), row.source_visible_fields)
                         for row in projection.rows
@@ -648,6 +712,7 @@ def _build_projection_row_index(
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
+                    source_type=entry["source_type"],
                     rows=(
                         (row.row_id, str(row.row_kind), row.source_visible_fields)
                         for row in projection.rows
@@ -684,6 +749,7 @@ def _build_projection_row_index(
                 row_index[packet_id] = _projection_rows_by_id(
                     packet_id=packet_id,
                     source_label=str(entry["source_label"]),
+                    source_type=entry["source_type"],
                     rows=rows,
                     findings=findings,
                     lane=lane,
@@ -708,19 +774,40 @@ def _projection_rows_by_id(
     *,
     packet_id: str,
     source_label: str,
+    source_type: str,
     rows: Iterable[tuple[str, str, dict[str, Any]]],
     findings: list[dict[str, Any]],
     lane: str,
 ) -> dict[str, dict[str, Any]]:
     row_index: dict[str, dict[str, Any]] = {}
     row_counts: dict[str, int] = {}
+    allowed_row_kinds = _SOURCE_FAMILY_AUDIT_ADAPTERS[source_type]["row_kinds"]
+    unsupported_row_kinds: set[str] = set()
     for row_id, row_kind, source_visible_fields in rows:
         row_counts[row_id] = row_counts.get(row_id, 0) + 1
+        if row_kind not in allowed_row_kinds:
+            unsupported_row_kinds.add(row_kind)
         if row_counts[row_id] == 1:
             row_index[row_id] = {
                 "row_kind": row_kind,
                 "source_visible_fields": source_visible_fields,
             }
+    if unsupported_row_kinds:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="projection_row_kind_unsupported_for_source_family",
+            owner_candidate="projection_or_audit_adapter",
+            source_label=source_label,
+            packet_id=packet_id,
+            message="Projection artifact contains row_kind values outside the source-family audit adapter.",
+            details={
+                "source_type": source_type,
+                "unsupported_row_kinds": sorted(unsupported_row_kinds),
+                "allowed_row_kinds": sorted(allowed_row_kinds),
+            },
+        )
 
     duplicate_row_ids = sorted(
         row_id for row_id, count in row_counts.items() if count > 1
@@ -811,6 +898,49 @@ def _verify_cleaning_projection_ref(
         )
 
 
+def _verify_source_family_anchor_adapter_coverage(
+    *,
+    handle_id: str,
+    source_family: str,
+    raw_anchor: dict[str, Any],
+    findings: list[dict[str, Any]],
+    lane: str,
+) -> None:
+    source_type = _CLEANING_SOURCE_FAMILY_TO_AUDIT_SOURCE.get(source_family)
+    if source_type is None:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_source_family_adapter_unresolved",
+            owner_candidate="cleaning_or_audit_adapter",
+            packet_id=raw_anchor["packet_id"],
+            handle_id=handle_id,
+            message="Cleaning handle source_family has no periodic-audit source-family adapter.",
+            details={"source_family": source_family},
+        )
+        return
+    allowed_anchor_kinds = _SOURCE_FAMILY_AUDIT_ADAPTERS[source_type]["anchor_kinds"]
+    anchor_kind = raw_anchor["anchor_kind"]
+    if anchor_kind not in allowed_anchor_kinds:
+        _finding(
+            findings,
+            lane=lane,
+            severity="major",
+            code="cleaning_anchor_kind_unsupported_for_source_family",
+            owner_candidate="cleaning_or_audit_adapter",
+            packet_id=raw_anchor["packet_id"],
+            handle_id=handle_id,
+            message="Cleaning raw anchor kind is not covered by the source-family audit adapter.",
+            details={
+                "source_family": source_family,
+                "source_type": source_type,
+                "anchor_kind": anchor_kind,
+                "allowed_anchor_kinds": sorted(allowed_anchor_kinds),
+            },
+        )
+
+
 def _verify_cleaning_packet_traceability(
     *,
     cleaning_packet: CleaningPacket,
@@ -868,6 +998,13 @@ def _verify_cleaning_packet_traceability(
                 else None
             ),
             projection_row_index=projection_row_index,
+            findings=findings,
+            lane=lane,
+        )
+        _verify_source_family_anchor_adapter_coverage(
+            handle_id=handle.handle_id,
+            source_family=handle.source_family,
+            raw_anchor=handle.raw_anchor.model_dump(mode="json"),
             findings=findings,
             lane=lane,
         )
