@@ -23,9 +23,13 @@ from cleaning.models import CleaningPacket  # noqa: E402
 from ecr.models import EcrSourceSideReceiptArtifact  # noqa: E402
 from harness_utils import hash_file, utc_now_z  # noqa: E402
 from runners.run_capture_ecr_cleaning_smoke import (  # noqa: E402
+    CAPTURE_VALIDITY_NOT_SUPPORTED_REASON,
     CLEANING_OUTPUT_NAME,
     ECR_OUTPUT_NAME,
+    INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON,
+    RETAIL_STRUCTURE_NOT_PRESERVED_REASON,
     SUMMARY_OUTPUT_NAME,
+    SOURCE_STRUCTURE_NOT_PRESERVED_REASON,
     run_capture_ecr_cleaning_smoke,
 )
 from source_capture.ig_projection import (  # noqa: E402
@@ -121,10 +125,10 @@ _RAW_PULL_TRIGGER_REQUIRED_REASON_TOKENS = frozenset(
         "access_failed",
         "capture_blocked",
         "capture_failed",
-        "capture_validity_not_supported",
-        "instagram_structure_not_preserved",
-        "retail_structure_not_preserved",
-        "source_structure_not_preserved",
+        CAPTURE_VALIDITY_NOT_SUPPORTED_REASON,
+        INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON,
+        RETAIL_STRUCTURE_NOT_PRESERVED_REASON,
+        SOURCE_STRUCTURE_NOT_PRESERVED_REASON,
     }
 )
 
@@ -1169,11 +1173,26 @@ def _transform_original_value_in_raw(
         return False
     try:
         raw_path = _contained_packet_path(packet_dir, preserved_file.relative_packet_path)
-        raw_text = raw_path.read_bytes().decode("utf-8", errors="replace")
+        anchored_values = _raw_anchor_text_values(raw_anchor=raw_anchor, raw_path=raw_path)
     except Exception:
         return False
-    return original_value in raw_text
+    return original_value in anchored_values
 
+
+def _raw_anchor_text_values(*, raw_anchor: dict[str, Any], raw_path: Path) -> set[str]:
+    anchor_kind = raw_anchor["anchor_kind"]
+    if anchor_kind == "json_pointer":
+        payload = json.loads(raw_path.read_text(encoding="utf-8"))
+        pointed_value = _resolve_json_pointer(payload, raw_anchor.get("json_pointer"))
+        return set(_source_visible_text_values(pointed_value))
+    if anchor_kind == "text_pattern":
+        anchor_value = raw_anchor.get("anchor_value")
+        if not isinstance(anchor_value, str) or not anchor_value.strip():
+            return set()
+        if anchor_value.encode("utf-8") not in raw_path.read_bytes():
+            return set()
+        return {anchor_value}
+    return set()
 
 def _verify_failed_capture_handle_raw_pull_trigger(
     *,

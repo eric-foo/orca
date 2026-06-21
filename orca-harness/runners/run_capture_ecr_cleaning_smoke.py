@@ -67,6 +67,13 @@ NON_CLAIMS = [
     "not_content_validity",
 ]
 
+CAPTURE_VALIDITY_NOT_SUPPORTED_REASON = "capture_validity_not_supported"
+INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON = "instagram_structure_not_preserved"
+RETAIL_STRUCTURE_NOT_PRESERVED_REASON = "retail_structure_not_preserved"
+SOURCE_STRUCTURE_NOT_PRESERVED_REASON = "source_structure_not_preserved"
+INSTAGRAM_RAW_PULL_TRIGGER_PREFIX = "inspect_raw_before_instagram_use"
+RETAIL_RAW_PULL_TRIGGER_PREFIX = "inspect_raw_before_retail_use"
+
 _RETAIL_TRANSFORM_CONTEXT_ROW_KINDS = frozenset({"retail_pdp_product"})
 _RETAIL_TRANSFORM_METADATA_FIELDS = frozenset(
     {
@@ -654,12 +661,14 @@ def _instagram_handle_trace_notes(
     raw_pull_triggers: list[str] = []
 
     if not structure_preserved:
-        warnings.append("instagram_structure_not_preserved")
+        warnings.append(INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON)
         residuals.extend(
-            f"instagram_structure_not_preserved:{residual}"
+            f"{INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON}:{residual}"
             for residual in projection_residuals
         )
-        raw_pull_triggers.append("inspect_raw_before_instagram_use:instagram_structure_not_preserved")
+        raw_pull_triggers.append(
+            f"{INSTAGRAM_RAW_PULL_TRIGGER_PREFIX}:{INSTAGRAM_STRUCTURE_NOT_PRESERVED_REASON}"
+        )
 
     return {
         "warnings": _dedupe_preserve_order(warnings),
@@ -970,18 +979,22 @@ def _retail_handle_trace_notes(
 
     if capture_validity_reasons:
         warnings.extend(
-            f"capture_validity_not_supported:{reason}"
+            f"{CAPTURE_VALIDITY_NOT_SUPPORTED_REASON}:{reason}"
             for reason in capture_validity_reasons
         )
-        raw_pull_triggers.append("inspect_raw_before_retail_use:capture_validity_not_supported")
+        raw_pull_triggers.append(
+            f"{RETAIL_RAW_PULL_TRIGGER_PREFIX}:{CAPTURE_VALIDITY_NOT_SUPPORTED_REASON}"
+        )
 
     if not structure_preserved:
-        warnings.append("retail_structure_not_preserved")
+        warnings.append(RETAIL_STRUCTURE_NOT_PRESERVED_REASON)
         residuals.extend(
-            f"retail_structure_not_preserved:{residual}"
+            f"{RETAIL_STRUCTURE_NOT_PRESERVED_REASON}:{residual}"
             for residual in projection_residuals
         )
-        raw_pull_triggers.append("inspect_raw_before_retail_use:retail_structure_not_preserved")
+        raw_pull_triggers.append(
+            f"{RETAIL_RAW_PULL_TRIGGER_PREFIX}:{RETAIL_STRUCTURE_NOT_PRESERVED_REASON}"
+        )
 
     return {
         "warnings": _dedupe_preserve_order(warnings),

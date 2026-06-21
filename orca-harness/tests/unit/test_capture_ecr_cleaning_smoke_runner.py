@@ -545,6 +545,74 @@ def test_periodic_audit_flags_transform_original_value_not_from_projection_or_ra
         for finding in report["findings"]
     )
 
+def test_transform_original_value_raw_anchor_accepts_text_pattern_value(tmp_path: Path) -> None:
+    anchored_value = "RAW_ANCHORED_VALUE"
+    retail_packet_dir = _write_retail_packet_dir(
+        tmp_path,
+        html=_retail_html() + f"\n<!-- {anchored_value} -->",
+    )
+    packet = SourceCapturePacket.model_validate(
+        _load_json(retail_packet_dir / "manifest.json")
+    )
+    preserved_file = next(
+        item for item in packet.preserved_files if item.file_id == "file_01"
+    )
+    raw_anchor = {
+        "packet_id": packet.packet_id,
+        "slice_id": packet.source_slices[0].slice_id,
+        "file_id": preserved_file.file_id,
+        "relative_packet_path": preserved_file.relative_packet_path,
+        "sha256": preserved_file.sha256,
+        "anchor_kind": "text_pattern",
+        "anchor_value": anchored_value,
+    }
+
+    assert audit_runner._transform_original_value_in_raw(
+        original_value=anchored_value,
+        raw_anchor=raw_anchor,
+        packet_index={
+            packet.packet_id: {"packet": packet, "packet_dir": retail_packet_dir}
+        },
+    )
+
+
+def test_transform_original_value_raw_anchor_rejects_unanchored_raw_substring(
+    tmp_path: Path,
+) -> None:
+    anchor_value = "REAL_ANCHOR_VALUE"
+    coincidental_value = "COINCIDENTAL_RAW_ONLY_VALUE"
+    retail_packet_dir = _write_retail_packet_dir(
+        tmp_path,
+        html=(
+            _retail_html()
+            + f"\n<!-- {anchor_value} -->"
+            + f"\n<!-- {coincidental_value} -->"
+        ),
+    )
+    packet = SourceCapturePacket.model_validate(
+        _load_json(retail_packet_dir / "manifest.json")
+    )
+    preserved_file = next(
+        item for item in packet.preserved_files if item.file_id == "file_01"
+    )
+    raw_anchor = {
+        "packet_id": packet.packet_id,
+        "slice_id": packet.source_slices[0].slice_id,
+        "file_id": preserved_file.file_id,
+        "relative_packet_path": preserved_file.relative_packet_path,
+        "sha256": preserved_file.sha256,
+        "anchor_kind": "text_pattern",
+        "anchor_value": anchor_value,
+    }
+
+    assert not audit_runner._transform_original_value_in_raw(
+        original_value=coincidental_value,
+        raw_anchor=raw_anchor,
+        packet_index={
+            packet.packet_id: {"packet": packet, "packet_dir": retail_packet_dir}
+        },
+    )
+
 def test_transform_smoke_fails_without_source_visible_string(tmp_path: Path) -> None:
     retail_packet_dir = _write_retail_packet_dir(tmp_path)
     retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
@@ -1402,6 +1470,50 @@ def test_periodic_audit_flags_failed_capture_handle_missing_raw_pull_trigger(tmp
         and finding["owner_candidate"] == "cleaning"
         and "capture_validity_not_supported:rendered_dom_error_or_block_page_marker"
         in finding["details"]["triggering_reasons"]
+        for finding in report["findings"]
+    )
+
+
+def test_periodic_audit_accepts_failed_capture_handle_with_raw_pull_trigger(
+    tmp_path: Path,
+) -> None:
+    retail_packet_dir = _write_retail_packet_dir(
+        tmp_path,
+        html="""
+        <html><head><title>Page Not Found</title></head>
+        <body>Sorry! We couldn't find that page.</body></html>
+        """,
+        visible_text="",
+    )
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert not any(
+        finding["lane"] == "lane_a_existing_package"
+        and finding["code"] == "cleaning_failed_capture_handle_raw_pull_trigger_missing"
         for finding in report["findings"]
     )
 
