@@ -20,6 +20,7 @@ if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from cleaning.models import CleaningPacket  # noqa: E402
+from ecr.models import EcrSourceSideReceiptArtifact  # noqa: E402
 from harness_utils import hash_file, utc_now_z  # noqa: E402
 from runners.run_capture_ecr_cleaning_smoke import (  # noqa: E402
     CLEANING_OUTPUT_NAME,
@@ -273,15 +274,12 @@ def _run_lane_a_existing_package_checks(
 ) -> dict[str, Any]:
     result: dict[str, Any] = {}
     try:
-        ecr_receipts = _load_json_object(
+        ecr_receipts = _load_ecr_receipt_artifact(
             lane_a_outputs["ecr_source_side_receipts"],
             "Lane A ECR receipts",
         )
         result["ecr_receipts"] = ecr_receipts
-        receipts = ecr_receipts.get("receipts")
-        if not isinstance(receipts, list) or not receipts:
-            raise ValueError("ECR receipts must contain a non-empty receipts list")
-        result["ecr_receipt_count"] = len(receipts)
+        result["ecr_receipt_count"] = len(ecr_receipts["receipts"])
     except Exception as exc:
         _finding(
             findings,
@@ -479,7 +477,10 @@ def _run_lane_b_cleaning_breakpoint(
         rebuilt_cleaning = CleaningPacket.model_validate(
             _load_json_object(Path(outputs["cleaning_packet"]), "rebuilt CleaningPacket")
         )
-        rebuilt_ecr = _load_json_object(Path(outputs["ecr_source_side_receipts"]), "rebuilt ECR receipts")
+        rebuilt_ecr = _load_ecr_receipt_artifact(
+            Path(outputs["ecr_source_side_receipts"]),
+            "rebuilt ECR receipts",
+        )
         result: dict[str, Any] = {
             "output_dir": str(output_dir),
             "outputs": outputs,
@@ -1439,6 +1440,12 @@ def _load_json_object(path: Path, label: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f"{label} must be a JSON object: {path}")
     return payload
+
+
+def _load_ecr_receipt_artifact(path: Path, label: str) -> dict[str, Any]:
+    return EcrSourceSideReceiptArtifact.model_validate(
+        _load_json_object(path, label)
+    ).model_dump(mode="json")
 
 
 def _summary_without_objects(value: dict[str, Any]) -> dict[str, Any]:

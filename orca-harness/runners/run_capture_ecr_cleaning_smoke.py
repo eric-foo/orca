@@ -34,6 +34,12 @@ from ecr.deriver import (  # noqa: E402
     derive_source_visibility_postures,
     derive_timing_postures,
 )
+from ecr.models import (  # noqa: E402
+    ECR_SOURCE_SIDE_RECEIPT_SCHEMA_VERSION,
+    ECR_SOURCE_SIDE_REF_KIND,
+    EcrSourceSideReceipt,
+    EcrSourceSideReceiptArtifact,
+)
 from harness_utils import hash_file, utc_now_z  # noqa: E402
 from source_capture.models import PreservedFile, SourceCapturePacket  # noqa: E402
 from source_capture.ig_projection import IgCreatorMomentumProjectionPacket  # noqa: E402
@@ -44,7 +50,7 @@ ECR_OUTPUT_NAME = "ecr_source_side_receipts.json"
 CLEANING_OUTPUT_NAME = "cleaning_packet.json"
 SUMMARY_OUTPUT_NAME = "smoke_summary.json"
 
-ECR_REF_KIND = "source_side_postures"
+ECR_REF_KIND = ECR_SOURCE_SIDE_REF_KIND
 
 NON_CLAIMS = [
     "not_capture_execution",
@@ -115,7 +121,7 @@ def run_capture_ecr_cleaning_smoke(
 
     generated_at = utc_now_z()
     handles: list[CleaningInputHandle] = []
-    receipts: list[dict[str, Any]] = []
+    receipts: list[EcrSourceSideReceipt] = []
     source_summaries: list[dict[str, Any]] = []
     findings: list[dict[str, Any]] = []
     transform_candidates: list[dict[str, str]] = []
@@ -162,12 +168,12 @@ def run_capture_ecr_cleaning_smoke(
     cleaning_packet = CleaningPacket(handles=handles, transform_ledger=transform_ledger)
     cleaning_payload = cleaning_packet.model_dump(mode="json")
 
-    ecr_payload = {
-        "schema_version": "capture_ecr_cleaning_smoke_ecr_receipts_v0",
-        "generated_at": generated_at,
-        "receipts": receipts,
-        "non_claims": NON_CLAIMS,
-    }
+    ecr_payload = EcrSourceSideReceiptArtifact(
+        schema_version=ECR_SOURCE_SIDE_RECEIPT_SCHEMA_VERSION,
+        generated_at=generated_at,
+        receipts=receipts,
+        non_claims=NON_CLAIMS,
+    ).model_dump(mode="json")
 
     summary_payload = {
         "schema_version": "capture_ecr_cleaning_smoke_summary_v0",
@@ -755,29 +761,25 @@ def _derive_ecr_receipt(
     packet: SourceCapturePacket,
     packet_dir: Path,
     source_label: str,
-) -> tuple[dict[str, Any], CleaningEcrRef]:
+) -> tuple[EcrSourceSideReceipt, CleaningEcrRef]:
     identity = derive_identity_postures(packet)
     inspectability = derive_inspectability_postures(packet)
     timing = derive_timing_postures(packet)
     source_visibility = derive_source_visibility_postures(packet)
     ref_id = f"ecr:{packet.packet_id}:{ECR_REF_KIND}"
 
-    receipt = {
-        "source_label": source_label,
-        "packet_id": packet.packet_id,
-        "packet_dir": str(packet_dir),
-        "ref_id": ref_id,
-        "postures": {
-            "identity": [posture.model_dump(mode="json") for posture in identity],
-            "inspectability": [
-                posture.model_dump(mode="json") for posture in inspectability
-            ],
-            "timing": [posture.model_dump(mode="json") for posture in timing],
-            "source_visibility": [
-                posture.model_dump(mode="json") for posture in source_visibility
-            ],
+    receipt = EcrSourceSideReceipt(
+        source_label=source_label,
+        packet_id=packet.packet_id,
+        packet_dir=str(packet_dir),
+        ref_id=ref_id,
+        postures={
+            "identity": identity,
+            "inspectability": inspectability,
+            "timing": timing,
+            "source_visibility": source_visibility,
         },
-        "clears": {
+        clears={
             "identity": _all_clear(identity, "clears_identity"),
             "inspectability": _all_clear(inspectability, "clears_inspectable"),
             "timing": _all_clear(timing, "clears_pre_cutoff"),
@@ -786,7 +788,7 @@ def _derive_ecr_receipt(
                 "clears_source_visibility",
             ),
         },
-    }
+    )
 
     return receipt, CleaningEcrRef(
         packet_id=packet.packet_id,
