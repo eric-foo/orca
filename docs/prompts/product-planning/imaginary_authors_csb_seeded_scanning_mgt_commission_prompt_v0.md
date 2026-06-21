@@ -5,16 +5,14 @@ retrieval_header_version: 1
 artifact_role: Prompt artifact (targeted scanning commission; product-planning family)
 scope: >
   Commissions one bounded MGT intelligent-walk scan of Imaginary Authors as a
-  CSB-derived US indie/DTC fragrance seed. The scan evaluates CSB-nominated
-  venues, looks for hidden venues CSB missed, and records current or imminent
-  public allocation, assortment, SKU, launch, restock, channel, or
-  discontinuation signals only when they change venue value or downstream route
-  decisions. It is screen-light only and does not authorize capture, crawling,
-  gate clearance, judgment, or buyer proof.
+  CSB-branch-selected US indie/DTC fragrance seed. The scan looks for current or
+  imminent public allocation, assortment, SKU, launch, restock, channel, or
+  discontinuation signals worth routing to Capture. It is screen-light only and
+  does not authorize capture, crawling, gate clearance, judgment, or buyer proof.
 use_when:
   - Dispatching the first controlled targeted scanning-lane rehearsal after the MGT intelligent-walk model landed.
-  - Testing venue_eval / hidden_venue_pointer vocabulary on a CSB-derived fragrance brand.
-  - Opening a capture_request handoff only after fresh scan observations satisfy the capture-request promotion bar.
+  - Testing precursor_signal / precursor_surface vocabulary on a CSB-selected fragrance brand.
+  - Opening a capture_request handoff only after fresh scan observations justify it.
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/scanning/README.md
@@ -54,13 +52,12 @@ reviews: findings-first if this prompt or the downstream scan is reviewed
 ## Fitness Reference
 
 Goal: run the smallest useful first rehearsal of the new scanning lane on one
-fragrance brand derived from CSB-visible material, with CSB as the upstream
-board shape and scanning as venue-value evaluation.
+fragrance brand selected from CSB-visible material.
 
 Success signal: the receiver produces either a bounded, dated scan artifact with
-high-signal `venue_eval`, `hidden_venue_pointer`, `observation`, `negative`,
-`access_note`, and only justified `capture_request` rows, or a precise blocker
-showing why the scan cannot be run without capture/source-access authority.
+high-signal `precursor_signal`, `precursor_surface`, `observation`, `negative`,
+`access_note`, and optional `capture_request` rows, or a precise blocker showing
+why the scan cannot be run without capture/source-access authority.
 
 ## Commission
 
@@ -115,9 +112,6 @@ Start with:
 
 Then read only the targeted sources needed for this commission:
 
-- `docs/research/orca_commission_signal_board_imaginary_authors_forward_v0.md`
-  when present. Treat it as the upstream venue/source-family board; scanning
-  evaluates and amends its venues rather than replacing CSB.
 - `orca/product/spines/scanning/scan_core/orca_demand_scan_core_spec_v0.md`
   sections for targeted forward mode, candidate promotion, and capture_request.
 - `orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md`
@@ -141,7 +135,7 @@ Initial frontiers, all subject to expected decision value:
 | Frontier | Why inspect | Boundary |
 | --- | --- | --- |
 | Imaginary Authors official site and collection/product surfaces | Owned chronology, assortment, SKU availability, launch/discontinuation hints. | Owned claims only; not independent demand proof. |
-| Specialist fragrance community surfaces around Imaginary Authors, Whispered Myths, Telegrama, discontinued tags, and current releases | Likely venue-value test for whether public community surfaces reveal independent origin language. | Public only; Reddit/Basenotes walls become access_note or orchestrator-mediated screening read, not direct capture. |
+| Specialist fragrance community surfaces around Imaginary Authors, Whispered Myths, Telegrama, discontinued tags, and current releases | Likely precursor surfaces for SKU/assortment movement and user language. | Public only; Reddit/Basenotes walls become access_note or orchestrator-mediated screening read, not direct capture. |
 | Review/retail/PDP surfaces if current public pages exist | Possible corroboration, review-experience language, availability/discounting posture. | Retail is G4 corroboration only; not demand-origin by itself. |
 | Search/AEO surfaces from the CSB/AEO seed query family | Visibility and cited-source ecosystem; may reveal better origin surfaces. | AEO is visibility annotation only, never independent demand-origin proof. |
 | News/editorial/trade mentions of recent Imaginary Authors decisions | Launch chronology, third-party framing, possible org-motion context. | Press may launder an origin; do not double-count laundered siblings. |
@@ -166,7 +160,7 @@ source_move_id:
 url:
 retrieval_date:
 short_quote_or_summary:
-signal_stage: venue_value | precursor | candidate_support | contradiction | negative | access_note | unknown
+signal_stage: precursor | candidate_support | contradiction | negative | access_note | unknown
 claim_it_might_support:
 gate_role: none | demand_origin | costly_behavior | divergence | org_motion | decision_event | influence
 independence_hypothesis:

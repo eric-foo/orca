@@ -5,19 +5,17 @@ retrieval_header_version: 1
 artifact_role: Research artifact (bounded MGT screen-light targeted scan)
 scope: >
   One commissioned forward-mode bounded intelligent-walk scan of Imaginary
-  Authors as a US indie/DTC fragrance seed. Records public venue-value signals,
-  hidden-venue gaps, negatives, access notes, and only capture_request handoffs
-  that satisfy the capture-request promotion bar, without capture, judgment,
-  demand proof, route binding, or buyer proof.
+  Authors as a US indie/DTC fragrance seed. Records public precursor signals,
+  negatives, access notes, and capture_request handoffs without capture,
+  judgment, demand proof, route binding, or buyer proof.
 use_when:
   - Reviewing the first controlled targeted scanning-lane rehearsal for a
-    CSB-derived fragrance brand.
+    CSB-selected fragrance brand.
   - Deciding whether any Imaginary Authors public assortment, SKU, launch,
     restock, channel, or discontinuation signal should route to Capture.
   - Checking why no forward candidate observation was minted from this scan.
 authority_boundary: retrieval_only
 open_next:
-  - docs/research/orca_commission_signal_board_imaginary_authors_forward_v0.md
   - docs/prompts/product-planning/imaginary_authors_csb_seeded_scanning_mgt_commission_prompt_v0.md
   - orca/product/spines/scanning/README.md
   - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
@@ -47,21 +45,17 @@ source_context_status: SOURCE_CONTEXT_READY
 screening_moves_used: 10
 active_frontier_branches_used: 5
 promoted_observations: 4
-capture_requests: 2
+capture_requests: 3
 closeout_state: SCAN_COMPLETE
 ```
 
 Source context loaded: `AGENTS.md`, `.agents/workflow-overlay/README.md`,
 Orca Cynefin routing, scanning README, MGT intelligent-walk operating model,
 vertical exploration guide, targeted demand scan-core sections, Commission
-Signal Board playbook, AEO phase-0 seed evidence, the fragrance candidate pool
-handoff, and the CSB forward board at
-`docs/research/orca_commission_signal_board_imaginary_authors_forward_v0.md`.
-This follow-up treats the CSB board as the upstream venue/source-family map;
-fresh public re-checks on 2026-06-21 found no material drift from the prior
-screen-light observations and no new independent demand-origin venue inside the
-run cap. The historical Imaginary Authors pool row was used only as a
-decision-shape precedent; it is not cited below as forward evidence.
+Signal Board playbook, AEO phase-0 seed evidence, and the fragrance candidate
+pool handoff. The CSB/AEO read was seed-selection context only. The historical
+Imaginary Authors pool row was used only as a decision-shape precedent; it is
+not cited below as forward evidence.
 
 Non-goals: no crawler, monitor, registry, atlas, capture packet, ECR, Cleaning,
 Judgment, buyer contact, gate verdict, demand proof, buyer proof, route binding,
@@ -94,25 +88,6 @@ Stop reason: all remaining public frontiers had decayed to low expected value
 inside the move cap, and the next useful work would be Capture-owned
 preservation or orchestrator-mediated public community screening.
 
-## CSB-First Venue Evaluation
-
-| Venue eval ID | CSB row(s) checked | Venue / route | Current venue value | Capture / route decision |
-| --- | --- | --- | --- | --- |
-| VE-001 | SBR-001 | Imaginary Authors official collections and PDPs | High venue value for volatile owned chronology: official collection/all-products surfaces still show current assortment, `A LITTLE SECRET` as `New`, `Dipped in Chocolate` sold out, and PDP-level variant/restock UI. | Keep CR-001 and CR-002; Capture owns preservation and route binding. Owned state is not demand proof. |
-| VE-002 | SBR-002, SBR-006 | Ministry of Scent collection/review route | Medium venue value for retailer corroboration and review routing: collection shows 28 Imaginary Authors products, `A Little Secret` with no reviews, and `First Peach of the Season` with sample add enabled and one review. | No new capture request. Useful child route if a later lane needs review text, but aggregate counts are insufficient. |
-| VE-003 | SBR-003 | Allure peach-fragrance article | Low-to-medium venue value as current editorial/category visibility: 2026-06-19 article includes `First Peach of the Season`. | No capture request. Treat as visibility/source route and campaign-overlap check, not demand-origin evidence. |
-| VE-004 | SBR-004, SBR-010 | Livingetc / Anthropologie candle collaboration | Low venue value for this fragrance-scoped run, but useful adjacent org-motion context for home fragrance/channel expansion. | No capture request unless the subject broadens to home fragrance or partner-channel movement. |
-| VE-005 | SBR-005, SBR-006, SBR-007 | Public community, review, and exact-query discovery | Low yield inside this cap: exact public searches did not surface a better independent product-specific origin than owned/retail/editorial routes. | No hidden venue pointer promoted. Reddit/Basenotes-style reads remain orchestrator-mediated public screening if later justified. |
-| VE-006 | SBR-008 | Search/AEO seed-query family | Visibility annotation only: seed evidence explains why Imaginary Authors entered the workstream and where cited-source ecosystems may point. | Excluded from demand-origin and classifier claims. No capture request. |
-
-## Hidden Venue Pointer Decision
-
-No `hidden_venue_pointer` was promoted in this CSB-first follow-up. The only
-child routes worth preserving as follow-up notes were Ministry of Scent
-product/review pages for exact SKUs and orchestrator-mediated public community
-reads; neither met the bar for a high-yield hidden venue requiring Capture-owned
-acquisition in this run.
-
 ## Screen-Light Observations
 
 ```yaml
@@ -127,7 +102,7 @@ short_quote_or_summary: >
   Official all-products collection marks A LITTLE SECRET as New; official PDP
   shows 50ml and 2ml available, while 50ml + Mug is sold out; Ministry of
   Scent also lists A Little Secret.
-signal_stage: venue_value
+signal_stage: precursor
 claim_it_might_support: >
   Current launch/assortment signal for a new Imaginary Authors fragrance SKU
   with a limited/bundled variant already unavailable.
@@ -151,9 +126,9 @@ short_quote_or_summary: >
   Official all-products collection marks Dipped in Chocolate sold out; the PDP
   shows the 50ml SKU sold out, restock-notify UI, and a Salt & Straw
   partnership.
-signal_stage: venue_value
+signal_stage: precursor
 claim_it_might_support: >
-  Current sold-out/restock venue-value signal for a collaboration fragrance SKU.
+  Current sold-out/restock precursor for a collaboration fragrance SKU.
 gate_role: decision_event
 independence_hypothesis: >
   Owned official availability state only; partnership language indicates org
@@ -175,7 +150,7 @@ short_quote_or_summary: >
   Ministry of Scent lists First Peach of the Season with sample add enabled and
   one review; Allure's 2026-06-19 peach-fragrance trend includes an Imaginary
   Authors peach perfume.
-signal_stage: venue_value
+signal_stage: precursor
 claim_it_might_support: >
   Current retail/editorial signal around an Imaginary Authors peach SKU and a
   fresh category trend surface.
@@ -200,7 +175,7 @@ short_quote_or_summary: >
   Official all-products collection marks Is This Still Life candle New; a
   January 2026 Livingetc article reports an Imaginary Authors x Anthropologie
   trio of nostalgic candles.
-signal_stage: venue_value
+signal_stage: precursor
 claim_it_might_support: >
   Assortment/channel expansion signal adjacent to fragrance, especially home
   fragrance/candle SKU activity.
@@ -218,7 +193,7 @@ uncertainty_or_limits: >
 
 No candidate minted.
 
-Reason: the scan found several current venue-value signals worth preserving or
+Reason: the scan found several current precursor signals worth preserving or
 checking, but none met the forward candidate-promotion threshold. The live
 signals were owned availability states, retailer listings, and editorial/search
 visibility. They did not show a gradeable costly-behavior floor in an
@@ -288,13 +263,37 @@ not_requested:
   - ECR, Cleaning, or Judgment work
 ```
 
-## Venue Follow-Up Notes
-
-- `VFN-001`: Ministry of Scent plus Allure peach-fragrance visibility remains a
-  venue-value note, not a Capture request under the tightened promotion bar.
-  It is useful for a later review/community venue test, but it lacks volatile
-  source state, source-access blockage, near-promoted candidate support, or a
-  high-yield hidden venue requiring Capture-owned acquisition.
+```yaml
+capture_request_id: CR-003
+source_scan: scanning_mgt_imaginary_authors_csb_seed_v0
+candidate_or_observation_ids:
+  - OBS-003
+urls:
+  - url: https://ministryofscent.com/collections/imaginary-authors
+    venue: Ministry of Scent retailer collection
+    observation_supported: First Peach of the Season retail listing, sample add enabled, one review
+    gate_role: influence
+  - url: https://www.allure.com/story/peach-perfumes-trend-summer-2026
+    venue: Allure editorial trend article
+    observation_supported: Fresh editorial visibility for an Imaginary Authors peach perfume
+    gate_role: influence
+what_capture_should_verify: >
+  Resolve whether First Peach of the Season is the same SKU Allure referenced,
+  whether an official current PDP exists, and whether any public buyer-origin
+  review/community surface is reachable without login or capture-boundary drift.
+decision_window: 2026-06-21 to 2026-07-12
+route_binding_state: unknown
+screening_evidence_summary: >
+  Retailer lists First Peach of the Season; Allure published fresh peach-trend
+  coverage including an Imaginary Authors peach perfume.
+uncertainty_or_access_limits: >
+  Screening could not bind official SKU metadata or independent demand origins
+  inside the cap; Allure/editorial and retailer visibility are not demand proof.
+not_requested:
+  - route expansion
+  - packet commitment by scanning
+  - ECR, Cleaning, or Judgment work
+```
 
 ## Negatives And Access Notes
 
@@ -310,7 +309,7 @@ not_requested:
   orchestrator-mediated screening reads; this scan records the need rather than
   crossing into direct capture or auth-gated access.
 - `NEG-003`: AEO/search surfaces produced visibility and category context, not
-  independent demand-origin proof, and were not promoted beyond venue-value
+  independent demand-origin proof, and were not promoted beyond precursor
   routing.
 
 ## Closeout
@@ -319,11 +318,11 @@ not_requested:
 
 Next lane may:
 
-- re-fetch and preserve the two capture_request URL sets under Capture-owned
+- re-fetch and preserve the three capture_request URL sets under Capture-owned
   route, entitlement, and provenance rules;
 - run an orchestrator-mediated public community screening read only if Capture
   or the owner wants to test independent demand-origin surfaces for the three
-  venue-value clusters;
+  precursor clusters;
 - discard this scan after 2026-07-12 for forward slot use unless the
   load-bearing observations are freshly re-verified.
 
