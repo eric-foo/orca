@@ -218,11 +218,12 @@ def build_retail_pdp_projection(
             for preserved_file, body in slice_files
             if preserved_file.relative_packet_path.lower().endswith((".html", ".htm"))
         ]
-        visible_text = "\n".join(
-            _decode_text(body)
+        visible_text_files = [
+            (preserved_file, _decode_text(body))
             for preserved_file, body in slice_files
             if preserved_file.relative_packet_path.lower().endswith(".txt")
-        )
+        ]
+        visible_text = "\n".join(text for _preserved_file, text in visible_text_files)
 
         if not html_files:
             residuals.append(f"{source_slice.slice_id}:retail_pdp_rendered_dom_absent")
@@ -236,6 +237,7 @@ def build_retail_pdp_projection(
                 packet=packet,
                 source_slice=source_slice,
                 raw_ref=raw_ref,
+                visible_text_files=visible_text_files,
                 raw_anchor=_raw_anchor(preserved_file),
                 retailer=retailer,
             )
@@ -279,6 +281,7 @@ class _StructuredJsonEntry(StrictModel):
 def _project_retail_html(
     html: str,
     *,
+    visible_text_files: Sequence[tuple[PreservedFile, str]],
     visible_text: str,
     packet: SourceCapturePacket,
     source_slice: SourceCaptureSlice,
@@ -437,7 +440,12 @@ def _project_retail_html(
     else:
         residuals.append(f"{source_slice.slice_id}:{retailer}:review_substrate_absent")
 
-    for module in _carried_module_fields(retailer=retailer, html=html, visible_text=visible_text, raw_anchor=raw_anchor):
+    for module in _carried_module_fields(
+        retailer=retailer,
+        html=html,
+        visible_text_files=visible_text_files,
+        raw_anchor=raw_anchor,
+    ):
         module_row_id = f"{source_slice.slice_id}:{retailer}:module:{module['module_type']}"
         rows.append(
             RetailPdpProjectionRow(
@@ -842,7 +850,7 @@ def _carried_module_fields(
     *,
     retailer: Literal["amazon", "sephora", "ulta", "unknown"],
     html: str,
-    visible_text: str,
+    visible_text_files: Sequence[tuple[PreservedFile, str]],
     raw_anchor: RetailProjectionRawAnchor,
 ) -> list[dict[str, Any]]:
     modules: list[dict[str, Any]] = []
@@ -851,18 +859,26 @@ def _carried_module_fields(
         ("loyalty", ("Beauty Insider", "points", "Store Card", "Rewards")),
         ("recommendations", ("data-cnstrc-item=\"recommendation\"", "customers bought together", "Make it a routine")),
     ]
-    combined = f"{html}\n{visible_text}"
+    anchorable_texts = [
+        ("rendered_dom", html, raw_anchor),
+        *[
+            ("visible_text", text, _raw_anchor(preserved_file))
+            for preserved_file, text in visible_text_files
+        ],
+    ]
     for module_type, patterns in module_specs:
-        matched = next((pattern for pattern in patterns if pattern.lower() in combined.lower()), None)
-        if matched is None:
+        match = _first_module_anchor_match(anchorable_texts, patterns)
+        if match is None:
             continue
+        source_label, matched, anchor_fragment, excerpt, match_anchor = match
         modules.append(
             {
                 "module_type": module_type,
                 "retailer": retailer,
                 "anchor_pattern": matched,
-                "text_excerpt": _excerpt(combined, matched),
-                "raw_anchor": _with_anchor(raw_anchor, "text_pattern", matched),
+                "anchor_source": source_label,
+                "text_excerpt": excerpt,
+                "raw_anchor": _with_anchor(match_anchor, "text_pattern", anchor_fragment),
             }
         )
     return modules
@@ -1162,7 +1178,36 @@ def _excerpt(text: str, pattern: str, *, radius: int = 140) -> str:
     index = text.lower().find(pattern.lower())
     if index < 0:
         return ""
-    return " ".join(text[max(0, index - radius) : index + len(pattern) + radius].split())
+    return _compact_excerpt(text[max(0, index - radius) : index + len(pattern) + radius])
+
+
+def _first_module_anchor_match(
+    anchorable_texts: Sequence[tuple[str, str, RetailProjectionRawAnchor]],
+    patterns: Sequence[str],
+) -> tuple[str, str, str, str, RetailProjectionRawAnchor] | None:
+    for pattern in patterns:
+        for source_label, text, raw_anchor in anchorable_texts:
+            index = _case_preferred_index(text, pattern)
+            if index < 0:
+                continue
+            anchor_fragment = _raw_excerpt_fragment(text, index, len(pattern))
+            return source_label, pattern, anchor_fragment, _compact_excerpt(anchor_fragment), raw_anchor
+    return None
+
+
+def _case_preferred_index(text: str, pattern: str) -> int:
+    exact_index = text.find(pattern)
+    if exact_index >= 0:
+        return exact_index
+    return text.lower().find(pattern.lower())
+
+
+def _raw_excerpt_fragment(text: str, index: int, pattern_length: int, *, leading_radius: int = 40, trailing_radius: int = 180) -> str:
+    return text[max(0, index - leading_radius) : index + pattern_length + trailing_radius].strip()
+
+
+def _compact_excerpt(text: str) -> str:
+    return " ".join(text.split())
 
 
 def _is_forbidden_field_name(key: str) -> bool:

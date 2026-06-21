@@ -260,8 +260,18 @@ def test_amazon_projection_pins_dom_js_review_and_asin_without_ld_json() -> None
     assert "Best Sellers Rank" in review.source_visible_fields["best_sellers_rank_text"]
     assert review.raw_anchor.anchor_value == "#averageCustomerReviews/#acrCustomerReviewText"
 
-    module_types = {row.source_visible_fields["module_type"] for row in projection.rows if row.row_kind == "retail_carried_module"}
-    assert module_types == {"shipping", "loyalty", "recommendations"}
+    carried_modules = {
+        row.source_visible_fields["module_type"]: row
+        for row in projection.rows
+        if row.row_kind == "retail_carried_module"
+    }
+    assert set(carried_modules) == {"shipping", "loyalty", "recommendations"}
+    shipping = carried_modules["shipping"]
+    assert shipping.source_visible_fields["anchor_source"] == "visible_text"
+    assert "$35" in shipping.source_visible_fields["text_excerpt"]
+    assert shipping.raw_anchor.file_id == "file_02"
+    assert shipping.raw_anchor.anchor_value is not None
+    assert "$35" in shipping.raw_anchor.anchor_value
     binding_types = {binding.binding_type for binding in projection.binding_map}
     assert {"sku_variant_price", "variant_availability", "series_locale_currency"} <= binding_types
     assert projection.loss_ledger.collapsed[0].category == "RETAIL_HERO_IMAGERY_COLLAPSED"
@@ -285,6 +295,45 @@ def test_amazon_projection_does_not_preserve_structure_for_404_page() -> None:
     assert projection.loss_ledger.structure_preserved is False
     assert "cloakbrowser_snapshot_01:amazon:variant_offer_absent" in projection.residuals
     assert "cloakbrowser_snapshot_01:amazon:review_substrate_absent" in projection.residuals
+
+
+def test_carried_module_text_pattern_prefers_exact_html_occurrence() -> None:
+    packet = _packet(
+        retailer="amazon",
+        locator="https://www.amazon.com/Laneige-Sleeping-Berry/dp/B07XXPHQZK",
+        series_id="amazon_laneige_lipmask_berry_us_v0",
+        variant_pin="Berry 2.5g (B07XXPHQZK)",
+    )
+    html = """
+    <html><body>
+      <input type="hidden" id="ASIN" name="ASIN" value="B07XXPHQZK">
+      <input type="hidden" name="items[0.base][customerVisiblePrice][amount]" value="24.00">
+      <p>Enjoy fast, free delivery, exclusive deals, and award-winning movies & TV shows.</p>
+      <div id="deliveryBlock">FREE delivery Sunday, June 21 on orders shipped by Amazon over $35</div>
+    </body></html>
+    """
+    visible_text = """
+    LANEIGE Lip Sleeping Mask
+    Style: Berry
+    $24.00
+    In Stock
+    """
+
+    projection = _projection(packet=packet, html=html, visible_text=visible_text)
+
+    shipping_modules = [
+        row
+        for row in projection.rows
+        if row.row_kind == "retail_carried_module" and row.source_visible_fields["module_type"] == "shipping"
+    ]
+    assert len(shipping_modules) == 1
+    shipping = shipping_modules[0]
+    assert shipping.source_visible_fields["anchor_source"] == "rendered_dom"
+    assert "$35" in shipping.source_visible_fields["text_excerpt"]
+    assert "award-winning" not in shipping.source_visible_fields["text_excerpt"]
+    assert shipping.raw_anchor.file_id == "file_01"
+    assert shipping.raw_anchor.anchor_value is not None
+    assert "$35" in shipping.raw_anchor.anchor_value
 
 
 def test_ulta_projection_residualizes_present_offer_substrate_when_not_extracted() -> None:
