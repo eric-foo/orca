@@ -2,7 +2,7 @@
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Owner-policy recommendation (PENDING owner adjudication; not adopted)
+artifact_role: Owner-adopted actor-retrieval governance decision (authored as a recommendation; adopted 2026-06-21)
 scope: >
   Recommended access, audit, retention, and identifier-scope guardrails for on-demand
   actor/commenter/reviewer timing retrieval in the Data Lake indexes/derived_retrieval
@@ -23,15 +23,27 @@ authority_boundary: retrieval_only
 
 ## Status
 
-`RECOMMENDATION_PENDING_OWNER_ADJUDICATION`. Addresses Physicality Location Contract
-blocker 6 (actor-related access/audit/retention + identifier scopes) as a
-**recommendation only**.
+`OWNER_ADOPTED_V0`. Resolves Physicality Location Contract blocker 6 (actor-related
+access/audit/retention + identifier scopes). Owner-adopted 2026-06-21.
 
-This is NOT an adopted policy, NOT legal advice, NOT validation/readiness, and NOT
-implementation authorization. The `indexes/derived_retrieval` actor-retrieval lane
-stays blocked until the owner — with legal/privacy review — adopts guardrail wording.
-Produced by an external blocker-resolution lane and adjudicated as faithful to the
-medallion contract's Actor Timing Retrieval boundary.
+Owner-recorded posture at adoption:
+
+- **Lawful-basis position (owner's call, owner-recorded, not externally validated):**
+  the owner reviewed PDPA and judged that logging public-platform comment/review timing
+  plus the observed public username — explicitly NOT building a person dossier — does
+  not require additional clearance. This is the owner's recorded position, not a legal
+  validation by this artifact.
+- **Takedown commitment:** on a request with reasonable-effort proof of ownership, the
+  data is removed promptly. Verification is reasonable-effort, not a high bar.
+- **Knobs set:** result-cache TTL = 7 days; access = internal decision-workflows only.
+- **Adopted guardrail set:** the full guardrail set below (MGT), not the SCI floor.
+
+Still NOT legal advice and NOT validation/readiness. The non-dossier guardrails below
+are what keep the owner's public-data/non-dossier basis true; they are binding on any
+build. The `indexes/derived_retrieval` lane is governance-unblocked but remains
+build-deferred (TTL automation, query-layer enforcement, and audit tooling are built
+when the lane is built). Produced by an external blocker-resolution lane and
+adjudicated as faithful to the medallion contract's Actor Timing Retrieval boundary.
 
 ## Recommended Guardrails (for owner adjudication)
 
@@ -62,16 +74,19 @@ medallion contract's Actor Timing Retrieval boundary.
   bot/fake/paid/coordinated label; credibility/exclusion recommendation;
   adverse-action/outreach surface.
 
-## Owner Decisions Required (only the owner can make these)
+## Owner Decisions (status at adoption 2026-06-21)
 
-1. Legal/privacy clearance (PDPA at minimum; GDPR applicability if EU-facing) — with counsel.
-2. The permitted decision-question enumeration.
-3. Result-cache TTL value and audit-log retention duration.
-4. Elevated-volume threshold for flagging.
-5. Whether to adopt the full MGT guardrail set or the SCI floor.
-6. Formal adoption of guardrail wording (the adoption act itself).
+1. Legal/privacy posture — **DECIDED** (owner-recorded PDPA position: public data,
+   comment/review timing + username, non-dossier; see Status). Not externally validated.
+2. Permitted decision-question enumeration — **RESIDUAL** (defined when the lane is built).
+3. Result-cache TTL — **DECIDED** (7 days); audit-log retention — **RESIDUAL**
+   (default ~1 year, set at build).
+4. Elevated-volume threshold for flagging — **RESIDUAL** (set at build).
+5. MGT vs SCI floor — **DECIDED** (full MGT guardrail set adopted).
+6. Formal adoption of guardrail wording — **DECIDED** (this adoption).
 
-Until 1-6 are decided, the `derived_retrieval` actor-retrieval lane remains blocked.
+The remaining residuals (2, audit-log retention, 4) are build-time settings, not
+adoption blockers; they do not re-block the lane.
 
 ## Accepted Residuals (recommendation-level, MGT)
 
@@ -84,7 +99,9 @@ Until 1-6 are decided, the `derived_retrieval` actor-retrieval lane remains bloc
 
 ## Non-Claims
 
-Not an adopted policy, not legal advice, not validation/readiness, not implementation
-authorization. Does not clear PDPA/GDPR or any privacy regime. Does not authorize
-bypassing legal/privacy review. Governs only actor timing retrieval in the
-`derived_retrieval` lane; not the full statement of Orca data governance.
+Records the owner's adopted governance posture and binding guardrails. Not legal
+advice, not validation/readiness, not implementation authorization. Does not externally
+validate PDPA/GDPR compliance — the lawful-basis position is the owner's recorded call.
+Does not authorize a build; the `derived_retrieval` lane is governance-unblocked but
+build-deferred. Governs only actor timing retrieval in the `derived_retrieval` lane;
+not the full statement of Orca data governance.

@@ -281,9 +281,9 @@ Resolution status (updated as blocker-resolution decisions land 2026-06-21):
 5. Index rebuild command + the guarantee that all of `indexes/` rebuilds from
    committed keys/hashes — OPEN (next wave).
 6. Access/audit/retention guardrails + allowed source-family identifier scopes for
-   actor-related on-demand retrieval — **RECOMMENDATION PENDING OWNER ADJUDICATION**
-   (actor-retrieval governance recommendation); `derived_retrieval` stays blocked
-   until the owner, with legal/privacy review, adopts.
+   actor-related on-demand retrieval — **RESOLVED** (owner-adopted actor-retrieval
+   governance decision, 2026-06-21); `derived_retrieval` is governance-unblocked but
+   build-deferred.
 7. Mechanical derivation owner + profile/version contract (baselines, windows,
    cohorts, thresholds) for movement threshold-crossing records — OPEN (next wave).
 8. Migration/replay policy for incumbent direct fields — directional (Storage Contract
