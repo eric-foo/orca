@@ -97,11 +97,12 @@ def write_local_source_capture_packet(
 
     packet_id = generate_ulid()
     if data_root is not None:
-        # Go-forward raw writes land under the configured external data root,
-        # keyed by packet_id and create-only (write-once) per the write-boundary
-        # enforcement contract. output_directory stays available for legacy/test
-        # callers (incumbent path; migration of existing output is deferred).
-        output_directory = data_root.allocate_raw_packet_dir(packet_id)
+        # Go-forward raw writes are staged off-tree, then atomically published to
+        # <root>/raw/<packet_id>/ so a partial packet never appears under raw/
+        # (write-once + atomic publish per the write-boundary enforcement contract).
+        # output_directory stays available for legacy/test callers (incumbent path;
+        # migration of existing output is deferred).
+        output_directory = data_root.stage_raw_packet(packet_id)
     assert output_directory is not None  # guaranteed by the exactly-one-target check above
 
     _prepare_output_directory(output_directory)
@@ -201,6 +202,12 @@ def write_local_source_capture_packet(
         encoding="utf-8",
     )
     receipt_path.write_text(render_receipt(packet), encoding="utf-8", newline="\n")
+
+    if data_root is not None:
+        # Atomically publish the completed staging dir to raw/<packet_id>.
+        output_directory = data_root.publish_raw_packet(output_directory, packet_id)
+        manifest_path = output_directory / "manifest.json"
+        receipt_path = output_directory / "receipt.md"
 
     return PacketWriteResult(
         output_directory=str(output_directory.resolve()),

@@ -203,3 +203,85 @@ def test_writer_incumbent_output_directory_still_works(tmp_path: Path) -> None:
     result = write_local_source_capture_packet(output_directory=out, **_writer_common(src))
     assert Path(result.output_directory) == out.resolve()
     assert (out / "manifest.json").is_file()
+
+
+# -- review hardening (DL-001..DL-005) -------------------------------------
+
+def test_data_root_write_publishes_atomically_no_staging_leftover(tmp_path: Path) -> None:
+    # DL-002: a successful data_root write publishes to raw/<packet_id> and
+    # leaves no partial staging directory behind.
+    root = _init(tmp_path)
+    src = tmp_path / "input.txt"
+    src.write_text("hello", encoding="utf-8")
+    result = write_local_source_capture_packet(data_root=root, **_writer_common(src))
+    out = Path(result.output_directory)
+    assert out == root.path / "raw" / result.packet.packet_id
+    assert (out / "manifest.json").is_file()
+    staging = root.path / ".staging"
+    assert not staging.exists() or not any(staging.iterdir())
+
+
+def test_publish_raw_packet_is_write_once(tmp_path: Path) -> None:
+    # DL-002: the same packet_id cannot be published twice.
+    root = _init(tmp_path)
+    pid = generate_ulid()
+    staging = root.stage_raw_packet(pid)
+    (staging / "x").write_text("1", encoding="utf-8")
+    published = root.publish_raw_packet(staging, pid)
+    assert published == root.path / "raw" / pid
+    with pytest.raises(DataLakeRootError):
+        root.stage_raw_packet(pid)  # final already exists -> write-once
+
+
+def test_packet_id_rejects_trailing_newline(tmp_path: Path) -> None:
+    # DL-004: fullmatch, not ^...$ (which would accept a trailing newline).
+    root = _init(tmp_path)
+    with pytest.raises(DataLakeRootError):
+        root.allocate_raw_packet_dir("A" * 26 + "\n")
+
+
+def test_segment_rejects_trailing_newline(tmp_path: Path) -> None:
+    # DL-004.
+    root = _init(tmp_path)
+    with pytest.raises(DataLakeRootError):
+        root.append_record(
+            subtree="derived", raw_anchor=generate_ulid(), lane="l", record_id="rec_01\n", data=b""
+        )
+
+
+def test_for_test_requires_absolute_path() -> None:
+    # DL-005: test-mode bypasses the outside-repo guard but not the absolute-path guard.
+    with pytest.raises(DataLakeRootError):
+        DataLakeRoot.for_test("relative-lake")
+
+
+def test_reverify_catches_root_identity_change(tmp_path: Path) -> None:
+    # DL-003: a swapped/remounted root (same path, different marker identity) is
+    # caught before any write.
+    root = _init(tmp_path)
+    (root.path / ROOT_MARKER_FILENAME).write_text(
+        json.dumps({"root_uuid": "DIFFERENTIDENTITY", "contract_version": "v0"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(DataLakeRootError):
+        root.allocate_raw_packet_dir(generate_ulid())
+    with pytest.raises(DataLakeRootError):
+        root.append_record(
+            subtree="derived", raw_anchor=generate_ulid(), lane="l", record_id="r", data=b""
+        )
+
+
+def test_within_rejects_symlinked_component(tmp_path: Path) -> None:
+    # DL-003: a symlinked component under a lake-owned subtree is rejected.
+    root = _init(tmp_path)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    link = root.path / "derived" / "linked"
+    try:
+        link.symlink_to(outside, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks not supported in this environment")
+    with pytest.raises(DataLakeRootError):
+        root.append_record(
+            subtree="derived", raw_anchor="linked", lane="l", record_id="r", data=b""
+        )
