@@ -8,6 +8,7 @@ import pytest
 
 from cleaning.models import CleaningPacket
 from runners import run_capture_ecr_cleaning_smoke as smoke_runner
+from runners import run_cleaning_spine_periodic_audit as audit_runner
 from runners.run_capture_ecr_cleaning_smoke import (
     _old_reddit_anchor_pattern,
     run_capture_ecr_cleaning_smoke,
@@ -904,6 +905,106 @@ def test_periodic_audit_refuses_stale_rebuild_subdirectories(tmp_path: Path) -> 
             audit_manifest_path=audit_manifest_path,
             output_dir=output_dir,
         )
+
+
+def test_periodic_audit_main_returns_nonzero_for_warn_status(tmp_path: Path) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    summary_path = Path(smoke_outputs["smoke_summary"])
+    summary = _load_json(summary_path)
+    summary["findings"] = [
+        {
+            "code": "retail_capture_validity_not_supported",
+            "source_label": "retail:sephora",
+            "packet_id": "01TESTRETAILSMOKE",
+            "reasons": ["fixture_warn_only"],
+        }
+    ]
+    _write_json(summary_path, summary)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    exit_code = audit_runner.main(
+        [
+            "--audit-manifest",
+            str(audit_manifest_path),
+            "--output-dir",
+            str(tmp_path / "audit_outputs"),
+        ]
+    )
+
+    report = _load_json(
+        tmp_path
+        / "audit_outputs"
+        / "cleaning_spine_periodic_audit_report.json"
+    )
+    assert report["overall_status"] == "warn"
+    assert exit_code == 3
+    assert any(
+        finding["code"] == "lane_a_smoke_summary_finding"
+        and finding["smoke_finding_code"] == "retail_capture_validity_not_supported"
+        for finding in report["findings"]
+    )
+
+
+def test_periodic_audit_flags_ecr_posture_content_drift(tmp_path: Path) -> None:
+    retail_packet_dir = _write_retail_packet_dir(tmp_path)
+    retail_projection_path = tmp_path / "retail_projection" / "retail_pdp_projection.json"
+    write_retail_pdp_projection(
+        packet_directory=retail_packet_dir,
+        output_path=retail_projection_path,
+    )
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        retail_packet_dir=retail_packet_dir,
+        retail_projection_path=retail_projection_path,
+    )
+    smoke_outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+    ecr_path = Path(smoke_outputs["ecr_source_side_receipts"])
+    ecr_payload = _load_json(ecr_path)
+    ecr_payload["receipts"][0]["postures"]["identity"][0]["fixture_extra_detail"] = (
+        "ecr posture content drift"
+    )
+    _write_json(ecr_path, ecr_payload)
+    audit_manifest_path = _write_audit_manifest(
+        tmp_path,
+        smoke_manifest_path=smoke_manifest_path,
+        smoke_outputs=smoke_outputs,
+    )
+
+    audit_outputs = run_cleaning_spine_periodic_audit(
+        audit_manifest_path=audit_manifest_path,
+        output_dir=tmp_path / "audit_outputs",
+    )
+
+    report = _load_json(Path(audit_outputs["audit_report_json"]))
+    assert report["overall_status"] == "fail"
+    assert any(
+        finding["lane"] == "lane_b_cleaning_breakpoint"
+        and finding["code"] == "ecr_rebuild_signature_mismatch"
+        and finding["owner_candidate"] == "ecr"
+        for finding in report["findings"]
+    )
+
 
 def test_periodic_audit_flags_cleaning_package_drift(tmp_path: Path) -> None:
     instagram_packet_dir = _write_instagram_packet_dir(tmp_path)

@@ -971,6 +971,7 @@ _VOLATILE_SIGNATURE_KEYS = frozenset(
         "operator_supplied_packet_path",
         "manifest_path",
         "packet_path",
+        "packet_dir",
     }
 )
 
@@ -1022,16 +1023,15 @@ def _ecr_signature(ecr_receipts: dict[str, Any]) -> list[dict[str, Any]]:
     for receipt in ecr_receipts.get("receipts", []):
         if not isinstance(receipt, dict):
             continue
-        signature.append(
-            {
-                "source_label": receipt.get("source_label"),
-                "packet_id": receipt.get("packet_id"),
-                "ref_id": receipt.get("ref_id"),
-                "posture_kinds": sorted((receipt.get("postures") or {}).keys()),
-                "clears": receipt.get("clears"),
-            }
-        )
-    return sorted(signature, key=lambda item: (str(item["packet_id"]), str(item["ref_id"])))
+        signature.append(_stable_signature_payload(receipt))
+    return sorted(
+        signature,
+        key=lambda item: (
+            str(item.get("packet_id")),
+            str(item.get("ref_id")),
+            str(item.get("source_label")),
+        ),
+    )
 
 
 def _source_entries(
@@ -1325,7 +1325,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.exit(status=2, message=f"cleaning periodic audit failed: {exc}\n")
 
     print(json.dumps(outputs, indent=2, sort_keys=True))
-    return 1 if report.get("overall_status") == "fail" else 0
+    status = report.get("overall_status")
+    if status == "fail":
+        return 1
+    if status == "warn":
+        return 3
+    return 0
 
 
 if __name__ == "__main__":
