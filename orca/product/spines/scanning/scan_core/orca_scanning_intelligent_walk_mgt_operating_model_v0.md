@@ -6,14 +6,16 @@ artifact_role: Product method operating model (owner-invoked Mini God Tier targe
 scope: >
   Defines the high-signal scanning target shape the owner invoked as Mini God
   Tier: bounded intelligent walks, frontier selection, branch decay/pivot
-  discipline, precursor-signal handling, minimum evidence for promotion,
-  shared scan vocabulary, and the capture-request handoff from scanning to the
-  Capture spine. Bridges the
+  discipline, CSB-first venue-value evaluation, hidden-venue discovery,
+  precursor-signal handling, minimum evidence for promotion, shared scan
+  vocabulary, and the capture-request handoff from scanning to the Capture
+  spine. Bridges the
   Vertical Exploration Guide, the PROPOSED Demand Scan-Core Spec, and
   source-family lanes without ratifying scan-core, authorizing live scans, or
   moving packet-grade acquisition into scanning.
 use_when:
   - Designing or reviewing a scanning lane that should behave like a high-signal bounded walker rather than a generic crawler.
+  - Evaluating whether CSB-surfaced venues are worth downstream attention and whether hidden venues were missed.
   - Deciding what scanning may emit before Capture, ECR, Cleaning, Judgment, or gate-run work begins.
   - Distinguishing precursor signals and precursor surfaces from gate proof, capture authority, or standing source maps.
   - Normalizing source-family lane outputs into shared scanning vocabulary and capture-request handoffs.
@@ -52,17 +54,19 @@ them.
 ## Target Shape
 
 Scanning should spend most of its read budget on value-bearing or
-value-routing surfaces: candidates, evidence, independent-origin leads,
-precursor signals, precursor surfaces, contradictions, high-quality pointers,
-decisive negatives, or access notes that change the next route. It is not
-optimized for exhaustive coverage.
+value-routing venues: the surfaces CSB nominated, hidden venues CSB missed,
+independent-origin leads, contradictions, high-quality pointers, decisive
+negatives, access notes, and only those precursor surfaces that change the next
+route. It is not optimized for exhaustive coverage.
 
 Target loop:
 
 ```text
 authorized seed / objective
--> bounded intelligent walk
--> frontier-selected reads
+-> CSB board or owner-authorized seed
+-> bounded intelligent walk over venues
+-> frontier-selected venue reads
+-> venue-value notes / hidden-venue pointers
 -> lightweight observations
 -> minimum-evidence promotion
 -> capture request
@@ -90,7 +94,8 @@ Scanning owns, inside an authorized run:
 
 - choosing the next public read by expected decision value;
 - producing screen-light summaries, short quotes, precursor signals, precursor
-  surfaces, pointers, negatives, access notes, and candidate observations;
+  surfaces, venue evaluations, hidden-venue pointers, negatives, access notes,
+  and candidate observations;
 - preserving dated provenance for what was tried and why;
 - emitting capture requests that tell Capture what to inspect and what the
   scan thinks that inspection could support.
@@ -103,7 +108,8 @@ byline trail, source-family surface, or cross-reference the walk may inspect.
 Choose the next frontier by expected decision value, not by crawl coverage.
 High-value reasons include:
 
-- likely precursor signal before a candidate is obvious;
+- likely value of a CSB-nominated venue for this decision;
+- likely hidden venue or surface that CSB missed;
 - likely precursor surface that may reveal better origins or candidates;
 - likely independent demand-origin signal;
 - likely gradeable costly-behavior evidence;
@@ -116,6 +122,11 @@ High-value reasons include:
 
 The scan records why a frontier was selected when that reason is load-bearing.
 This reason is a steering explanation, not a score or proof.
+
+Precursor is a venue-routing concept here. Do not relabel ordinary weak
+owned/channel/editorial evidence as a precursor just because it falls below the
+candidate bar. If the item mainly tells the operator whether a venue is useful,
+record it as venue value, pointer, negative, access note, or unknown.
 
 ## Branch Decay, Pivot, And Stop
 
@@ -162,11 +173,18 @@ separate downstream shapes:
 - `frontier` - a candidate next read and its reason;
 - `move` - one bounded read or attempted read;
 - `precursor_signal` - an early, URL-backed clue that may guide a walk but is
-  not proof, gate clearance, or capture authorization;
+  tied to a venue or surface worth probing; not proof, gate clearance, or
+  capture authorization;
 - `precursor_surface` - a venue, hub, thread, search, AEO surface, source-family
   surface, or cross-reference that produced or likely produces precursor
   signals inside an authorized run; not a registry, atlas, monitor, or standing
   source map;
+- `venue_eval` - a screen-light assessment of whether a CSB-nominated or
+  discovered venue is worth more retrieval, capture, or exclusion for this
+  commission;
+- `hidden_venue_pointer` - a URL, venue, hub, or source-family surface not
+  surfaced by the starting CSB board but worth returning to CSB, scanning, or
+  Capture as a route candidate;
 - `candidate` - possible target/company/topic worth carrying forward;
 - `observation` - screen-light evidence or contradiction tied to a URL;
 - `pointer` - a URL, venue, byline, hub, or cross-reference likely to improve
@@ -205,7 +223,7 @@ source_move_id:
 url:
 retrieval_date:
 short_quote_or_summary:
-signal_stage: precursor | candidate_support | contradiction | negative | access_note | unknown
+signal_stage: venue_value | precursor | candidate_support | contradiction | negative | access_note | unknown
 claim_it_might_support:
 gate_role: none | demand_origin | costly_behavior | divergence | org_motion | decision_event | influence
 independence_hypothesis:
@@ -231,6 +249,22 @@ every low-level move.
 ## Capture Request Contract
 
 Scanning hands Capture a request, not a route.
+
+Emit a `capture_request` only when the observation needs Capture-owned action,
+not merely because a venue produced a non-empty clue. At least one must be true:
+
+- the source state is volatile or time-sensitive enough that packet-grade
+  preservation could matter;
+- the next useful read is blocked by a source-access, entitlement, or
+  route-binding boundary that scanning must not cross;
+- a promoted or near-promoted candidate-support observation needs Capture to
+  preserve provenance before gate use;
+- a hidden venue is high-yield enough that Capture-owned acquisition is the
+  right next action, not another screen-light scan move.
+
+Do not emit a capture request for ordinary owned-only chronology, retailer
+presence, editorial visibility, AEO visibility, or weak precursor material
+unless one of the triggers above is explicitly satisfied.
 
 ```yaml
 capture_request_id:
@@ -277,7 +311,8 @@ Reddit, LinkedIn, answer-engine/search, trade press, forums, trackers, review
 surfaces, and future source families may keep local guardrails. Their
 downstream scanning output should still map into the same shared terms:
 `frontier`, `move`, `precursor_signal`, `precursor_surface`, `observation`,
-`pointer`, `negative`, `access_note`, `capture_request`, and `gate_role`.
+`pointer`, `venue_eval`, `hidden_venue_pointer`, `negative`, `access_note`,
+`capture_request`, and `gate_role`.
 
 Local restrictions always carry. Examples:
 
