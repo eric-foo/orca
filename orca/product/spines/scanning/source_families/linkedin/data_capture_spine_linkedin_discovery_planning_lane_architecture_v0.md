@@ -1,15 +1,17 @@
-# Data Capture Spine LinkedIn Lane Discovery Planning Architecture v0
+# LinkedIn Discovery Scanning Adapter Architecture v0
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Product architecture contract
-scope: Defines the LinkedIn Lane as a bounded discovery and candidate-frontier lane for businesses, organizations, senior decision makers, public professional actors, creators, and influential people before any source capture, outreach, or commercial use.
+artifact_role: Product architecture contract (legacy data-capture filename; scanning source-family adapter)
+scope: Defines the LinkedIn Lane as a bounded discovery and candidate-frontier lane for businesses, organizations, senior decision makers, public professional actors, creators, and influential people before any source capture, outreach, or commercial use, now mapped into shared scanning vocabulary.
 use_when:
   - Planning LinkedIn-adjacent discovery without turning it into LinkedIn scraping.
+  - Mapping LinkedIn discovery outputs into shared scanning vocabulary.
   - Checking the optional supervised POC-risk browser-assist mode and its guardrails.
   - Distinguishing decision-evidence discovery from future lead/outreach handling.
 authority_boundary: retrieval_only
 open_next:
+  - orca/product/spines/scanning/README.md
   - orca/product/spines/capture/core/contracts/candidate_intake/data_capture_spine_candidate_url_intake_contract_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/linkedin_reddit_source_capture_armory_concurrent_structure_architecture_v0.md
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
@@ -46,11 +48,9 @@ Owner decision recorded 2026-06-08:
   `optional_poc_risk_mode`, consistent with the source-access boundary;
   bypassing an entitlement gate to reach non-entitled data remains a hard stop.
 
-This artifact is not implementation authorization. It does not authorize a live
-LinkedIn runner, autonomous scraping, bulk export, contact harvesting, lead-list
-creation, profile dataset construction, storage, scheduler, dashboard,
-production runtime, commercial use, ECR, Cleaning, Judgment, buyer proof,
-commits, pushes, or PRs.
+Shared no-capture/no-runtime boundaries are inherited from the scanning README
+and MGT operating model. LinkedIn-specific no-live, privacy, anti-contact,
+no-graph, and optional POC-risk stops are in Hard Stops and Non-Claims below.
 
 ## Meaning Of Optional POC Risk Mode
 
@@ -107,6 +107,23 @@ Capture by default.
 Outreach may later consume a promoted business or public-professional candidate,
 but this lane does not collect emails, phone numbers, private contact routes,
 lead lists, connection graphs, or commenter leads.
+
+## Scanning Vocabulary Alignment
+
+This source-family adapter keeps LinkedIn-specific privacy and no-contact rails
+while mapping into shared scanning terms:
+
+- allowed source surface, theme, or selected next run -> `frontier`;
+- public company/org/person locator or relevant public role surface ->
+  `precursor_surface` when it can route a bounded read;
+- public role basis, visible org motion, visible influence band, or role-context
+  clue -> `precursor_signal` until promoted;
+- candidate row or promotion receipt -> `candidate` or `observation` only after
+  the lane's promotion gate records the basis and limitations;
+- no-yield, privacy-quarantined, duplicate, or dead-end route -> `negative`;
+- source-policy, entitlement, or access friction -> `access_note`;
+- any later acquisition ask -> `capture_request`, owned by the downstream
+  capture lane and never by LinkedIn discovery itself.
 
 ## Run Envelope
 

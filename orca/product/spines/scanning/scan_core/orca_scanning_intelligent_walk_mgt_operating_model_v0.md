@@ -6,14 +6,16 @@ artifact_role: Product method operating model (owner-invoked Mini God Tier targe
 scope: >
   Defines the high-signal scanning target shape the owner invoked as Mini God
   Tier: bounded intelligent walks, frontier selection, branch decay/pivot
-  discipline, minimum evidence for promotion, shared scan vocabulary, and the
-  capture-request handoff from scanning to the Capture spine. Bridges the
+  discipline, precursor-signal handling, minimum evidence for promotion,
+  shared scan vocabulary, and the capture-request handoff from scanning to the
+  Capture spine. Bridges the
   Vertical Exploration Guide, the PROPOSED Demand Scan-Core Spec, and
   source-family lanes without ratifying scan-core, authorizing live scans, or
   moving packet-grade acquisition into scanning.
 use_when:
   - Designing or reviewing a scanning lane that should behave like a high-signal bounded walker rather than a generic crawler.
   - Deciding what scanning may emit before Capture, ECR, Cleaning, Judgment, or gate-run work begins.
+  - Distinguishing precursor signals and precursor surfaces from gate proof, capture authority, or standing source maps.
   - Normalizing source-family lane outputs into shared scanning vocabulary and capture-request handoffs.
 authority_boundary: retrieval_only
 open_next:
@@ -51,8 +53,9 @@ them.
 
 Scanning should spend most of its read budget on value-bearing or
 value-routing surfaces: candidates, evidence, independent-origin leads,
-contradictions, high-quality pointers, decisive negatives, or access notes that
-change the next route. It is not optimized for exhaustive coverage.
+precursor signals, precursor surfaces, contradictions, high-quality pointers,
+decisive negatives, or access notes that change the next route. It is not
+optimized for exhaustive coverage.
 
 Target loop:
 
@@ -86,8 +89,8 @@ Scanning does not own:
 Scanning owns, inside an authorized run:
 
 - choosing the next public read by expected decision value;
-- producing screen-light summaries, short quotes, pointers, negatives, access
-  notes, and candidate observations;
+- producing screen-light summaries, short quotes, precursor signals, precursor
+  surfaces, pointers, negatives, access notes, and candidate observations;
 - preserving dated provenance for what was tried and why;
 - emitting capture requests that tell Capture what to inspect and what the
   scan thinks that inspection could support.
@@ -100,6 +103,8 @@ byline trail, source-family surface, or cross-reference the walk may inspect.
 Choose the next frontier by expected decision value, not by crawl coverage.
 High-value reasons include:
 
+- likely precursor signal before a candidate is obvious;
+- likely precursor surface that may reveal better origins or candidates;
 - likely independent demand-origin signal;
 - likely gradeable costly-behavior evidence;
 - likely contradiction, divergence, or defeater;
@@ -156,6 +161,12 @@ separate downstream shapes:
 
 - `frontier` - a candidate next read and its reason;
 - `move` - one bounded read or attempted read;
+- `precursor_signal` - an early, URL-backed clue that may guide a walk but is
+  not proof, gate clearance, or capture authorization;
+- `precursor_surface` - a venue, hub, thread, search, AEO surface, source-family
+  surface, or cross-reference that produced or likely produces precursor
+  signals inside an authorized run; not a registry, atlas, monitor, or standing
+  source map;
 - `candidate` - possible target/company/topic worth carrying forward;
 - `observation` - screen-light evidence or contradiction tied to a URL;
 - `pointer` - a URL, venue, byline, hub, or cross-reference likely to improve
@@ -168,7 +179,8 @@ separate downstream shapes:
   URLs for specified observations.
 
 These terms are screen-light. They do not mint ECR, Cleaning, Judgment,
-claim-ladder, packet, or buyer-proof vocabulary.
+claim-ladder, packet, buyer-proof vocabulary, source-access authority, or gate
+proof.
 
 ## Minimum Evidence, Not Quotas
 
@@ -181,6 +193,10 @@ downstream gate or capture evaluation: it ties to a specific URL and a possible
 gate role, decision window, or candidate. Do not promote every observed item;
 do not suppress signal that may support a candidate entry.
 
+`signal_stage` names what the scan currently thinks the item is doing.
+`gate_role` remains separate: a precursor may have no gate role yet, and a
+possible gate role does not turn the precursor into proof.
+
 Minimum promotion from move note to observation:
 
 ```yaml
@@ -189,6 +205,7 @@ source_move_id:
 url:
 retrieval_date:
 short_quote_or_summary:
+signal_stage: precursor | candidate_support | contradiction | negative | access_note | unknown
 claim_it_might_support:
 gate_role: none | demand_origin | costly_behavior | divergence | org_motion | decision_event | influence
 independence_hypothesis:
@@ -259,8 +276,8 @@ replace the gate with raw source counts.
 Reddit, LinkedIn, answer-engine/search, trade press, forums, trackers, review
 surfaces, and future source families may keep local guardrails. Their
 downstream scanning output should still map into the same shared terms:
-`frontier`, `move`, `observation`, `pointer`, `negative`, `access_note`,
-`capture_request`, and `gate_role`.
+`frontier`, `move`, `precursor_signal`, `precursor_surface`, `observation`,
+`pointer`, `negative`, `access_note`, `capture_request`, and `gate_role`.
 
 Local restrictions always carry. Examples:
 

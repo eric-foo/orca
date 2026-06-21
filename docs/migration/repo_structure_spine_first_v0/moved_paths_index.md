@@ -187,8 +187,8 @@ resolve them here.
 | `docs/product/product_lead/orca_product_proof_lead_charter_consumer_demand_revision_v0.md` | `orca/product/spines/product_lead/proof_charter/orca_product_proof_lead_charter_consumer_demand_revision_v0.md` |
 | `docs/product/product_lead/orca_product_proof_lead_charter_v0.md` | `orca/product/spines/product_lead/proof_charter/orca_product_proof_lead_charter_v0.md` |
 | `docs/product/product_lead/orca_ratification_day_runbook_v0.md` | `orca/product/spines/product_lead/icp_wedge/orca_ratification_day_runbook_v0.md` |
-| `docs/product/search/aeo_capture_feasibility_probe_phase0_v0.md` | `orca/product/spines/scanning/source_families/answer_engine/aeo_capture_feasibility_probe_phase0_v0.md` |
-| `docs/product/search/aeo_capture_feasibility_probe_phase0_v0_evidence.json` | `orca/product/spines/scanning/source_families/answer_engine/aeo_capture_feasibility_probe_phase0_v0_evidence.json` |
+| `docs/product/search/aeo_capture_feasibility_probe_phase0_v0.md` | `docs/research/answer_engine/aeo_capture_feasibility_probe_phase0_v0.md` |
+| `docs/product/search/aeo_capture_feasibility_probe_phase0_v0_evidence.json` | `docs/research/answer_engine/aeo_capture_feasibility_probe_phase0_v0_evidence.json` |
 | `docs/product/search/demand_durability_indicator_search_interest_capture_profile_v0.md` | `orca/product/spines/capture/core/demand_durability_indicators/search_interest/demand_durability_indicator_search_interest_capture_profile_v0.md` |
 | `docs/product/search/demand_search_interest_sourcing_and_gate_delta_spec_v0.md` | `orca/product/spines/scanning/source_families/answer_engine/demand_search_interest_sourcing_and_gate_delta_spec_v0.md` |
 | `docs/product/search/orca_demand_gate_definition_closures_proposal_v0.md` | `orca/product/spines/scanning/admissibility_checkability/orca_demand_gate_definition_closures_proposal_v0.md` |
