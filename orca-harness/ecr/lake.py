@@ -15,9 +15,10 @@ I/O is isolated here so the derivers in ``ecr.deriver`` stay pure.
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import TYPE_CHECKING
 
+from data_lake.root import DataLakeRootError
 from ecr.deriver import (
     derive_identity_postures,
     derive_inspectability_postures,
@@ -46,6 +47,47 @@ def _record_bytes(postures) -> bytes:
     ).encode("utf-8")
 
 
+def _is_single_path_segment(name: str) -> bool:
+    windows = PureWindowsPath(name)
+    posix = PurePosixPath(name)
+    return (
+        bool(name)
+        and not windows.drive
+        and not windows.root
+        and not posix.is_absolute()
+        and windows.name == name
+        and posix.name == name
+    )
+
+
+def _preflight_no_existing_siblings(
+    *,
+    data_root: "DataLakeRoot",
+    packet_id: str,
+    record_name: str,
+) -> None:
+    """Prevent deterministic partial ECR derivations from lane-local collisions.
+
+    ``DataLakeRoot.append_record`` still owns final path validation and create-only
+    publication. This preflight only checks caller-safe single-segment record
+    names, so invalid record ids still fail in append_record before any write.
+    """
+    if not _is_single_path_segment(record_name):
+        return
+
+    existing = [
+        data_root.path / "derived" / packet_id / lane / record_name
+        for lane in ECR_LANES.values()
+        if (data_root.path / "derived" / packet_id / lane / record_name).exists()
+    ]
+    if existing:
+        joined = ", ".join(str(path) for path in existing)
+        raise DataLakeRootError(
+            "refusing partial ECR derivation; sibling record_id already exists "
+            f"for at least one ECR lane: {joined}"
+        )
+
+
 def derive_ecr_into_lake(
     *,
     data_root: "DataLakeRoot",
@@ -64,6 +106,12 @@ def derive_ecr_into_lake(
     loaded = data_root.load_raw_packet(packet_id)
     packet = SourceCapturePacket.model_validate(loaded.manifest)
     record = record_id if record_id is not None else generate_ulid()
+    record_name = f"{record}.json"
+    _preflight_no_existing_siblings(
+        data_root=data_root,
+        packet_id=packet_id,
+        record_name=record_name,
+    )
     postures_by_kind = {
         "timing": derive_timing_postures(packet),
         "inspectability": derive_inspectability_postures(packet),
@@ -77,7 +125,7 @@ def derive_ecr_into_lake(
             subtree="derived",
             raw_anchor=packet_id,
             lane=lane,
-            record_id=f"{record}.json",
+            record_id=record_name,
             data=_record_bytes(postures),
         )
     return paths
