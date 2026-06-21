@@ -85,9 +85,20 @@ def run_source_capture_ig_calls_batch(
     cooldown_ledger_path: Path | None = None,
     cooldown_seconds: float = DEFAULT_COOLDOWN_SECONDS,
     ignore_cooldown: bool = False,
+    smoke_mode: bool = False,
     now_fn: Callable[[], datetime] | None = None,
     sleep_fn: Callable[[float], None] = time.sleep,
 ) -> tuple[int, str]:
+    if smoke_mode:
+        _validate_smoke_mode_inputs(
+            slots=slots,
+            output_root=output_root,
+            max_profiles=max_profiles,
+            max_items_per_profile=max_items_per_profile,
+            inter_profile_delay_seconds=inter_profile_delay_seconds,
+            cadence_mode=cadence_mode,
+            ignore_cooldown=ignore_cooldown,
+        )
     _validate_batch_inputs(
         slots=slots,
         output_root=output_root,
@@ -127,6 +138,7 @@ def run_source_capture_ig_calls_batch(
             cooldown_policy=_cooldown_policy(cooldown_seconds=cooldown_seconds, ledger_enabled=True),
             cooldown=cooldown_active,
             results=[],
+            smoke_mode=smoke_mode,
         )
         _write_json(summary_path, summary)
         return IG_CALLS_BATCH_EXIT_CODE_COOLDOWN_ACTIVE, str(summary_path)
@@ -157,6 +169,15 @@ def run_source_capture_ig_calls_batch(
             "capture_finished_at": None,
         }
 
+        run_limitations = [
+            "batch_runner=ig_calls_batch",
+            f"batch_slot_id={slot.slot_id}",
+            "batch_inputs_locked_before_run",
+            "batch_runner_no_discovery",
+        ]
+        if smoke_mode:
+            run_limitations.append("batch_smoke_mode=max_profiles_1_max_items_1_cooldown_respected")
+
         try:
             row["capture_started_at"] = _utc_now(now_fn)
             capture_exit, capture_message = run_source_capture_ig_calls_packet(
@@ -179,12 +200,7 @@ def run_source_capture_ig_calls_batch(
                 auth_state_label=auth_state_label,
                 auth_session_mode=auth_session_mode,
                 auth_state_root=auth_state_root,
-                limitations=[
-                    "batch_runner=ig_calls_batch",
-                    f"batch_slot_id={slot.slot_id}",
-                    "batch_inputs_locked_before_run",
-                    "batch_runner_no_discovery",
-                ],
+                limitations=run_limitations,
                 sleep_fn=sleep_fn,
             )
             row["capture_exit"] = capture_exit
@@ -234,6 +250,7 @@ def run_source_capture_ig_calls_batch(
         cooldown_policy=_cooldown_policy(cooldown_seconds=cooldown_seconds, ledger_enabled=True),
         cooldown=cooldown_record,
         results=results,
+        smoke_mode=smoke_mode,
     )
     _write_json(summary_path, summary)
     return (IG_CIRCUIT_BREAK_EXIT_CODE if batch_status == "stopped_circuit_break" else 0), str(summary_path)
@@ -317,6 +334,32 @@ def _validate_batch_inputs(
         _canonical_profile_url_and_handle(slot.profile_url)
     if output_root.exists() and not output_root.is_dir():
         raise ValueError(f"output_root is not a directory: {output_root}")
+
+
+def _validate_smoke_mode_inputs(
+    *,
+    slots: Sequence[IgCallsBatchSlot],
+    output_root: Path,
+    max_profiles: int,
+    max_items_per_profile: int,
+    inter_profile_delay_seconds: float,
+    cadence_mode: CadenceMode,
+    ignore_cooldown: bool,
+) -> None:
+    if len(slots) != 1:
+        raise ValueError("IG smoke mode requires exactly one profile")
+    if max_profiles != 1:
+        raise ValueError("IG smoke mode requires max_profiles=1")
+    if max_items_per_profile != 1:
+        raise ValueError("IG smoke mode requires max_items_per_profile=1")
+    if inter_profile_delay_seconds != 0:
+        raise ValueError("IG smoke mode requires inter_profile_delay_seconds=0")
+    if cadence_mode != "fixed":
+        raise ValueError("IG smoke mode requires fixed cadence")
+    if ignore_cooldown:
+        raise ValueError("IG smoke mode respects cooldown and cannot be combined with --ignore-cooldown")
+    if output_root.exists():
+        raise ValueError("IG smoke mode requires a new output_root")
 
 
 def _canonical_profile_url_and_handle(raw: str) -> tuple[str, str]:
@@ -424,10 +467,12 @@ def _build_summary(
     cooldown_policy: dict[str, object],
     cooldown: dict[str, Any] | None,
     results: Sequence[dict[str, Any]],
+    smoke_mode: bool,
 ) -> dict[str, Any]:
     return {
         "runner": "ig_calls_batch",
         "method": "wrap_existing_ig_calls_packet_runner",
+        "smoke_mode": smoke_mode,
         "status": status,
         "non_claims": [
             "not crawler",
@@ -519,6 +564,11 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--cooldown-ledger", type=Path, default=None)
     parser.add_argument("--cooldown-seconds", type=float, default=DEFAULT_COOLDOWN_SECONDS)
     parser.add_argument("--ignore-cooldown", action="store_true")
+    parser.add_argument(
+        "--smoke",
+        action="store_true",
+        help="Force the safest live smoke envelope: one locked profile, one item, fixed zero inter-profile delay, cooldown respected, and a fresh output root.",
+    )
     return parser
 
 
@@ -543,18 +593,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         slots = _slots_from_args(args)
+        max_profiles = 1 if args.smoke else args.max_profiles
+        max_items_per_profile = 1 if args.smoke else args.max_items_per_profile
+        inter_profile_delay_seconds = 0.0 if args.smoke else args.inter_profile_delay_seconds
+        cadence_mode = "fixed" if args.smoke else args.cadence_mode
+        cadence_window_seconds = None if args.smoke else args.cadence_window_seconds
+        cadence_min_gap_seconds = None if args.smoke else args.cadence_min_gap_seconds
+        cadence_max_gap_seconds = None if args.smoke else args.cadence_max_gap_seconds
         exit_code, message = run_source_capture_ig_calls_batch(
             slots=slots,
             output_root=args.output_root,
             decision_question=args.decision_question,
-            max_profiles=args.max_profiles,
-            max_items_per_profile=args.max_items_per_profile,
+            max_profiles=max_profiles,
+            max_items_per_profile=max_items_per_profile,
             profile_scroll_passes=args.profile_scroll_passes,
-            inter_profile_delay_seconds=args.inter_profile_delay_seconds,
-            cadence_mode=args.cadence_mode,
-            cadence_window_seconds=args.cadence_window_seconds,
-            cadence_min_gap_seconds=args.cadence_min_gap_seconds,
-            cadence_max_gap_seconds=args.cadence_max_gap_seconds,
+            inter_profile_delay_seconds=inter_profile_delay_seconds,
+            cadence_mode=cadence_mode,
+            cadence_window_seconds=cadence_window_seconds,
+            cadence_min_gap_seconds=cadence_min_gap_seconds,
+            cadence_max_gap_seconds=cadence_max_gap_seconds,
             cadence_random_seed=args.cadence_random_seed,
             timeout_seconds=args.timeout_seconds,
             max_artifact_bytes=args.max_artifact_bytes,
@@ -572,6 +629,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             cooldown_ledger_path=args.cooldown_ledger,
             cooldown_seconds=args.cooldown_seconds,
             ignore_cooldown=args.ignore_cooldown,
+            smoke_mode=args.smoke,
         )
     except ValueError as exc:
         parser.exit(status=2, message=f"source capture ig calls batch failed: {exc}\n")

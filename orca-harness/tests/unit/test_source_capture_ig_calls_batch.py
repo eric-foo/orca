@@ -265,6 +265,97 @@ def test_batch_runner_refuses_active_cooldown_unless_ignored(
     assert ignored_summary["status"] == "completed"
 
 
+def test_smoke_mode_cli_forces_single_profile_single_item_and_records_smoke(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict] = []
+
+    def fake_packet_runner(**kwargs):
+        calls.append(kwargs)
+        _write_manifest(kwargs["output_directory"])
+        return 0, "packet-ok"
+
+    monkeypatch.setattr(batch, "run_source_capture_ig_calls_packet", fake_packet_runner)
+    output_root = tmp_path / "smoke"
+
+    exit_code = batch.main(
+        [
+            "--smoke",
+            "--handle",
+            "hyram",
+            "--decision-question",
+            "Smoke capture one locked profile.",
+            "--output-root",
+            str(output_root),
+            "--max-profiles",
+            "9",
+            "--max-items-per-profile",
+            "9",
+            "--inter-profile-delay-seconds",
+            "99",
+            "--cadence-mode",
+            "bounded_jitter",
+            "--cooldown-ledger",
+            str(tmp_path / "smoke_cooldown.json"),
+        ]
+    )
+
+    summary = _read_json(output_root / "ig_calls_batch_summary.json")
+    assert exit_code == 0
+    assert len(calls) == 1
+    assert calls[0]["max_items"] == 1
+    assert "batch_smoke_mode=max_profiles_1_max_items_1_cooldown_respected" in calls[0]["limitations"]
+    assert summary["smoke_mode"] is True
+    assert summary["max_profiles"] == 1
+    assert summary["max_items_per_profile"] == 1
+    assert summary["cadence"]["mode"] == "fixed"
+    assert summary["cadence"]["delay_seconds"] == 0.0
+    assert summary["attempted_count"] == 1
+
+
+@pytest.mark.parametrize(
+    "args, match",
+    [
+        (["--ignore-cooldown"], "cannot be combined with --ignore-cooldown"),
+        (["--handle", "curlyscents"], "requires exactly one profile"),
+    ],
+)
+def test_smoke_mode_refuses_unsafe_cli_shapes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    args: list[str],
+    match: str,
+) -> None:
+    calls: list[dict] = []
+
+    def fake_packet_runner(**kwargs):
+        calls.append(kwargs)
+        _write_manifest(kwargs["output_directory"])
+        return 0, "packet-ok"
+
+    monkeypatch.setattr(batch, "run_source_capture_ig_calls_packet", fake_packet_runner)
+
+    with pytest.raises(SystemExit) as exc_info:
+        batch.main(
+            [
+                "--smoke",
+                "--handle",
+                "hyram",
+                "--decision-question",
+                "Smoke capture one locked profile.",
+                "--output-root",
+                str(tmp_path / f"smoke_{len(args)}"),
+                *args,
+            ]
+        )
+
+    captured = capsys.readouterr()
+    assert exc_info.value.code == 2
+    assert match in captured.err
+    assert calls == []
+
 def test_batch_runner_has_no_hidden_network_browser_or_proxy_imports() -> None:
     runner_path = Path(__file__).resolve().parents[2] / "runners" / "run_source_capture_ig_calls_batch.py"
     tree = ast.parse(runner_path.read_text(encoding="utf-8"))
