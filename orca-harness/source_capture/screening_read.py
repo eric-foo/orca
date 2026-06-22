@@ -1,61 +1,81 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
 from enum import StrEnum
-from typing import TypeAlias
-from urllib.parse import urljoin, urlparse
+from ipaddress import ip_address
+from typing import Literal, TypeAlias
+from urllib.parse import quote_plus, urlparse
 
 from source_capture.adapters.anti_blocking_http import (
     AntiBlockingHttpCaptureFailure,
+    AntiBlockingHttpCaptureSuccess,
     fetch_anti_blocking_http_capture,
 )
-from source_capture.adapters.direct_http import DirectHttpCaptureFailure, fetch_direct_http_capture
-from source_capture.block_shell import CaptureBodyClass, classify_capture_body
-from source_capture.reddit_consolidation.html_dom import HtmlNode, parse_html_document
-from source_capture.screening_browser_read import (
-    SCREENING_ORCHESTRATOR_CONTEXT,
-    ScreeningBrowserRead,
-    ScreeningBrowserReadRefused,
-    screening_browser_read,
+from source_capture.adapters.direct_http import (
+    DirectHttpCaptureFailure,
+    DirectHttpCaptureSuccess,
+    fetch_direct_http_capture,
 )
+from source_capture.block_shell import classify_capture_body
+from source_capture.screening_extraction import extract_screening_fields
 from source_capture.screening_reddit_read import (
     RATE_CEILING_NOTE,
-    _post_fetch_entitlement_gate,
-    _pre_fetch_entitlement_gate,
+    RedditScreeningReadRefused,
+    RedditScreenLight,
+    reddit_screening_read,
 )
+
+
+HUMAN_RATE_NOTE = (
+    "orchestrator-invoked screening read; one source / one question; "
+    "human-rate; no standing service, crawler, scheduler, packet, manifest, or ECR"
+)
+OLD_REDDIT_FIRST_ACT_SUBREDDIT = "beauty"
+OLD_REDDIT_FIRST_ACT_QUERY = "skincare moisturizer"
 
 
 class ScreeningReadRoute(StrEnum):
-    REDDIT_OLD_SEARCH = "reddit_old_search"
+    REDDIT_SCREENING_READ = "reddit_screening_read"
     DIRECT_HTTP = "direct_http"
     ANTI_BLOCKING_HTTP = "anti_blocking_http"
     BROWSER = "screening_browser_read"
 
 
 @dataclass(frozen=True)
-class ScreeningReadRecord:
-    """Screen-light record: status/bytes/classification/extracts only; no packet/ECR."""
+class ScreeningReadDispatch:
+    screen_id: str
+    question: str
+    invoked_by: Literal["screen_orchestrator"] = "screen_orchestrator"
 
-    route: str
+
+@dataclass(frozen=True)
+class ScreeningReadRecord:
     requested_url: str
     final_url: str
+    route: str
     status: int | None
     byte_count: int
     content_class: str
     content_signal: str | None
-    content_detail: str
+    content_class_detail: str
     extracted_fields: dict[str, object] = field(default_factory=dict)
+    content_type: str | None = None
     warning_notes: list[str] = field(default_factory=list)
     limitation_notes: list[str] = field(default_factory=list)
-    metadata: dict[str, object] = field(default_factory=dict)
+    human_rate_note: str = HUMAN_RATE_NOTE
 
 
 @dataclass(frozen=True)
 class ScreeningReadRefused:
-    route: str
     requested_url: str
-    reason: str
+    route: str
+    reason: Literal[
+        "not_orchestrator_invoked",
+        "unbounded_dispatch",
+        "entitlement_gated",
+        "login_redirect",
+        "fetch_failed",
+    ]
     message: str
 
 
@@ -66,387 +86,425 @@ def screening_read(
     *,
     url: str,
     route: ScreeningReadRoute | str,
-    invocation_context: str,
+    dispatch: ScreeningReadDispatch,
     timeout_seconds: float = 20.0,
     max_bytes: int = 2_000_000,
+    browser_wait_until: str = "load",
+    browser_viewport_width: int = 1280,
+    browser_viewport_height: int = 720,
+    browser_block_heavy_assets: bool = False,
     browser_settle_seconds: float = 0.0,
     browser_scroll_passes: int = 0,
+    browser_load_more_selector: str | None = None,
+    browser_load_more_clicks: int = 0,
     browser_scroll_step_px: int = 0,
+    old_reddit_submission_min_datetime: str | None = None,
+    old_reddit_submission_max_datetime: str | None = None,
 ) -> ScreeningReadResult:
-    """Orchestrator-only screening read over existing source-capture adapters.
+    """One orchestrator-invoked, screen-light source read.
 
-    The service is deliberately not a crawler, scheduler, packet writer, or ECR
-    writer. It executes one supplied URL through one supplied route and returns
-    a screen-light record for the screen orchestrator.
+    This entry returns status/bytes/content-class/extracted fields only. It
+    deliberately has no CLI, no scheduler, no packet runner import, no packet
+    staging call, no manifest write, and no ECR import.
     """
-    if invocation_context != SCREENING_ORCHESTRATOR_CONTEXT:
-        return ScreeningReadRefused(
-            route=str(route),
-            requested_url=url,
-            reason="not_orchestrator_invoked",
-            message="screening_read is orchestrator-invoked only; walker-direct calls are refused",
+    normalized_route = ScreeningReadRoute(route)
+    dispatch_refusal = _validate_dispatch(dispatch, requested_url=url, route=normalized_route.value)
+    if dispatch_refusal is not None:
+        return dispatch_refusal
+
+    if normalized_route is ScreeningReadRoute.REDDIT_SCREENING_READ:
+        reddit_result = reddit_screening_read(
+            url=url,
+            timeout_seconds=timeout_seconds,
+            max_bytes=max_bytes,
+            old_reddit_submission_min_datetime=old_reddit_submission_min_datetime,
+            old_reddit_submission_max_datetime=old_reddit_submission_max_datetime,
         )
-    try:
-        selected_route = ScreeningReadRoute(route)
-    except ValueError:
-        return ScreeningReadRefused(
-            route=str(route),
+        return _record_from_reddit_result(
             requested_url=url,
-            reason="unsupported_route",
-            message=f"unsupported screening read route: {route!r}",
+            route=normalized_route.value,
+            result=reddit_result,
         )
 
-    if selected_route == ScreeningReadRoute.REDDIT_OLD_SEARCH:
-        return _screening_reddit_old_search_read(
+    gate_refusal = _public_url_gate(url, route=normalized_route.value)
+    if gate_refusal is not None:
+        return gate_refusal
+
+    if normalized_route is ScreeningReadRoute.BROWSER:
+        from source_capture.screening_browser_read import screening_browser_read as browser_screening_read
+
+        browser_result = browser_screening_read(
             url=url,
+            dispatch=dispatch,
             timeout_seconds=timeout_seconds,
-            max_bytes=max_bytes,
-        )
-    if selected_route == ScreeningReadRoute.DIRECT_HTTP:
-        return _screening_direct_http_read(
-            url=url,
-            timeout_seconds=timeout_seconds,
-            max_bytes=max_bytes,
-        )
-    if selected_route == ScreeningReadRoute.ANTI_BLOCKING_HTTP:
-        return _screening_anti_blocking_http_read(
-            url=url,
-            timeout_seconds=timeout_seconds,
-            max_bytes=max_bytes,
-        )
-    if selected_route == ScreeningReadRoute.BROWSER:
-        return _screening_browser_route_read(
-            url=url,
-            timeout_seconds=timeout_seconds,
-            max_bytes=max_bytes,
+            wait_until=browser_wait_until,
+            viewport_width=browser_viewport_width,
+            viewport_height=browser_viewport_height,
+            max_artifact_bytes=max_bytes,
+            block_heavy_assets=browser_block_heavy_assets,
             settle_seconds=browser_settle_seconds,
             scroll_passes=browser_scroll_passes,
+            load_more_selector=browser_load_more_selector,
+            load_more_clicks=browser_load_more_clicks,
             scroll_step_px=browser_scroll_step_px,
         )
-    raise AssertionError(f"unhandled screening read route: {selected_route}")
-
-
-def _screening_reddit_old_search_read(
-    *, url: str, timeout_seconds: float, max_bytes: int
-) -> ScreeningReadResult:
-    pre_gate = _pre_fetch_entitlement_gate(url)
-    if pre_gate is not None:
-        return ScreeningReadRefused(
-            route=ScreeningReadRoute.REDDIT_OLD_SEARCH.value,
+        return _record_from_browser_result(
             requested_url=url,
-            reason=pre_gate.reason,
-            message=pre_gate.message,
+            route=normalized_route.value,
+            result=browser_result,
         )
-    result = fetch_direct_http_capture(
+
+
+    if normalized_route is ScreeningReadRoute.DIRECT_HTTP:
+        fetch_result = fetch_direct_http_capture(
+            url=url,
+            timeout_seconds=timeout_seconds,
+            max_bytes=max_bytes,
+        )
+        return _record_from_direct_http_result(
+            requested_url=url,
+            route=normalized_route.value,
+            result=fetch_result,
+            old_reddit_submission_min_datetime=old_reddit_submission_min_datetime,
+            old_reddit_submission_max_datetime=old_reddit_submission_max_datetime,
+        )
+
+    fetch_result = fetch_anti_blocking_http_capture(
         url=url,
         timeout_seconds=timeout_seconds,
         max_bytes=max_bytes,
     )
+    return _record_from_antiblock_result(
+        requested_url=url,
+        route=normalized_route.value,
+        result=fetch_result,
+        old_reddit_submission_min_datetime=old_reddit_submission_min_datetime,
+        old_reddit_submission_max_datetime=old_reddit_submission_max_datetime,
+    )
+
+
+def close_old_reddit_search_surface_receipt(
+    *,
+    dispatch: ScreeningReadDispatch,
+    subreddit: str = OLD_REDDIT_FIRST_ACT_SUBREDDIT,
+    query: str = OLD_REDDIT_FIRST_ACT_QUERY,
+    timeout_seconds: float = 20.0,
+    max_bytes: int = 500_000,
+) -> ScreeningReadResult:
+    """First-act receipt helper for the route-decision residual."""
+    url = (
+        f"https://old.reddit.com/r/{subreddit}/search"
+        f"?q={quote_plus(query)}&restrict_sr=on&sort=new"
+    )
+    return screening_read(
+        url=url,
+        route=ScreeningReadRoute.REDDIT_SCREENING_READ,
+        dispatch=dispatch,
+        timeout_seconds=timeout_seconds,
+        max_bytes=max_bytes,
+    )
+
+
+def _record_from_reddit_result(
+    *,
+    requested_url: str,
+    route: str,
+    result: RedditScreenLight | RedditScreeningReadRefused,
+) -> ScreeningReadResult:
+    if isinstance(result, RedditScreeningReadRefused):
+        return ScreeningReadRefused(
+            requested_url=requested_url,
+            route=route,
+            reason=result.reason,
+            message=result.message,
+        )
+    extracted_fields = dict(result.extracted_fields)
+    extracted_fields.setdefault("comments_marker_count", result.comments_marker_count)
+    extracted_fields.setdefault("rate_ceiling_note", RATE_CEILING_NOTE)
+    return ScreeningReadRecord(
+        requested_url=requested_url,
+        final_url=result.final_url,
+        route=route,
+        status=result.status,
+        byte_count=result.byte_count,
+        content_class=result.content_class,
+        content_signal=result.content_signal,
+        content_class_detail=result.content_class_detail,
+        extracted_fields=extracted_fields,
+        limitation_notes=list(result.limitation_notes),
+    )
+
+
+def _record_from_direct_http_result(
+    *,
+    requested_url: str,
+    route: str,
+    result: DirectHttpCaptureSuccess | DirectHttpCaptureFailure,
+    old_reddit_submission_min_datetime: str | None,
+    old_reddit_submission_max_datetime: str | None,
+) -> ScreeningReadResult:
     if isinstance(result, DirectHttpCaptureFailure):
         return ScreeningReadRefused(
-            route=ScreeningReadRoute.REDDIT_OLD_SEARCH.value,
-            requested_url=url,
+            requested_url=requested_url,
+            route=route,
             reason="fetch_failed",
             message=result.message,
         )
     body_text = result.body.decode("utf-8", errors="replace")
-    post_gate = _post_fetch_entitlement_gate(url, result, body_text=body_text)
-    if post_gate is not None:
-        return ScreeningReadRefused(
-            route=ScreeningReadRoute.REDDIT_OLD_SEARCH.value,
-            requested_url=url,
-            reason=post_gate.reason,
-            message=post_gate.message,
-        )
-    body_class = classify_capture_body(status=result.status, headers={}, body=result.body)
-    extracted_fields = extract_old_reddit_listing_fields(
-        html=body_text,
-        base_url=result.final_url,
-    )
-    extracted_fields["rate_ceiling_note"] = RATE_CEILING_NOTE
-    return _http_record(
-        route=ScreeningReadRoute.REDDIT_OLD_SEARCH.value,
-        requested_url=result.requested_url,
+    login_refusal = _post_fetch_login_gate(
+        requested_url=requested_url,
         final_url=result.final_url,
+        body_text=body_text,
+        route=route,
+    )
+    if login_refusal is not None:
+        return login_refusal
+    classification = classify_capture_body(
         status=result.status,
+        headers=_headers_from_direct_metadata(result),
         body=result.body,
-        body_class=body_class,
-        extracted_fields=extracted_fields,
-        warning_notes=result.warning_notes,
-        limitation_notes=result.limitation_notes,
-        metadata={
-            "first_act_old_reddit_receipt": True,
-            "comments_marker_count": body_text.count("/comments/"),
-            "packet_written": False,
-            "ecr_touched": False,
-        },
     )
-
-
-def _screening_direct_http_read(
-    *, url: str, timeout_seconds: float, max_bytes: int
-) -> ScreeningReadResult:
-    pre_gate = _public_url_gate(
-        route=ScreeningReadRoute.DIRECT_HTTP.value,
-        url=url,
-    )
-    if pre_gate is not None:
-        return pre_gate
-    result = fetch_direct_http_capture(
-        url=url,
-        timeout_seconds=timeout_seconds,
-        max_bytes=max_bytes,
-    )
-    if isinstance(result, DirectHttpCaptureFailure):
-        return ScreeningReadRefused(
-            route=ScreeningReadRoute.DIRECT_HTTP.value,
-            requested_url=url,
-            reason="fetch_failed",
-            message=result.message,
-        )
-    body_class = classify_capture_body(status=result.status, headers={}, body=result.body)
-    return _http_record(
-        route=ScreeningReadRoute.DIRECT_HTTP.value,
-        requested_url=result.requested_url,
+    return ScreeningReadRecord(
+        requested_url=requested_url,
         final_url=result.final_url,
+        route=route,
         status=result.status,
-        body=result.body,
-        body_class=body_class,
-        extracted_fields={},
-        warning_notes=result.warning_notes,
-        limitation_notes=result.limitation_notes,
-        metadata={"packet_written": False, "ecr_touched": False},
+        byte_count=int(result.metadata["byte_count"]),
+        content_class=classification.classification.value,
+        content_signal=classification.signal,
+        content_class_detail=classification.detail,
+        extracted_fields=extract_screening_fields(
+            url=result.final_url,
+            body_text=body_text,
+            old_reddit_submission_min_datetime=old_reddit_submission_min_datetime,
+            old_reddit_submission_max_datetime=old_reddit_submission_max_datetime,
+        ),
+        content_type=_metadata_str(result.metadata.get("content_type")),
+        warning_notes=list(result.warning_notes),
+        limitation_notes=list(result.limitation_notes),
     )
 
 
-def _screening_anti_blocking_http_read(
-    *, url: str, timeout_seconds: float, max_bytes: int
+def _record_from_antiblock_result(
+    *,
+    requested_url: str,
+    route: str,
+    result: AntiBlockingHttpCaptureSuccess | AntiBlockingHttpCaptureFailure,
+    old_reddit_submission_min_datetime: str | None,
+    old_reddit_submission_max_datetime: str | None,
 ) -> ScreeningReadResult:
-    pre_gate = _public_url_gate(
-        route=ScreeningReadRoute.ANTI_BLOCKING_HTTP.value,
-        url=url,
-    )
-    if pre_gate is not None:
-        return pre_gate
-    result = fetch_anti_blocking_http_capture(
-        url=url,
-        timeout_seconds=timeout_seconds,
-        max_bytes=max_bytes,
-    )
     if isinstance(result, AntiBlockingHttpCaptureFailure):
         return ScreeningReadRefused(
-            route=ScreeningReadRoute.ANTI_BLOCKING_HTTP.value,
-            requested_url=url,
+            requested_url=requested_url,
+            route=route,
             reason="fetch_failed",
             message=result.message,
         )
-    body_class = classify_capture_body(
+    body_text = result.body.decode("utf-8", errors="replace")
+    login_refusal = _post_fetch_login_gate(
+        requested_url=requested_url,
+        final_url=result.final_url,
+        body_text=body_text,
+        route=route,
+    )
+    if login_refusal is not None:
+        return login_refusal
+    classification = classify_capture_body(
         status=result.status,
         headers=result.response_headers,
         body=result.body,
     )
-    return _http_record(
-        route=ScreeningReadRoute.ANTI_BLOCKING_HTTP.value,
-        requested_url=result.requested_url,
+    return ScreeningReadRecord(
+        requested_url=requested_url,
         final_url=result.final_url,
+        route=route,
         status=result.status,
-        body=result.body,
-        body_class=body_class,
-        extracted_fields={},
-        warning_notes=result.warning_notes,
-        limitation_notes=result.limitation_notes,
-        metadata={
-            "method_category": result.method_category,
-            "impersonation_profile": result.impersonation_profile,
-            "packet_written": False,
-            "ecr_touched": False,
-        },
+        byte_count=int(result.metadata["byte_count"]),
+        content_class=classification.classification.value,
+        content_signal=classification.signal,
+        content_class_detail=classification.detail,
+        extracted_fields=extract_screening_fields(
+            url=result.final_url,
+            body_text=body_text,
+            old_reddit_submission_min_datetime=old_reddit_submission_min_datetime,
+            old_reddit_submission_max_datetime=old_reddit_submission_max_datetime,
+        ),
+        content_type=_metadata_str(result.metadata.get("content_type")),
+        warning_notes=list(result.warning_notes),
+        limitation_notes=list(result.limitation_notes),
     )
 
 
-def _screening_browser_route_read(
+def _record_from_browser_result(
     *,
-    url: str,
-    timeout_seconds: float,
-    max_bytes: int,
-    settle_seconds: float,
-    scroll_passes: int,
-    scroll_step_px: int,
+    requested_url: str,
+    route: str,
+    result: object,
 ) -> ScreeningReadResult:
-    result = screening_browser_read(
-        url=url,
-        invocation_context=SCREENING_ORCHESTRATOR_CONTEXT,
-        timeout_seconds=timeout_seconds,
-        max_artifact_bytes=max_bytes,
-        settle_seconds=settle_seconds,
-        scroll_passes=scroll_passes,
-        scroll_step_px=scroll_step_px,
-    )
-    if isinstance(result, ScreeningBrowserReadRefused):
+    from source_capture.screening_browser_read import BrowserScreeningReadRefused
+
+    if isinstance(result, BrowserScreeningReadRefused):
         return ScreeningReadRefused(
-            route=ScreeningReadRoute.BROWSER.value,
-            requested_url=url,
+            requested_url=requested_url,
+            route=route,
             reason=result.reason,
             message=result.message,
         )
-    assert isinstance(result, ScreeningBrowserRead)
     return ScreeningReadRecord(
-        route=ScreeningReadRoute.BROWSER.value,
-        requested_url=result.requested_url,
+        requested_url=requested_url,
         final_url=result.final_url,
+        route=route,
         status=None,
-        byte_count=result.byte_count,
+        byte_count=result.visible_text_byte_count,
         content_class=result.content_class,
         content_signal=result.content_signal,
-        content_detail=result.content_detail,
-        extracted_fields={},
-        warning_notes=result.warning_notes,
-        limitation_notes=result.limitation_notes,
-        metadata=dict(result.metadata),
+        content_class_detail=result.content_class_detail,
+        extracted_fields={
+            "title": result.title,
+            "visible_text": result.visible_text,
+            "access_block_reason": result.access_block_reason,
+            "status_note": result.status_note,
+        },
+        warning_notes=list(result.warning_notes),
+        limitation_notes=list(result.limitation_notes),
     )
 
 
-def extract_old_reddit_listing_fields(*, html: str, base_url: str) -> dict[str, object]:
-    """Extract old-Reddit listing/search fields using title-row-local locators.
-
-    Post dates are read only from the same listing row as the candidate title.
-    The extractor never computes a global min() over page datetimes, because
-    sidebars can carry unrelated subreddit-age timestamps.
-    """
-    root = parse_html_document(html)
-    rows: list[dict[str, object]] = []
-    for anchor in _title_anchors(root):
-        row = _nearest_thing(anchor)
-        if row is None:
-            continue
-        href = anchor.attrs.get("href", "")
-        time_node = row.first_descendant(tag="time")
-        date_value = time_node.attrs.get("datetime") if time_node is not None else None
-        date_status, date_detail = _post_date_sanity(date_value)
-        rows.append(
-            {
-                "title": anchor.text_content(),
-                "url": urljoin(base_url, href),
-                "post_date": date_value if date_status == "range_sane" else None,
-                "post_date_status": date_status,
-                "post_date_detail": date_detail,
-            }
-        )
-    comments_marker_count = html.count("/comments/")
-    return {
-        "comments_marker_count": comments_marker_count,
-        "candidate_count": len(rows),
-        "candidate_rows": rows,
-        "extraction_method": "old_reddit_title_row_local_locators",
-        "range_sanity_guard": "reddit_launch_to_now_plus_one_day",
-    }
-
-
-def _http_record(
+def _validate_dispatch(
+    dispatch: ScreeningReadDispatch,
     *,
-    route: str,
     requested_url: str,
-    final_url: str,
-    status: int,
-    body: bytes,
-    body_class,
-    extracted_fields: dict[str, object],
-    warning_notes: list[str],
-    limitation_notes: list[str],
-    metadata: dict[str, object],
-) -> ScreeningReadRecord:
-    notes = list(limitation_notes)
-    if body_class.classification == CaptureBodyClass.BLOCK_SHELL:
-        notes.append(
-            f"access_failed: {route} body classified as block_shell; signal={body_class.signal}"
-        )
-    return ScreeningReadRecord(
-        route=route,
-        requested_url=requested_url,
-        final_url=final_url,
-        status=status,
-        byte_count=len(body),
-        content_class=body_class.classification.value,
-        content_signal=body_class.signal,
-        content_detail=body_class.detail,
-        extracted_fields=extracted_fields,
-        warning_notes=list(warning_notes),
-        limitation_notes=notes,
-        metadata=metadata,
-    )
-
-
-def _public_url_gate(*, route: str, url: str) -> ScreeningReadRefused | None:
-    try:
-        parsed = urlparse(url)
-    except Exception as exc:
+    route: str,
+) -> ScreeningReadRefused | None:
+    if dispatch.invoked_by != "screen_orchestrator":
         return ScreeningReadRefused(
+            requested_url=requested_url,
             route=route,
-            requested_url=url,
-            reason="entitlement_gated",
-            message=f"URL could not be parsed ({exc!r}); refusing without fetch.",
+            reason="not_orchestrator_invoked",
+            message="screening reads must be invoked by the screen orchestrator, not walkers directly",
         )
+    if not dispatch.screen_id.strip() or not dispatch.question.strip():
+        return ScreeningReadRefused(
+            requested_url=requested_url,
+            route=route,
+            reason="unbounded_dispatch",
+            message="screening reads require a per-screen id and one bounded question",
+        )
+    return None
+
+
+def _public_url_gate(url: str, *, route: str) -> ScreeningReadRefused | None:
+    parsed = urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return ScreeningReadRefused(
-            route=route,
             requested_url=url,
+            route=route,
             reason="entitlement_gated",
-            message="screening read requires an absolute http:// or https:// URL",
+            message="screening reads require an absolute public http:// or https:// URL",
         )
     if parsed.username is not None or parsed.password is not None:
         return ScreeningReadRefused(
-            route=route,
             requested_url=url,
+            route=route,
             reason="entitlement_gated",
-            message="credential-bearing URLs are refused without fetch",
+            message="URLs with embedded credentials are not public logged-out screening surfaces",
+        )
+    host = (parsed.hostname or "").lower()
+    if host in {"localhost"} or host.endswith(".local") or _is_non_public_ip_literal(host):
+        return ScreeningReadRefused(
+            requested_url=url,
+            route=route,
+            reason="entitlement_gated",
+            message=f"host {host!r} is not a public logged-out screening surface",
+        )
+    path_segments = {segment.lower() for segment in (parsed.path or "").split("/") if segment}
+    if path_segments & {"login", "signin", "sign-in", "register", "account", "accounts", "oauth", "auth"}:
+        return ScreeningReadRefused(
+            requested_url=url,
+            route=route,
+            reason="entitlement_gated",
+            message="URL path looks like an auth/account surface; refused before fetch",
         )
     return None
 
 
-def _title_anchors(root: HtmlNode) -> list[HtmlNode]:
-    anchors: list[HtmlNode] = []
-    for node in root.descendants():
-        if node.tag != "a":
-            continue
-        classes = node.classes()
-        href = node.attrs.get("href", "")
-        if "may-blank" not in classes or "/comments/" not in href:
-            continue
-        if "search-title" in classes or "title" in classes:
-            anchors.append(node)
-    return anchors
-
-
-def _nearest_thing(node: HtmlNode) -> HtmlNode | None:
-    current = node.parent
-    while current is not None:
-        if "thing" in current.classes():
-            return current
-        current = current.parent
+def _post_fetch_login_gate(
+    *,
+    requested_url: str,
+    final_url: str,
+    body_text: str,
+    route: str,
+) -> ScreeningReadRefused | None:
+    final_lower = final_url.lower()
+    if any(marker in final_lower for marker in ("/login", "/signin", "/register", "/account")):
+        return ScreeningReadRefused(
+            requested_url=requested_url,
+            route=route,
+            reason="login_redirect",
+            message=f"screening read landed on an auth/account URL: {final_url!r}",
+        )
+    body_lower = body_text.lower()
+    if any(
+        marker in body_lower
+        for marker in (
+            'action="/login"',
+            'action="/signin"',
+            "please log in",
+            "please sign in",
+            "log in to continue",
+            "sign in to continue",
+        )
+    ):
+        return ScreeningReadRefused(
+            requested_url=requested_url,
+            route=route,
+            reason="login_redirect",
+            message="screening read received a login/sign-in page; content is access-gated",
+        )
     return None
 
 
-def _post_date_sanity(value: str | None) -> tuple[str, str]:
-    if not value:
-        return "absent", "no time datetime attribute found in the title row"
-    parsed = _parse_datetime(value)
-    if parsed is None:
-        return "invalid", f"could not parse title-row datetime {value!r}"
-    reddit_launch = datetime(2005, 6, 23, tzinfo=timezone.utc)
-    upper = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=1)
-    if parsed < reddit_launch or parsed > upper:
-        return "out_of_range", f"title-row datetime {value!r} is outside Reddit launch..now+1d"
-    return "range_sane", "title-row datetime is inside Reddit launch..now+1d"
+def _headers_from_direct_metadata(result: DirectHttpCaptureSuccess) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    content_type = _metadata_str(result.metadata.get("content_type"))
+    if content_type:
+        headers["Content-Type"] = content_type
+    content_encoding = _metadata_str(result.metadata.get("content_encoding"))
+    if content_encoding:
+        headers["Content-Encoding"] = content_encoding
+    return headers
 
 
-def _parse_datetime(value: str) -> datetime | None:
-    text = value.strip()
-    if text.endswith("Z"):
-        text = f"{text[:-1]}+00:00"
+def _is_non_public_ip_literal(host: str) -> bool:
     try:
-        parsed = datetime.fromisoformat(text)
+        parsed = ip_address(host)
     except ValueError:
+        return False
+    return (
+        parsed.is_private
+        or parsed.is_loopback
+        or parsed.is_link_local
+        or parsed.is_multicast
+        or parsed.is_reserved
+        or parsed.is_unspecified
+    )
+
+
+def _metadata_str(value: object) -> str | None:
+    if value is None:
         return None
-    if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=timezone.utc)
-    return parsed.astimezone(timezone.utc)
+    return str(value)
+
+
+__all__ = [
+    "HUMAN_RATE_NOTE",
+    "OLD_REDDIT_FIRST_ACT_QUERY",
+    "OLD_REDDIT_FIRST_ACT_SUBREDDIT",
+    "ScreeningReadDispatch",
+    "ScreeningReadRecord",
+    "ScreeningReadRefused",
+    "ScreeningReadResult",
+    "ScreeningReadRoute",
+    "close_old_reddit_search_surface_receipt",
+    "screening_read",
+]
