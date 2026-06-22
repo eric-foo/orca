@@ -284,4 +284,3 @@ Total targeted pair reads: 9, covering approximately 12–15 individual rows. Pa
 ## Review-Use Boundary
 
 This review is decision input only. It is not approval, acceptance, validation, production readiness, or authorization to change code or pipeline configuration. Only a separately authorized patch, acceptance, validation, lifecycle, or implementation lane can make remediation mandatory or executor-ready.
-
