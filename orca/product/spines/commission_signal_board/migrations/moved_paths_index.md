@@ -21,14 +21,15 @@ stale_if:
 - Status: ACTIVE_MOVED_PATH_INDEX.
 - Scope: Commission Signal Board pilot only.
 - Global docs move: staged, not executed.
+- Current-main reconciliation: `orca/product/spines/commission_signal_board/migrations/commission_signal_board_current_main_reconciliation_v0.md`.
 
 ## Moved Canonical Docs
 
 | Old path | Canonical path | Resolution |
 | --- | --- | --- |
-| `docs/product/product_lead/orca_commission_signal_board_prompt_adjudication_packet_v0.md` | `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md` | Old path is a resolver stub. |
-| `docs/prompts/product-planning/orca_commission_signal_board_prompt_v0.md` | `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md` | Old path is a resolver stub. |
-| `docs/workflows/commission_signal_board_playbook_v0.md` | `orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md` | Old path is a resolver stub. |
+| `docs/product/product_lead/orca_commission_signal_board_prompt_adjudication_packet_v0.md` | `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md` | Old path is absent on current `main`; use the canonical spine path. |
+| `docs/prompts/product-planning/orca_commission_signal_board_prompt_v0.md` | `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md` | Old path is absent on current `main`; use the canonical spine path. |
+| `docs/workflows/commission_signal_board_playbook_v0.md` | `orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md` | Old path is absent on current `main`; use the canonical spine path. |
 
 ## Indexed But Not Moved
 
@@ -37,8 +38,20 @@ stale_if:
 | `.agents/hooks/check_commission_signal_board_output.py` | `orca/product/spines/commission_signal_board/harness/validator.md` | Shared manual/local hook substrate stays global during the pilot. |
 | `orca-harness/tests/unit/test_commission_signal_board_output_validator.py` | `orca/product/spines/commission_signal_board/tests/validator_tests.md` | Executable tests stay with the harness until separate code-root migration authority exists. |
 | `orca-harness/tests/fixtures/commission_signal_board_outputs/` | `orca/product/spines/commission_signal_board/tests/validator_tests.md` | Fixtures remain bound to the executable harness test suite. |
-| `docs/prompts/handoffs/commission_signal_board_spine_pilot_reconciliation_handoff_prompt_v0.md` | none | Historical handoff prompt remains in the global handoff prompt archive. |
-| `docs/migration/commission_signal_board_spine_pilot_migration_plan_v0.md` | this index | Global migration planning record remains under `docs/migration/`. |
+
+## Historical Records Absent On Current Main
+
+These paths are historical CSB lane names that older handoffs or packets may
+mention, but they are not present on current `main`. Do not route live CSB work
+through them unless a later branch restores or explicitly imports them. Recheck
+with `git cat-file -e HEAD:<path>` before relying on any older packet that names
+one of these files.
+
+| Historical path | Current resolution |
+| --- | --- |
+| `docs/prompts/handoffs/commission_signal_board_spine_pilot_reconciliation_handoff_prompt_v0.md` | No current-main artifact observed; use the live CSB spine entry points instead. |
+| `docs/migration/commission_signal_board_migration_inventory_v0.md` | No current-main artifact observed; use this moved-path index and the Phase-2 CSB proposal for current structure context. |
+| `docs/migration/commission_signal_board_spine_pilot_migration_plan_v0.md` | No current-main artifact observed; use this moved-path index and the live CSB spine entry points instead. |
 
 ## Reverse Plan
 
