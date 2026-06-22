@@ -41,10 +41,7 @@ VALID_CLOSEOUT_STATES = {
 VALID_SOURCE_CONTEXT_STATUS = "SOURCE_CONTEXT_READY"
 
 SECTION_PATTERNS = {
-    "broad_scout_accounting": re.compile(
-        r"(^##\s+Broad Scout\b|\bbroad_scout_return\b)",
-        re.IGNORECASE | re.MULTILINE,
-    ),
+    "broad_scout_accounting": re.compile(r"^##\s+Broad Scout\b", re.IGNORECASE | re.MULTILINE),
     "csb_row_accounting": re.compile(
         r"(csb_rows_consumed|Rows consumed as route map:)",
         re.IGNORECASE | re.MULTILINE,
@@ -114,7 +111,7 @@ def _find_intake(blocks: list[Any]) -> dict[str, Any] | None:
     for block in blocks:
         if not isinstance(block, dict):
             continue
-        if "commission_id" in block and "source_context_status" in block:
+        if "commission_id" in block:
             return block
     return None
 
@@ -148,7 +145,7 @@ def _validate_intake(intake: dict[str, Any]) -> list[Finding]:
         )
 
     closeout = _normalize_vocab(intake.get("closeout_state"))
-    if closeout and closeout not in VALID_CLOSEOUT_STATES:
+    if closeout not in VALID_CLOSEOUT_STATES:
         findings.append(
             Finding(
                 "invalid_closeout_state",
@@ -237,11 +234,11 @@ def _validate_yaml_overclaims(blocks: list[Any]) -> list[Finding]:
                 "candidate_authorization",
             }:
                 findings.append(Finding("invalid_signal_stage_overclaim", f"{path} must not use {value!r}."))
-            if key_norm == "route_binding_state" and value_norm not in {"", "unknown", "not_bound", "capture_owned"}:
+            if key_norm == "route_binding_state" and value_norm not in {"", "unknown", "not_bound"}:
                 findings.append(
                     Finding(
                         "invalid_capture_route_binding_state",
-                        f"{path} must stay unknown/not_bound/capture_owned, got {value!r}.",
+                        f"{path} must stay unknown/not_bound, got {value!r}.",
                     )
                 )
     return findings
