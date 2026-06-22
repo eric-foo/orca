@@ -81,6 +81,13 @@ The recommended direction is:
 - Buyer-proof and client-facing claims remain downstream and separately gated.
 - Durable prompt authoring still goes through prompt-orchestration.
 
+Current prompt amendment: the durable CSB prompt now records recency/currentness
+as source-route attention metadata (`recency_status` and `recency_attention`).
+The manual/local CSB validator now enforces those row-shape fields and enum
+values, but only as output shape: same-strength newer/current URL-backed rows
+can deserve more scan attention, and that attention is not buyer proof, demand
+classification, classifier mapping, evidence weighting, or graph weight.
+
 The temporary prompt is too high-lock-in to adopt wholesale because it mixes
 five different objects in one artifact: commission intake, venue playbook,
 source registry, forecast-target schema, and graph retrieval schema. Installing
@@ -255,7 +262,7 @@ source_subfamily: <subfamily>
 surface: <specific venue or route>
 observable: <what can be seen>
 capture_posture: available_now | planned_lane | deferred | manual_only | not_authorized | noisy_deferred
-row_purpose: chronology | source_route | signal_unit | contradiction | gap | classifier_handoff
+row_purpose: chronology | source_route | signal_unit | contradiction | gap | classifier_handoff | recency_priority
 graph_role: seed | node_candidate | edge_candidate | propagation_path | campaign_overlap_check | counterevidence_path | none
 graph_weight_hint: high | medium | low | none   # relation utility only, never signal strength
 signal_role: consumer_language | review_experience | creator_attention | retail_corroboration | search_interest | aeo_visibility | org_motion | owned_claim | none
@@ -279,7 +286,8 @@ feeds:
   map, `signal_role` records the *signal content* a family yields. The schema's
   separate `row_purpose` field records the job of the row inside the board
   (`chronology | source_route | signal_unit | contradiction | gap |
-  classifier_handoff`). A future prompt and the Owner Decision 2 field set should
+  classifier_handoff | recency_priority`). A future prompt and the Owner
+  Decision 2 field set should
   not conflate the two.
 
 ## Section Adjudication Matrix

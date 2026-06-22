@@ -3,9 +3,10 @@
 
 This is a local/manual checker. It does not run retrieval, classify demand,
 construct graphs, or prove a board is correct. It only checks that saved full
-board outputs preserve the prompt's mechanical shape and that rows listed in
-the classifier handoff are evidence-backed and cutoff-safe according to the
-board's own row table.
+board outputs preserve the prompt's mechanical shape, that rows listed in the
+classifier handoff are evidence-backed and cutoff-safe according to the board's
+own row table, and that Section 4 carries the mechanically required
+recency/current-state attention fields.
 """
 from __future__ import annotations
 
@@ -53,6 +54,11 @@ REQUIRED_ROW_COLUMNS = {
     "row_id",
     "source_family",
     "signal_role",
+    "row_purpose",
+    "recency_status",
+    "recency_attention",
+    "graph_role",
+    "graph_weight_hint",
     "evidence_status",
     "surface_cutoff_status",
     "cutoff_status",
@@ -81,7 +87,23 @@ VALID_SIGNAL_ROLES = {
     "owned_claim",
     "none",
 }
-VALID_ROW_PURPOSES = {"chronology", "source_route", "signal_unit", "contradiction", "gap", "classifier_handoff"}
+VALID_ROW_PURPOSES = {
+    "chronology",
+    "source_route",
+    "signal_unit",
+    "contradiction",
+    "gap",
+    "classifier_handoff",
+    "recency_priority",
+}
+VALID_RECENCY_STATUSES = {
+    "current_state",
+    "recent",
+    "older_context",
+    "stale_or_unknown",
+    "not_applicable",
+}
+VALID_RECENCY_ATTENTIONS = {"high", "normal", "low", "unknown"}
 VALID_GRAPH_ROLES = {
     "seed",
     "node_candidate",
@@ -250,6 +272,8 @@ def parse_signal_rows(text: str) -> tuple[dict[str, dict[str, str]], list[Findin
             "source_family": VALID_SOURCE_FAMILIES,
             "signal_role": VALID_SIGNAL_ROLES,
             "row_purpose": VALID_ROW_PURPOSES,
+            "recency_status": VALID_RECENCY_STATUSES,
+            "recency_attention": VALID_RECENCY_ATTENTIONS,
             "graph_role": VALID_GRAPH_ROLES,
             "graph_weight_hint": VALID_GRAPH_WEIGHT_HINTS,
             "evidence_status": VALID_EVIDENCE_STATUSES,

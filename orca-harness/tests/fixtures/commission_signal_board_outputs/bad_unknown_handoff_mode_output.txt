@@ -33,9 +33,9 @@ This is an evidence/signals-only fixture, not a demand verdict, proof claim, gra
 
 ### 4. Signal Board Rows
 
-| Row ID | Source family | Subfamily | Surface | Observable | Signal role | Row purpose | Graph role | Graph weight hint | Evidence status | Provenance needed | Surface cutoff status | Cutoff status | Handoff note |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | uncertain | Unknown mode must not make this pass |
+| Row ID | Source family | Subfamily | Surface | Observable | Signal role | Row purpose | Recency status | Recency attention | Graph role | Graph weight hint | Evidence status | Provenance needed | Surface cutoff status | Cutoff status | Handoff note |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | recent | high | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | uncertain | Unknown mode must not make this pass |
 
 ### 5. Mandatory Counterevidence Paths
 

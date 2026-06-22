@@ -254,6 +254,21 @@ Spec + provenance: `archive_org_refinement_and_source_family_gap_spec_v0.md` (sl
 is a `stale_if` catalog amendment documenting landed code (added 2026-06-16); it is outside the
 original de-correlated review's scope.
 
+## Recency / Current-State Preservation Priority
+
+When a scanning or CSB handoff marks a URL or venue as recent/current-state
+high-attention, Capture treats that as preservation urgency and source-drift
+risk. Prefer preserving the current visible state before older context when the
+request is otherwise within scope and route-matched. Same-strength newer/current
+source states may deserve earlier capture than older source states, especially
+for stockout/restock, waitlist, review text, availability, price, or changing PDP
+/ social / forum surfaces.
+
+This priority does not prove demand, change the access-control gate, select a
+route by itself, or let scanning bind Capture's route. Capture still runs Step 0,
+chooses the cheapest matching route, and records the captured state as source
+facts, not proof.
+
 ## Step 3 — The verdict + receipt
 
 - **GO:** source-native content captured AND independently checkable — raw bytes/hash, magic bytes
@@ -268,7 +283,8 @@ original de-correlated review's scope.
   **not** call it NO-GO.
 - **Receipt (every run):** access classification · routes tried · routes considered-but-skipped and
   why · evidence locator for each attempt · fidelity evidence · request rate / volume · why it
-  stopped · verdict · routes now forbidden without a new fact.
+  stopped · current/recent state preserved when relevant · verdict · routes now forbidden without a
+  new fact.
 
 ## The output: a recipe card (the growing tail — authored by probes, not here)
 
@@ -303,6 +319,59 @@ capture-spine spec slice F, pending build).
 - **Rate-limited / commercial / entitled APIs** are entitlement / API-contract routes, not anti-bot
   routes; use your own entitled access, don't defeat the auth.
 - **Recipe cards are not yet authored.** This MVP is the method only.
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Capture now interprets scanning/CSB recency-currentness as preservation
+    urgency and source-drift risk, not proof or route binding: same-strength
+    newer/current source states may deserve earlier capture when the request is
+    otherwise in scope and route-matched.
+  trigger: product_doctrine
+  related_triggers:
+    - workflow_authority
+  controlling_sources_updated:
+    - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+    - orca/product/spines/judgment/demand_read/core/judgment_spine_demand_read_machinery_architecture_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - docs/workflows/data_capture_spine_consolidation_map_v0.md
+    - orca/product/spines/capture/core/source_capture_toolbox/README.md
+    - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
+    - orca/product/spines/scanning/README.md
+    - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
+  intentionally_not_updated:
+    - path: docs/workflows/data_capture_spine_consolidation_map_v0.md
+      reason: >
+        The submap remains a pointer surface and already routes capture-method
+        questions to this playbook; no route ownership changed.
+    - path: orca/product/spines/capture/core/source_capture_toolbox/README.md
+      reason: >
+        The Source Capture Armory index already points operators to this playbook
+        for method routing; duplicating recency semantics there would create a
+        second wording surface.
+  stale_language_search: >
+    rg -n "recency|recent|current-state|currentness|preservation urgency|route binding|proof|access-control gate"
+    orca/product/spines/capture orca/product/spines/scanning docs/workflows/data_capture_spine_consolidation_map_v0.md docs/workflows/orca_repo_map_v0.md
+    (run 2026-06-23)
+  stale_language_search_result: >
+    Hits were accepted recency/currentness preservation-priority language,
+    repo-map routing summaries, existing capture/scanning safeguards, harvested
+    historical source text, or explicit no-proof/no-route-binding/no-access-gate
+    boundaries. No controlling Capture/scanning surface was found that lets
+    recency/currentness prove demand, authorize access, or bind a Capture route.
+  non_claims:
+    - not validation
+    - not readiness
+    - not capture authorization
+    - not source-access authorization
+    - not buyer proof
+```
 
 ## Non-claims
 

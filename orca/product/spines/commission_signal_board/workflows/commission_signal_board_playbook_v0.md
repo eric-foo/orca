@@ -97,12 +97,14 @@ because it is not a board.
 
 The validator first checks full-board structure: Sections 1-10 must appear in
 the prompt-defined order, Section 4 must have its Markdown table and required
-columns (`row_id`, `source_family`, `signal_role`, `evidence_status`,
-`surface_cutoff_status`, `cutoff_status`), Section 8 must contain a valid YAML
+columns (`row_id`, `source_family`, `signal_role`, `row_purpose`,
+`recency_status`, `recency_attention`, `graph_role`, `graph_weight_hint`,
+`evidence_status`, `surface_cutoff_status`, `cutoff_status`), Section 8 must
+contain a valid YAML
 `classifier_handoff_packet`, and Section 10 must contain valid board-status
 YAML. It fails malformed Section 4 rows, missing row IDs, duplicate row IDs,
 row IDs not matching `SBR-NNN` format, non-monotonic row IDs, invalid Section 4 controlled
-vocabulary values, missing Section 8 handoff packet fields, invalid
+vocabulary values including recency/current-state fields, missing Section 8 handoff packet fields, invalid
 `classifier_mapping_status`, invalid `prohibited_claims` shape, invalid
 `board_status`, invalid `run_boundary`, and missing `next_authorized_step`.
 

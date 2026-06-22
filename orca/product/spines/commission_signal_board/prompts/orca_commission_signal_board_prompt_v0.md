@@ -62,9 +62,10 @@ python -B .agents\hooks\check_commission_signal_board_output.py <board-output-fi
 ```
 
 A validator pass means only that the handoff rows are mechanically eligible
-under the board's own row table. It is not evidence truth, demand
-classification, retrieval completion, buyer proof, validation, readiness, or
-client-facing approval.
+under the board's own row table and that Section 4 carries the required
+recency/current-state attention fields. It is not evidence truth, demand
+classification, retrieval completion, buyer proof, validation, readiness,
+attention correctness, or client-facing approval.
 
 If the dispatcher wants the board written as a durable repo artifact, use a
 separate wrapper or current-turn instruction that binds a file path, docs-write
@@ -292,7 +293,9 @@ surface:
 observable:
 capture_posture: available_now | planned_lane | deferred | manual_only | not_authorized | noisy_deferred
 signal_role: consumer_language | review_experience | creator_attention | retail_corroboration | search_interest | aeo_visibility | org_motion | owned_claim | none
-row_purpose: chronology | source_route | signal_unit | contradiction | gap | classifier_handoff
+row_purpose: chronology | source_route | signal_unit | contradiction | gap | classifier_handoff | recency_priority
+recency_status: current_state | recent | older_context | stale_or_unknown | not_applicable
+recency_attention: high | normal | low | unknown
 graph_role: seed | node_candidate | edge_candidate | propagation_path | campaign_overlap_check | counterevidence_path | none
 graph_weight_hint: high | medium | low | none
 evidence_status: provided | source_backed | to_retrieve | gap | not_authorized | not_applicable | excluded_future_info
@@ -302,6 +305,9 @@ surface_cutoff_status: existed_by_cutoff | post_cutoff_surface | uncertain | not
 
 `signal_role` records what kind of signal the source contributes.
 `row_purpose` records why this row exists inside the board.
+`recency_status` and `recency_attention` record source-route priority, not truth:
+same-strength newer/current URL-backed signals normally deserve more downstream
+scan attention than older sources, even when their direction differs.
 `graph_role` records how the row helps retrieval or later graph organization.
 `graph_weight_hint` is relation utility only. It is never signal strength.
 `surface_cutoff_status` records whether a source surface was available within a
@@ -317,6 +323,8 @@ demand classifier owns any board-`signal_role` to classifier-family mapping.
 Use effort allocation as search hygiene, not a gate rule:
 
 - majority effort: independent origin/experience/attention/corroboration routes;
+- elevated effort: current or recent URL-backed source states when same-strength
+  older sources would otherwise steer the board;
 - meaningful effort: counterevidence, contradictions, campaign-overlap risk,
   and missing-signal checks;
 - smaller effort: owned chronology and official claims.
@@ -393,7 +401,7 @@ absence is decision-relevant.
 
 Markdown table:
 
-`Row ID | Source family | Subfamily | Surface | Observable | Signal role | Row purpose | Graph role | Graph weight hint | Evidence status | Provenance needed | Surface cutoff status | Cutoff status | Handoff note`
+`Row ID | Source family | Subfamily | Surface | Observable | Signal role | Row purpose | Recency status | Recency attention | Graph role | Graph weight hint | Evidence status | Provenance needed | Surface cutoff status | Cutoff status | Handoff note`
 
 Rules:
 
@@ -404,6 +412,12 @@ Rules:
 - For backtests, set `surface_cutoff_status` before assigning `evidence_status`.
   Post-cutoff surfaces are `excluded_future_info`, not ordinary `to_retrieve`.
 - Counterevidence rows are first-class rows, not footnotes.
+- Use `recency_attention: high` for same-strength newer/current signals that
+  should receive more downstream scan attention than older context; this does
+  not make the row proof, demand classification, or graph weight.
+- Use `row_purpose: recency_priority` only when the row exists primarily to flag
+  a recency routing priority; ordinary signal rows that happen to be recent can
+  stay `signal_unit` with `recency_attention: high`.
 
 ### 5. Mandatory Counterevidence Paths
 
@@ -553,6 +567,8 @@ in one sentence.
   ATS/careers pages for movement.
 - Treat creator surfaces as graph-rich but never demand proof by themselves.
 - Keep graph weight separate from signal weight.
+- Keep recency attention separate from proof, classifier mapping, and graph
+  weight; it routes attention, not truth.
 - If this is a repo-aware run that produced a full board, run the local
   validator before claiming the board is mechanically safe for classifier
   handoff. If this run produced only intake output, do not run the validator;
@@ -561,6 +577,66 @@ in one sentence.
 
 COMMISSION INPUTS FOLLOW:
 ````
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Commission Signal Board rows now carry recency/currentness as source-route
+    attention metadata: same-strength newer/current URL-backed signals normally
+    deserve more downstream scan attention than older context, without becoming
+    proof, classifier mapping, or graph weight.
+  trigger: product_doctrine
+  related_triggers:
+    - output_authority
+  controlling_sources_updated:
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
+    - orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
+    - .agents/hooks/check_commission_signal_board_output.py
+    - orca-harness/tests/unit/test_commission_signal_board_output_validator.py
+    - orca-harness/tests/fixtures/commission_signal_board_outputs/
+    - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+    - orca/product/spines/judgment/demand_read/core/judgment_spine_demand_read_machinery_architecture_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/decision-routing.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/hooks/check_commission_signal_board_output.py
+    - orca/product/spines/scanning/README.md
+    - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/validation-gates.md
+      reason: >
+        The CSB validator remains a manual/local checker, not a CI, pre-commit,
+        or write-hook gate. The existing enforcement-placement rule already
+        covers why mechanically checkable output shape lives in the checker.
+  stale_language_search: >
+    rg -n "recency|recent|current-state|currentness|optional board metadata|validator only requires existing core row columns|proof|graph weight|classifier mapping"
+    orca/product/spines/commission_signal_board orca/product/spines/scanning docs/workflows/orca_repo_map_v0.md
+    (run 2026-06-23)
+  stale_language_search_result: >
+    Hits were accepted recency/currentness attention language, repo-map routing
+    summaries, existing scanning safeguards, historical CSB source-family
+    references, or explicit no-proof/no-classifier/no-graph-weight boundaries.
+    No controlling CSB/scanning surface was found that turns recency/currentness
+    into buyer proof, demand classification, classifier mapping, or graph weight;
+    the old optional-validator wording produced only receipt search-string hits,
+    not live instructional hits, after the CSB validator began requiring recency
+    fields and enum values.
+    Capture and Judgment surfaces carry their own DCP receipts for the same
+    propagation, and the follow-up adversarial review ran a cross-spine leakage
+    search with no proof, scoring, route-binding, or gate-clearance leakage found.
+  non_claims:
+    - not validation
+    - not readiness
+    - not demand classification
+    - not buyer proof
+    - not source-access authorization
+```
 
 ## Non-Claims
 
