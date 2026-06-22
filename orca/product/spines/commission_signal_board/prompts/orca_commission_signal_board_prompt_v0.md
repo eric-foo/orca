@@ -608,6 +608,9 @@ direction_change_propagation:
     references, or explicit no-proof/no-classifier/no-graph-weight boundaries.
     No controlling CSB/scanning surface was found that turns recency/currentness
     into buyer proof, demand classification, classifier mapping, or graph weight.
+    Capture and Judgment surfaces carry their own DCP receipts for the same
+    propagation, and the follow-up adversarial review ran a cross-spine leakage
+    search with no proof, scoring, route-binding, or gate-clearance leakage found.
   non_claims:
     - not validation
     - not readiness

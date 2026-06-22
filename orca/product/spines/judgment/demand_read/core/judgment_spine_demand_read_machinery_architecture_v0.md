@@ -137,7 +137,7 @@ so contamination can be tell-audited and lessons extracted.
   is **qualitative, LLM-in-session, explained** — see INV-1. Recent/current
   source states are an attention and relevance input here: same-strength newer
   signals normally deserve more read attention than older context, including
-  when direction differs. That attention weighting is not gate proof, numeric
+  when direction differs. That attention-priority rule is not gate proof, numeric
   weight, or a scoring shortcut.
   *(`derived_from`/`diverges_from` semantics are owned by the dispatched
   ontology-backbone commission, currently branch-only — confirm on adoption.)*
@@ -404,7 +404,9 @@ direction_change_propagation:
     explicit no-proof/no-scoring/no-numeric-weight/no-claim-tier boundaries.
     No controlling Judgment/scanning surface was found that turns
     recency/currentness into gate proof, scoring, numeric weight, or claim-tier
-    evidence.
+    evidence. A post-review CA spot-check of the named grading rubric found no
+    recency/currentness language; its proof/proof-case hits are unrelated
+    grading-scope prose.
   non_claims:
     - not validation
     - not readiness
