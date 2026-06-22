@@ -1,0 +1,115 @@
+"""Driver: run Pass 1 over a transcript and persist the mentions into the Data Lake.
+
+Mirrors `ecr/lake.py` (read/derive/append), adapted for the LLM extractor: take a
+TranscriptInput, run `extract_transcript_products`, and append the validated mentions as a
+silver derived record-set at
+``derived/<transcript_anchor>/silver__cleaning__product_mentions/<record_id>`` with an
+all-or-nothing completion marker (so the runner can skip already-extracted transcripts).
+
+Lives in `cleaning/` because it invokes the LLM extractor. Also owns the source->cues
+normalizers (ASR derived record / caption json3), so the runner stays a thin orchestrator.
+
+Spec: youtube_transcript_product_extraction_spec_v0.md (medallion silver lane; daemon-ready).
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+
+from cleaning.transcript_product_extractor import (
+    EXTRACTOR_RUBRIC_VERSION,
+    TranscriptInput,
+    extract_transcript_products,
+)
+
+# Silver lane (tiered medallion name) + its sibling completion-marker lane.
+PRODUCT_MENTIONS_LANE = "silver__cleaning__product_mentions"
+PRODUCT_MENTIONS_SET_LANE = "silver__cleaning__product_mentions__set"
+
+
+def cues_from_asr_record(record: dict) -> list[dict]:
+    """Cues from a transcript_asr derived record (already {start_ms,end_ms,text})."""
+    cues = record.get("cues")
+    return cues if isinstance(cues, list) else []
+
+
+def cues_from_json3(raw: bytes) -> list[dict]:
+    """Parse caption json3 into ms-timed cues, PRESERVING timing.
+
+    Unlike `flatten_json3` (which drops timing for a readable view), this keeps each event's
+    start/end so caption-sourced mentions still get a timestamp anchor (CE5). Rolling
+    duplicate lines are collapsed (consecutive identical text), matching the flattener.
+    """
+    data = json.loads(raw.decode("utf-8", "replace"))
+    cues: list[dict] = []
+    prev: str | None = None
+    for event in data.get("events", []):
+        segs = event.get("segs") or []
+        if not segs:
+            continue
+        text = "".join(s.get("utf8", "") for s in segs if isinstance(s, dict)).strip()
+        if not text or text == prev:
+            continue
+        start = int(event.get("tStartMs", 0))
+        duration = event.get("dDurationMs")
+        end = start + int(duration) if isinstance(duration, (int, float)) else start
+        cues.append({"start_ms": start, "end_ms": end, "text": text})
+        prev = text
+    return cues
+
+
+def mentions_record_id(transcript: TranscriptInput, model: str) -> str:
+    """Deterministic per (transcript content, model) so re-runs check/skip the same record."""
+    token = re.sub(r"[^A-Za-z0-9_-]", "-", str(model))
+    digest = hashlib.sha256(transcript.joined_text.encode("utf-8")).hexdigest()
+    return f"mentions_{token}__{digest[:16]}.json"
+
+
+def extract_products_into_lake(
+    *,
+    data_root,
+    transcript: TranscriptInput,
+    transport,
+    provider,
+    model: str,
+    api_key: str,
+    record_id: str | None = None,
+    max_tokens: int = 2048,
+) -> dict[str, "object"]:
+    """Run Pass 1 for one transcript and append the silver mentions record-set.
+
+    Returns the written member paths. Re-appending the same record_id is refused by the lake
+    (write-once); the runner avoids that by checking `is_record_set_complete` first.
+    """
+    rid = record_id or mentions_record_id(transcript, model)
+    result = extract_transcript_products(
+        transcript,
+        transport=transport,
+        provider=provider,
+        model=model,
+        api_key=api_key,
+        max_tokens=max_tokens,
+    )
+    payload = {
+        "video_id": transcript.video_id,
+        "transcript_anchor": transcript.transcript_anchor,
+        "transcript_source": transcript.transcript_source,
+        "model": model,
+        "rubric_version": EXTRACTOR_RUBRIC_VERSION,
+        "mention_count": len(result.mentions),
+        "rejected_count": len(result.rejected),
+        "mentions": [m.model_dump(mode="json") for m in result.mentions],
+        "rejected": result.rejected,
+    }
+    members = {
+        PRODUCT_MENTIONS_LANE: (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    }
+    return data_root.append_record_set(
+        subtree="derived",
+        raw_anchor=transcript.transcript_anchor,
+        record_id=rid,
+        members=members,
+        completion_lane=PRODUCT_MENTIONS_SET_LANE,
+    )
