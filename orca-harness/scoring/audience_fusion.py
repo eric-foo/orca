@@ -73,6 +73,7 @@ _BAND_LOW = 0.40
 _CREATOR_AUTHORED_MULT = 1.0
 _IMPLICIT_MULT = 0.6
 _NEGATION_MULT = 0.3  # discount possible negation/irony
+_UNLABELED_PILLAR_LABEL = "unlabeled"
 
 
 class MultipleCreatorsError(ValueError):
@@ -98,6 +99,18 @@ def _abstain(field: OutputField, score: float) -> FieldResult:
     )
 
 
+def _pillar_key(evidence: EvidenceRecord) -> tuple[str, str | None]:
+    pillar_label = evidence.pillar_label
+    if pillar_label is not None:
+        pillar_label = pillar_label.strip() or None
+    return (evidence.platform, pillar_label)
+
+
+def _pillar_display_label(pillar_key: tuple[str, str | None]) -> str:
+    platform, pillar_label = pillar_key
+    return f"{platform}:{pillar_label or _UNLABELED_PILLAR_LABEL}"
+
+
 def _fuse_field(field: OutputField, items: list[EvidenceRecord]) -> FieldResult:
     if not items:
         return _abstain(field, 0.0)
@@ -105,10 +118,17 @@ def _fuse_field(field: OutputField, items: list[EvidenceRecord]) -> FieldResult:
     caps = _MODALITY_CAPS[field]
     cluster_counts = Counter(e.creative_cluster_id for e in items if e.creative_cluster_id)
 
-    # label -> modality -> summed contribution
-    fam_contrib: dict[str, dict[ModalityFamily, float]] = defaultdict(lambda: defaultdict(float))
+    # label -> modality -> positive/negative contribution. Cap support and
+    # opposition separately so volume cannot hide high contradiction by netting first.
+    fam_support: dict[str, dict[ModalityFamily, float]] = defaultdict(
+        lambda: defaultdict(float)
+    )
+    fam_oppose: dict[str, dict[ModalityFamily, float]] = defaultdict(
+        lambda: defaultdict(float)
+    )
     support_ids: dict[str, list[str]] = defaultdict(list)
     oppose_ids: dict[str, list[str]] = defaultdict(list)
+    creator_authored_text_labels: set[str] = set()
 
     for e in items:
         mult = _CREATOR_AUTHORED_MULT if e.creator_authored else _IMPLICIT_MULT
@@ -119,25 +139,58 @@ def _fuse_field(field: OutputField, items: list[EvidenceRecord]) -> FieldResult:
         if e.creative_cluster_id and cluster_counts[e.creative_cluster_id] > 1:
             dep = 1.0 / sqrt(cluster_counts[e.creative_cluster_id])
         c = e.vote * e.base_reliability * e.extractor_confidence * mult * dep
-        fam_contrib[e.label][e.modality] += c
-        if e.vote > 0:
+        cap = caps.get(e.modality, 0.0)
+        if cap <= 0.0 or c == 0.0:
+            continue
+        if c > 0:
+            fam_support[e.label][e.modality] += c
             support_ids[e.label].append(e.evidence_id)
-        elif e.vote < 0:
+            if e.creator_authored and e.modality == ModalityFamily.TEXT:
+                creator_authored_text_labels.add(e.label)
+        else:
+            fam_oppose[e.label][e.modality] += abs(c)
             oppose_ids[e.label].append(e.evidence_id)
 
     # Apply per-family caps (CE3/CE5), then sum to a per-label raw score.
     raw_by_label: dict[str, float] = {}
-    for label, fams in fam_contrib.items():
+    labels = set(fam_support) | set(fam_oppose)
+    for label in labels:
         raw = 0.0
-        for fam, val in fams.items():
+        modalities = set(fam_support[label]) | set(fam_oppose[label])
+        for fam in modalities:
             cap = caps.get(fam, 0.0)
-            raw += max(-cap, min(cap, val))
+            raw += min(cap, fam_support[label].get(fam, 0.0))
+            raw -= min(cap, fam_oppose[label].get(fam, 0.0))
         raw_by_label[label] = raw
 
-    ranked = sorted(raw_by_label.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+    if not raw_by_label:
+        return _abstain(field, 0.0)
+
+    creator_rank_labels = {
+        label
+        for label in creator_authored_text_labels
+        if _band(max(0.0, tanh(_GAIN * raw_by_label.get(label, 0.0))))
+        != SupportBand.ABSTAIN
+    }
+
+    ranked = sorted(
+        raw_by_label.items(),
+        key=lambda kv: (
+            kv[0] in creator_rank_labels,
+            max(0.0, tanh(_GAIN * kv[1])),
+            kv[1],
+            kv[0],
+        ),
+        reverse=True,
+    )
     top_label, top_raw = ranked[0]
     top_score = max(0.0, tanh(_GAIN * top_raw))
-    second_score = max(0.0, tanh(_GAIN * ranked[1][1])) if len(ranked) > 1 else 0.0
+    top_creator_ranked = top_label in creator_rank_labels
+    second_score = 0.0
+    for label, raw in ranked[1:]:
+        if (label in creator_rank_labels) == top_creator_ranked:
+            second_score = max(0.0, tanh(_GAIN * raw))
+            break
     margin = top_score - second_score
 
     band = _band(top_score)
@@ -175,16 +228,17 @@ def fuse_profile(
         raise MultipleCreatorsError(f"expected one creator_id, got {sorted(creator_ids)}")
     creator_id = next(iter(creator_ids))
 
-    by_pillar: dict[str, list[EvidenceRecord]] = defaultdict(list)
+    by_pillar: dict[tuple[str, str | None], list[EvidenceRecord]] = defaultdict(list)
     for e in evidence:
-        by_pillar[e.pillar_label or "default"].append(e)
+        by_pillar[_pillar_key(e)].append(e)
 
     total = len(evidence)
     pillars: list[PillarProfile] = []
     abstentions: list[str] = []
 
-    for idx, pillar_label in enumerate(sorted(by_pillar)):
-        items = by_pillar[pillar_label]
+    for idx, pillar_key in enumerate(sorted(by_pillar, key=lambda key: (key[0], key[1] or ""))):
+        items = by_pillar[pillar_key]
+        pillar_label = _pillar_display_label(pillar_key)
         field_results: list[FieldResult] = []
         for field in OutputField:
             fr = _fuse_field(field, [e for e in items if e.target_field == field])

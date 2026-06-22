@@ -16,9 +16,9 @@ ig_creator_ideal_audience_inference_spec_v0.md (CE1-CE12 / D1-D7).
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal, Mapping, Self
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from schemas.case_models import StrictModel
 
@@ -63,7 +63,30 @@ class SupportBand(StrEnum):
 UNKNOWN_LABEL = "unknown"
 
 
-class EvidenceRecord(StrictModel):
+class AudienceInferenceModel(StrictModel):
+    """Strict model variant for audit-critical audience inference records."""
+
+    model_config = ConfigDict(
+        extra="forbid", populate_by_name=True, validate_assignment=True
+    )
+
+    @classmethod
+    def model_construct(
+        cls, _fields_set: set[str] | None = None, **values: Any
+    ) -> Self:
+        # These schemas encode CE invariants; unsafe construction must not skip them.
+        return cls.model_validate(values)
+
+    def model_copy(
+        self, *, update: Mapping[str, Any] | None = None, deep: bool = False
+    ) -> Self:
+        data = self.model_dump(mode="python")
+        if update:
+            data.update(update)
+        return type(self).model_validate(data)
+
+
+class EvidenceRecord(AudienceInferenceModel):
     """One extracted, source-pointed observation that votes on one Tier-1 field.
 
     Produced by Pass 1 (LLM, D1-D9). Pass 2 consumes these; it never sees raw content.
@@ -98,6 +121,13 @@ class EvidenceRecord(StrictModel):
             raise ValueError("CE9: evidence record requires a non-empty source_pointer")
         return value
 
+    @field_validator("evidence_id")
+    @classmethod
+    def _evidence_id_required(cls, value: str) -> str:
+        if not value or not value.strip():
+            raise ValueError("evidence_id must be non-empty")
+        return value
+
     @field_validator("label")
     @classmethod
     def _label_not_unknown(cls, value: str) -> str:
@@ -106,7 +136,7 @@ class EvidenceRecord(StrictModel):
         return value
 
 
-class FieldResult(StrictModel):
+class FieldResult(AudienceInferenceModel):
     """Fused result for one output field within one pillar."""
 
     field: OutputField
@@ -124,8 +154,15 @@ class FieldResult(StrictModel):
             raise ValueError("CE12: a decided (non-unknown) field result must carry evidence_ids")
         return self
 
+    @field_validator("evidence_ids", "counterevidence_ids")
+    @classmethod
+    def _evidence_ids_non_empty(cls, value: list[str]) -> list[str]:
+        if any(not item or not item.strip() for item in value):
+            raise ValueError("evidence id lists must contain only non-empty IDs")
+        return value
 
-class PillarProfile(StrictModel):
+
+class PillarProfile(AudienceInferenceModel):
     """Per-content-pillar profile. Pillars are NOT merged when divergent (CE8)."""
 
     pillar_id: str
@@ -134,7 +171,7 @@ class PillarProfile(StrictModel):
     field_results: list[FieldResult]
 
 
-class IdealAudienceProfile(StrictModel):
+class IdealAudienceProfile(AudienceInferenceModel):
     """The Pass-2 output: who the creator's content is best-fit for (ideal, not actual)."""
 
     creator_id: str

@@ -13,6 +13,7 @@ from pydantic import ValidationError
 from schemas.audience_inference_models import (
     UNKNOWN_LABEL,
     EvidenceRecord,
+    FieldResult,
     IdealAudienceProfile,
     ModalityFamily,
     OutputField,
@@ -35,13 +36,14 @@ def _ev(
     cluster: str | None = None,
     pillar: str | None = None,
     creator: str = "c1",
+    platform: str = "instagram",
     post: str = "p1",
     source: str = "caption:p1:span",
 ) -> EvidenceRecord:
     return EvidenceRecord(
         evidence_id=evidence_id,
         creator_id=creator,
-        platform="instagram",
+        platform=platform,
         post_id=post,
         pillar_label=pillar,
         signal_id="T1",
@@ -81,6 +83,18 @@ def test_schema_rejects_actual_audience_claim() -> None:
         )
 
 
+def test_schema_rejects_actual_audience_copy_and_assignment() -> None:
+    profile = IdealAudienceProfile(
+        creator_id="c1",
+        fusion_config_version="0.1",
+        generated_at="2026-06-23T00:00:00Z",
+    )
+    with pytest.raises(ValidationError):
+        profile.model_copy(update={"actual_audience": "estimated"})
+    with pytest.raises(ValidationError):
+        profile.actual_audience = "estimated"  # type: ignore[assignment]
+
+
 # --- CE9: every evidence item must carry a source pointer ------------------
 
 
@@ -88,6 +102,27 @@ def test_schema_rejects_actual_audience_claim() -> None:
 def test_ce9_source_pointer_required(bad: str) -> None:
     with pytest.raises(ValidationError):
         _ev(source=bad)
+
+
+def test_ce9_source_pointer_required_on_construct_and_copy() -> None:
+    with pytest.raises(ValidationError):
+        EvidenceRecord.model_construct(
+            evidence_id="E1",
+            creator_id="c1",
+            platform="instagram",
+            post_id="p1",
+            signal_id="T1",
+            modality=ModalityFamily.TEXT,
+            target_field=OutputField.SEGMENT,
+            label="aspirational_beauty",
+            vote=1.0,
+            base_reliability=1.0,
+            extractor_confidence=1.0,
+            creator_authored=True,
+            source_pointer="",
+        )
+    with pytest.raises(ValidationError):
+        _ev().model_copy(update={"source_pointer": ""})
 
 
 # --- CE6: abstention on thin or contested evidence -------------------------
@@ -98,7 +133,7 @@ def test_ce6_thin_evidence_abstains() -> None:
     seg = _field(profile, OutputField.SEGMENT)
     assert seg.support_band == SupportBand.ABSTAIN
     assert seg.label == UNKNOWN_LABEL
-    assert "default:segment" in profile.abstentions
+    assert "instagram:unlabeled:segment" in profile.abstentions
 
 
 def test_ce6_contested_margin_abstains() -> None:
@@ -110,6 +145,33 @@ def test_ce6_contested_margin_abstains() -> None:
     seg = _field(profile, OutputField.SEGMENT)
     assert seg.support_band == SupportBand.ABSTAIN
     assert seg.label == UNKNOWN_LABEL
+
+
+def test_ce6_same_modality_contradiction_abstains() -> None:
+    evidence = [
+        *[
+            _ev(
+                f"P{i}",
+                field=OutputField.SKILL_LEVEL,
+                label="beginner",
+                vote=1.0,
+            )
+            for i in range(10)
+        ],
+        *[
+            _ev(
+                f"N{i}",
+                field=OutputField.SKILL_LEVEL,
+                label="beginner",
+                vote=-1.0,
+            )
+            for i in range(9)
+        ],
+    ]
+    profile = fuse_profile(evidence, generated_at="t")
+    skill = _field(profile, OutputField.SKILL_LEVEL)
+    assert skill.support_band == SupportBand.ABSTAIN
+    assert skill.label == UNKNOWN_LABEL
 
 
 # --- CE8: divergent pillars are not merged ---------------------------------
@@ -126,6 +188,34 @@ def test_ce8_pillars_not_merged() -> None:
     assert labels == {"aspirational_beauty", "professional_stylist"}
 
 
+def test_ce8_unlabeled_and_literal_default_are_not_collided() -> None:
+    evidence = [
+        _ev("EU", label="unlabeled_audience", pillar=None),
+        _ev("ED", label="default_named_audience", pillar="default"),
+    ]
+    profile = fuse_profile(evidence, generated_at="t")
+    assert [p.pillar_label for p in profile.ideal_audience_profiles] == [
+        "instagram:unlabeled",
+        "instagram:default",
+    ]
+    labels = {_field(profile, OutputField.SEGMENT, i).label for i in range(2)}
+    assert labels == {"unlabeled_audience", "default_named_audience"}
+
+
+def test_ce8_platforms_not_merged_when_pillar_label_matches() -> None:
+    evidence = [
+        _ev("EI", label="instagram_audience", pillar="tutorials"),
+        _ev("ET", label="tiktok_audience", pillar="tutorials", platform="tiktok"),
+    ]
+    profile = fuse_profile(evidence, generated_at="t")
+    assert [p.pillar_label for p in profile.ideal_audience_profiles] == [
+        "instagram:tutorials",
+        "tiktok:tutorials",
+    ]
+    labels = {_field(profile, OutputField.SEGMENT, i).label for i in range(2)}
+    assert labels == {"instagram_audience", "tiktok_audience"}
+
+
 # --- CE12: a decided field carries its evidence ids ------------------------
 
 
@@ -134,6 +224,36 @@ def test_ce12_decided_field_has_evidence_ids() -> None:
     seg = _field(profile, OutputField.SEGMENT)
     assert seg.label == "aspirational_beauty"
     assert seg.evidence_ids == ["E42"]
+
+
+def test_ce12_rejects_empty_evidence_ids_and_copy_bypass() -> None:
+    with pytest.raises(ValidationError):
+        _ev("", label="aspirational_beauty")
+    with pytest.raises(ValidationError):
+        FieldResult(
+            field=OutputField.SEGMENT,
+            label="aspirational_beauty",
+            support_band=SupportBand.LOW,
+            uncalibrated_support_score=0.5,
+            evidence_ids=[""],
+        )
+    result = FieldResult(
+        field=OutputField.SEGMENT,
+        label="aspirational_beauty",
+        support_band=SupportBand.LOW,
+        uncalibrated_support_score=0.5,
+        evidence_ids=["E42"],
+    )
+    with pytest.raises(ValidationError):
+        result.model_copy(update={"evidence_ids": []})
+    with pytest.raises(ValidationError):
+        FieldResult.model_construct(
+            field=OutputField.SEGMENT,
+            label="aspirational_beauty",
+            support_band=SupportBand.LOW,
+            uncalibrated_support_score=0.5,
+            evidence_ids=[],
+        )
 
 
 # --- CE3: aggregate comments cannot drive a field ---------------------------
@@ -145,6 +265,23 @@ def test_ce3_comment_only_abstains() -> None:
     )
     seg = _field(profile, OutputField.SEGMENT)
     assert seg.support_band == SupportBand.ABSTAIN
+
+
+def test_ce3_comments_are_w0_for_price_tier() -> None:
+    evidence = [
+        _ev(
+            f"C{i}",
+            field=OutputField.PRICE_TIER,
+            modality=ModalityFamily.COMMENT,
+            vote=1.0,
+        )
+        for i in range(20)
+    ]
+    profile = fuse_profile(evidence, generated_at="t")
+    price = _field(profile, OutputField.PRICE_TIER)
+    assert price.support_band == SupportBand.ABSTAIN
+    assert price.uncalibrated_support_score == 0.0
+    assert price.evidence_ids == []
 
 
 # --- CE5: one modality family cannot dominate beyond its cap ---------------
@@ -172,6 +309,28 @@ def test_ce4_creator_authored_outweighs_implicit() -> None:
     assert seg.label == "authored_target"
 
 
+def test_ce4_creator_authored_outweighs_multi_modality_implicit() -> None:
+    evidence = [
+        _ev("EA", label="authored_target", authored=True),
+        _ev(
+            "EC",
+            label="implicit_target",
+            modality=ModalityFamily.COMMERCIAL,
+            authored=False,
+        ),
+        _ev(
+            "ES",
+            label="implicit_target",
+            modality=ModalityFamily.STRUCTURAL,
+            authored=False,
+        ),
+    ]
+    profile = fuse_profile(evidence, generated_at="t")
+    seg = _field(profile, OutputField.SEGMENT)
+    assert seg.label == "authored_target"
+    assert seg.evidence_ids == ["EA"]
+
+
 # --- Counterfactual smoke tests -------------------------------------------
 
 
@@ -187,7 +346,7 @@ def test_counterfactual_strip_cta_purchase_intent_abstains() -> None:
     profile = fuse_profile([_ev(field=OutputField.SEGMENT)], generated_at="t")
     intent = _field(profile, OutputField.PURCHASE_INTENT)
     assert intent.support_band == SupportBand.ABSTAIN
-    assert "default:purchase_intent" in profile.abstentions
+    assert "instagram:unlabeled:purchase_intent" in profile.abstentions
 
 
 def test_counterfactual_oneoff_campaign_does_not_flip() -> None:
