@@ -72,7 +72,7 @@ It does not mint candidates, clear gates, bind Capture routes, or authorize
 source expansion. Main scanning owns deepening and final candidate decisions.
 
 After CSB routes and hard stops, scanning treats recency/currentness as an
-attention and relevance weight. For same-strength URL-backed signals, a newer or
+attention-priority signal. For same-strength URL-backed signals, a newer or
 current source should normally receive more scan attention than an older source,
 even when their direction differs. Prioritize current official or retailer state,
 dated buyer language, recent reviews or threads, recent stockout/restock or
@@ -114,7 +114,7 @@ the MGT hard boundaries while preserving source-specific hard stops.
 direction_change_propagation:
   doctrine_changed: >
     CSB-first scans now run a bounded broad-scout phase by default, and scanning
-    treats recency/currentness as an attention and relevance weight: same-strength
+    treats recency/currentness as an attention-priority signal: same-strength
     newer/current signals normally receive more scan attention than older context.
     Broad scout may use a route-ledger subagent when available, but the default
     is the bounded phase, not a hard runtime dependency on subagent infrastructure.

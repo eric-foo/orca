@@ -28,9 +28,12 @@ def _valid_text() -> str:
     return (FIXTURE_DIR / "valid_csb_first_scan.md").read_text(encoding="utf-8")
 
 
+def _codes(text: str) -> set[str]:
+    return {finding.code for finding in validator.validate_text(text)}
+
+
 def test_valid_csb_first_scan_artifact_passes() -> None:
-    findings = validator.validate_text(_valid_text())
-    assert findings == []
+    assert validator.validate_text(_valid_text()) == []
 
 
 def test_fixture_expected_fail_has_broad_scout_error() -> None:
@@ -44,18 +47,14 @@ def test_fixture_expected_fail_has_broad_scout_error() -> None:
     [
         ("exact_queries_used: 2", "", "missing_intake_fields"),
         ("max_exact_queries_total: 3", "", "missing_run_cap_fields"),
-        ("screening_moves_used: 4", "screening_moves_used: 9", "screening_moves_exceed_cap"),
+        ("screening_moves_used: 2", "screening_moves_used: 9", "screening_moves_exceed_cap"),
         ("closeout_state: no_candidate_after_discovery", "closeout_state: SCAN_COMPLETE", "invalid_closeout_state"),
         ("closeout_state: no_candidate_after_discovery", "closeout_state:", "invalid_closeout_state"),
         ("source_context_status: SOURCE_CONTEXT_READY", "", "missing_intake_fields"),
     ],
 )
 def test_intake_contract_failures(old: str, new: str, expected_code: str) -> None:
-    text = _valid_text().replace(old, new, 1)
-
-    findings = validator.validate_text(text)
-
-    assert expected_code in {finding.code for finding in findings}
+    assert expected_code in _codes(_valid_text().replace(old, new, 1))
 
 
 @pytest.mark.parametrize(
@@ -72,11 +71,41 @@ def test_intake_contract_failures(old: str, new: str, expected_code: str) -> Non
     ],
 )
 def test_required_receipt_parts(old: str, new: str, expected_code: str) -> None:
-    text = _valid_text().replace(old, new, 1)
+    assert expected_code in _codes(_valid_text().replace(old, new, 1))
 
-    findings = validator.validate_text(text)
 
-    assert expected_code in {finding.code for finding in findings}
+def test_broad_scout_return_token_without_section_does_not_count() -> None:
+    assert "missing_broad_scout_accounting" in _codes(_valid_text().replace("## Broad Scout Return", "## Scout Notes", 1))
+
+
+def test_broad_scout_section_requires_route_ledger_parts() -> None:
+    text = _valid_text().replace("access notes, and current-state", "current-state", 1)
+
+    assert "missing_broad_scout_detail" in _codes(text)
+
+
+def test_csb_row_accounting_requires_sbr_ids() -> None:
+    text = (
+        _valid_text()
+        .replace("SBR-001 through SBR-003", "three rows", 1)
+        .replace("SBR-001", "row one")
+        .replace("SBR-002", "row two")
+    )
+
+    assert "missing_csb_row_ids" in _codes(text)
+
+
+@pytest.mark.parametrize(
+    ("old", "new", "expected_code"),
+    [
+        ("screening_moves_used: 2", "screening_moves_used: 3", "screening_moves_count_mismatch"),
+        ("exact_queries_used: 2", "exact_queries_used: 1", "exact_queries_count_mismatch"),
+        ("hidden_venue_pointers: 1", "hidden_venue_pointers: 2", "hidden_venue_pointer_count_mismatch"),
+        ("capture_requests: 1", "capture_requests: 2", "capture_request_count_mismatch"),
+    ],
+)
+def test_declared_counts_match_recorded_ledgers(old: str, new: str, expected_code: str) -> None:
+    assert expected_code in _codes(_valid_text().replace(old, new, 1))
 
 
 def test_recency_overclaim_text_fails() -> None:
@@ -86,72 +115,162 @@ def test_recency_overclaim_text_fails() -> None:
         1,
     )
 
-    findings = validator.validate_text(text)
-
-    assert "recency_as_proof" in {finding.code for finding in findings}
+    assert "recency_as_proof" in _codes(text)
 
 
-def test_capture_route_binding_yaml_fails() -> None:
-    text = _valid_text().replace("route_binding_state: unknown", "route_binding_state: bound_by_scanning", 1)
-
-    findings = validator.validate_text(text)
-
-    assert "invalid_capture_route_binding_state" in {finding.code for finding in findings}
+def test_observation_record_required() -> None:
+    assert "missing_observation_records" in _codes(_valid_text().replace("observation_id: OBS-001", "observation_note: OBS-001", 1))
 
 
-def test_broad_scout_return_token_without_section_does_not_count() -> None:
-    text = _valid_text().replace("## Broad Scout Return", "## Scout Notes", 1)
+def test_observation_required_fields_enforced() -> None:
+    assert "missing_observation_fields" in _codes(_valid_text().replace("claim_it_might_support: preservation pressure only\n", "", 1))
 
-    findings = validator.validate_text(text)
 
-    assert "missing_broad_scout_accounting" in {finding.code for finding in findings}
+@pytest.mark.parametrize(
+    ("old", "new", "expected_code"),
+    [
+        ("retrieval_date: 2026-06-23", "retrieval_date: soon", "invalid_observation_retrieval_date"),
+        ("signal_stage: access_note", "signal_stage: proof", "invalid_signal_stage"),
+        ("gate_role: none", "gate_role: gate_proof", "invalid_gate_role"),
+        ("url: https://example.test/fixture-product", "url: fixture-product", "invalid_observation_url"),
+    ],
+)
+def test_observation_field_values_enforced(old: str, new: str, expected_code: str) -> None:
+    assert expected_code in _codes(_valid_text().replace(old, new, 1))
+
+
+def test_candidate_observation_schema_enforced_when_present() -> None:
+    text = _valid_text() + """
+
+```yaml
+candidate_observation_id: COBS-001
+candidate: Fixture Candidate
+supporting_observations:
+  - OBS-001
+decision_window: fixture window
+competing_or_defeating_observations: []
+capture_needed: unknown
+```
+"""
+
+    assert "missing_candidate_observation_fields" in _codes(text)
+
+
+def test_candidate_ready_requires_candidate_observation() -> None:
+    text = _valid_text().replace(
+        "closeout_state: no_candidate_after_discovery", "closeout_state: candidate_ready_for_next_lane", 2
+    ).replace("`no_candidate_after_discovery`", "`candidate_ready_for_next_lane`", 1)
+
+    assert "candidate_ready_without_candidate_observation" in _codes(text)
+
+
+def test_no_candidate_closeout_rejects_candidate_observation() -> None:
+    text = _valid_text() + """
+
+```yaml
+candidate_observation_id: COBS-001
+candidate: Fixture Candidate
+supporting_observations:
+  - OBS-001
+why_promoted: fixture support
+decision_window: fixture window
+competing_or_defeating_observations: []
+capture_needed: unknown
+```
+"""
+
+    assert "no_candidate_with_candidate_observation" in _codes(text)
+
+
+def test_candidate_decision_closeout_must_match_intake() -> None:
+    text = _valid_text().replace(
+        "candidate_decision:\n  closeout_state: no_candidate_after_discovery",
+        "candidate_decision:\n  closeout_state: capture_preservation_only",
+        1,
+    )
+
+    assert "candidate_decision_closeout_mismatch" in _codes(text)
+
+
+def test_closeout_section_must_repeat_intake_closeout() -> None:
+    text = _valid_text().replace("`no_candidate_after_discovery`", "`capture_preservation_only`", 1)
+
+    assert "closeout_state_not_in_closeout_section" in _codes(text)
+
+
+def test_capture_preservation_only_requires_capture_request() -> None:
+    text = (
+        _valid_text()
+        .replace("capture_requests: 1", "capture_requests: 0", 1)
+        .replace("capture_request_id: CR-001", "capture_request_note: CR-001", 1)
+        .replace("closeout_state: no_candidate_after_discovery", "closeout_state: capture_preservation_only", 2)
+        .replace("`no_candidate_after_discovery`", "`capture_preservation_only`", 1)
+    )
+
+    assert "preservation_without_capture_request" in _codes(text)
 
 
 def test_capture_request_accounting_missing_when_section_and_intake_count_absent() -> None:
     text = _valid_text().replace("capture_requests: 1\n", "", 1).replace("## Capture Triage", "## Preservation Notes", 1)
 
-    findings = validator.validate_text(text)
-
-    assert "missing_capture_request_accounting" in {finding.code for finding in findings}
+    assert "missing_capture_request_accounting" in _codes(text)
 
 
 def test_positive_capture_request_count_requires_capture_section() -> None:
-    text = _valid_text().replace("## Capture Triage", "## Preservation Notes", 1)
-
-    findings = validator.validate_text(text)
-
-    assert "missing_capture_request_accounting" in {finding.code for finding in findings}
+    assert "missing_capture_request_accounting" in _codes(_valid_text().replace("## Capture Triage", "## Preservation Notes", 1))
 
 
 def test_zero_capture_request_count_can_account_without_capture_section() -> None:
-    text = _valid_text().replace("capture_requests: 1", "capture_requests: 0", 1).replace(
-        "## Capture Triage", "## Preservation Notes", 1
+    text = (
+        _valid_text()
+        .replace("capture_requests: 1", "capture_requests: 0", 1)
+        .replace("capture_request_id: CR-001", "capture_request_note: CR-001", 1)
+        .replace("## Capture Triage", "## Preservation Notes", 1)
     )
 
-    findings = validator.validate_text(text)
+    assert "missing_capture_request_accounting" not in _codes(text)
 
-    assert "missing_capture_request_accounting" not in {finding.code for finding in findings}
+
+def test_capture_request_required_fields_enforced() -> None:
+    assert "missing_capture_request_fields" in _codes(_valid_text().replace("what_capture_should_verify: whether current PDP availability needs preservation\n", "", 1))
+
+
+def test_capture_request_url_entries_must_be_structured() -> None:
+    text = _valid_text().replace(
+        "urls:\n  - url: https://example.test/fixture-product\n    venue: Official PDP\n    observation_supported: OBS-001\n    gate_role: none",
+        "urls:\n  - https://example.test/fixture-product",
+        1,
+    )
+
+    assert "invalid_capture_request_urls" in _codes(text)
+
+
+def test_capture_request_not_requested_boundaries_required() -> None:
+    assert "missing_capture_request_not_requested_boundaries" in _codes(_valid_text().replace("  - route expansion\n", "", 1))
+
+
+@pytest.mark.parametrize("state", ["cited_current", "unknown", "blocked_outside_current_binding", "not_applicable"])
+def test_mgt_route_binding_states_allowed(state: str) -> None:
+    text = _valid_text().replace("route_binding_state: unknown", f"route_binding_state: {state}", 1)
+
+    assert "invalid_capture_route_binding_state" not in _codes(text)
+
+
+@pytest.mark.parametrize("state", ["bound_by_scanning", "not_bound", "capture_owned", ""])
+def test_non_mgt_route_binding_states_fail(state: str) -> None:
+    replacement = f"route_binding_state: {state}" if state else "route_binding_state:"
+    text = _valid_text().replace("route_binding_state: unknown", replacement, 1)
+
+    assert "invalid_capture_route_binding_state" in _codes(text)
 
 
 def test_missing_scan_intake_receipt_without_yaml_fails() -> None:
-    findings = validator.validate_text("# Missing Intake\n\nNo YAML receipt here.")
-
-    assert "missing_scan_intake_receipt" in {finding.code for finding in findings}
+    assert "missing_scan_intake_receipt" in _codes("# Missing Intake\n\nNo YAML receipt here.")
 
 
 def test_invalid_yaml_fence_fails() -> None:
     text = _valid_text().replace("commission_id: fixture_csb_first_scan", "commission_id: [", 1)
 
-    findings = validator.validate_text(text)
-
-    codes = {finding.code for finding in findings}
+    codes = _codes(text)
     assert "invalid_yaml_fence" in codes
     assert "missing_scan_intake_receipt" in codes
-
-
-def test_capture_owned_route_binding_state_fails() -> None:
-    text = _valid_text().replace("route_binding_state: unknown", "route_binding_state: capture_owned", 1)
-
-    findings = validator.validate_text(text)
-
-    assert "invalid_capture_route_binding_state" in {finding.code for finding in findings}

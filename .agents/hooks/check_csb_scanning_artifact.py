@@ -12,14 +12,19 @@ candidate closeout.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 import re
 import sys
-from typing import Any
+from typing import Any, Iterable
 
 import yaml
 
 YAML_FENCE_RE = re.compile(r"```yaml\s*(?P<body>.*?)\s*```", re.IGNORECASE | re.DOTALL)
+HEADING_RE = re.compile(r"^##\s+", re.MULTILINE)
+MOVE_ID_RE = re.compile(r"\bM\d{2,}\b")
+EXACT_QUERY_ID_RE = re.compile(r"\bEQ-\d{3,}\b")
+CSB_ROW_ID_RE = re.compile(r"\bSBR-\d{3,}\b")
 
 REQUIRED_INTAKE_FIELDS = {
     "commission_id",
@@ -39,6 +44,69 @@ VALID_CLOSEOUT_STATES = {
     "no_candidate_after_discovery",
 }
 VALID_SOURCE_CONTEXT_STATUS = "SOURCE_CONTEXT_READY"
+VALID_SIGNAL_STAGES = {
+    "venue_value",
+    "precursor",
+    "candidate_support",
+    "contradiction",
+    "negative",
+    "access_note",
+    "unknown",
+}
+VALID_GATE_ROLES = {
+    "none",
+    "demand_origin",
+    "costly_behavior",
+    "divergence",
+    "org_motion",
+    "decision_event",
+    "influence",
+}
+VALID_ROUTE_BINDING_STATES = {
+    "cited_current",
+    "unknown",
+    "blocked_outside_current_binding",
+    "not_applicable",
+}
+REQUIRED_OBSERVATION_FIELDS = {
+    "observation_id",
+    "source_move_id",
+    "url",
+    "retrieval_date",
+    "short_quote_or_summary",
+    "signal_stage",
+    "claim_it_might_support",
+    "gate_role",
+    "independence_hypothesis",
+    "uncertainty_or_limits",
+}
+REQUIRED_CANDIDATE_OBSERVATION_FIELDS = {
+    "candidate_observation_id",
+    "candidate",
+    "supporting_observations",
+    "why_promoted",
+    "decision_window",
+    "competing_or_defeating_observations",
+    "capture_needed",
+}
+REQUIRED_CAPTURE_REQUEST_FIELDS = {
+    "capture_request_id",
+    "source_scan",
+    "candidate_or_observation_ids",
+    "urls",
+    "what_capture_should_verify",
+    "decision_window",
+    "route_binding_state",
+    "screening_evidence_summary",
+    "uncertainty_or_access_limits",
+    "not_requested",
+}
+REQUIRED_CAPTURE_URL_FIELDS = {"url", "venue", "observation_supported", "gate_role"}
+REQUIRED_NOT_REQUESTED = {
+    "route_expansion",
+    "packet_commitment_by_scanning",
+    "ecr_cleaning_or_judgment_work",
+}
 
 SECTION_PATTERNS = {
     "broad_scout_accounting": re.compile(r"^##\s+Broad Scout\b", re.IGNORECASE | re.MULTILINE),
@@ -66,6 +134,17 @@ SECTION_PATTERNS = {
         re.IGNORECASE | re.MULTILINE,
     ),
     "closeout": re.compile(r"^##\s+Closeout\b", re.IGNORECASE | re.MULTILINE),
+}
+
+BROAD_SCOUT_DETAIL_PATTERNS = {
+    "frontier": re.compile(r"\bfrontiers?\b", re.IGNORECASE),
+    "exact_query": re.compile(r"\b(exact[-_ ]?quer(y|ies)|EQ-\d{3,})\b", re.IGNORECASE),
+    "venue_eval": re.compile(r"\b(venue[_ -]?eval|venue evaluation|venues?)\b", re.IGNORECASE),
+    "hidden_venue_pointer": re.compile(r"\b(hidden venue|hidden_venue_pointer)\b", re.IGNORECASE),
+    "negative": re.compile(r"\bnegatives?\b", re.IGNORECASE),
+    "access_note": re.compile(r"\b(access notes?|access walls?)\b", re.IGNORECASE),
+    "recency_current_state": re.compile(r"\b(recency|recent|currentness|current-state|current state)\b", re.IGNORECASE),
+    "main_deepening": re.compile(r"\b(main deepening|recommended deepening|recommended main deepening)\b", re.IGNORECASE),
 }
 
 FORBIDDEN_TEXT_PATTERNS = {
@@ -124,6 +203,73 @@ def _as_int(value: Any) -> int | None:
     if isinstance(value, str) and re.fullmatch(r"\d+", value.strip()):
         return int(value.strip())
     return None
+
+
+def _has_text(value: Any) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return value.strip() != ""
+    return True
+
+
+def _is_url(value: Any) -> bool:
+    return isinstance(value, str) and re.match(r"https?://", value.strip(), re.IGNORECASE) is not None
+
+
+def _is_iso_date(value: Any) -> bool:
+    if isinstance(value, date):
+        return True
+    if not isinstance(value, str):
+        return False
+    try:
+        date.fromisoformat(value.strip())
+    except ValueError:
+        return False
+    return True
+
+
+def _iter_dict_records(value: Any, required_key: str) -> Iterable[dict[str, Any]]:
+    if isinstance(value, dict):
+        if required_key in value:
+            yield value
+        for child in value.values():
+            yield from _iter_dict_records(child, required_key)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _iter_dict_records(child, required_key)
+
+
+def _records(blocks: list[Any], required_key: str) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    for block in blocks:
+        records.extend(_iter_dict_records(block, required_key))
+    return records
+
+
+def _mapping_values(value: Any, key_name: str) -> Iterable[Any]:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if _normalize_vocab(key) == key_name:
+                yield child
+            yield from _mapping_values(child, key_name)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _mapping_values(child, key_name)
+
+
+def _section_body(text: str, pattern: re.Pattern[str]) -> str:
+    match = pattern.search(text)
+    if not match:
+        return ""
+    start = match.end()
+    next_heading = HEADING_RE.search(text, start)
+    end = next_heading.start() if next_heading else len(text)
+    return text[start:end]
+
+
+def _required_missing(record: dict[str, Any], required: set[str]) -> list[str]:
+    return sorted(field for field in required if field not in record or not _has_text(record.get(field)))
 
 
 def _validate_intake(intake: dict[str, Any]) -> list[Finding]:
@@ -194,6 +340,10 @@ def _validate_used_within_cap(
 ) -> None:
     used = _as_int(intake.get(used_field))
     cap = _as_int(run_caps.get(cap_field))
+    if used is None and used_field in intake:
+        findings.append(Finding("invalid_numeric_field", f"{used_field} must be a non-negative integer."))
+    if cap is None and cap_field in run_caps:
+        findings.append(Finding("invalid_numeric_field", f"{cap_field} must be a non-negative integer."))
     if used is None or cap is None:
         return
     if used > cap:
@@ -209,6 +359,177 @@ def _validate_required_receipt_parts(text: str, intake: dict[str, Any] | None = 
             if _as_int(intake.get("capture_requests")) == 0:
                 continue
         findings.append(Finding(f"missing_{name}", f"Missing required CSB-first scan receipt part: {name}."))
+    return findings
+
+
+def _validate_broad_scout_detail(text: str) -> list[Finding]:
+    body = _section_body(text, SECTION_PATTERNS["broad_scout_accounting"])
+    if not body:
+        return []
+    missing = sorted(name for name, pattern in BROAD_SCOUT_DETAIL_PATTERNS.items() if not pattern.search(body))
+    if missing:
+        return [Finding("missing_broad_scout_detail", "Broad Scout section is missing: " + ", ".join(missing))]
+    return []
+
+
+def _validate_csb_row_ids(text: str) -> list[Finding]:
+    if SECTION_PATTERNS["csb_row_accounting"].search(text) and not CSB_ROW_ID_RE.search(text):
+        return [Finding("missing_csb_row_ids", "CSB row accounting must cite at least one SBR-NNN row id.")]
+    return []
+
+
+def _validate_count_consistency(text: str, blocks: list[Any], intake: dict[str, Any] | None) -> list[Finding]:
+    if not isinstance(intake, dict):
+        return []
+    findings: list[Finding] = []
+    checks = [
+        ("screening_moves_used", len(set(MOVE_ID_RE.findall(text))), "screening_moves_count_mismatch"),
+        ("exact_queries_used", len(set(EXACT_QUERY_ID_RE.findall(text))), "exact_queries_count_mismatch"),
+        ("hidden_venue_pointers", len(_records(blocks, "hidden_venue_pointer_id")), "hidden_venue_pointer_count_mismatch"),
+        ("capture_requests", len(_records(blocks, "capture_request_id")), "capture_request_count_mismatch"),
+    ]
+    for field, observed, code in checks:
+        declared = _as_int(intake.get(field))
+        if declared is None:
+            continue
+        if declared != observed:
+            findings.append(Finding(code, f"{field}={declared} but artifact records {observed}."))
+    return findings
+
+
+def _validate_observations(blocks: list[Any]) -> list[Finding]:
+    observations = _records(blocks, "observation_id")
+    if not observations:
+        return [Finding("missing_observation_records", "Observations section must include at least one observation_id YAML record.")]
+
+    findings: list[Finding] = []
+    for observation in observations:
+        obs_id = observation.get("observation_id", "<unknown>")
+        missing = _required_missing(observation, REQUIRED_OBSERVATION_FIELDS)
+        if missing:
+            findings.append(Finding("missing_observation_fields", f"Observation {obs_id} is missing: {', '.join(missing)}."))
+        if "url" in observation and not _is_url(observation.get("url")):
+            findings.append(Finding("invalid_observation_url", f"Observation {obs_id} url must be http(s)."))
+        if "retrieval_date" in observation and not _is_iso_date(observation.get("retrieval_date")):
+            findings.append(Finding("invalid_observation_retrieval_date", f"Observation {obs_id} retrieval_date must be YYYY-MM-DD."))
+        signal_stage = _normalize_vocab(observation.get("signal_stage"))
+        if signal_stage not in VALID_SIGNAL_STAGES:
+            findings.append(
+                Finding("invalid_signal_stage", f"Observation {obs_id} signal_stage must be one of {', '.join(sorted(VALID_SIGNAL_STAGES))}.")
+            )
+        gate_role = _normalize_vocab(observation.get("gate_role"))
+        if gate_role not in VALID_GATE_ROLES:
+            findings.append(
+                Finding("invalid_gate_role", f"Observation {obs_id} gate_role must be one of {', '.join(sorted(VALID_GATE_ROLES))}.")
+            )
+    return findings
+
+
+def _validate_candidate_observations(blocks: list[Any]) -> list[Finding]:
+    findings: list[Finding] = []
+    for candidate_obs in _records(blocks, "candidate_observation_id"):
+        candidate_obs_id = candidate_obs.get("candidate_observation_id", "<unknown>")
+        missing = _required_missing(candidate_obs, REQUIRED_CANDIDATE_OBSERVATION_FIELDS)
+        if missing:
+            findings.append(
+                Finding(
+                    "missing_candidate_observation_fields",
+                    f"Candidate observation {candidate_obs_id} is missing: {', '.join(missing)}.",
+                )
+            )
+        capture_needed = _normalize_vocab(candidate_obs.get("capture_needed"))
+        if capture_needed and capture_needed not in {"yes", "no", "unknown"}:
+            findings.append(
+                Finding("invalid_capture_needed", f"Candidate observation {candidate_obs_id} capture_needed must be yes/no/unknown.")
+            )
+    return findings
+
+
+def _validate_capture_requests(blocks: list[Any]) -> list[Finding]:
+    findings: list[Finding] = []
+    for request in _records(blocks, "capture_request_id"):
+        request_id = request.get("capture_request_id", "<unknown>")
+        missing = _required_missing(request, REQUIRED_CAPTURE_REQUEST_FIELDS)
+        if missing:
+            findings.append(Finding("missing_capture_request_fields", f"Capture request {request_id} is missing: {', '.join(missing)}."))
+
+        route_state = _normalize_vocab(request.get("route_binding_state"))
+        if route_state not in VALID_ROUTE_BINDING_STATES:
+            findings.append(
+                Finding(
+                    "invalid_capture_route_binding_state",
+                    f"Capture request {request_id} route_binding_state must be one of {', '.join(sorted(VALID_ROUTE_BINDING_STATES))}.",
+                )
+            )
+
+        urls = request.get("urls")
+        if not isinstance(urls, list) or not urls:
+            findings.append(Finding("invalid_capture_request_urls", f"Capture request {request_id} urls must be a non-empty list."))
+        else:
+            for index, entry in enumerate(urls, start=1):
+                if not isinstance(entry, dict):
+                    findings.append(
+                        Finding("invalid_capture_request_urls", f"Capture request {request_id} url entry {index} must be a mapping.")
+                    )
+                    continue
+                missing_url_fields = _required_missing(entry, REQUIRED_CAPTURE_URL_FIELDS)
+                if missing_url_fields:
+                    findings.append(
+                        Finding(
+                            "missing_capture_request_url_fields",
+                            f"Capture request {request_id} url entry {index} is missing: {', '.join(missing_url_fields)}.",
+                        )
+                    )
+                if "url" in entry and not _is_url(entry.get("url")):
+                    findings.append(Finding("invalid_capture_request_url", f"Capture request {request_id} url entry {index} must be http(s)."))
+                gate_role = _normalize_vocab(entry.get("gate_role"))
+                if gate_role and gate_role not in VALID_GATE_ROLES:
+                    findings.append(Finding("invalid_gate_role", f"Capture request {request_id} url entry {index} has invalid gate_role."))
+
+        not_requested = request.get("not_requested")
+        if isinstance(not_requested, list):
+            normalized = {_normalize_vocab(item) for item in not_requested}
+            missing_not_requested = sorted(REQUIRED_NOT_REQUESTED - normalized)
+            if missing_not_requested:
+                findings.append(
+                    Finding(
+                        "missing_capture_request_not_requested_boundaries",
+                        f"Capture request {request_id} not_requested is missing: {', '.join(missing_not_requested)}.",
+                    )
+                )
+        elif "not_requested" in request:
+            findings.append(Finding("invalid_capture_request_not_requested", f"Capture request {request_id} not_requested must be a list."))
+    return findings
+
+
+def _validate_closeout(text: str, blocks: list[Any], intake: dict[str, Any] | None) -> list[Finding]:
+    if not isinstance(intake, dict):
+        return []
+    findings: list[Finding] = []
+    closeout = _normalize_vocab(intake.get("closeout_state"))
+    candidate_observations = _records(blocks, "candidate_observation_id")
+    capture_request_count = len(_records(blocks, "capture_request_id"))
+
+    body = _section_body(text, SECTION_PATTERNS["closeout"])
+    if closeout and closeout not in body:
+        findings.append(Finding("closeout_state_not_in_closeout_section", "Closeout section must repeat the intake closeout_state."))
+
+    for decision in _mapping_values(blocks, "candidate_decision"):
+        if isinstance(decision, dict) and "closeout_state" in decision:
+            decision_closeout = _normalize_vocab(decision.get("closeout_state"))
+            if closeout and decision_closeout != closeout:
+                findings.append(Finding("candidate_decision_closeout_mismatch", "candidate_decision.closeout_state must match intake closeout_state."))
+
+    if closeout == "candidate_ready_for_next_lane" and not candidate_observations:
+        findings.append(
+            Finding("candidate_ready_without_candidate_observation", "candidate_ready_for_next_lane requires a candidate_observation_id record.")
+        )
+    if closeout == "no_candidate_after_discovery" and candidate_observations:
+        findings.append(Finding("no_candidate_with_candidate_observation", "no_candidate_after_discovery must not include candidate_observation_id records."))
+    if closeout == "capture_preservation_only" and capture_request_count == 0:
+        findings.append(Finding("preservation_without_capture_request", "capture_preservation_only requires at least one capture_request_id record."))
+    if closeout == "capture_preservation_only" and candidate_observations:
+        findings.append(Finding("preservation_with_candidate_observation", "capture_preservation_only must not include candidate_observation_id records."))
     return findings
 
 
@@ -238,11 +559,11 @@ def _validate_yaml_overclaims(blocks: list[Any]) -> list[Finding]:
                 "candidate_authorization",
             }:
                 findings.append(Finding("invalid_signal_stage_overclaim", f"{path} must not use {value!r}."))
-            if key_norm == "route_binding_state" and value_norm not in {"", "unknown", "not_bound"}:
+            if key_norm == "route_binding_state" and value_norm not in VALID_ROUTE_BINDING_STATES:
                 findings.append(
                     Finding(
                         "invalid_capture_route_binding_state",
-                        f"{path} must stay unknown/not_bound, got {value!r}.",
+                        f"{path} must stay one of {', '.join(sorted(VALID_ROUTE_BINDING_STATES))}, got {value!r}.",
                     )
                 )
     return findings
@@ -273,6 +594,13 @@ def validate_text(text: str) -> list[Finding]:
         findings.extend(_validate_intake(intake))
 
     findings.extend(_validate_required_receipt_parts(text, intake))
+    findings.extend(_validate_broad_scout_detail(text))
+    findings.extend(_validate_csb_row_ids(text))
+    findings.extend(_validate_count_consistency(text, blocks, intake))
+    findings.extend(_validate_observations(blocks))
+    findings.extend(_validate_candidate_observations(blocks))
+    findings.extend(_validate_capture_requests(blocks))
+    findings.extend(_validate_closeout(text, blocks, intake))
     findings.extend(_validate_yaml_overclaims(blocks))
     findings.extend(_validate_forbidden_text(text))
     return findings
