@@ -128,7 +128,7 @@ SOURCE-LOAD these Orca sources:
 Then read target `open_next` sources only when material and accessible. At minimum, check whether the following are available and state gaps explicitly:
 
 - `docs/prompts/handoffs/retail_pdp_review_capture_commission_prompt_v0.md`
-- `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`
+- `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`
 - `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md`
 - `orca-harness/source_capture/retail_pdp_projection.py`
 

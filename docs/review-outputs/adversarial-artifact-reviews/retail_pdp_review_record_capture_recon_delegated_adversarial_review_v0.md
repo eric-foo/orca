@@ -144,7 +144,7 @@ Single file changed: `docs/research/retail_pdp_review_record_capture_recon_v0.md
 @@ open_next:
 -  - docs/prompts/handoffs/retail_pdp_review_capture_commission_prompt_v0.md
 +  - docs/prompts/handoffs/retail_pdp_review_capture_commission_prompt_v0.md  # branch-only: present only in the distracted-ishizaka-01eff5 local worktree, not on this branch or origin/main (see Inputs Read retrievability note)
-   - orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
+   - orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
 @@ Inputs Read (after harness-code bullet)
 +Retrievability note: the commission prompt, the branch-only review capture spec, and the branch-only manufactured-demand design above live only in the `.claude/worktrees/distracted-ishizaka-01eff5` local worktree. They are not tracked on this branch (`codex/retail-pdp-review-recon`) or on `origin/main`, so a fresh reader on this branch cannot open them; treat their content as reported, not retrievable here. By contrast, the retail PDP projection contract, the Attachment Record implementation contract, and `retail_pdp_projection.py` cited above are tracked and retrievable on this branch.
 @@ Live Recon Packets

@@ -10,7 +10,7 @@ use_when:
   - Preparing the minimal retail_pdp review_record adapter scope after Attachment Record storage binding is locked.
 authority_boundary: retrieval_only
 open_next:
-  - orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md
   - orca-harness/source_capture/retail_pdp_projection.py
 stale_if:
@@ -38,8 +38,8 @@ Controlling and support inputs:
 - Commission prompt: `.claude/worktrees/distracted-ishizaka-01eff5/docs/prompts/handoffs/retail_pdp_review_capture_commission_prompt_v0.md`.
 - Branch-only review capture spec: `.claude/worktrees/distracted-ishizaka-01eff5/orca/product/spines/capture/source_families/retail_pdp/retail_pdp_review_capture_spec_v0.md`.
 - Branch-only manufactured-demand design: `.claude/worktrees/distracted-ishizaka-01eff5/orca/product/spines/judgment/demand_read/integrity/judgment_spine_manufactured_demand_detection_design_v0.md`.
-- Established mainline retail substrate: `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`.
-- Existing operator playbook and toolbox: `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`, `orca/product/spines/capture/source_capture_toolbox/source_capture_playbook_v0.md`, `orca/product/spines/capture/source_capture_toolbox/source_capture_anti_block_ladder_usage_guide_v0.md`, `orca/product/spines/capture/source_capture_toolbox/capture_recon_index_v0.md`.
+- Established mainline retail substrate: `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`.
+- Existing operator playbook and toolbox: `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`, `orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md`, `orca/product/spines/capture/core/source_capture_toolbox/source_capture_anti_block_ladder_usage_guide_v0.md`, `orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md`.
 - Attachment Record contracts: `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_core_contract_v0.md`, `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_storage_contract_v0.md`, `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md`.
 - Existing harness code: `orca-harness/source_capture/retail_pdp_projection.py`, `orca-harness/runners/run_source_capture_cloakbrowser_packet.py`, `orca-harness/runners/run_source_capture_http_packet.py`, `orca-harness/runners/run_source_capture_durability_series.py`, `orca-harness/source_capture/models.py`.
 

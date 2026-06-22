@@ -17,7 +17,7 @@ open_next:
   - docs/research/retail_pdp_review_record_capture_recon_v0.md
   - docs/review-outputs/adversarial-artifact-reviews/retail_pdp_review_record_capture_recon_delegated_adversarial_review_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md
-  - orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
   - orca-harness/source_capture/retail_pdp_projection.py
 branch_or_commit: codex/retail-pdp-review-recon @ 3da8d9268af740780139b2683cebbf746010f396
 stale_if:
@@ -128,9 +128,9 @@ Attachment Record and packet/storage sources:
 
 Retail PDP source and harness sources:
 
-- `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`
+- `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md`
 - `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_projection_playbook_v0.md`
-- `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`
+- `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`
 - `orca-harness/source_capture/retail_pdp_projection.py`
 - `orca-harness/runners/run_source_capture_cloakbrowser_packet.py`
 - `orca-harness/runners/run_retail_pdp_projection.py`
