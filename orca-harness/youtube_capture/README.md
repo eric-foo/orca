@@ -4,7 +4,8 @@ YouTube **public-data** capture tooling (promoted from `_scratch/` 2026-06-21).
 
 - `stealth_client.py` — the single network entry point: Chrome-impersonating HTTP client
   (`curl_cffi`: matched TLS/JA3 + HTTP/2 + client-hints), **anonymous-only** (no account),
-  **proxy-from-env-only**, with a loud non-stealth warning if it falls back to urllib.
+  **no proxy** (proxy/residential rotation is a separate higher rung — CloakBrowser), with a
+  loud non-stealth warning if it falls back to urllib.
 - `capture_youtube_v0.py` — per-video capture: embedded `ytInitialPlayerResponse` metadata +
   `youtubei/v1/next` comments. Long-form + Shorts via one runner (`surface_type` switch).
 - `shorts_scroll_capture_v0.py` — volume capture / load test (scrolls Shorts at a cadence;
