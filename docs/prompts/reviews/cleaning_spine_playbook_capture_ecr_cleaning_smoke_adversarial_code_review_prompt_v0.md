@@ -19,10 +19,10 @@ open_next:
   - .agents/workflow-overlay/README.md
   - .agents/workflow-overlay/source-loading.md
   - .agents/workflow-overlay/review-lanes.md
-  - orca/product/spines/capture/source_capture_toolbox/source_capture_playbook_v0.md
-  - orca/product/spines/capture/source_capture_toolbox/capture_recon_index_v0.md
+  - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+  - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
-  - orca/product/spines/capture/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md
   - orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_readme_v0.md
   - orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_foundation_v0.md
   - orca/product/spines/foundation/product_contract/core_spine_v0_data_and_cleaning_spine_boundary_v0.md
@@ -153,10 +153,10 @@ Read these generated run artifacts:
 
 Read these doctrine/runbook sources for boundaries:
 
-- `orca/product/spines/capture/source_capture_toolbox/source_capture_playbook_v0.md`
-- `orca/product/spines/capture/source_capture_toolbox/capture_recon_index_v0.md`
+- `orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md`
+- `orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md`
 - `orca-harness/docs/source_capture_agent_runbook.md`
-- `orca/product/spines/capture/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`
+- `orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_sidecar_operator_playbook_v0.md`
 - `orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_readme_v0.md`
 - `orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_foundation_v0.md`
 - `orca/product/spines/foundation/product_contract/core_spine_v0_data_and_cleaning_spine_boundary_v0.md`
