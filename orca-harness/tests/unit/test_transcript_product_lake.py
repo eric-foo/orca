@@ -141,6 +141,22 @@ def test_cues_from_json3_handles_missing_and_nonnumeric_timing() -> None:
     ]
 
 
+def test_cues_from_json3_handles_nonfinite_timing() -> None:
+    # json.loads accepts bare NaN/Infinity (they ARE floats); the parser must finite-guard, not crash.
+    raw = json.dumps(
+        {
+            "events": [
+                {"tStartMs": float("nan"), "dDurationMs": 1000, "segs": [{"utf8": "nan start"}]},
+                {"tStartMs": 2000, "dDurationMs": float("inf"), "segs": [{"utf8": "inf dur"}]},
+            ]
+        }
+    ).encode("utf-8")
+    assert cues_from_json3(raw) == [
+        {"start_ms": 0, "end_ms": 1000, "text": "nan start"},
+        {"start_ms": 2000, "end_ms": 2000, "text": "inf dur"},
+    ]
+
+
 def test_mentions_record_id_bounded_for_long_model_name() -> None:
     rid = mentions_record_id(_transcript(), "x" * 300)
     assert len(rid) <= 128  # stays within the lake's 128-char _SAFE_SEGMENT limit

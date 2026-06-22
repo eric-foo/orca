@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 
 from cleaning.transcript_product_extractor import (
@@ -60,12 +61,17 @@ def cues_from_json3(raw: bytes) -> list[dict]:
         text = "".join(s.get("utf8", "") for s in segs if isinstance(s, dict)).strip()
         if not text or text == prev:
             continue
+        # finite-guard, not just type-guard: json.loads accepts bare NaN/Infinity, which ARE
+        # floats (so isinstance passes) but raise on int() — guard them or the documented
+        # fail-closed contract breaks. Negative duration is clamped so end_ms >= start_ms.
         raw_start = event.get("tStartMs", 0)
-        start = int(raw_start) if isinstance(raw_start, (int, float)) else 0
+        start = int(raw_start) if isinstance(raw_start, (int, float)) and math.isfinite(raw_start) else 0
         duration = event.get("dDurationMs")
-        # clamp to >= 0 so a negative duration never yields end_ms < start_ms (which would
-        # make ProductMention reject an otherwise-valid mention).
-        end = start + max(0, int(duration)) if isinstance(duration, (int, float)) else start
+        end = (
+            start + max(0, int(duration))
+            if isinstance(duration, (int, float)) and math.isfinite(duration)
+            else start
+        )
         cues.append({"start_ms": start, "end_ms": end, "text": text})
         prev = text
     return cues

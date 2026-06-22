@@ -316,6 +316,35 @@ def test_blank_brand_falls_back_to_unknown() -> None:
     assert result.mentions[0].brand == "unknown"
 
 
+def test_mention_rejects_nonfinite_stance_or_confidence() -> None:
+    # pydantic ge/le rejects NaN/inf; lock it so a future switch to comparison validators regresses loudly.
+    for bad in [_item(stance_vote=float("nan")), _item(stance_vote=float("inf")),
+                _item(extractor_confidence=float("nan"))]:
+        result, _ = _extract(_anthropic([bad]))
+        assert result.mentions == []
+        assert len(result.rejected) == 1
+
+
+def test_stated_rating_inf_scale_max_is_dropped() -> None:
+    transcript = _transcript(
+        cues=_cues() + [{"start_ms": 6000, "end_ms": 9000, "text": "a solid 8 out of 10"}]
+    )
+    item = _item(stated_rating={"value": 8, "scale_max": float("inf"), "source_pointer": "8 out of 10"})
+    result, _ = _extract(_anthropic([item]), transcript)
+    assert len(result.mentions) == 1
+    assert result.mentions[0].stated_rating is None  # math.isfinite(scale_max) guard
+
+
+def test_product_mention_requires_source_pointer_directly() -> None:
+    # CE2 defense-in-depth: locked at the schema even though the extractor never passes an empty quote.
+    with pytest.raises(Exception):
+        ProductMention(
+            mention_id="a:0", video_id="v", transcript_anchor="A", transcript_source="asr",
+            brand="Dior", line="Sauvage", concentration="edt", stance_vote=0.0,
+            source_pointer="", start_ms=0, end_ms=1, extractor_confidence=0.5,
+        )
+
+
 def test_locate_quote_empty_cues_is_none() -> None:
     assert locate_quote("anything", []) is None
 
