@@ -11,6 +11,7 @@ use_when:
   - Choosing the source pack before building or reviewing a LinkedIn lane slice.
 authority_boundary: retrieval_only
 open_next:
+  - orca/product/spines/scanning/README.md
   - orca/product/spines/scanning/source_families/linkedin/data_capture_spine_linkedin_discovery_planning_lane_architecture_v0.md
   - docs/workflows/linkedin_lane_operator_pilot_plan_v0.md
 ```
@@ -23,6 +24,11 @@ is worth looking at* and hands a pointer forward; it never performs live access,
 contact harvesting, graph capture, or content capture. If a task touches
 LinkedIn, **start here**, then open the authority docs below — do not invent a
 different path.
+
+For scanning-wide vocabulary, the lane maps local discovery records into
+`frontier`, `precursor_signal`, `precursor_surface`, `observation`, `negative`,
+`access_note`, and `capture_request`; the architecture file owns the detailed
+mapping.
 
 ## The stages (one pipeline)
 

@@ -111,14 +111,23 @@ solves; the diagnosis selects the route. Blind climbing wastes probes and can mi
    "blocked" that abandons capturable material (Daimler, Sephora, Teal, WSO); the opposite error is
    thrashing the same route forever, or escalating volume past human rate.
 
-**Screening-side consumer (reverse pointer, 2026-06-12).** These read-escalation patterns
-(Guardrail 4 + the Step 2 pointer) are distilled for *screening posture* — public pages, no logins,
-no bulk, URLs + short quotes only — into the **Walker Equipment Kit** in
-`orca/product/spines/foundation/vertical_exploration/orca_vertical_exploration_guide_v0.md` (discovery-lane-owned). Keep them in
-sync: when a route-escalation pattern here changes, the kit's READ ESCALATION / KNOWN WALLS block may
-need a dated note. Packet-grade capture still routes through this method; the kit is screening-read
-only. (Tooling note: WebFetch-based screening agents cannot fetch `reddit.com` at all — only the
-capture runner can; see `docs/decisions/screening_reddit_read_route_decision_v0.md`.)
+**Screening-side consumer (reverse pointer, 2026-06-12; updated 2026-06-21).**
+These read-escalation patterns (Guardrail 4 + the Step 2 pointer) are distilled
+for *screening posture* - public pages, no logins, URLs + short quotes - in the
+Walker Equipment Kit
+(`orca/product/spines/foundation/vertical_exploration/orca_vertical_exploration_guide_v0.md`).
+Keep them in sync: when a route-escalation pattern here changes, the kit's READ
+ESCALATION / KNOWN WALLS block may need a dated note. Packet-grade capture still
+routes through this method; the kit is screening-read only.
+
+The bounded screening-read service now gives the orchestrator a read-only
+capture-harness path for public screening reads:
+`source_capture.screening_read.screening_read(...)` for Reddit/direct/anti-block
+HTTP routes and `source_capture.screening_browser_read.screening_browser_read(...)`
+for public browser/interstitial reads. These entries return screen-light records
+or visible text; they do not stage packets, write manifests, or touch ECR. Walkers
+must not call them directly; they record the need and let the orchestrator invoke
+the bounded read.
 
 ## Step 0 — The access-control gate (run before any technical probe)
 
@@ -147,6 +156,13 @@ Locate **where the signal actually lives**, and name the blocker — *before* pi
 - **What's blocking?** 403 / empty / lazy-load-not-fired / anti-bot challenge / login-wall /
   paraphrase-only. (A **login-wall** is an access-control gate — Step 0 governs it; an **anti-bot
   challenge** on public content is now a route problem, not a stop.)
+- **Rendered browser access check.** For browser routes, distinguish **visible source content** from
+  **residual challenge artifacts** in the full DOM. A passed anti-bot page can retain hidden
+  `/cdn-cgi/`, challenge-platform, CAPTCHA, or interstitial script/template text after real source
+  content is visible. Classify access-block posture from rendered **visible text + title** first;
+  full-DOM challenge markers alone are a warning/residual signal unless the visible text is empty or
+  challenge-only. Conversely, a visible interstitial ("Just a moment", "verify you are human",
+  access-block copy, etc.) is `access_failed` even when the browser returned artifacts.
 - **Output:** a one-line problem statement — `<signal> lives in <substrate>; blocked by <symptom>`.
 
 ## Step 2 — The pointer (problem -> route)
@@ -159,8 +175,8 @@ Pick the cheapest route that fits the located substrate. A symptom quick-referen
 | 403 on direct fetch | headless/bot signature, or host block | real browser context; then visible browser + user action; then anti-bot route |
 | empty / sparse body | content lazy-loads or is JS-rendered | progressive scroll to fire observers; locate embedded state |
 | content present but reworded | tool returned paraphrase (fidelity fail) | a route that preserves bytes (browser page content / embedded-state extract) |
-| 403 *and* headless also 403 | NOT "browser won't help" — visible-context / anti-bot detection | visible browser + user action (Daimler); then anti-bot fingerprint/challenge route |
-| anti-bot challenge on PUBLIC content | bot detection (Kasada/Akamai/etc.) | anti-bot route (fingerprint/challenge handling, proxy/geo) — authorized, human-rate |
+| 403 *and* headless also 403 | NOT "browser won't help" — visible-context / anti-bot detection | standard browser controls (headed / local channel / settle); then visible browser + user action; then anti-bot fingerprint/challenge route |
+| anti-bot challenge on PUBLIC content | bot detection (Cloudflare/Kasada/Akamai/etc.) | browser-rendered access diagnosis; standard browser controls first when plausible; then anti-bot route (fingerprint/challenge handling, proxy/geo) — authorized, human-rate |
 | login-wall | access-control gate (Step 0) | use OWN entitled access, or stop — do NOT defeat it |
 | reviews/section missing | IntersectionObserver lazy-load not fired | progressive/incremental scroll (Sephora) |
 
@@ -175,7 +191,8 @@ menu.** Cheapest fit wins.
 | archive.today / Memento (ladder rung 2) | pre-cutoff state when Wayback misses; closes the single-archive SPOF for ordinary brand/retailer pages | low-med | memento bytes, served-time-verified <= cutoff (mirror-family host-anchored) | public; no-gate-defeat (CF/CAPTCHA challenge -> STOP; HTTP 429 -> retry/backoff) |
 | publisher version-history (MediaWiki / GitHub) | pre-cutoff state of a doc/wiki/repo from the publisher's OWN version history | low | the publisher's exact revision bytes, served-time-verified <= cutoff | public API (needs explicit wiki/repo coordinates) |
 | direct-HTTP | static first-party HTML/JSON | lowest | raw bytes | public |
-| real browser (headless) | JS-rendered DOM | med | rendered bytes | public |
+| real browser (headless) | JS-rendered DOM | med | rendered bytes; visible text used for access-block diagnosis | public |
+| standard browser controls (headed / local channel / settle) | headless/browser-channel/settle-sensitive interstitials before anti-detect escalation | med | rendered bytes; visible text/title separated from residual DOM challenge markers | public |
 | visible browser + user action | headless-detected 403; user-gated download (PDF) | med-high | real bytes via the real UI path | public; own entitled access if gated |
 | progressive / incremental scroll | lazy-load / IntersectionObserver content (reviews) | med | first-party-rendered bytes | public |
 | anti-bot / cloakbrowser + proxy/geo | anti-bot challenge on public content; geo friction | high | rendered bytes *(expected, not yet demonstrated — see route maturity)* | public; authorized under Risk posture; human-rate; no secrets/exit-IP |
@@ -199,6 +216,16 @@ Proxy profiles are shared Source Capture browser-route configuration, not CloakB
 state. A runner may opt into a registered proxy profile by label while keeping endpoint,
 credentials, exit IP, and store path out of packets; CloakBrowser remains one possible
 browser backend rather than the owner of proxy semantics.
+
+**Rendered-access honesty rule (browser routes).** Browser artifacts are not source success by
+themselves. A route GO requires source-native visible content or route-native embedded values, not
+merely a non-error browser run. When visible text/title show an access block, CAPTCHA, or
+interstitial, record `access_failed` / PARTIAL even if DOM and screenshot were preserved. When
+visible text shows source content but the DOM still contains residual challenge scripts/templates,
+record the residual marker as a limitation/warning, not as the verdict. This is source-agnostic:
+Cloudflare, Akamai, Kasada, DataDome, PerimeterX, or other challenge families may leave artifacts in
+the DOM after the human-visible page has advanced. The safe error is under-claiming source success;
+the unsafe error is calling a visible block shell content.
 
 ### Cross-archive historical capture (the ladder + the runner)
 
