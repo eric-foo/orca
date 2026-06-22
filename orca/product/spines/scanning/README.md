@@ -86,6 +86,14 @@ used to test CSB rows, find hidden venues, and record pointers, negatives, or
 access notes. It is not search-volume proof, AEO proof, SEO keyword research,
 a standing query monitor, or a crawler substitute.
 
+Before closeout, a fresh CSB-first scan artifact must pass
+`.agents/hooks/check_csb_scanning_artifact.py` or record why the checker was not
+run. The checker enforces receipt shape only: source context, caps,
+broad-scout accounting, CSB-row accountability, exact-query accounting,
+venue/hidden-venue accounting, observations, negatives/access notes,
+capture-request accounting, and candidate closeout. It does not grade signal
+quality, prove buyer demand, validate candidates, or bind Capture routes.
+
 `precursor_signal` and `precursor_surface` are routing inputs. They may steer a
 walk or explain why a venue deserves inspection. They are not a generic label
 for every weak clue. They do not prove demand, clear a gate, authorize capture,
@@ -110,6 +118,8 @@ direction_change_propagation:
     newer/current signals normally receive more scan attention than older context.
     Broad scout may use a route-ledger subagent when available, but the default
     is the bounded phase, not a hard runtime dependency on subagent infrastructure.
+    Fresh CSB-first scan artifacts also have a portable receipt-shape checker;
+    the checker enforces reviewable structure, not scan quality or proof.
   trigger: product_doctrine
   related_triggers:
     - workflow_authority
@@ -124,6 +134,8 @@ direction_change_propagation:
     - .agents/workflow-overlay/decision-routing.md
     - .agents/workflow-overlay/source-of-truth.md
     - .agents/workflow-overlay/prompt-orchestration.md
+    - .agents/hooks/check_csb_scanning_artifact.py
+    - orca-harness/tests/unit/test_csb_scanning_artifact_validator.py
     - orca/product/spines/scanning/scan_core/orca_demand_scan_core_spec_v0.md
   intentionally_not_updated:
     - path: orca/product/spines/scanning/scan_core/orca_demand_scan_core_spec_v0.md
@@ -137,15 +149,16 @@ direction_change_propagation:
         broad-scout and recency ordering by opening this README and the MGT
         operating model.
   stale_language_search: >
-    rg -n "broad scout|broad-scout|subagent|recent|recency|freshness|crawler|monitor|registry|atlas|capture route|gate proof"
-    orca/product/spines/scanning docs/workflows/orca_repo_map_v0.md
+    rg -n "broad scout|broad-scout|subagent|recent|recency|freshness|crawler|monitor|registry|atlas|capture route|gate proof|check_csb_scanning_artifact|receipt-shape"
+    orca/product/spines/scanning docs/workflows/orca_repo_map_v0.md .agents/hooks/check_csb_scanning_artifact.py orca-harness/tests/unit/test_csb_scanning_artifact_validator.py
     (run 2026-06-23)
   stale_language_search_result: >
     Executed 2026-06-23 after edit. Hits are this accepted broad-scout/recency
     default, existing scan-core freshness/monitor safeguards, repo-map registry
     route entries, or explicit no-crawler/no-monitor/no-capture-route/no-gate-proof
     boundaries. No capless crawl, standing monitor, gate-proof leakage,
-    Capture route binding, or mandatory subagent-runtime claim was found.
+    Capture route binding, mandatory subagent-runtime claim, or checker-as-proof
+    leakage was found. Checker hits are receipt-shape enforcement only.
   non_claims:
     - not validation
     - not readiness
