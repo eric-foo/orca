@@ -511,6 +511,16 @@ Rules:
 
 ## Privacy And Safety Invariants
 
+> **Carve-out 2026-06-22 amendment supersedes part of this list** (the carve-out is the authority —
+> `docs/decisions/wind_caller_calibration_carveout_v0.md`): **cross-platform PUBLIC-handle stitching is now
+> ACTIVATED** (Tier-2-B; public-handle↔public-handle, via the linkage spec; non-public-handle joins still
+> gated) — so the "Cross-platform identity stitching" forbiddance below is **lifted for public-handle joins**,
+> and the `creator_record_id` "must not be cross-platform stitched without a separate owner-approved spec"
+> rule is now satisfied by that amendment + the linkage spec. **Aggregate audience demographics** (text-only,
+> aggregate, legitimate-interests basis, no retention of individuals, no special-category) are
+> **AUTHORIZED-pending council confirmation** (Tier-2-A) — a separate data class from the *creator's own*
+> attributes. **Person special-category data remains absolutely forbidden** (Tier-3).
+
 Allowed in v0:
 
 - Public handle.

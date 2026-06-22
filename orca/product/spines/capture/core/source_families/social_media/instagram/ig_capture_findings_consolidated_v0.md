@@ -70,7 +70,12 @@ sustained cadence remain unmeasured.
 - **Therefore**: keep the IG runner logged-out-first. Re-open session/runtime wiring only as an
   explicit fallback decision after measured logged-out route/cadence evidence, because the sustained
   account/session risk is not characterized here.
-- **Cheaper HTTP rung (rung-2, `curl_cffi` Chrome impersonation) is UN-PROBED (finding 2026-06-22).**
+- **SUPERSEDED for IG/TikTok (carve-out 2026-06-22 amendment):** owner + legal council selected
+  **logged-in own-account capture** as the operational mode for IG and TikTok — within the carve-out's
+  already-permitted operating-account/session scope, council-cleared at internal/pre-commercial scope. The
+  "logged-out-first" recommendation above was the original lower-account-risk stance and is **superseded for
+  IG/TikTok**; `docs/decisions/wind_caller_calibration_carveout_v0.md` (2026-06-22 amendment) governs.
+  (YouTube is unaffected — it stays anonymous logged-out.)
   The cookieless `web_profile_info` 429 (Correction #1) was measured at the *stdlib* `direct_http`
   rung, which carries Python's TLS/JA3 fingerprint; the browser-context 200 differs by real Chrome
   TLS/JA3 + HTTP/2 + full Chrome headers + page-origin/JS context. A `curl_cffi` rung-2 client (real
