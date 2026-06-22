@@ -5,7 +5,8 @@ retrieval_header_version: 1
 artifact_role: Scanning spine front-door index
 scope: >
   Retrieval-only entry point for the scanning spine: load order, file classes,
-  shared vocabulary, precursor-signal placement, and bloat-control boundaries.
+  shared vocabulary, CSB-first venue evaluation, exact-query discovery,
+  precursor-signal placement, and bloat-control boundaries.
 use_when:
   - Starting any scanning-lane task cold.
   - Deciding which scanning source to open before source-family or capture work.
@@ -23,14 +24,18 @@ stale_if:
 
 ## Load Order
 
-1. Open the MGT intelligent-walk operating model first for shared scanning
-   vocabulary, branch-aware walking, precursor handling, and capture-request
+1. Start from a Commission Signal Board output when one exists. If no CSB
+   board exists and the task is not an owner-authorized seed-first probe,
+   commission CSB first; scanning should not silently invent the board shape.
+2. Open the MGT intelligent-walk operating model for shared scanning
+   vocabulary, branch-aware walking, venue-value evaluation, exact-query
+   discovery, hidden-venue discovery, precursor handling, and capture-request
    boundaries.
-2. Open the Demand Scan-Core Spec only when the work needs rich promoted
+3. Open the Demand Scan-Core Spec only when the work needs rich promoted
    observation schema, gate preparation, or backward/forward scan-mode detail.
-3. Open source-family adapters only for local restrictions: Reddit, LinkedIn,
+4. Open source-family adapters only for local restrictions: Reddit, LinkedIn,
    answer-engine/search, or future families.
-4. Open Capture sources only when a `capture_request` or source-access wall is
+5. Open Capture sources only when a `capture_request` or source-access wall is
    present. Scanning cites route state; Capture owns route binding.
 
 ## File Classes
@@ -45,14 +50,24 @@ stale_if:
 
 ## Shared Output Vocabulary
 
-Scanning emits screen-light `frontier`, `move`, `precursor_signal`,
-`precursor_surface`, `observation`, `candidate`, `pointer`, `negative`,
-`access_note`, `influence_obs`, and `capture_request` records.
+Scanning emits screen-light `frontier`, `move`, `exact_query`,
+`precursor_signal`, `precursor_surface`, `observation`, `candidate`, `pointer`,
+`negative`, `access_note`, `influence_obs`, `venue_eval`,
+`hidden_venue_pointer`, and `capture_request` records.
+
+CSB supplies the starting source-family and signal-route board. Scanning then
+tests which venues are actually valuable for the commissioned decision and
+whether any high-yield venue or surface was hidden from the board.
+
+Exact-query discovery belongs to scanning. It is a bounded public-query walk
+used to test CSB rows, find hidden venues, and record pointers, negatives, or
+access notes. It is not search-volume proof, AEO proof, SEO keyword research,
+a standing query monitor, or a crawler substitute.
 
 `precursor_signal` and `precursor_surface` are routing inputs. They may steer a
-walk, explain a pivot, support an observation, or justify a capture request.
-They do not prove demand, clear a gate, authorize capture, or create a standing
-source map.
+walk or explain why a venue deserves inspection. They are not a generic label
+for every weak clue. They do not prove demand, clear a gate, authorize capture,
+or create a standing source map.
 
 ## Boundary
 
@@ -67,10 +82,13 @@ the MGT hard boundaries while preserving source-specific hard stops.
 direction_change_propagation:
   doctrine_changed: >
     The scanning spine now has a retrieval-only front door that routes source
-    loading through the MGT intelligent-walk operating model first, makes
-    precursor_signal and precursor_surface first-class screen-light scanning
-    vocabulary, and rehomes the AEO Phase-0 probe artifacts to research rather
-    than product-spine authority.
+    loading through CSB when a board exists, then the MGT intelligent-walk
+    operating model. Scanning's primary role is venue-value evaluation,
+    exact-query discovery, and hidden-venue discovery; precursor_signal and
+    precursor_surface are reserved
+    for venue/surface routing rather than generic weak evidence labels. The AEO
+    Phase-0 probe artifacts live in research rather than product-spine
+    authority.
   trigger: product_doctrine
   related_triggers:
     - workflow_authority

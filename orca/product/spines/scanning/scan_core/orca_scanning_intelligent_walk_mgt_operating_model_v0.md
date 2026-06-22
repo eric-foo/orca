@@ -6,14 +6,18 @@ artifact_role: Product method operating model (owner-invoked Mini God Tier targe
 scope: >
   Defines the high-signal scanning target shape the owner invoked as Mini God
   Tier: bounded intelligent walks, frontier selection, branch decay/pivot
-  discipline, precursor-signal handling, minimum evidence for promotion,
-  shared scan vocabulary, and the capture-request handoff from scanning to the
-  Capture spine. Bridges the
+  discipline, CSB-first venue-value evaluation, exact-query discovery,
+  hidden-venue discovery, precursor-signal handling, minimum evidence for
+  promotion, shared scan
+  vocabulary, and the capture-request handoff from scanning to the Capture
+  spine. Bridges the
   Vertical Exploration Guide, the PROPOSED Demand Scan-Core Spec, and
   source-family lanes without ratifying scan-core, authorizing live scans, or
   moving packet-grade acquisition into scanning.
 use_when:
   - Designing or reviewing a scanning lane that should behave like a high-signal bounded walker rather than a generic crawler.
+  - Evaluating whether CSB-surfaced venues are worth downstream attention and whether hidden venues were missed.
+  - Running bounded exact-query discovery to test CSB rows, find hidden venues, or record decisive negatives.
   - Deciding what scanning may emit before Capture, ECR, Cleaning, Judgment, or gate-run work begins.
   - Distinguishing precursor signals and precursor surfaces from gate proof, capture authority, or standing source maps.
   - Normalizing source-family lane outputs into shared scanning vocabulary and capture-request handoffs.
@@ -52,17 +56,20 @@ them.
 ## Target Shape
 
 Scanning should spend most of its read budget on value-bearing or
-value-routing surfaces: candidates, evidence, independent-origin leads,
-precursor signals, precursor surfaces, contradictions, high-quality pointers,
-decisive negatives, or access notes that change the next route. It is not
-optimized for exhaustive coverage.
+value-routing venues: the surfaces CSB nominated, exact public queries that can
+find or disqualify venues, hidden venues CSB missed, independent-origin leads,
+contradictions, high-quality pointers, decisive negatives, access notes, and
+only those precursor surfaces that change the next route. It is not optimized
+for exhaustive coverage.
 
 Target loop:
 
 ```text
 authorized seed / objective
--> bounded intelligent walk
--> frontier-selected reads
+-> CSB board or owner-authorized seed
+-> bounded intelligent walk over venues
+-> frontier-selected venue reads and exact-query probes
+-> venue-value notes / exact-query negatives / hidden-venue pointers
 -> lightweight observations
 -> minimum-evidence promotion
 -> capture request
@@ -84,13 +91,15 @@ Scanning does not own:
 - capture route binding or source-access policy decisions;
 - replacing the demand gate with collection quotas;
 - full-schema burden on every exploratory move;
-- contact, outreach, lead-list, follower-graph, or person-dossier work.
+- contact, outreach, lead-list, follower-graph, comment-scraping,
+  channel-dossier, person-dossier, or standing creator-monitoring work.
 
 Scanning owns, inside an authorized run:
 
 - choosing the next public read by expected decision value;
 - producing screen-light summaries, short quotes, precursor signals, precursor
-  surfaces, pointers, negatives, access notes, and candidate observations;
+  surfaces, venue evaluations, hidden-venue pointers, negatives, access notes,
+  and candidate observations;
 - preserving dated provenance for what was tried and why;
 - emitting capture requests that tell Capture what to inspect and what the
   scan thinks that inspection could support.
@@ -103,7 +112,9 @@ byline trail, source-family surface, or cross-reference the walk may inspect.
 Choose the next frontier by expected decision value, not by crawl coverage.
 High-value reasons include:
 
-- likely precursor signal before a candidate is obvious;
+- likely value of a CSB-nominated venue for this decision;
+- likely hidden venue or surface that CSB missed;
+- exact query likely to reveal a hidden venue, better origin, or decisive negative;
 - likely precursor surface that may reveal better origins or candidates;
 - likely independent demand-origin signal;
 - likely gradeable costly-behavior evidence;
@@ -116,6 +127,33 @@ High-value reasons include:
 
 The scan records why a frontier was selected when that reason is load-bearing.
 This reason is a steering explanation, not a score or proof.
+
+Precursor is a venue-routing concept here. Do not relabel ordinary weak
+owned/channel/editorial evidence as a precursor just because it falls below the
+candidate bar. If the item mainly tells the operator whether a venue is useful,
+record it as venue value, pointer, negative, access note, or unknown.
+
+## Exact Query Discovery
+
+An `exact_query` is a bounded public query string crafted to test a CSB row,
+find a hidden venue, reach a better origin surface, or produce a decisive
+negative. Exact-query discovery belongs to scanning because it is part of
+frontier selection and venue-value evaluation.
+
+Rules:
+
+- count each exact query plus first-pass result inspection against the run cap;
+- record the query string, intent, retrieval date, result class, and next-route
+  decision when it changes the walk;
+- when the row is creator/social or influence-related, public YouTube video and
+  Shorts result pages are allowed screening routes if reachable without login
+  and selected inside the run cap;
+- emit discovered venues as `hidden_venue_pointer`, weak/no-yield results as
+  `negative`, and access/policy walls as `access_note`;
+- do not treat query count, search rank, AEO visibility, or repeated SERP
+  presence as demand proof;
+- do not turn exact queries into a standing query monitor, search-volume model,
+  SEO keyword surface, crawler, or registry.
 
 ## Branch Decay, Pivot, And Stop
 
@@ -161,19 +199,29 @@ separate downstream shapes:
 
 - `frontier` - a candidate next read and its reason;
 - `move` - one bounded read or attempted read;
+- `exact_query` - a bounded public query string used to test a CSB row, find a
+  hidden venue, reach a better origin, or produce a decisive negative;
 - `precursor_signal` - an early, URL-backed clue that may guide a walk but is
-  not proof, gate clearance, or capture authorization;
+  tied to a venue or surface worth probing; not proof, gate clearance, or
+  capture authorization;
 - `precursor_surface` - a venue, hub, thread, search, AEO surface, source-family
   surface, or cross-reference that produced or likely produces precursor
   signals inside an authorized run; not a registry, atlas, monitor, or standing
   source map;
+- `venue_eval` - a screen-light assessment of whether a CSB-nominated or
+  discovered venue is worth more retrieval, capture, or exclusion for this
+  commission;
+- `hidden_venue_pointer` - a URL, venue, hub, or source-family surface not
+  surfaced by the starting CSB board but worth returning to CSB, scanning, or
+  Capture as a route candidate;
 - `candidate` - possible target/company/topic worth carrying forward;
 - `observation` - screen-light evidence or contradiction tied to a URL;
 - `pointer` - a URL, venue, byline, hub, or cross-reference likely to improve
   the next read;
 - `negative` - checked path with decisive low/no yield;
 - `access_note` - public access constraint and shapes tried;
-- `influence_obs` - hub, pointing structure, wind-caller, or detector signal;
+- `influence_obs` - hub, pointing structure, public creator-video pointer,
+  wind-caller, or detector signal;
 - `gate_role` - what demand-gate role the observation might support, if any;
 - `capture_request` - scanning's request for Capture to inspect specified
   URLs for specified observations.
@@ -205,7 +253,7 @@ source_move_id:
 url:
 retrieval_date:
 short_quote_or_summary:
-signal_stage: precursor | candidate_support | contradiction | negative | access_note | unknown
+signal_stage: venue_value | precursor | candidate_support | contradiction | negative | access_note | unknown
 claim_it_might_support:
 gate_role: none | demand_origin | costly_behavior | divergence | org_motion | decision_event | influence
 independence_hypothesis:
@@ -231,6 +279,22 @@ every low-level move.
 ## Capture Request Contract
 
 Scanning hands Capture a request, not a route.
+
+Emit a `capture_request` only when the observation needs Capture-owned action,
+not merely because a venue produced a non-empty clue. At least one must be true:
+
+- the source state is volatile or time-sensitive enough that packet-grade
+  preservation could matter;
+- the next useful read is blocked by a source-access, entitlement, or
+  route-binding boundary that scanning must not cross;
+- a promoted or near-promoted candidate-support observation needs Capture to
+  preserve provenance before gate use;
+- a hidden venue is high-yield enough that Capture-owned acquisition is the
+  right next action, not another screen-light scan move.
+
+Do not emit a capture request for ordinary owned-only chronology, retailer
+presence, editorial visibility, AEO visibility, or weak precursor material
+unless one of the triggers above is explicitly satisfied.
 
 ```yaml
 capture_request_id:
@@ -276,8 +340,9 @@ replace the gate with raw source counts.
 Reddit, LinkedIn, answer-engine/search, trade press, forums, trackers, review
 surfaces, and future source families may keep local guardrails. Their
 downstream scanning output should still map into the same shared terms:
-`frontier`, `move`, `precursor_signal`, `precursor_surface`, `observation`,
-`pointer`, `negative`, `access_note`, `capture_request`, and `gate_role`.
+`frontier`, `move`, `exact_query`, `precursor_signal`, `precursor_surface`,
+`observation`, `pointer`, `venue_eval`, `hidden_venue_pointer`, `negative`,
+`access_note`, `capture_request`, and `gate_role`.
 
 Local restrictions always carry. Examples:
 
@@ -286,6 +351,12 @@ Local restrictions always carry. Examples:
   unless a separate owner-authorized mode applies.
 - Search-interest / AEO remains proposed and gap-bound until owner-approved
   sourcing and schema placement land.
+- Public YouTube videos and Shorts are allowed as screen-light creator/social
+  routes when reachable without login and chosen by frontier/exact-query logic;
+  record the video or Short URL, retrieval date, visible dated call/context, and
+  campaign/affiliate caveat. Do not scrape comments, enumerate channels, build
+  subscriber/follower graphs, create channel/person dossiers, or monitor
+  creators. TikTok/Instagram live reads remain separately authorized.
 
 ## Accepted Residuals
 
@@ -309,3 +380,78 @@ capture authorization, scan-core ratification, source-family adoption, crawler
 approval, monitor approval, registry approval, or live web access permission.
 No implementation, scheduler, crawler, dashboard, storage layer, packet runner,
 ECR, Cleaning, Judgment, outreach, or buyer-contact work is authorized here.
+
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Scanning core now treats public YouTube videos/Shorts as bounded non-login
+    creator-video routes for creator/social exact-query and frontier reads,
+    while preserving no TikTok/Instagram live read without separate authorization,
+    no comment scraping, no channel/person dossier, no graph, and no standing
+    creator monitoring.
+  trigger: product_doctrine
+  related_triggers:
+    - workflow_authority
+  controlling_sources_updated:
+    - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
+    - orca/product/spines/scanning/scan_core/orca_demand_scan_core_spec_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - orca/product/spines/scanning/README.md
+    - docs/workflows/orca_repo_map_v0.md
+    - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
+    - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        Agent kernel rules are unchanged; this is scanning-method routing, not a
+        global behavior rule.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        Prompt authoring contract is unchanged; future scanning prompts inherit
+        this through the scanning core source pack.
+    - path: orca/product/spines/scanning/README.md
+      reason: >
+        The front-door already routes cold scanning starts through this MGT model
+        and the proposed Demand Scan-Core Spec; duplicating the YouTube/Shorts
+        rule there would create a second wording surface.
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        Repo-map routing is unchanged: scanning tasks still open the scanning
+        README, which opens this MGT operating model.
+    - path: docs/prompts/product-planning/imaginary_authors_core_satellite_csb_recommission_prompt_v0.md
+      reason: >
+        The owner clarified the target as the reusable core for future asks, so
+        the one-off executed IA commission was restored instead of silently
+        rewriting that historical prompt.
+  stale_language_search: >
+    rg -n "YouTube|Shorts|creator-video|creator/social|comment scraping|comment-scraping|channel/person|channel-dossier|creator graph|standing creator|TikTok/Instagram live"
+    orca/product/spines/scanning docs/prompts/product-planning docs/workflows/orca_repo_map_v0.md
+    orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
+    orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+    (run 2026-06-22)
+  stale_language_search_result: >
+    Executed 2026-06-22 after edit. In the scanning core, hits are this accepted
+    bounded-route rule, the proposed schema alignment, or the receipt itself. In
+    product-planning prompts, older subject-specific prompts still carry their
+    prior TikTok/Instagram live-read boundaries; the IA recommission prompt is
+    restored to its pre-correction state. Repo-map hits only route to the scanning
+    spine. The capture recon index/playbook in this worktree do not contain a
+    YouTube source-family route; this change creates no capture route, comments
+    route, channel/person dossier, graph, monitoring, or TikTok/Instagram live
+    access authorization.
+  non_claims:
+    - not validation
+    - not readiness
+    - not scan authorization
+    - not capture authorization
+    - not source-access authorization
+    - not implementation authorization
+```
+
+Older receipts archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.
