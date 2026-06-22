@@ -85,6 +85,52 @@ def test_signal_board_validates_recency_vocab() -> None:
     assert ("invalid_recency_attention", "SBR-001") in {(finding.code, finding.row_id) for finding in findings}
 
 
+@pytest.mark.parametrize(
+    "header_fragment",
+    [" | Row purpose |", " | Graph role |", " | Graph weight hint |"],
+)
+def test_signal_board_requires_non_recency_shape_columns(header_fragment: str) -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text = text.replace(header_fragment, " |", 1)
+
+    findings = validator.validate_text(text)
+
+    assert "missing_required_row_columns" in {finding.code for finding in findings}
+
+
+@pytest.mark.parametrize(
+    ("valid_fragment", "invalid_fragment", "expected_code"),
+    [
+        (
+            "| consumer_language | signal_unit | recent | high |",
+            "| consumer_language | proof_unit | recent | high |",
+            "invalid_row_purpose",
+        ),
+        (
+            "| recent | high | node_candidate | medium |",
+            "| recent | high | proof_node | medium |",
+            "invalid_graph_role",
+        ),
+        (
+            "| high | node_candidate | medium | source_backed |",
+            "| high | node_candidate | proof | source_backed |",
+            "invalid_graph_weight_hint",
+        ),
+    ],
+)
+def test_signal_board_validates_non_recency_vocab(
+    valid_fragment: str,
+    invalid_fragment: str,
+    expected_code: str,
+) -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text = text.replace(valid_fragment, invalid_fragment, 1)
+
+    findings = validator.validate_text(text)
+
+    assert (expected_code, "SBR-001") in {(finding.code, finding.row_id) for finding in findings}
+
+
 def test_handoff_row_must_exist_in_signal_board_rows() -> None:
     text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
     text, replacements = re.subn(r"(?m)^(\s*-\s*)SBR-001\s*$", r"\1SBR-999", text, count=1)

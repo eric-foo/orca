@@ -413,6 +413,9 @@ Rules:
 - Use `recency_attention: high` for same-strength newer/current signals that
   should receive more downstream scan attention than older context; this does
   not make the row proof, demand classification, or graph weight.
+- Use `row_purpose: recency_priority` only when the row exists primarily to flag
+  a recency routing priority; ordinary signal rows that happen to be recent can
+  stay `signal_unit` with `recency_attention: high`.
 
 ### 5. Mandatory Counterevidence Paths
 
