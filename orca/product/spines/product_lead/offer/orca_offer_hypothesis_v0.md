@@ -67,7 +67,7 @@ are superseded — reread-required. Deltas:
 
 - Engine/spine = outside-in market & competitive intelligence (unchanged);
   its first application moves from B2B SaaS pricing to beauty
-  consumer-demand allocation decisions — durable / transient / manufactured demand
+  consumer-demand allocation decisions (DecisionEvent) — durable / transient / manufactured demand (TrendVector)
   discrimination per the thesis's central read.
 - First door: a US-market tractioned indie/DTC beauty or personal-care brand
   decision owner (founder, head of brand / insights / growth / strategy, or
@@ -77,7 +77,7 @@ are superseded — reread-required. Deltas:
 - Substrate gate RE-DERIVED for the demand wedge: the differentiated read is
   multi-venue fused demand signal anchored on costly behavior (reviews,
   forums/community, search interest, retail presence) with integrity labels,
-  plus org-motion corroboration at brand AND parent level through the routes
+  plus org-motion corroboration at brand (Brand) AND parent level (Org) through the routes
   currently bound by the owning capture decisions. Engagement volume alone
   never carries a read; reviews are admissible as one fused venue with bias
   flags (J-curve self-selection; FTC 16 CFR 465) — the single-substrate
@@ -93,9 +93,8 @@ are superseded — reread-required. Deltas:
 
 The executed `direction_change_propagation` receipt for this ratification
 event lives in `docs/decisions/orca_product_thesis_consumer_demand_v0.md`
-("Doctrine-Change Propagation — Executed"). Applied here from
-`orca/product/spines/product_lead/offer/orca_offer_hypothesis_consumer_demand_revision_v0.md`
-(deviations recorded in that package's status).
+("Doctrine-Change Propagation — Executed"). Applied here by the ratification
+cascade; the live text reflects the applied deviations.
 
 The substantive content below (the broad offer, value proposition, decision
 families, deck framing, and all non-claims) is SURGICALLY ALIGNED to this
@@ -163,7 +162,7 @@ non-claims, or docs-first limits.
 The existing product docs distinguish internal proof substrate from buyer-facing
 packaging:
 
-- The decision memo plus evidence appendix is the internal reasoning substrate,
+- The decision memo (Memo) plus evidence appendix is the internal reasoning substrate,
   proof gate, and backtest artifact.
 - The executive-grade decision deck is the premium buyer-facing artifact,
   derived from that substrate.
@@ -248,7 +247,7 @@ owner facing a live 30-90 day consumer-demand allocation decision -- especially
 retail/channel expansion, launch/reposition, or inventory/purchase-depth
 commitment -- before internal data is conclusive, Orca offers the decided
 answer: "this demand is real and durable / this demand is transient or
-manufactured -- act, phase, narrow, hold, or defend, and here is what would
+manufactured -- monitor, probe, commit, hold, scale, avoid, or reduce, and here is what would
 change the answer." The artifact is a decision memo + evidence appendix
 substrate surfaced as an executive-grade decision deck when the proof gates
 pass: fused public demand signal (reviews, forums, search interest, retail
@@ -284,10 +283,10 @@ inside the selected wedge: US-market tractioned indie/DTC beauty or
 personal-care brand decision owners with a live 30-90 day demand-allocation
 decision -- prioritizing retail/channel expansion, launch/reposition, and
 inventory or purchase-depth commitment -- where internal data is not conclusive
-and public demand signal is visible across more than one venue family. The
+and public demand signal is visible across more than one venue family (Venue). The
 fund-screen door uses the same read later; it is not the first door.
 
-## ICP Status
+## ICP (Buyer) Status
 
 The first proof ICP wedge is selected, not proven.
 
@@ -300,7 +299,9 @@ moratorium / reposition, and inventory or purchase-depth commitment -- with a
 named decision owner (founder, head of brand / insights / growth / strategy,
 or equivalent operator), a concrete allocation consequence (inventory, retail
 commitment, launch budget, backlash/churn risk, or delayed capture), and
-demand signal visible across at least two independent public venue families so
+demand signal visible across at least two effectively-independent public venue
+origins (de-correlated by origination, per the buyer-proof Demand-Substrate Hard
+Gate — laundered or shared-origination siblings of one event do not count) so
 the fused, costly-behavior-anchored read is possible. Tier/price change,
 taste-shift pivot, and defend/hold against suspected hollow or manufactured
 demand remain eligible when they satisfy the same gates. Org-motion
@@ -326,9 +327,11 @@ Qualifying conditions for the first proof offer:
   decision-families list below).
 - Named decision owner with a concrete allocation consequence: inventory,
   retail commitment, launch budget, backlash/churn risk, or delayed capture.
-- Demand signal visible across at least two independent public venue
-  families (reviews, forums/community, search interest, retail presence),
-  including costly-behavior evidence — not engagement volume alone.
+- Demand signal visible across at least two effectively-independent public venue
+  origins — de-correlated by origination, per the buyer-proof Demand-Substrate
+  Hard Gate (laundered/shared-origination siblings of one event do not count) —
+  across the venue families (reviews, forums/community, search interest, retail
+  presence), including costly-behavior evidence — not engagement volume alone.
 - Org-motion corroboration obtainable at org level through the capture
   lane's currently bound routes; route changes are capture-lane decisions
   under the owner's measured-ToS-risk posture (absurd-level approaches,
@@ -527,9 +530,12 @@ For the first proof offer, add these stricter gates:
 2. Is there a named decision owner or budget-accountable lead?
 3. Is the allocation consequence concrete (inventory, retail commitment,
    launch budget, backlash/churn risk, delayed capture)?
-4. Is public demand signal visible across at least two independent venue
-   families (reviews, forums/community, search interest, retail presence) so
-   the read can be fused and integrity-labeled rather than single-sourced?
+4. Is public demand signal visible across at least two effectively-independent
+   venue origins — de-correlated by origination, per the buyer-proof
+   Demand-Substrate Hard Gate (laundered siblings of one event do not count) —
+   across the venue families (reviews, forums/community, search interest, retail
+   presence), so the read can be fused and integrity-labeled rather than
+   single-sourced or laundered-double-counted?
 5. Does the available signal include costly-behavior evidence (payment,
    switching, workarounds, churn, durable buyer pressure) — not engagement
    volume alone?

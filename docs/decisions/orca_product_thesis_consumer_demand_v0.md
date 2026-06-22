@@ -6,7 +6,7 @@ artifact_role: Decision record (controlling product thesis — owner-ratified)
 scope: >
   V1 product thesis re-centering Orca on consumer-demand decision
   intelligence (durable / transient / manufactured demand discrimination), beauty/personal-care
-  as the first vertical, on the existing outside-in engine and frozen Core
+  as the first vertical (Vertical), on the existing outside-in engine and frozen Core
   Spine foundation. Prepared 2026-06-11 after a cross-branch exploration
   sweep; ratified by the owner 2026-06-12 with the ask-1 capture-risk
   amendment folded in (see Status). Supersedes
@@ -193,12 +193,133 @@ direction_change_propagation:
     - the decay-curve capability and decay-timing calibration do not yet exist (transient reads are built-to, not proven-at)
 ```
 
+## Amendment — 2026-06-20 (owner-directed): Canonical Headline Value Proposition (Decision-Led)
+
+Owner-directed in-thread; lock of the iterated headline sentence. The canonical
+one-line value proposition is now:
+
+> **Orca helps consumer-market leaders make evidence-backed (demand integrity,
+> durability & more) strategic decisions — whether to commit, hold, or avoid, and
+> at what scale the evidence supports — before internal data is conclusive.**
+
+This **leads** the framing; the "Thesis (the bet)" and "Value Proposition"
+sections below are read through it (dated amendment; originals preserved).
+
+- **The decision is the identity.** The customer-facing lead is the strategic
+  decision (commit / hold / avoid, at the scale the evidence supports), not the
+  mechanism. This sharpens — and slightly broadens — the 2026-06-12 framing that
+  named "consumer-demand" as the product's subject: the headline subject is now
+  the decision, with the demand reads as its evidence.
+- **Demand integrity & durability are the first (and currently sharpest) reads,
+  not the ceiling.** The "& more" is deliberate: further reads will be added as
+  the product expands. The engine described in "Thesis (the bet)" remains
+  consumer-demand-centric *today* (demand integrity & durability are the reads it
+  runs); "& more" reserves the expansion path and keeps the headline from
+  hard-locking the product to demand — consistent with the offer hypothesis's
+  existing broad umbrella ("foundational strategic and hyper-competitive
+  decisions").
+- **"At what scale the evidence supports"** is qualitative scale guidance (the
+  action ceiling) — a positive claim, not a precise quantity.
+
+Unchanged: the first-proof wedge (beauty operator demand-allocation), the
+evidence ladder, the vertical/geography doctrine, all product boundaries, and
+every non-claim. This is a headline framing lock, not a wedge, vertical, or proof
+change.
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    The Orca product thesis adopts a locked, decision-led canonical headline
+    value proposition ("Orca helps consumer-market leaders make evidence-backed
+    (demand integrity, durability & more) strategic decisions — commit / hold /
+    avoid, at the scale the evidence supports — before internal data is
+    conclusive"). The customer-facing subject moves from "consumer-demand" to the
+    strategic decision, with demand integrity & durability as the first (not only)
+    reads; "& more" reserves expansion. Engine, first-proof wedge, evidence
+    ladder, vertical, and all non-claims are unchanged.
+  trigger: product_doctrine
+  related_triggers: []
+  controlling_sources_updated:
+    - docs/decisions/orca_product_thesis_consumer_demand_v0.md
+  downstream_surfaces_checked:
+    - orca/product/spines/product_lead/offer/orca_offer_hypothesis_v0.md
+    - docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md
+    - orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_v0.md
+    - orca/product/spines/product_lead/proof_charter/orca_product_proof_lead_charter_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+    - .agents/skills/orca-product-lead/SKILL.md
+  intentionally_not_updated:
+    - path: orca/product/spines/product_lead/offer/orca_offer_hypothesis_v0.md
+      reason: >
+        Already carries the broad umbrella ("foundational strategic and
+        hyper-competitive decisions") with beauty demand as the first application;
+        the decision-led headline aligns with it rather than contradicting it.
+    - path: docs/decisions/orca_icp_wedge_consumer_demand_first_v0.md
+      reason: >
+        First-proof wedge unchanged (beauty operator demand-allocation); the lock
+        broadens the value-prop subject, not the wedge.
+    - path: orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_v0.md
+      reason: >
+        Proof gates, trust ladder, kill/graduation unchanged; demand-first proof
+        is consistent with demand being the first reads. Residual
+        "consumer-demand" wording is read through this headline; light realign
+        deferred and named, not silently forked.
+    - path: orca/product/spines/product_lead/proof_charter/orca_product_proof_lead_charter_v0.md
+      reason: Proof-lead ownership/exclusions unchanged by a headline framing lock.
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: Product-anchor rows route to this thesis as controlling source; no route or anchor target changes.
+    - path: .agents/skills/orca-product-lead/SKILL.md (and the .claude/ runtime copy)
+      reason: >
+        Sha-pinned under skill-adoption governance (ORCA-HYGIENE skill-edit lane);
+        the copies route to this thesis as controlling and quote it as history —
+        the headline lock changes no routing. Edit deferred to the governed lane.
+    - path: docs/decisions/turn_08_product_thesis_v0.md, orca_consumer_demand_ratification_decision_memo_v0.md, orca_ratification_day_runbook_v0.md
+      reason: >
+        Superseded/dated historical records (the turn-08 thesis and the 2026-06-12
+        ratification memo and runbook); forward-only, not rewritten.
+  stale_language_search: >
+    rg -i "consumer-demand decision intelligence|consumer demand.{0,15}subject" (repo-wide)
+  stale_language_search_result: >
+    Executed 2026-06-20. Eight files match: this thesis (amending — Thesis-the-bet
+    body now read through the new headline); the orca-product-lead skill copies
+    (x2, sha-pinned, routing/description — not edited); the repo map (product-anchor
+    row routing to this thesis — unchanged); turn_08 (superseded historical); the
+    wedge (first-proof, unchanged); and the ratification decision memo and runbook
+    (dated 2026-06-12 records — forward-only). None asserts demand as the
+    permanent/only subject in a way the "& more" headline forks; the engine is
+    consumer-demand-centric today and the offer umbrella is already broad. In-body
+    "consumer-demand" naming realignment is deferred and named.
+  non_claims:
+    - not validation
+    - not readiness
+    - not buyer proof
+    - not judgment-quality evidence
+    - a headline framing lock only; wedge, vertical, proof gates, and evidence ladder unchanged
+```
+
+## Amendment — 2026-06-20 (owner-directed): Action Vocabulary (Replaces The Frozen Ladder)
+
+Owner-directed in-thread. The action-ceiling vocabulary in **Central Read #4**
+below — "the frozen vocabulary (Excluded → Watch → Probe → Test → Hold → Move →
+Commit)" — and the action verbs in the 2026-06-14 amendment's demand-state mapping
+("durable → commit; transient → move") are **superseded** by a single flat verb set:
+**monitor · probe · commit · hold · scale · avoid · reduce**. Horizon is no longer declared —
+it accretes via monitoring (`scale` earns the long horizon, `reduce` handles decay;
+manufactured → `avoid`). There is no `defend` / `narrow` / `phase` / `move`
+verb (they fold into `commit` / `monitor` / `probe`). The controlling definition,
+cap-rule remap, and rationale live in the demand-read **C3 contract**'s 2026-06-20
+amendment (`orca/product/spines/judgment/demand_read/c3_verdict_action/judgment_spine_c3_verdict_action_ceiling_contract_v0.md`),
+which owns this vocabulary and carries the propagation receipt; this is its faithful
+restatement (read Central Read #4 and the 2026-06-14 mapping through it; originals
+preserved). The cap LOGIC — ≥2 converging origins for a material commitment,
+engagement-only caps below commit — is unchanged; only the verb names change.
+
 ## Thesis (the bet)
 
 Orca is a productized outside-in **consumer-demand decision intelligence**
 system. It turns messy, contradictory public demand signals — reviews, forums,
 search interest, retail presence, social chatter — fused with org-motion
-corroboration (hiring composition and headcount at brand and parent level),
+corroboration (hiring composition and headcount at brand (Brand) and parent level (Org)),
 into clean, source-backed, calibrated decision evidence that discriminates
 **durable demand from transient and manufactured demand** before internal data
 is conclusive. It
@@ -209,12 +330,12 @@ vertical; the engine, spine, and method are vertical-portable by design.
 
 ## Value Proposition
 
-For a decision owner facing a live consumer-demand allocation decision before
+For a decision owner (Buyer) facing a live consumer-demand allocation decision (DecisionEvent) before
 internal data is conclusive, Orca delivers the decided answer — "this demand is
 real-and-durable / real-but-transient / manufactured — *commit*, *move
 (time-boxed)*, or *discount*; here is what would change the answer and when" —
 as a **calibrated decision with an action ceiling, never a feed**, built from an
-inspectable memo + evidence appendix substrate, never a dashboard or source dump.
+inspectable memo (Memo) + evidence appendix substrate, never a dashboard or source dump.
 
 The differentiated mechanism is judgment discipline over a hostile substrate,
 not access to data: provenance-verified capture, integrity labels

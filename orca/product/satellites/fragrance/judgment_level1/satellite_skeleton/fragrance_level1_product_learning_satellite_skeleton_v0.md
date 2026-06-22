@@ -41,7 +41,7 @@ stale_if:
 
 ## Status
 
-This is a docs-only skeleton for the first fragrance satellite. It is useful
+This is a docs-only skeleton for the first fragrance (Vertical) satellite. It is useful
 because it names the slots a real fragrance pack must fill without forcing those
 slots to be filled now.
 
@@ -71,7 +71,7 @@ restating or replacing them:
 - Qualitative weighting comes from C2; no numeric weight, score, formula, or
   deterministic apply-rule belongs here.
 - Verdict and action ceiling come from C3; fragrance may map examples onto
-  `act`, `phase`, `narrow`, `hold`, or `defend`, but it must not mint new action
+  `monitor`, `probe`, `commit`, `scale`, `avoid`, or `reduce`, but it must not mint new action
   vocabulary.
 - Forecast, utility/action, decision-log, reveal/evaluation, and lesson fields
   are product-learning inputs unless later owner gates promote them.
@@ -84,7 +84,7 @@ source_quality_state: >
   repo-local skeleton reconciled to current Judgment owner sources and the
   fragrance reconciliation artifact
 execution_quality_state: >
-  no admitted fragrance casebook, no captured source packet, no sealed answer,
+  no admitted fragrance casebook, no captured source packet (CapturePacket), no sealed answer,
   no run, no scoring, no reveal comparison, no completed receipt
 closeout_state: unreceipted_product_learning_context
 claim_cap: product-learning context only
@@ -106,15 +106,15 @@ receipt_artifact_or_gap: this skeleton is setup context; future per-case receipt
 | --- | --- | --- | --- | --- |
 | Satellite identity | `decision_family`, Level 1 purpose, target product-learning question | Current-state/decomposition map; C0 frame | Owner accepts the first pack's purpose and case family | Judgment doctrine, proof, or readiness |
 | Backtest mode and commission gate | `mode`, cutoff, future-information policy, decision type, playbook, source priorities, confirmation/counterevidence, forecast targets | Current-state/decomposition map; future prompt-orchestrated gate artifact | Durable gate brief and case intake artifact | Live/client mode, final recommendation, prompt approval, or run authorization |
-| Casebook queue | Candidate cases, cutoff dates, outcome labels, exclusion reasons | Current-state/decomposition map; C0 frame, case-finder gap, conductor run authorization boundary | Separate casebook admission artifact | Accepted benchmark, fixture, run authorization, readiness, or scoreable case |
-| Source-family registry | Candidate fragrance venues, source-family notes, provenance requirements, cutoff/date/SKU limits | Beauty venue card-set; source-capture owners by pointer; Level 1 source-registry contract | Owning source-capture artifact admits or authorizes source work | Capture authority, monitoring, or current-state source proof |
+| Casebook queue | Candidate cases (Case), cutoff dates, outcome labels, exclusion reasons | Current-state/decomposition map; C0 frame, case-finder gap, conductor run authorization boundary | Separate casebook admission artifact | Accepted benchmark, fixture, run authorization, readiness, or scoreable case |
+| Source-family registry | Candidate fragrance venues (Venue), source-family notes, provenance requirements, cutoff/date/SKU (Product) limits | Beauty venue card-set; source-capture owners by pointer; Level 1 source-registry contract | Owning source-capture artifact admits or authorizes source work | Capture authority, monitoring, or current-state source proof |
 | Evidence object | Source references, provenance notes, contradiction/timeline links, pre/post-cutoff separation, packet IDs | JSG-01, ECR, packing/finalization owners; Level 1 graph-family plan | Captured evidence packet and authorized packet construction | JSG clearance or gate-bearing execution |
 | C1 allow read | Why the demand signal is allowed into the read, or why it is held | Demand-read core C1 | Case-specific source plan and allowed-evidence rationale | Source truth or source-family admission |
 | C2 weighting trace | `signal_id`, direction, reasoning, caveats, no-row handling | C2 ledger read contract; signal-reliability ledger | Qualitative read over in-case evidence plus any valid ledger row | Numeric weight, formula, ranking, or score |
-| Forecast records | Target, horizon, cutoff, evidence refs, probability bucket, due date, outcome label, Brier hook | Level 1 forecast-record contract; far-half decision object; near-half eval surfaces | Pre-reveal seal before outcome lookup | Judgment-quality evidence, calibration, or buyer proof |
+| Forecast records | Target, horizon, cutoff, evidence refs, probability bucket, due date, outcome label | Level 1 forecast-record contract; far-half decision object; near-half eval surfaces | Pre-reveal seal before outcome lookup | Judgment-quality evidence, calibration, or buyer proof |
 | C3 utility/action | Bounded action family, magnitude, timing, trigger, stop condition, next action, crux, confidence bucket | Level 1 utility/action schema; C3 verdict/action ceiling contract | C2 trace and fixed action vocabulary | Passive monitor, new action vocabulary, or unconstrained live action |
 | Decision log | Evidence version, forecasts, utility assumptions, action object, limitations, due dates | Level 1 decision-log contract; evidence ladder receipt boundary | Sealed log before reveal | Completed product-learning evidence by itself |
-| Reveal/eval | Outcome record, outcome labels, benchmark comparison, regret/error labels, Brier-style note if used | JSG-08 owner contract; near-half learning shell; Level 1 evaluation record | Sealed pre-reveal call plus outcome record | JSG-08 clearance, calibration, readiness, or proof by outcome |
+| Reveal/eval | Outcome record, outcome labels, benchmark comparison, regret/error labels | JSG-08 owner contract; near-half learning shell; Level 1 evaluation record | Sealed pre-reveal call plus outcome record | JSG-08 clearance, calibration, readiness, or proof by outcome |
 | Lesson/signal rows | Candidate lesson, signal row candidate, discriminator tell | Near-half lesson architecture; signal-reliability ledger | Promotion gate and report-all K-of-N discipline | Validated lesson, source-family promotion, or causation |
 | Product-learning receipt | Case/packet ID, surface, prompt or answer handle, owner readback, friction/product signals, non-claims | Evidence ladder `product_learning_receipt` | All minimum receipt fields complete | Buyer proof, judgment quality, run readiness, or scoring authorization |
 
@@ -197,11 +197,10 @@ fragrance_level1_case:
       raw_probability_bucket:
       due_date:
       outcome_label:
-      brier_hook:
       sealed_before_reveal: yes | no | unknown
       seal_artifact_or_process_ref:
   utility_action:
-    action_family: act | phase | narrow | hold | defend | unknown
+    action_family: monitor | probe | commit | hold | scale | avoid | reduce | unknown
     magnitude:
     timing:
     trigger:
@@ -221,8 +220,7 @@ fragrance_level1_case:
   c3_decision:
     demand_state: durable | transient | unknown
     persistence_basis:
-    action_ceiling: act | phase | narrow | hold | defend | unknown
-    horizon: commit | move | unknown
+    action_ceiling: monitor | probe | commit | hold | scale | avoid | reduce | unknown
     confidence_band:
     confidence_band_basis:
     recommendation:
@@ -236,7 +234,7 @@ fragrance_level1_case:
     regret_label:
     error_label:
     reveal_comparison:
-    brier_or_forecast_note:
+    forecast_note:
     product_learning_signal:
   lesson_capture:
     candidate_lessons: []
@@ -312,13 +310,13 @@ These are candidate fields for a future source/evidence slice. They are not
 current evidence, not source-family admission, and not permission to run source
 capture.
 
-Creator evidence is early radar, not proof. A creator-led case cannot reach a
+Creator (WindCaller) evidence is early radar, not proof. A creator-led case cannot reach a
 stronger action posture without non-creator confirmation.
 
 ## Forecasting Boundary
 
 Forecasting is a learning input, not the center of the Judgment claim. A
-forecast field may help compare sealed expectation to later outcome, but the
+forecast field may help compare sealed expectation to later outcome (Outcome), but the
 evidence ladder frames Judgment as the best move under the evidence available at
 the decision point.
 
@@ -326,7 +324,7 @@ For this satellite:
 
 - Forecasts must be sealed before reveal if they will be evaluated.
 - Forecast records should name target, horizon, cutoff, included evidence refs,
-  raw probability bucket, due date, outcome label, and Brier hook.
+  raw probability bucket, due date, and outcome label.
 - Outcome comparison may produce product-learning notes.
 - A correct outcome call does not prove the judgment was good.
 - A wrong outcome call does not automatically prove the judgment was bad.

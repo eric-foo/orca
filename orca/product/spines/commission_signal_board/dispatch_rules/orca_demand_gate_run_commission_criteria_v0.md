@@ -57,9 +57,9 @@ another lane's unverified summary, or from the backtest candidate pool.
 
 The scan must carry enough for the gate-run to be decidable:
 
-- candidate context: brand + the live 30-90 day demand-allocation decision, and
+- candidate context: brand (Brand) + the live 30-90 day demand-allocation decision (DecisionEvent), and
   the decision family;
-- the observed demand-venue signals, each with **origination provenance**
+- the observed demand-venue signals (Observation), each with **origination provenance**
   (where it originated, and any `derived_from` / `diverges_from` links) so
   origin de-correlation can be applied;
 - observed costly-behavior instance(s), if any, with enough to judge
@@ -99,9 +99,8 @@ this order. Each step is a judgment, not a number.
 4. **Verb-tier the ceiling.** The independent-origin count tiers the action
    ceiling, not a binary pass: **one** independent origin (or laundered copies of
    one) → **hold / low-commitment** ceiling; **≥2 converging independent origins**
-   → **material-action eligible** (act, phase, narrow, or a costly/committing
-   defend). Org-motion corroboration may raise confidence but does not raise the
-   origin count.
+   → **material-action eligible** (commit or scale). Org-motion corroboration may
+   raise confidence but does not raise the origin count.
 5. **Owner + consequence check.** A gate-run that clears the floor still requires
    the brief's other objectives for a slot to be live: a **named decision owner**
    and a **concrete allocation consequence**. Their absence is a hold/disqualify
@@ -132,7 +131,7 @@ Routing:
   notes home (`docs/product/product_lead/orca_proof_batch_<n>_notes_v0.md`) as a
   hold / near-miss / disqualification record with the deciding-step basis.
 
-A filled slot is **admissibility for a memo at the stated ceiling** — it is not
+A filled slot is **admissibility for a memo (Memo) at the stated ceiling** — it is not
 buyer qualification, not paid-first willingness, and not buyer proof. Those are
 separate objectives (#4–#6) and separate gates.
 

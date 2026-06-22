@@ -21,6 +21,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$CLAUDE_PROJECT_DIR/.agents/hooks/remind_sci.py\" --hook",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "PostToolUse": [

@@ -49,9 +49,9 @@ consumer-demand direction. Controlling authority:
 (pricing retained as engine application + re-entry candidate). Earlier pinned
 `input_hashes` / wedge references are superseded — reread-required. Deltas:
 
-- Proof subject: beauty consumer-demand allocation decisions —
-  durable / transient / manufactured demand discrimination (act / phase / narrow /
-  hold / defend), per the thesis's central read.
+- Proof subject: beauty consumer-demand allocation decisions (DecisionEvent) —
+  durable / transient / manufactured demand (TrendVector) discrimination (monitor / probe /
+  commit / hold / scale / avoid / reduce), per the thesis's central read.
 - Substrate HARD GATE RE-DERIVED (replaces "competitor prices clean, reviews
   confirmatory-only," which was derived for a pricing read and does not
   transfer): see "Demand-Substrate Hard Gate" below.
@@ -71,9 +71,8 @@ consumer-demand direction. Controlling authority:
 
 The executed `direction_change_propagation` receipt for this ratification
 event lives in `docs/decisions/orca_product_thesis_consumer_demand_v0.md`
-("Doctrine-Change Propagation — Executed"). Applied here from
-`orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_consumer_demand_revision_v0.md`
-(deviations recorded in that package's status).
+("Doctrine-Change Propagation — Executed"). Applied here by the ratification
+cascade; the live text reflects the applied deviations.
 
 The substantive content below (rubric grades, trust handling, pull standard,
 kill and graduation structure, exclusions, and all non-claims) is SURGICALLY
@@ -103,7 +102,7 @@ serve as routes to brand decision owners, but their interest is not buyer proof
 unless the accountable brand decision owner enters the memo/readback loop.
 
 Customer-provided proprietary data may later improve accuracy by letting Orca
-compare the public-signal judgment against the buyer's internal demand
+compare the public-signal judgment (Reading) against the buyer's internal demand
 evidence. This packet does not authorize that intake. For this first proof,
 requiring private/internal data, data science, dashboards, integrations, or
 source-system buildout before the public memo is useful remains a disqualifier.
@@ -115,19 +114,19 @@ buyer-proof evidence by itself.
 This packet tests one narrow first-proof claim:
 
 A real decision owner at a US-market tractioned indie/DTC beauty /
-personal-care brand facing a live 30-90 day consumer-demand allocation
+personal-care brand (Brand) facing a live 30-90 day consumer-demand allocation
 decision — where internal data is not conclusive — will use an Orca decision
 artifact to reduce allocation risk before committing inventory,
 retail/channel, launch, or pricing budget. Orca
 creates that artifact by capturing, cleaning, integrity-labeling, classifying
 (costly behavior, never engagement volume alone), and constraining messy
 public demand signals — reviews, forums, search interest, retail presence —
-fused with org-motion corroboration at brand and parent level, into
+fused with org-motion corroboration at brand and parent level (Org), into
 inspectable decision evidence with an explicit action ceiling. The engine is
 outside-in market & competitive intelligence; beauty consumer-demand
 allocation is its first application.
 
-Minimum viable artifact: a manual decision memo plus evidence appendix.
+Minimum viable artifact: a manual decision memo (Memo) plus evidence appendix.
 
 Premium buyer-facing artifact: an executive-grade decision deck derived from the memo and evidence appendix.
 
@@ -145,7 +144,7 @@ integrity rule instead of a venue allowlist:
 
 - **Independence = de-correlation by origination, not a raw venue count.** A
   qualified read requires demand signal from **effectively-independent
-  demand-venue origins**, so no single origin's bias or manipulation carries the
+  demand-venue origins (Venue)**, so no single origin's bias or manipulation carries the
   answer. An "independent venue family" means traceable to a *distinct
   origination event*. Per the venue-chain (community originates → trade press
   launders → BoF/WWD terminate), signals on the same `derived_from` chain are
@@ -159,11 +158,10 @@ integrity rule instead of a venue allowlist:
   **enough effectively-independent origins for the commitment claimed**, tiered
   by *commitment/reversibility*, not verb name: one origin (or
   laundered/shared-origination copies of one) authorizes only **low-commitment,
-  reversible responses** (hold; a watchful or low-cost defensive posture); **any
-  material or irreversible commitment — act, phase, narrow, or a
-  costly/committing defend — requires ≥2 independent origins that converge.**
-  "Defend" is not automatically low-commitment; a costly defensive campaign is a
-  material action and needs the ≥2 bar. *(AR-02)*
+  reversible responses** (monitor / probe / hold; a watchful or low-cost posture); **any
+  material or irreversible commitment — commit or scale — requires ≥2 independent
+  origins that converge.** This is tiered by commitment/reversibility, not verb
+  name: a costly or scaling position is a material action and needs the ≥2 bar. *(AR-02)*
 - **Two distinct maintained card sets.** Maintained cards split into **G1
   demand-family cards** (today only **forums/community** is sourced;
   review-surface and search-interest are **unsourced gaps**, owner-owned) and
@@ -215,7 +213,7 @@ integrity rule instead of a venue allowlist:
   CORROBORATION inside the artifact — divergence reads (demand up +
   staffing up / demand up + staffing flat / staffing up + demand flat) are
   the premium element — never a standalone product, never a sold or externally
-  published person-level surface (internal wind-caller calibration is the sole
+  published person-level surface (internal wind-caller (WindCaller) calibration is the sole
   bounded exception per `docs/decisions/wind_caller_calibration_carveout_v0.md`;
   that carve-out is internal-only and does not change this artifact's external boundary).
   Routes follow the owning capture decisions (official/manual/entitled/
@@ -243,7 +241,7 @@ Evidence mode: delegated advisory directional, adversarial, and grounding lanes.
 
 Source mode: local Orca authority and repo-visible product artifacts only. No public web research was used. Archived contaminated replay outputs were not read.
 
-## Target Buyer
+## Target Buyer (Buyer)
 
 Primary segment:
 
@@ -318,7 +316,7 @@ The proof should start only when at least one of these triggers is present:
   durable-vs-transient question before inventory or launch commitment.
 - A taste/preference shift (ingredient, format, claim trend) puts a
   reformulation, reposition, or launch decision in play.
-- A planned launch, moratorium, tier/price change, or SKU rationalization is
+- A planned launch, moratorium, tier/price change, or SKU (Product) rationalization is
   being debated and internal data is inconclusive.
 - Suspected manufactured or coordinated demand (the brand's own or a
   competitor's) creates a defend/hold decision.
@@ -340,7 +338,7 @@ integrity-labeled public evidence.
 For this first proof, the promise is not "Orca predicts the trend." The promise is narrower:
 
 Orca identifies the evidence-supported action ceiling for the live demand
-decision — act, phase, narrow, hold, or defend — states what the public
+decision — monitor, probe, commit, hold, scale, avoid, or reduce — states what the public
 signal can and cannot support, and names what would change the answer.
 
 **Never-a-feed invariant (2026-06-14):** every output is a calibrated decision
@@ -393,7 +391,7 @@ Recommended memo and evidence appendix shape:
 5. Org-motion corroboration at brand and parent level, and the divergence
    read where the layers disagree.
 6. Competitor and category movement relevant to the decision.
-7. Valid action ceiling (act / phase / narrow / hold / defend) and the
+7. Valid action ceiling (monitor / probe / commit / hold / scale / avoid / reduce) and the
    unsafe overclaims explicitly declined.
 8. Decision options mapped to the ceiling, with what would change the answer.
 9. Evidence appendix with provenance-backed citations.
@@ -402,7 +400,7 @@ Recommended memo and evidence appendix shape:
 Recommended executive deck shape, if the premium layer is produced:
 
 1. Decision question and recommendation verb.
-2. Executive action ceiling: act, phase, narrow, hold, or defend.
+2. Executive action ceiling: monitor, probe, commit, hold, scale, avoid, or reduce.
 3. What public signals can and cannot support.
 4. Source-backed signal synthesis.
 5. Buyer, user, developer, partner, or ecosystem objection patterns.
