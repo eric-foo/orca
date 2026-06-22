@@ -14,9 +14,9 @@ use_when:
   - Asking for a small proposed change set before any implementation or live capture run.
 authority_boundary: retrieval_only
 open_next:
-  - orca/product/spines/capture/source_families/instagram/ig_at_scale_operating_envelope_v0.md
-  - orca/product/spines/capture/source_families/instagram/ig_logged_out_sustainability_probe_plan_v0.md
-  - orca/product/spines/capture/source_capture_toolbox/source_capture_playbook_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/instagram/ig_at_scale_operating_envelope_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/instagram/ig_logged_out_sustainability_probe_plan_v0.md
+  - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
 branch_or_commit: codex/social-capture-browser-calibration-prompt @ 631c5e89de59848fada59d45e52668ae2dba85b5
 stale_if:
@@ -73,8 +73,8 @@ intended_decision: >
   and YouTube, no change, or a blocked source-context result.
 target_files_or_dirs:
   - docs/prompts/architecture/social_capture_browser_behavior_calibration_prompt_v0.md
-  - orca/product/spines/capture/source_families/instagram/
-  - orca/product/spines/capture/source_capture_toolbox/
+  - orca/product/spines/capture/core/source_families/social_media/instagram/
+  - orca/product/spines/capture/core/source_capture_toolbox/
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
 source_pack: bounded custom pack listed below.
 output_mode: file-write
@@ -110,22 +110,22 @@ Authority and workflow:
 Capture spine and source-access sources:
 
 - `docs/workflows/data_capture_spine_consolidation_map_v0.md`
-- `orca/product/spines/capture/source_capture_toolbox/source_capture_playbook_v0.md`
-- `orca/product/spines/capture/source_capture_toolbox/capture_recon_index_v0.md`
-- `orca/product/spines/capture/source_capture_toolbox/source_capture_anti_block_ladder_usage_guide_v0.md`
-- `orca/product/spines/capture/contracts/source_access_boundary/data_capture_source_access_boundary_decision_v0.md`
+- `orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md`
+- `orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md`
+- `orca/product/spines/capture/core/source_capture_toolbox/source_capture_anti_block_ladder_usage_guide_v0.md`
+- `orca/product/spines/capture/core/contracts/source_access_boundary/data_capture_source_access_boundary_decision_v0.md`
 - `docs/decisions/wind_caller_calibration_carveout_v0.md`
 
 IG current spine:
 
-- `orca/product/spines/capture/source_families/instagram/ig_capture_findings_consolidated_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_r_probe_results_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_capture_rate_findings_report_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_at_scale_operating_envelope_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_logged_out_sustainability_probe_plan_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_sustained_cadence_r_probe_design_v0.md`
-- `orca/product/spines/capture/source_families/instagram/ig_capture_shape_contract_spec_v0.md`
-- `orca/product/spines/capture/source_families/instagram/orca_creator_monitoring_policy_architecture_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_capture_findings_consolidated_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_r_probe_results_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_capture_rate_findings_report_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_at_scale_operating_envelope_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_logged_out_sustainability_probe_plan_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_sustained_cadence_r_probe_design_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_capture_shape_contract_spec_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_monitoring_policy_architecture_v0.md`
 - `orca-harness/runners/run_source_capture_ig_calls_packet.py`
 
 TikTok and YouTube source discovery:
@@ -231,7 +231,7 @@ Write exactly one durable recommendation artifact. Choose the path based on the
 recommendation:
 
 - If the recommendation is IG-only:
-  `orca/product/spines/capture/source_families/instagram/ig_browser_behavior_calibration_change_set_v0.md`
+  `orca/product/spines/capture/core/source_families/social_media/instagram/ig_browser_behavior_calibration_change_set_v0.md`
 - If the recommendation is a shared controller with platform profiles:
   `orca/product/spines/capture/core/source_capture_toolbox/social_browser_behavior_calibration_architecture_v0.md`
 - If the recommendation is recon-first for TikTok/YouTube with only an IG
