@@ -118,6 +118,34 @@ def test_cues_from_json3_preserves_timing_and_dedups() -> None:
     ]
 
 
+def test_cues_from_json3_clamps_negative_duration() -> None:
+    raw = json.dumps(
+        {"events": [{"tStartMs": 5000, "dDurationMs": -3000, "segs": [{"utf8": "a product line"}]}]}
+    ).encode("utf-8")
+    # end_ms must not fall below start_ms (else ProductMention would reject a valid mention).
+    assert cues_from_json3(raw) == [{"start_ms": 5000, "end_ms": 5000, "text": "a product line"}]
+
+
+def test_cues_from_json3_handles_missing_and_nonnumeric_timing() -> None:
+    raw = json.dumps(
+        {
+            "events": [
+                {"segs": [{"utf8": "no timing fields"}]},
+                {"tStartMs": "bad", "dDurationMs": "bad", "segs": [{"utf8": "nonnumeric timing"}]},
+            ]
+        }
+    ).encode("utf-8")
+    assert cues_from_json3(raw) == [
+        {"start_ms": 0, "end_ms": 0, "text": "no timing fields"},
+        {"start_ms": 0, "end_ms": 0, "text": "nonnumeric timing"},
+    ]
+
+
+def test_mentions_record_id_bounded_for_long_model_name() -> None:
+    rid = mentions_record_id(_transcript(), "x" * 300)
+    assert len(rid) <= 128  # stays within the lake's 128-char _SAFE_SEGMENT limit
+
+
 # --- driver: persists to the silver lane + write-once -------------------------
 
 

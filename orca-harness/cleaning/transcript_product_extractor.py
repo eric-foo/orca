@@ -192,7 +192,7 @@ def parse_mentions(
                 transcript_anchor=transcript.transcript_anchor,
                 transcript_source=TranscriptSource(transcript.transcript_source),
                 brand=(str(item.get("brand") or "").strip() or "unknown"),
-                line=str(item["line"]),
+                line=str(item.get("line") or "").strip(),  # null/blank -> "" -> rejected (no product)
                 concentration=Concentration(str(item.get("concentration", "unknown")).lower()),
                 stance_vote=item.get("stance_vote", 0.0),
                 stated_rating=_build_stated_rating(item, transcript.cues),

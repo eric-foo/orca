@@ -81,8 +81,12 @@ def _asr_records(data_root, audio_packet_id: str) -> list[dict]:
 
 def _candidate_packet_ids(data_root) -> list[str]:
     """Committed YouTube packet ids. Rebuilds the availability index from raw first so
-    discovery does not depend on the index being pre-populated."""
-    data_root.rebuild_availability()
+    discovery does not depend on the index being pre-populated. The rebuild is best-effort:
+    a single corrupt manifest must not abort the whole run (it just goes un-indexed/skipped)."""
+    try:
+        data_root.rebuild_availability()
+    except Exception:  # noqa: BLE001 - a corrupt manifest must not abort the run; index is best-effort
+        pass
     return list(data_root.list_available(source_family="youtube"))
 
 

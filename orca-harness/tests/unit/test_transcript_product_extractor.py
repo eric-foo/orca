@@ -286,6 +286,36 @@ def test_stated_rating_value_above_scale_max_is_dropped() -> None:
     assert result.mentions[0].stated_rating is None  # value > scale_max -> dropped
 
 
+def test_stated_rating_nan_value_is_dropped() -> None:
+    # a hostile model emitting a bare NaN must not persist a non-finite, non-RFC-JSON rating.
+    transcript = _transcript(
+        cues=_cues() + [{"start_ms": 6000, "end_ms": 9000, "text": "a solid 8 out of 10"}]
+    )
+    item = _item(stated_rating={"value": float("nan"), "scale_max": 10, "source_pointer": "8 out of 10"})
+    result, _ = _extract(_anthropic([item]), transcript)
+    assert len(result.mentions) == 1
+    assert result.mentions[0].stated_rating is None
+
+
+def test_stated_rating_non_dict_or_missing_value_dropped() -> None:
+    r1, _ = _extract(_anthropic([_item(stated_rating="8/10")]))  # non-dict
+    assert r1.mentions[0].stated_rating is None
+    r2, _ = _extract(_anthropic([_item(stated_rating={"scale_max": 10, "source_pointer": "absolute beast in the heat"})]))
+    assert r2.mentions[0].stated_rating is None  # missing "value"
+
+
+def test_null_line_is_rejected() -> None:
+    result, _ = _extract(_anthropic([_item(line=None)]))
+    assert result.mentions == []
+    assert len(result.rejected) == 1
+
+
+def test_blank_brand_falls_back_to_unknown() -> None:
+    result, _ = _extract(_anthropic([_item(brand="   ")]))
+    assert len(result.mentions) == 1
+    assert result.mentions[0].brand == "unknown"
+
+
 def test_locate_quote_empty_cues_is_none() -> None:
     assert locate_quote("anything", []) is None
 

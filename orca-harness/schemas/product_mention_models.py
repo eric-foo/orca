@@ -13,6 +13,7 @@ youtube_transcript_product_extraction_spec_v0.md (CE1-CE10 / D1-D8).
 
 from __future__ import annotations
 
+import math
 from enum import StrEnum
 from typing import Any, Mapping, Self
 
@@ -75,6 +76,10 @@ class StatedRating(ProductMentionModel):
 
     @model_validator(mode="after")
     def _value_in_range(self) -> StatedRating:
+        # NaN/Inf slip past <,> comparisons (unlike pydantic ge/le); reject them so a hostile
+        # model cannot persist a non-finite, non-RFC-JSON rating (CE3/CE8).
+        if not (math.isfinite(self.value) and math.isfinite(self.scale_max)):
+            raise ValueError("stated_rating value/scale_max must be finite")
         if self.value < 0 or self.value > self.scale_max:
             raise ValueError("stated_rating.value must be within [0, scale_max]")
         return self

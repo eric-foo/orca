@@ -119,7 +119,11 @@ def extract_products_into_lake(
         "rejected": result.rejected,
     }
     members = {
-        PRODUCT_MENTIONS_LANE: (json.dumps(payload, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        # allow_nan=False: a non-finite float fails closed (the runner records `failed`) rather
+        # than writing a literal NaN/Infinity token that is invalid RFC-8259 JSON.
+        PRODUCT_MENTIONS_LANE: (
+            json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+        ).encode("utf-8")
     }
     return data_root.append_record_set(
         subtree="derived",
