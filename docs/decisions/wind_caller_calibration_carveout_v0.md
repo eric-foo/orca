@@ -121,6 +121,42 @@ This is a doctrine change; its downstream surfaces are propagated under the
 `direction_change_propagation` receipt at the foot of this record (creator-momentum
 cap-redefinition, 2026-06-15).
 
+## Amendment — 2026-06-22 (owner; council-cleared except Tier-2-A): logged-in capture for IG/TikTok; Tier-2-B activated; Tier-2-A authorized-pending-legal
+
+Owner-adjudicated 2026-06-22 with legal-counsel input (creator-momentum / fragrance lane). Dated; prior
+lines preserved as history.
+
+- **Access mode — logged-in own-account capture for IG + TikTok (council-cleared).** IG and TikTok capture
+  will run **logged in with our own operating accounts**, not logged-out-only. This is **within** the
+  already-permitted scope of this carve-out ("Orca's own operating/capture **accounts/sessions**", 2026-06-15
+  amendment) — **not a new grant**. It supersedes the *operational* "logged-out-first" recommendation in the
+  IG findings/recon docs (which chose logged-out for lower account-risk); that recommendation is **superseded
+  for IG/TikTok** (see those docs' pointers). Council-cleared 2026-06-22 as acceptable/low-risk **at internal
+  pre-commercial scope** (not sold; no public person-level surface). **UNCHANGED:** the ≤10 / start-≤5
+  operating-account ceiling, human-mimicking cadence, no standing/scheduled crawler. **YouTube is
+  unaffected** — it stays anonymous logged-out (its public data needs no login).
+- **Tier-2-B — cross-platform PUBLIC-handle stitching: ACTIVATED (council-cleared).** The Tier-2-B
+  pre-conditions (separate dated authorization + legal review) are met for **public-handle↔public-handle**
+  joins by this dated authorization + council clearance 2026-06-22. Build routes through a dedicated
+  **linkage spec** (the link-confidence model). **Residuals:** **non-public-handle joins remain gated**
+  (still need separate legal); linkage is probabilistic — some links wrong, bounded by the link-score, not
+  eliminated. **Tier-3** real-person de-anonymization / contact stays excluded.
+- **Tier-2-A — aggregate audience demographics (the audience-graph slice): AUTHORIZED, ACTIVATION
+  LEGAL-PENDING.** Owner-authorized 2026-06-22; **activation gated on council confirmation** of the Tier-2-A
+  lawful-basis + data-minimization pre-conditions. Binding posture on activation: **aggregate-only**
+  distribution (age-band / gender / geo / language), from **TEXT signals only** (name/bio/location/language —
+  **no facial/biometric inference**), **legitimate-interests** lawful basis, **transient processing with NO
+  retention of individual follower data**, and **NO special-category attributes** (ethnicity/health/politics/
+  religion/sexuality). Remains **deferred** until council confirms; this activates only the demographics
+  slice, not the full follower-network analysis.
+- **Tier-3 — permanent exclusions: UNCHANGED.** Special-category data (health, biometrics, political views,
+  etc.), contact/outreach/lead-lists, genuinely private data, and resale/sold person-level product remain
+  absolute. The header `stale_if` EU/UK legitimate-interest/retention assessment still applies — the
+  Tier-2-A legal-pending gate covers exactly this for the audience layer.
+
+Downstream surfaces propagated under the `direction_change_propagation` receipt at the foot of this record
+(2026-06-22, logged-in + Tier-2 activation).
+
 ## The Prior Boundary (baseline)
 
 All Orca product and capture doctrine to date has held:
@@ -211,7 +247,10 @@ Home: `docs/product/data_capture_spine/data_capture_spine_future_exploration_lan
 (reclassified from out-of-scope → sanctioned-but-deferred; see propagation below).
 
 Neither Tier 2 item is activated by this record. Each needs its own gate. Do not
-treat reclassification as authorization.
+treat reclassification as authorization. *(Update — 2026-06-22 amendment above:
+**Tier-2-B is now ACTIVATED** for public-handle↔public-handle joins (council-cleared);
+**Tier-2-A is AUTHORIZED but activation-legal-pending** council confirmation. See the
+2026-06-22 amendment for the exact scope, binding posture, and residuals.)*
 
 ## Tier 3 — Permanent Exclusions (unchanged; no carve-out)
 
@@ -440,5 +479,61 @@ direction_change_propagation:
     - not a change to the external/product person-level boundary
     - not a change to non-permanence / 10-year retention / takedown-on-request
     - not a change to LinkedIn org-motion doctrine
+    - not merged; owner adjudicates (lane PR flow; landing to main is human-gated)
+```
+
+```yaml
+# Logged-in capture + Tier-2 activation set 2026-06-22 (owner; council-cleared except Tier-2-A pending). See the 2026-06-22 amendment above.
+direction_change_propagation:
+  doctrine_changed: >
+    IG/TikTok capture will run logged-in with our own operating accounts (WITHIN the already-permitted
+    operating-account/session scope; supersedes the IG findings' OPERATIONAL "logged-out-first"
+    recommendation; YouTube unaffected, stays anonymous logged-out). Tier-2-B cross-platform PUBLIC-handle
+    stitching is ACTIVATED for public-handle joins (dated authorization + council clearance 2026-06-22;
+    non-public-handle joins remain gated; build via a dedicated linkage spec). Tier-2-A aggregate audience
+    demographics is AUTHORIZED but ACTIVATION-LEGAL-PENDING council confirmation of the lawful-basis +
+    data-minimization design (binding on activation: aggregate-only, text-only / no-biometric,
+    legitimate-interests, transient / no individual retention, no special-category). UNCHANGED: Tier-3
+    permanent exclusions, the external/product person-level boundary, the ≤10/start-≤5 operating-account
+    ceiling, non-permanence + 10-year retention + takedown-on-request.
+  trigger: lifecycle_boundary
+  related_triggers:
+    - product_doctrine
+  controlling_sources_updated:
+    - docs/decisions/wind_caller_calibration_carveout_v0.md   # this record (2026-06-22 amendment + Tier-2 annotation)
+  downstream_surfaces_checked:
+    - path: orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md
+      note: Privacy/Forbidden-in-v0 section got a pointer note — cross-platform public-handle stitching now activated (Tier-2-B); aggregate audience demographics authorized-pending (Tier-2-A); person special-category still forbidden (Tier-3).
+    - path: orca/product/spines/capture/core/source_families/social_media/instagram/ig_capture_findings_consolidated_v0.md
+      note: Auth/route-posture "logged-out-first" recommendation pointer-superseded for IG/TikTok by this amendment.
+  intentionally_not_updated:
+    - path: ig_at_scale_operating_envelope_v0.md ; ig_r_probe_results_v0.md ; ig_logged_out_sustainability_probe_plan_v0.md
+      reason: >
+        Record logged-out PROBE EVIDENCE / a logged-out probe PLAN — still accurate as measurements/plan;
+        the logged-in posture is a forward operational choice, not a retro-correction of past probes. The
+        carve-out is the authority and the consolidated findings doc carries the forward pointer.
+    - path: ig_wind_caller_capture_feasibility_recon_v0.md ; orca_creator_monitoring_policy_architecture_v0.md
+      reason: >
+        Recon finding / restatement-by-reference of "Tier-2 not activated" + the ledger's cross-platform rule;
+        the carve-out (authority) + the ledger pointer cover the forward routing (point-don't-duplicate).
+    - path: youtube tooling + docs
+      reason: anonymous logged-out posture unchanged; this change is IG/TikTok-scoped.
+  stale_language_search: >
+    git grep -niE "logged-out-first|session.*(fallback|default)|cross-platform identity stitch|stitch" --
+    orca/product/spines/capture/core/source_families/social_media/instagram/
+  stale_language_search_result: >
+    Run 2026-06-22 on this branch (off origin/main 666c4f14). Live surfaces found: ig_capture_findings_consolidated
+    (logged-out-first conclusion — POINTER added), ig_creator_roster_frontier_ledger (cross-platform "Forbidden in v0"
+    + "must not be cross-platform stitched without a separate owner-approved spec" — POINTER added; the carve-out
+    is that separate owner approval), ig_at_scale_operating_envelope / ig_r_probe_results / ig_logged_out_sustainability_probe_plan
+    (logged-out as evidence/plan, not a forward rule — intentionally_not_updated), ig_wind_caller_capture_feasibility_recon /
+    orca_creator_monitoring_policy ("Tier-2 not activated" / cross-platform restatement — intentionally_not_updated, covered
+    by the carve-out + ledger pointer). After the two pointers, no LIVE forward-routing surface contradicts this amendment.
+  non_claims:
+    - not validation
+    - not readiness
+    - not commercial-scale authorization
+    - not Tier-2-A activation (legal-pending council confirmation)
+    - not a change to Tier-3 exclusions or the external/product person-level boundary
     - not merged; owner adjudicates (lane PR flow; landing to main is human-gated)
 ```
