@@ -4,6 +4,8 @@ from source_capture.ig_reels_grid import (
     AMBIGUOUS_HIDDEN_NUMERIC,
     CLIPS_USER_JSON_METADATA,
     PARSED_NO_HOVER_GRID_ENGAGEMENT,
+    STATIC_POST_VIEW_COUNT_NOT_APPLICABLE,
+    MEDIA_KIND_REEL,
     WEB_PROFILE_INFO_JSON_METADATA,
     iter_json_media_candidates,
     join_dom_rows_with_json_candidates,
@@ -42,6 +44,44 @@ def test_normalize_dom_grid_rows_preserves_no_hover_hidden_engagement() -> None:
     assert row.hidden_engagement_candidates == ("30", "4")
     assert row.parse_status == PARSED_NO_HOVER_GRID_ENGAGEMENT
 
+
+
+
+def test_static_profile_post_never_promotes_visible_number_to_view_count() -> None:
+    rows = normalize_dom_grid_rows(
+        [
+            {
+                "path": "/liv_cos/p/STATIC123/",
+                "visibleNumericTexts": ["4,264"],
+                "leafNumericTexts": [{"text": "4,264"}, {"text": "48"}],
+            }
+        ],
+        final_url="https://www.instagram.com/liv_cos/",
+        profile_handle="liv_cos",
+    )
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.kind == "post"
+    assert row.shortcode == "STATIC123"
+    assert row.views_text is None
+    assert row.parse_status == STATIC_POST_VIEW_COUNT_NOT_APPLICABLE
+
+
+def test_normalize_dom_grid_rows_can_filter_to_reels_only() -> None:
+    rows = normalize_dom_grid_rows(
+        [
+            {"path": "/liv_cos/reel/REEL123/", "visibleNumericTexts": ["1,234"]},
+            {"path": "/liv_cos/p/STATIC123/", "visibleNumericTexts": ["4,264"]},
+        ],
+        final_url="https://www.instagram.com/liv_cos/reels/",
+        profile_handle="liv_cos",
+        allowed_kinds=(MEDIA_KIND_REEL,),
+    )
+
+    assert len(rows) == 1
+    assert rows[0].shortcode == "REEL123"
+    assert rows[0].kind == "reel"
 
 def test_normalize_dom_grid_rows_marks_hidden_numeric_collision_ambiguous() -> None:
     rows = normalize_dom_grid_rows(

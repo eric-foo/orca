@@ -25,6 +25,10 @@ VIEWS_ONLY_NO_HIDDEN_ENGAGEMENT = "views_only_no_hidden_engagement"
 HIDDEN_ENGAGEMENT_ONLY_NO_VISIBLE_VIEWS = "hidden_engagement_only_no_visible_views"
 AMBIGUOUS_HIDDEN_NUMERIC = "ambiguous_hidden_numeric"
 ROUTE_NOT_VERIFIED = "route_not_verified"
+STATIC_POST_VIEW_COUNT_NOT_APPLICABLE = "static_post_view_count_not_applicable"
+MEDIA_KIND_REEL = "reel"
+MEDIA_KIND_POST = "post"
+MEDIA_KIND_UNKNOWN = "unknown"
 
 _NUMERIC_RE = re.compile(r"^\d[\d,.]*(?:[KMB])?$", re.IGNORECASE)
 _AD_TERM_RE = re.compile(r"(#ad\b|#ads\b|#sponsored\b|paid partnership|partner(?:ship)?|gifted|affiliate)", re.IGNORECASE)
@@ -114,6 +118,7 @@ def normalize_dom_grid_rows(
     final_url: str,
     profile_handle: str | None = None,
     max_rows: int | None = None,
+    allowed_kinds: tuple[str, ...] | None = None,
 ) -> list[IgReelsGridDomRow]:
     normalized_handle = profile_handle.casefold() if profile_handle else None
     rows: list[IgReelsGridDomRow] = []
@@ -123,6 +128,9 @@ def normalize_dom_grid_rows(
         if not path or ("/p/" not in path and "/reel/" not in path):
             continue
         if normalized_handle is not None and not _path_matches_handle(path, normalized_handle):
+            continue
+        kind = _media_kind_from_path(path)
+        if allowed_kinds is not None and kind not in allowed_kinds:
             continue
         shortcode = shortcode_from_path(path)
         identity = _row_identity(path=path, shortcode=shortcode)
@@ -136,7 +144,7 @@ def normalize_dom_grid_rows(
         visible_found = True
         if not hidden_candidates:
             hidden_candidates, visible_found = _subtract_visible_numbers(leaf_nums, visible_nums)
-        views_text = _string_or_none(raw.get("views_text")) or (visible_nums[0] if visible_nums else None)
+        views_text = None if kind == MEDIA_KIND_POST else _string_or_none(raw.get("views_text")) or (visible_nums[0] if visible_nums else None)
         ambiguous_hidden = _ambiguous_hidden_numeric(
             leafs=leaf_nums,
             visible=visible_nums,
@@ -155,6 +163,7 @@ def normalize_dom_grid_rows(
                 hidden_candidates[1] if len(hidden_candidates) == 2 else None
             )
         parse_status = _dom_parse_status(
+            media_kind=kind,
             views_text=views_text,
             hidden_candidates=hidden_candidates,
             ambiguous_hidden=ambiguous_hidden,
@@ -165,7 +174,7 @@ def normalize_dom_grid_rows(
                 path=path,
                 permalink_url=urljoin(final_url, path),
                 shortcode=shortcode,
-                kind="reel" if "/reel/" in path else "post" if "/p/" in path else "unknown",
+                kind=kind,
                 visible_text=_string_or_none(raw.get("visible_text") or raw.get("visibleText")),
                 visible_numeric_texts=visible_nums,
                 hidden_leaf_numeric_texts=leaf_nums,
@@ -332,6 +341,13 @@ def _canonical_path(path: str) -> str:
     normalized = parsed.path or path
     return normalized.rstrip("/") or normalized
 
+def _media_kind_from_path(path: str) -> str:
+    if "/reel/" in path:
+        return MEDIA_KIND_REEL
+    if "/p/" in path:
+        return MEDIA_KIND_POST
+    return MEDIA_KIND_UNKNOWN
+
 
 def _path_matches_handle(path: str, normalized_handle: str) -> bool:
     parts = [part for part in path.split("/") if part]
@@ -399,10 +415,13 @@ def _ambiguous_hidden_numeric(
 
 def _dom_parse_status(
     *,
+    media_kind: str,
     views_text: str | None,
     hidden_candidates: tuple[str, ...],
     ambiguous_hidden: bool,
 ) -> str:
+    if media_kind == MEDIA_KIND_POST:
+        return STATIC_POST_VIEW_COUNT_NOT_APPLICABLE
     if ambiguous_hidden:
         return AMBIGUOUS_HIDDEN_NUMERIC
     if views_text is not None and len(hidden_candidates) >= 2:

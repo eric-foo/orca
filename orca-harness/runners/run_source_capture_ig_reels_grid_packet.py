@@ -32,6 +32,7 @@ from source_capture import (
 )
 from source_capture.ig_reels_grid import (
     IgReelsJsonCandidate,
+    MEDIA_KIND_REEL,
     iter_json_media_candidates,
     join_dom_rows_with_json_candidates,
     normalize_dom_grid_rows,
@@ -140,7 +141,9 @@ def run_source_capture_ig_reels_grid_packet(
         final_url=capture.final_url,
         profile_handle=profile_handle,
         max_rows=max_rows,
+        allowed_kinds=(MEDIA_KIND_REEL,),
     )
+    static_input_count = _static_post_row_count(capture.dom_rows)
     candidates, json_limitations = _json_candidates_from_passive_responses(capture)
     joined_rows = join_dom_rows_with_json_candidates(dom_rows, candidates)
     profile_snapshot = _profile_snapshot_from_passive_responses(
@@ -253,6 +256,12 @@ def run_source_capture_ig_reels_grid_packet(
             f"{limited_media_slice_count} grid row(s) carried row-level limitations; "
             "inspect source_slices[].limitations"
         )
+    if static_input_count:
+        run_limitations.append(
+            "static_profile_grid_rows_filtered: "
+            f"{static_input_count} /p/ row(s) omitted from the reels traction series; "
+            "use a separate static comparison source surface; static view_count is not_applicable"
+        )
     if proxy_profile is not None:
         run_limitations.append(
             "proxy_profile_used: category="
@@ -349,6 +358,17 @@ def _normalize_handle(handle: str) -> str:
         raise ValueError("IG handle must be a non-empty handle, not a path")
     return normalized
 
+
+def _static_post_row_count(raw_rows: Sequence[dict[str, object]]) -> int:
+    count = 0
+    for raw in raw_rows:
+        raw_path = _string_or_none(raw.get("path")) or _string_or_none(raw.get("href"))
+        if raw_path is None:
+            continue
+        path = urlparse(raw_path).path or raw_path
+        if "/p/" in path:
+            count += 1
+    return count
 
 def _detect_ig_block(*, final_url: str, title: str | None, visible_text: str) -> str | None:
     final_low = final_url.lower()

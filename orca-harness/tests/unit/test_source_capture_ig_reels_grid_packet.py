@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 
@@ -143,6 +144,46 @@ def test_reels_grid_runner_writes_packet_without_item_page_fanout(tmp_path: Path
     assert "Clips caption #ad" in captions
     assert "Web profile caption" in captions
 
+
+
+
+def _fake_capture_with_static_post_row(**_kwargs):
+    result = _fake_capture(**_kwargs)
+    return replace(
+        result,
+        dom_rows=[
+            *result.dom_rows,
+            {
+                "path": "/hyram/p/STATIC123/",
+                "visibleText": "4,264",
+                "visibleNumericTexts": ["4,264"],
+                "leafNumericTexts": [{"text": "99"}, {"text": "8"}, {"text": "4,264"}],
+                "rect": {"x": 210, "y": 0, "width": 200, "height": 300},
+            },
+        ],
+    )
+
+
+
+def test_reels_grid_runner_filters_static_post_rows_from_reels_series(tmp_path: Path) -> None:
+    output = tmp_path / "ig_reels_static_filtered_packet"
+
+    exit_code, message = run_source_capture_ig_reels_grid_packet(
+        handle="hyram",
+        output_directory=output,
+        decision_question="capture hyram reels grid",
+        capture_fetcher=_fake_capture_with_static_post_row,
+    )
+
+    assert exit_code == 0
+    assert Path(message) == output.resolve()
+    manifest = json.loads((output / "manifest.json").read_text(encoding="utf-8"))
+    assert any("static_profile_grid_rows_filtered: 1" in item for item in manifest["limitations"])
+    grid_slices = [item for item in manifest["source_slices"] if item["slice_id"].startswith("ig_reels_grid_")]
+    assert len(grid_slices) == 1
+
+    payload = json.loads((output / "raw" / "01_ig_reels_grid_capture.json").read_text(encoding="utf-8"))
+    assert [row["shortcode"] for row in payload["dom_rows"]] == ["REEL123"]
 
 def test_reels_grid_runner_can_commit_to_data_lake(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")

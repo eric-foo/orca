@@ -62,6 +62,7 @@ runner. Policy:
 - escalation: static pass when reels signal is ambiguous or sponsor detection matters
 
 Static `view_count` must be recorded as `not_applicable`, not as missing data.
+Implementation note: the optimized reels runner filters `/p/` rows out of the reels traction series and records a limitation when such rows are observed on the reels route. The pure grid normalizer also marks static `/p/` rows with static view-count non-applicability so a future static comparison surface cannot accidentally promote a visible number into `view_count`.
 ## Lane Wrap-Up: Code Enforcement And Behavioral Refresh Boundary
 
 The optimized `/reels/` capture lane has two kinds of rules. Code should enforce deterministic packet honesty and privacy boundaries. Behavioral probes should refresh assumptions about Instagram's changing UI, response payloads, and block behavior. Do not move behavioral assumptions into hard correctness claims.
