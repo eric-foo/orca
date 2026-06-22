@@ -10,7 +10,7 @@ use_when:
   - Commissioning a read-only architecture planning pass before implementation scoping.
   - Deciding the core/satellite boundary for IG creator profile snapshot plus reel media and static comparison records.
   - Comparing DOM-grid, passive page-load JSON, and viewport/zoom implications without executing a runner patch.
-authority_boundary: prompt_only
+authority_boundary: retrieval_only
 open_next:
   - AGENTS.md
   - .agents/workflow-overlay/README.md
