@@ -134,7 +134,11 @@ so contamination can be tell-audited and lessons extracted.
   validated-lesson library. Only citation-disjoint `judgment_domain` lessons may
   enter the judgment read path; `loop_mechanics` lessons and lessons whose
   evidentiary set overlaps the case / same-family neighbors stay out. Weighting
-  is **qualitative, LLM-in-session, explained** — see INV-1.
+  is **qualitative, LLM-in-session, explained** — see INV-1. Recent/current
+  source states are an attention and relevance input here: same-strength newer
+  signals normally deserve more read attention than older context, including
+  when direction differs. That attention-priority rule is not gate proof, numeric
+  weight, or a scoring shortcut.
   *(`derived_from`/`diverges_from` semantics are owned by the dispatched
   ontology-backbone commission, currently branch-only — confirm on adoption.)*
 - **C3 — Verdict + Action Ceiling.** Emit the **demand-state verdict** on main's
@@ -268,8 +272,10 @@ production." The C1 allow step routes to the buyer-proof gate.
 - **INV-1 — No scoring engine (operational discriminator).** Weighting and verdict
   are qualitative, LLM-in-session, explained. **No card/row may carry a numeric or
   ordinal weight or a deterministic apply-rule**; the signal-reliability ledger
-  records a graded *track record* (K-of-N) the in-session read interprets. Numeric/
-  calibrated weighting graduates only when the owner explicitly lifts the
+  records a graded *track record* (K-of-N) the in-session read interprets.
+  Recency/currentness may raise scan/read attention for same-strength signals,
+  but it must not be encoded as a numeric/ordinal weight or deterministic rule.
+  Numeric/calibrated weighting graduates only when the owner explicitly lifts the
   no-scoring boundary. (Buyer-proof do-not-build list: "Scoring engines",
   "Automated scoring".)
 - **INV-2 — Don't graft onto / don't edit the conductor.** In backtest mode, the
@@ -359,6 +365,60 @@ lane held no overlapping architecture).
   closures proposal (P2/P3/P4) is untracked/branch-only — consumed, not reopened.
 
 ## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Judgment demand-read C2 now consumes scanning/CSB recency-currentness as a
+    qualitative attention/relevance input: same-strength newer/current signals
+    normally deserve more read attention than older context, without becoming
+    gate proof, numeric weight, scoring, or claim-tier evidence.
+  trigger: product_doctrine
+  related_triggers:
+    - architecture_doctrine
+  controlling_sources_updated:
+    - orca/product/spines/judgment/demand_read/core/judgment_spine_demand_read_machinery_architecture_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+    - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
+    - docs/workflows/orca_repo_map_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md
+    - orca/product/spines/judgment/claim_ladder/judgment_spine_evidence_ladder_architecture_v0.md
+    - orca/product/spines/judgment/conductor/judgment_spine_gate_ownership_map_v0.md
+    - orca/product/spines/judgment/demand_read/grading/judgment_spine_demand_read_grading_rubric_v0.md
+    - orca/product/spines/scanning/README.md
+    - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
+  intentionally_not_updated:
+    - path: orca/product/spines/judgment/claim_ladder/judgment_spine_evidence_ladder_architecture_v0.md
+      reason: >
+        Claim tiers and closeout states are unchanged; recency/currentness affects
+        qualitative read attention in C2, not evidence-tier promotion.
+    - path: orca/product/spines/judgment/conductor/judgment_spine_gate_ownership_map_v0.md
+      reason: >
+        Gate ownership and required receipts are unchanged; no JSG gate gains a
+        recency proof shortcut.
+  stale_language_search: >
+    rg -n "recency|recent|current-state|currentness|numeric weight|scoring|gate proof|claim tier|attention"
+    orca/product/spines/judgment orca/product/spines/scanning docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md docs/workflows/orca_repo_map_v0.md
+    (run 2026-06-23)
+  stale_language_search_result: >
+    Hits were accepted recency/currentness qualitative-attention language,
+    repo-map routing summaries, existing judgment/scanning safeguards, or
+    explicit no-proof/no-scoring/no-numeric-weight/no-claim-tier boundaries.
+    No controlling Judgment/scanning surface was found that turns
+    recency/currentness into gate proof, scoring, numeric weight, or claim-tier
+    evidence. A post-review CA spot-check of the named grading rubric found no
+    recency/currentness language; its proof/proof-case hits are unrelated
+    grading-scope prose.
+  non_claims:
+    - not validation
+    - not readiness
+    - not buyer proof
+    - not judgment-quality evidence
+    - not scoring authorization
+```
 
 ```yaml
 direction_change_propagation:

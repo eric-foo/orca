@@ -60,6 +60,77 @@ def test_invalid_commission_signal_board_outputs_fail(
     assert (expected_code, expected_row_id) in {(finding.code, finding.row_id) for finding in findings}
 
 
+def test_signal_board_requires_recency_columns() -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text = text.replace(" | Recency status | Recency attention |", " |", 1)
+
+    findings = validator.validate_text(text)
+
+    assert "missing_required_row_columns" in {finding.code for finding in findings}
+
+
+def test_signal_board_validates_recency_vocab() -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text, replacements = re.subn(
+        r"(\| SBR-001 \| forums_community \| Reddit \| public thread \| dated consumer question \| consumer_language \| signal_unit \| )recent \| high( \| node_candidate \|)",
+        r"\1too_new | proof\2",
+        text,
+        count=1,
+    )
+    assert replacements == 1
+
+    findings = validator.validate_text(text)
+
+    assert ("invalid_recency_status", "SBR-001") in {(finding.code, finding.row_id) for finding in findings}
+    assert ("invalid_recency_attention", "SBR-001") in {(finding.code, finding.row_id) for finding in findings}
+
+
+@pytest.mark.parametrize(
+    "header_fragment",
+    [" | Row purpose |", " | Graph role |", " | Graph weight hint |"],
+)
+def test_signal_board_requires_non_recency_shape_columns(header_fragment: str) -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text = text.replace(header_fragment, " |", 1)
+
+    findings = validator.validate_text(text)
+
+    assert "missing_required_row_columns" in {finding.code for finding in findings}
+
+
+@pytest.mark.parametrize(
+    ("valid_fragment", "invalid_fragment", "expected_code"),
+    [
+        (
+            "| consumer_language | signal_unit | recent | high |",
+            "| consumer_language | proof_unit | recent | high |",
+            "invalid_row_purpose",
+        ),
+        (
+            "| recent | high | node_candidate | medium |",
+            "| recent | high | proof_node | medium |",
+            "invalid_graph_role",
+        ),
+        (
+            "| high | node_candidate | medium | source_backed |",
+            "| high | node_candidate | proof | source_backed |",
+            "invalid_graph_weight_hint",
+        ),
+    ],
+)
+def test_signal_board_validates_non_recency_vocab(
+    valid_fragment: str,
+    invalid_fragment: str,
+    expected_code: str,
+) -> None:
+    text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
+    text = text.replace(valid_fragment, invalid_fragment, 1)
+
+    findings = validator.validate_text(text)
+
+    assert (expected_code, "SBR-001") in {(finding.code, finding.row_id) for finding in findings}
+
+
 def test_handoff_row_must_exist_in_signal_board_rows() -> None:
     text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
     text, replacements = re.subn(r"(?m)^(\s*-\s*)SBR-001\s*$", r"\1SBR-999", text, count=1)
@@ -73,13 +144,13 @@ def test_handoff_row_must_exist_in_signal_board_rows() -> None:
 def test_handoff_validation_continues_with_malformed_unreferenced_row() -> None:
     text = (FIXTURE_DIR / "valid_source_backed_backtest_output.txt").read_text(encoding="utf-8")
     text = text.replace(
-        "| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | in_window | Eligible for classifier handoff |",
-        "| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | uncertain | Eligible for classifier handoff |",
+        "| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | recent | high | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | in_window | Eligible for classifier handoff |",
+        "| SBR-001 | forums_community | Reddit | public thread | dated consumer question | consumer_language | signal_unit | recent | high | node_candidate | medium | source_backed | URL and thread date supplied | existed_by_cutoff | uncertain | Eligible for classifier handoff |",
         1,
     )
     text = text.replace(
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
-        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
         "| SBR-BAD | malformed | row |",
         1,
     )
