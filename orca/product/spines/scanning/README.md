@@ -71,13 +71,15 @@ decisive negatives, access walls, and obvious recency/current-state changes.
 It does not mint candidates, clear gates, bind Capture routes, or authorize
 source expansion. Main scanning owns deepening and final candidate decisions.
 
-After CSB routes and hard stops, scanning prioritizes recent and current-state
-sources first when expected decision value is otherwise comparable: current
-official or retailer state, dated buyer language, recent reviews or threads,
-recent stockout/restock/availability changes, and recent editorial, partner, or
-org-motion pointers. Older sources remain useful for provenance, chronology, or
-baseline contradiction, but they should be labeled as historical/contextual and
-must not override fresh current-state reads.
+After CSB routes and hard stops, scanning treats recency/currentness as an
+attention and relevance weight. For same-strength URL-backed signals, a newer or
+current source should normally receive more scan attention than an older source,
+even when their direction differs. Prioritize current official or retailer state,
+dated buyer language, recent reviews or threads, recent stockout/restock or
+availability changes, and recent editorial, partner, or org-motion pointers.
+Older sources remain useful for provenance, chronology, or baseline
+contradiction, but they should be labeled as historical/contextual and must not
+override fresh current-state reads without a load-bearing reason.
 
 Exact-query discovery belongs to scanning. It is a bounded public-query walk
 used to test CSB rows, find hidden venues, and record pointers, negatives, or
@@ -104,10 +106,10 @@ the MGT hard boundaries while preserving source-specific hard stops.
 direction_change_propagation:
   doctrine_changed: >
     CSB-first scans now run a bounded broad-scout phase by default, and scanning
-    prioritizes recent/current-state frontiers before older context when
-    expected decision value is otherwise comparable. Broad scout may use a
-    route-ledger subagent when available, but the default is the bounded phase,
-    not a hard runtime dependency on subagent infrastructure.
+    treats recency/currentness as an attention and relevance weight: same-strength
+    newer/current signals normally receive more scan attention than older context.
+    Broad scout may use a route-ledger subagent when available, but the default
+    is the bounded phase, not a hard runtime dependency on subagent infrastructure.
   trigger: product_doctrine
   related_triggers:
     - workflow_authority

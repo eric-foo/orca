@@ -165,9 +165,12 @@ record it as venue value, pointer, negative, access note, or unknown.
 
 ## Recency And Current-State Priority
 
-Recency is a hard frontier-priority rule, not proof. After source-family hard
-stops and CSB routing, choose recent or current-state URL-backed frontiers before
-older context when expected decision value is otherwise comparable.
+Recency is a hard attention-priority rule, not proof. After source-family hard
+stops and CSB routing, assign more scan attention to recent or current-state
+URL-backed frontiers. For same-strength signals, the newer/current source
+normally outranks the older source even when direction differs; a one-month-old
+buyer comment generally deserves more scan attention than a one-year-old comment
+of the same intensity.
 
 High-priority recent/current-state frontiers include current official or
 retailer state, dated buyer-language reviews, forum/community posts, stockout,
@@ -175,7 +178,7 @@ restock, sold-out, waitlist, availability changes, and recent editorial,
 partner, or org-motion pointers. Older sources remain admissible when they
 establish origin, chronology, partnership provenance, baseline contradiction, or
 backtest cutoff. Label those as historical or contextual, and do not let them
-override fresh current-state reads.
+override fresh current-state reads without a load-bearing reason.
 
 Record `retrieval_date` for each load-bearing read and the event, review,
 publication, or source-state date when available. If an older source is carried
@@ -442,11 +445,11 @@ buyer-contact work is authorized here.
 direction_change_propagation:
   doctrine_changed: >
     CSB-first scanning now includes a bounded broad-scout phase by default, and
-    MGT frontier selection now hard-prioritizes recent/current-state public
-    sources before older context when expected decision value is otherwise
-    comparable. Broad scout may be performed by one route-ledger subagent when
-    available, but the doctrine requires the bounded phase, not a subagent
-    runtime dependency.
+    MGT frontier selection now treats recency/currentness as an attention and
+    relevance weight: same-strength newer/current public signals normally receive
+    more scan attention than older context. Broad scout may be performed by one
+    route-ledger subagent when available, but the doctrine requires the bounded
+    phase, not a subagent runtime dependency.
   trigger: product_doctrine
   related_triggers:
     - workflow_authority
