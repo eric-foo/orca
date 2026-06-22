@@ -81,6 +81,12 @@ The recommended direction is:
 - Buyer-proof and client-facing claims remain downstream and separately gated.
 - Durable prompt authoring still goes through prompt-orchestration.
 
+Current prompt amendment: the durable CSB prompt now records recency/currentness
+as source-route attention metadata (`recency_status` and `recency_attention`).
+Same-strength newer/current URL-backed rows can deserve more scan attention, but
+that attention is not buyer proof, demand classification, classifier mapping,
+evidence weighting, or graph weight.
+
 The temporary prompt is too high-lock-in to adopt wholesale because it mixes
 five different objects in one artifact: commission intake, venue playbook,
 source registry, forecast-target schema, and graph retrieval schema. Installing
