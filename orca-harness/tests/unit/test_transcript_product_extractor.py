@@ -256,6 +256,36 @@ def test_locate_quote_tolerates_unicode_whitespace_and_tabs() -> None:
     assert locate_quote("beast mode compliment getter", cues) == (10, 20)
 
 
+def test_locate_quote_tolerates_nonbreaking_space() -> None:
+    nbsp = chr(0x00A0)  # the \s normalization CE9 relies on must cover unicode whitespace
+    cues = [{"start_ms": 10, "end_ms": 20, "text": f"beast{nbsp}mode{nbsp}getter"}]
+    assert locate_quote("beast mode getter", cues) == (10, 20)
+
+
+def test_brand_null_falls_back_to_unknown() -> None:
+    # model returns JSON null for brand -> must coerce to "unknown", never the literal "None".
+    result, _ = _extract(_anthropic([_item(brand=None)]))
+    assert len(result.mentions) == 1
+    assert result.mentions[0].brand == "unknown"
+
+
+def test_brand_missing_falls_back_to_unknown() -> None:
+    item = _item()
+    del item["brand"]
+    result, _ = _extract(_anthropic([item]))
+    assert result.mentions[0].brand == "unknown"
+
+
+def test_stated_rating_value_above_scale_max_is_dropped() -> None:
+    transcript = _transcript(
+        cues=_cues() + [{"start_ms": 6000, "end_ms": 9000, "text": "honestly a solid 8 out of 10"}]
+    )
+    item = _item(stated_rating={"value": 11, "scale_max": 10, "source_pointer": "8 out of 10"})
+    result, _ = _extract(_anthropic([item]), transcript)
+    assert len(result.mentions) == 1
+    assert result.mentions[0].stated_rating is None  # value > scale_max -> dropped
+
+
 def test_locate_quote_empty_cues_is_none() -> None:
     assert locate_quote("anything", []) is None
 

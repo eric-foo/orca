@@ -3,10 +3,12 @@
 Decoupled / choreography (not a call-chain): this independently scans the lake for committed
 transcripts and extracts any that lack a completed mentions record-set. Daemon-ready by the
 spec contract — idempotent (skip-if-done via the completion marker), stateless/resumable
-(work is re-derived from the lake each run), per-item failure isolated at BOTH grains
-(a corrupt packet -> a `discovery_failed` status; a transcript whose extraction raises -> a
-`failed` status; the batch never aborts), single entrypoint (`run_extraction`). A cron/daemon
-just calls `run_extraction` on a timer (zero rework).
+(work is re-derived from the lake each run; a record-set left half-written by a process crash
+before its completion marker surfaces as `partial_needs_cleanup` for operator remediation, not
+silent auto-resume), per-item failure isolated at BOTH grains (a corrupt packet -> a
+`discovery_failed` status; a transcript whose extraction raises -> a `failed` status; the batch
+never aborts), single entrypoint (`run_extraction`). A cron/daemon just calls `run_extraction`
+on a timer (zero rework).
 
 No-LLM zone (`runners/`): this file imports the cleaning driver but no LLM SDK
 (`tests/contract/test_no_llm_imports.py`). The Transport is INJECTED, so the live caller
@@ -21,6 +23,7 @@ import json
 
 from cleaning.transcript_product_extractor import TranscriptInput
 from cleaning.transcript_product_lake import (
+    PRODUCT_MENTIONS_LANE,
     PRODUCT_MENTIONS_SET_LANE,
     cues_from_asr_record,
     cues_from_json3,
@@ -115,18 +118,6 @@ def _transcripts_for_packet(data_root, packet_id: str) -> list[TranscriptInput]:
     return transcripts
 
 
-def find_transcripts(data_root) -> list[TranscriptInput]:
-    """Discover committed YouTube transcripts. A corrupt packet is skipped (isolated), never
-    aborts discovery — mirroring the runner's failure isolation."""
-    transcripts: list[TranscriptInput] = []
-    for packet_id in _candidate_packet_ids(data_root):
-        try:
-            transcripts.extend(_transcripts_for_packet(data_root, packet_id))
-        except Exception:  # noqa: BLE001 - a corrupt packet is skipped, never aborts discovery
-            continue
-    return transcripts
-
-
 def run_extraction(
     *,
     data_root,
@@ -140,7 +131,9 @@ def run_extraction(
 
     Failure-isolated at both grains: a corrupt packet yields a `discovery_failed` status; a
     transcript whose check/extraction raises yields a `failed` status — the batch always
-    continues. Idempotent (skip-if-done). Returns one status dict per packet/transcript.
+    continues. Idempotent (skip-if-done). A record-set half-written before its completion marker
+    (process crash) yields `partial_needs_cleanup` rather than a re-colliding `failed` forever.
+    Returns one status dict per packet/transcript.
     """
     results: list[dict] = []
     for packet_id in _candidate_packet_ids(data_root):
@@ -163,6 +156,15 @@ def run_extraction(
                 ):
                     results.append(
                         {"anchor": anchor, "video_id": transcript.video_id, "status": "skipped_done"}
+                    )
+                    continue
+                member_path = data_root.path / "derived" / anchor / PRODUCT_MENTIONS_LANE / rid
+                if member_path.exists():
+                    # Member record written but the completion marker is absent: a crash between the
+                    # two writes. The deterministic record_id would re-collide on every rerun, so
+                    # surface it for operator cleanup rather than looping forever on `failed`.
+                    results.append(
+                        {"anchor": anchor, "video_id": transcript.video_id, "status": "partial_needs_cleanup"}
                     )
                     continue
                 paths = extract_products_into_lake(

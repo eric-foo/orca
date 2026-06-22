@@ -18,12 +18,13 @@ from cleaning.transcript_product_extractor import TranscriptInput
 from cleaning.transcript_product_lake import (
     PRODUCT_MENTIONS_LANE,
     PRODUCT_MENTIONS_SET_LANE,
+    cues_from_asr_record,
     cues_from_json3,
     extract_products_into_lake,
     mentions_record_id,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError
-from runners.run_transcript_product_extract import find_transcripts, run_extraction
+from runners.run_transcript_product_extract import run_extraction
 from source_capture.transcript.asr_packet import write_asr_transcript
 from source_capture.transcript.youtube_captions import CaptionFetch
 from source_capture.transcript.caption_packet import write_caption_packet
@@ -218,15 +219,62 @@ def test_runner_extracts_caption_transcript(tmp_path) -> None:
     assert results[0]["status"] == "extracted"
 
 
-def test_find_transcripts_empty_lake_is_empty(tmp_path) -> None:
+def test_runner_empty_lake_yields_no_results(tmp_path) -> None:
     data_root = DataLakeRoot.for_test(tmp_path / "lake")
-    assert find_transcripts(data_root) == []
+    results = run_extraction(
+        data_root=data_root, transport=FakeTransport(_anthropic([_item()])),
+        provider=_PROVIDER, model="m", api_key="k",
+    )
+    assert results == []
 
 
-def test_find_transcripts_skips_non_transcribed_asr(tmp_path) -> None:
+def test_runner_skips_non_transcribed_asr(tmp_path) -> None:
     data_root = DataLakeRoot.for_test(tmp_path / "lake")
     _commit_asr_transcript(data_root, "vid12345678", posture="no_speech")
-    assert find_transcripts(data_root) == []
+    results = run_extraction(
+        data_root=data_root, transport=FakeTransport(_anthropic([_item()])),
+        provider=_PROVIDER, model="m", api_key="k",
+    )
+    assert results == []
+
+
+def test_cues_from_asr_record_guards_non_list() -> None:
+    assert cues_from_asr_record({"cues": "not-a-list"}) == []
+    assert cues_from_asr_record({}) == []
+    good = [{"start_ms": 0, "end_ms": 1, "text": "x"}]
+    assert cues_from_asr_record({"cues": good}) == good
+
+
+def test_mentions_record_id_keys_on_content_and_model() -> None:
+    t1 = _transcript()
+    t2 = TranscriptInput("vid12345678", _ANCHOR, "asr", [{"start_ms": 0, "end_ms": 1, "text": "totally other words"}])
+    assert mentions_record_id(t1, "m") == mentions_record_id(t1, "m")  # stable across calls
+    assert mentions_record_id(t1, "m") != mentions_record_id(t2, "m")  # content-keyed
+    assert mentions_record_id(t1, "m1") != mentions_record_id(t1, "m2")  # model-keyed (R1 backfill)
+
+
+def test_runner_marks_zero_mention_transcript_done(tmp_path) -> None:
+    # D5 filler-drop: the model finds no products -> still persisted + marked complete (idempotent).
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _commit_asr_transcript(data_root, "vid12345678")
+    empty = FakeTransport(_anthropic([]))
+    first = run_extraction(data_root=data_root, transport=empty, provider=_PROVIDER, model="m", api_key="k")
+    assert len(first) == 1 and first[0]["status"] == "extracted"
+    second = run_extraction(data_root=data_root, transport=empty, provider=_PROVIDER, model="m", api_key="k")
+    assert second[0]["status"] == "skipped_done"
+
+
+def test_runner_reports_partial_needs_cleanup(tmp_path) -> None:
+    # crash between the member write and the completion marker: delete the marker, then re-run.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _commit_asr_transcript(data_root, "vid12345678")
+    transport = FakeTransport(_anthropic([_item()]))
+    first = run_extraction(data_root=data_root, transport=transport, provider=_PROVIDER, model="m", api_key="k")
+    assert first[0]["status"] == "extracted"
+    marker = next((data_root.path / "derived").glob(f"**/{PRODUCT_MENTIONS_SET_LANE}/*"))
+    marker.unlink()
+    second = run_extraction(data_root=data_root, transport=transport, provider=_PROVIDER, model="m", api_key="k")
+    assert second[0]["status"] == "partial_needs_cleanup"
 
 
 # --- daemon-readiness: failure isolation at both grains (review major) --------

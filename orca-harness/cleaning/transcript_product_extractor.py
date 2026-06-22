@@ -191,7 +191,7 @@ def parse_mentions(
                 video_id=transcript.video_id,
                 transcript_anchor=transcript.transcript_anchor,
                 transcript_source=TranscriptSource(transcript.transcript_source),
-                brand=str(item.get("brand", "unknown")) or "unknown",
+                brand=(str(item.get("brand") or "").strip() or "unknown"),
                 line=str(item["line"]),
                 concentration=Concentration(str(item.get("concentration", "unknown")).lower()),
                 stance_vote=item.get("stance_vote", 0.0),

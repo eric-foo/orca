@@ -63,15 +63,21 @@ def cues_from_json3(raw: bytes) -> list[dict]:
         raw_start = event.get("tStartMs", 0)
         start = int(raw_start) if isinstance(raw_start, (int, float)) else 0
         duration = event.get("dDurationMs")
-        end = start + int(duration) if isinstance(duration, (int, float)) else start
+        # clamp to >= 0 so a negative duration never yields end_ms < start_ms (which would
+        # make ProductMention reject an otherwise-valid mention).
+        end = start + max(0, int(duration)) if isinstance(duration, (int, float)) else start
         cues.append({"start_ms": start, "end_ms": end, "text": text})
         prev = text
     return cues
 
 
 def mentions_record_id(transcript: TranscriptInput, model: str) -> str:
-    """Deterministic per (transcript content, model) so re-runs check/skip the same record."""
-    token = re.sub(r"[^A-Za-z0-9_-]", "-", str(model))
+    """Deterministic per (transcript content, model) so re-runs check/skip the same record.
+
+    The model token is bounded so the id stays within the lake's 128-char _SAFE_SEGMENT limit
+    for any model string; the full model is still recorded in the record payload + provenance.
+    """
+    token = re.sub(r"[^A-Za-z0-9_-]", "-", str(model))[:48]
     digest = hashlib.sha256(transcript.joined_text.encode("utf-8")).hexdigest()
     return f"mentions_{token}__{digest[:16]}.json"
 
