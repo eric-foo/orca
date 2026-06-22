@@ -1,5 +1,16 @@
 # Cleaning Spine Periodic Audit Adversarial Code Review v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Review output (implementation/code review, advisory)
+scope: >
+  Same-vendor advisory implementation/code review of the Cleaning spine periodic audit.
+use_when:
+  - Checking advisory findings from the periodic-audit review pass.
+  - Reconstructing review scope, source basis, and accepted residuals.
+authority_boundary: retrieval_only
+```
+
 reviewed_by: openai/gpt-5-codex
 authored_by: gpt-family-codex
 de_correlation_bar: same_vendor_sanity

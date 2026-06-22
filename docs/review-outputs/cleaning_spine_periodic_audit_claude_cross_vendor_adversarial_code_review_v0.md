@@ -1,5 +1,16 @@
 # Cleaning Spine Periodic Audit Claude Cross-Vendor Adversarial Code Review v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Review output (implementation/code review, advisory)
+scope: >
+  Cross-vendor advisory implementation/code review of the Cleaning spine periodic audit.
+use_when:
+  - Checking advisory findings from the Claude periodic-audit review pass.
+  - Reconstructing review scope, source basis, and de-correlation posture.
+authority_boundary: retrieval_only
+```
+
 reviewed_by: anthropic/claude-opus-4.8
 authored_by: gpt-family-codex
 de_correlation_bar: cross_vendor_discovery

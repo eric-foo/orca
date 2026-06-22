@@ -1,6 +1,15 @@
 # Cleaning Spine Last Enforcement Batch — Cross-Vendor Adversarial Code Review v0
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Review output (implementation/code review, advisory)
+scope: >
+  Cross-vendor adversarial implementation/code review of the Cleaning spine
+  last-enforcement batch on the cleaning-spine-continuation branch.
+use_when:
+  - Checking the advisory findings and residuals from the last-enforcement Cleaning review batch.
+  - Reconstructing what source context the delegated reviewer inspected.
+authority_boundary: retrieval_only
 reviewed_by: Claude (Anthropic), Opus 4.8 — cross-vendor controller, read-only
 authored_by: gpt-family-codex
 de_correlation_bar: cross_vendor_discovery

@@ -8,7 +8,7 @@ scope: >
   branch smoke runner, related tests, ECR derivers, Cleaning models, and
   generated scratch evidence under
   orca-harness/_test_runs/cleaning_spine_playbook_capture_20260621/.
-authority_boundary: review_output_advisory_only
+authority_boundary: retrieval_only
 stale_if:
   - The branch is rebased, merged, or materially updated.
   - The smoke output directory is regenerated with different counts or findings.
