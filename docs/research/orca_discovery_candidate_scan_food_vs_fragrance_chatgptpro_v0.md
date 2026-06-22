@@ -49,6 +49,26 @@ candidate context, external market number, and source citation below remains
 evidence, named operator, live decision trigger, costly-behavior floor, and
 origination independence.
 
+
+## Post-Run Owner Clarification
+
+On 2026-06-23, the owner clarified that Feastables was intended as the best
+available positive example of online food demand mechanics, not as a broad food
+category shortcut and not because the brand merely looks impressive. The intended
+food comparator is closer to online-first / ecommerce-led food CPG: products
+sold or proven through DTC, marketplace, social-commerce, or public PDP surfaces
+before or alongside retail expansion.
+
+Therefore, this v0 ChatGPT Pro answer is useful but partially overbroad on the
+food side. It stress-tests broad food, creator-led CPG, and snack/confectionery
+patterns; it does not fully answer the corrected online-food subniche question.
+Do not treat its `continue fragrance` recommendation as a decisive rejection of
+online-first food until the corrected v1 prompt is run or a no-contact scan tests
+that narrower category.
+
+Use next:
+`docs/prompts/product-planning/chatgptpro_consumer_category_online_food_vs_fragrance_prompt_v1.md`.
+
 ## Start Preflight
 
 ```text
