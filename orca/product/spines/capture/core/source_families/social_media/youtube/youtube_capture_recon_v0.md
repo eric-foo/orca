@@ -114,7 +114,9 @@ Edge cases observed (runner must handle):
 - **Return YouTube Dislike API (ESTIMATE, low-weight)** — public `GET /votes?videoId=`. Pre-2021-11-10 videos ≈ archived real (±1-2%); post-cutoff = extrapolated from RYD-user telemetry (±15-25%, worse for small/new; <24h unreliable); self-selected, gameable. **Ingest only as an explicitly-labeled estimate** carrying `rawLikes`/`rawDislikes`/retrieval-time/era — never a hard authenticity threshold.
 - **ArchiveTeam Dec-2021 crawl** — exact pre-cutoff snapshot; historical baseline feature only.
 
-**Decided: adopt the RYD estimate as a low-weight labeled signal** (a `dislikes_estimate` block on packets), with creator-OAuth as the future ground-truth route for consenting creators. **Next: a durable route-health canary** (watch-200 + embedded-state present + comments-continuation returns items + po_token-not-required) — runnable on-demand; scheduling is an owner decision.
+**Decided: adopt the RYD estimate as a low-weight labeled signal** (a `dislikes_estimate` block on packets), with creator-OAuth as the future ground-truth route for consenting creators.
+
+**Route-health: no standalone monitor (owner decision, 2026-06-21).** A standalone canary and an inline capture guard were both prototyped and then **dropped as redundant**: at real capture *volume* a broken route surfaces directly in the output (errors, empty-continuations, walls/429s), and for Shorts it shows during normal active capture/browsing. Route-health is read from **per-packet posture receipts** (`captured` / `empty` / `disabled`) plus a volume run's wall-detection, not a separate probe. Residual: a silent-empty (`po_token`) break can mimic a genuinely comment-disabled video on a *single* item — distinguished at volume (a run of `empty` across many items = a wall; scattered `disabled` = normal). Durable/at-volume behavior is probed by the Shorts volume-scroll runner.
 
 ## Non-claims / what is NOT proven
 
