@@ -197,7 +197,7 @@ Run these after any patch, or state exactly why a command could not be run:
 
 ```powershell
 python .agents/hooks/check_search_surface_google_route.py --selftest
-python .agents/hooks/check_search_surface_google_route.py --changed --strict
+python .agents/hooks/check_search_surface_google_route.py --strict --base main
 python -m json.tool .claude/settings.json
 python -m json.tool .codex/hooks.json
 python .agents/hooks/check_prompt_provenance.py --selftest

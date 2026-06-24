@@ -52,7 +52,7 @@ EXCLUDED_PARTS = ("/_inbox/", "/_scratch/", "/snapshots/")
 REQUIRED_SEARCH_PARAMS = {"hl": "en", "gl": "us", "pws": "0"}
 
 _GOOGLE_SEARCH_URL_RE = re.compile(
-    r"https?://(?:www\.)?google\.com/search[^\s<>)\"']*",
+    r"https?://(?:www\.)?google\.com/search[^\s<>)\"'`\]\*|]*",
     re.IGNORECASE,
 )
 _PATCH_FILE_RE = re.compile(
@@ -73,6 +73,21 @@ _PHYSICAL_LOCALITY_NONCLAIM_RE = re.compile(
     r"physical\s+locality\s+(?:is\s+)?not\s+asserted|"
     r"physically\s+US(?:[- ](?:local|located))?\s+is\s+not\s+asserted|"
     r"not\s+physically\s+located\s+in\s+the\s+US)",
+    re.IGNORECASE,
+)
+_GOOGLE_BLOCK_CONTEXT_RE = re.compile(
+    r"(?:our\s+systems\s+have\s+detected\s+unusual\s+traffic|"
+    r"https?://(?:www\.)?google\.com/sorry(?:/|\b)|"
+    r"\bgoogle\.com/sorry(?:/|\b))",
+    re.IGNORECASE,
+)
+_IP_LITERAL_PATTERN = (
+    r"(?:(?:25[0-5]|2[0-4]\d|1?\d?\d)\.){3}"
+    r"(?:25[0-5]|2[0-4]\d|1?\d?\d)|"
+    r"(?:[0-9a-f]{1,4}:){2,}[0-9a-f]{1,4}"
+)
+_IP_WITH_LABEL_RE = re.compile(
+    r"\b(?:your\s+)?ip\s+address(?:\s+is|:)?\s+(?:" + _IP_LITERAL_PATTERN + r")\b",
     re.IGNORECASE,
 )
 
@@ -105,7 +120,7 @@ def in_scope(relpath: str) -> bool:
 def google_search_urls(text: str) -> list[str]:
     urls: list[str] = []
     for match in _GOOGLE_SEARCH_URL_RE.finditer(text):
-        raw = html.unescape(match.group(0)).rstrip(".,;")
+        raw = html.unescape(match.group(0)).rstrip(".,;`)]*|")
         urls.append(raw)
     return urls
 
@@ -115,7 +130,7 @@ def missing_required_params(url: str) -> list[str]:
     params = parse_qs(parsed.query, keep_blank_values=True)
     missing: list[str] = []
     for key, expected in REQUIRED_SEARCH_PARAMS.items():
-        values = params.get(key, [])
+        values = [value.lower() for value in params.get(key, [])]
         if expected not in values:
             missing.append(f"{key}={expected}")
     return missing
@@ -135,12 +150,12 @@ def has_physical_locality_nonclaim(text: str) -> bool:
 
 
 def has_google_sorry_ip_leak(text: str) -> bool:
-    lower = text.lower()
-    return (
-        "our systems have detected unusual traffic" in lower
-        and "ip address:" in lower
-        and "google.com/search" in lower
-    )
+    for match in _GOOGLE_BLOCK_CONTEXT_RE.finditer(text):
+        start = max(match.start() - 500, 0)
+        end = min(match.end() + 500, len(text))
+        if _IP_WITH_LABEL_RE.search(text[start:end]):
+            return True
+    return False
 
 
 def analyze_text(path: str, text: str) -> list[Finding]:
@@ -367,6 +382,26 @@ def selftest() -> int:
         "URL: https://www.google.com/search?q=niche+perfume&hl=en&gl=us&pws=0\n"
         "This is US-parameterized, not physically US-local."
     )
+    sorry_path = (
+        "Google block page. Our systems have detected unusual traffic.\n"
+        "Your IP address is 100.38.68.100\n"
+        "URL: https://www.google.com/sorry/index?continue=/search\n"
+        "This is US-parameterized, not physically US-local."
+    )
+    inline_code = (
+        "Google Search capture URL: "
+        "`https://www.google.com/search?q=niche+perfume&hl=en&gl=us&pws=0`\n"
+        "This is US-parameterized, not physically US-local."
+    )
+    uppercase_gl = (
+        "Google Search capture URL: "
+        "https://www.google.com/search?q=niche+perfume&hl=en&gl=US&pws=0\n"
+        "This is US-parameterized, not physically US-local."
+    )
+    ip_without_block = (
+        "Network note: 100.38.68.100.\n"
+        "This is US-parameterized, not physically US-local."
+    )
 
     check("good has no findings", [f.code for f in analyze_text("x.md", good)], [])
     check(
@@ -384,6 +419,14 @@ def selftest() -> int:
         [f.code for f in analyze_text("x.md", sorry)],
         ["GOOGLE_SORRY_IP_LEAK"],
     )
+    check(
+        "sorry path IP leak",
+        [f.code for f in analyze_text("x.md", sorry_path)],
+        ["GOOGLE_SORRY_IP_LEAK"],
+    )
+    check("inline code URL has no findings", [f.code for f in analyze_text("x.md", inline_code)], [])
+    check("uppercase gl accepted", [f.code for f in analyze_text("x.md", uppercase_gl)], [])
+    check("IP without block context has no findings", [f.code for f in analyze_text("x.md", ip_without_block)], [])
     check(
         "html escaped url",
         missing_required_params(

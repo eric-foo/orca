@@ -60,6 +60,7 @@ Verify:
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --selftest
+python .agents/hooks/check_search_surface_google_route.py --strict --base main
 ```
 
 ### Codex (tracked project hook)
@@ -103,6 +104,7 @@ Verify:
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --selftest
+python .agents/hooks/check_search_surface_google_route.py --strict --base main
 python .codex/hooks/orca_guard_codex_adapter.py --selftest
 ```
 
