@@ -2,7 +2,7 @@
 
 ```yaml
 retrieval_header_version: 1
-artifact_role: Full prompt artifact
+artifact_role: Prompt Structure
 scope: >
   Reusable prompt for producing an Orca Commission Signal Board: an
   evidence/signals-only board, graph retrieval brief, and classifier handoff
