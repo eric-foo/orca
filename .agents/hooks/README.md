@@ -19,6 +19,7 @@ via exit code — so they are **harness-portable**: the *logic* runs anywhere; o
 | `pre_push_guard.py` | local Git **pre-push** adapter policy | Blocks pushes targeting `main`, branch deletes, non-fast-forward updates, and unverifiable update safety when `.githooks/pre-push` is installed through `core.hooksPath`. Bypassable with `--no-verify`; misses GitHub API merges. |
 | `check_retrieval_header.py` | **post-tool** (after a write) | Advisory (exit 0): warns if an in-scope artifact is missing its retrieval header. Forward-only; never blocks. |
 | `check_repo_map_freshness.py` | **post-tool** (after a write) | Reports structural drift vs the repo map as advisory output; exits 2 when the repo map itself is dirty after edit so the next action is an explicit-path commit; has a `--strict` gate for commit/CI use. |
+| `check_search_surface_google_route.py` | **post-tool** (after a write) + CI | Advisory on live writes and strict in CI for the checkable Google search-surface route shell: Google Search URLs use `hl=en&gl=us&pws=0`, US-parameterized artifacts carry the physical-locality non-claim, and Google sorry/IP pages are not preserved in durable docs. |
 | `remind_sci.py` | **pre-tool** (before a `git commit`) | Advisory (exit 0): when the commit includes durable-artifact changes, re-injects the Smallest Complete Intervention rule (verbatim from AGENTS.md) as a nudge before scope is locked in. Never blocks; silent for code/scratch/config-only commits. |
 
 Each has a `--selftest`. Rule authority lives in the overlay
@@ -58,6 +59,7 @@ Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
+python .agents/hooks/check_search_surface_google_route.py --selftest
 ```
 
 ### Codex (tracked project hook)
@@ -67,8 +69,8 @@ tracked project-local `.codex/hooks.json`, which registers:
 - `PreToolUse` for `Bash|PowerShell|apply_patch|Edit|Write`;
 - `.codex/hooks/orca_guard_codex_adapter.py` as the command hook.
 - `PostToolUse` for `apply_patch|Edit|Write`;
-- `.agents/hooks/check_repo_map_freshness.py --hook` as the repo-map commit
-  interrupt / freshness advisory.
+- `.agents/hooks/check_repo_map_freshness.py --hook` as the repo-map commit interrupt / freshness advisory.
+- `.agents/hooks/check_search_surface_google_route.py --hook` as the Google search-surface route policy advisory.
 
 The adapter preserves the shared guard logic but returns Codex's native denial
 shape:
@@ -100,6 +102,7 @@ Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
+python .agents/hooks/check_search_surface_google_route.py --selftest
 python .codex/hooks/orca_guard_codex_adapter.py --selftest
 ```
 
