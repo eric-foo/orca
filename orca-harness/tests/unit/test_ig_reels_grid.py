@@ -47,6 +47,23 @@ def test_normalize_dom_grid_rows_preserves_no_hover_hidden_engagement() -> None:
 
 
 
+def test_normalize_dom_grid_rows_carries_best_effort_pinned_marker() -> None:
+    rows = normalize_dom_grid_rows(
+        [
+            {"path": "/liv_cos/reel/PINNED1/", "visibleNumericTexts": ["1,234"], "pinned": True},
+            {"path": "/liv_cos/reel/NOTPIN/", "visibleNumericTexts": ["500"], "pinned": False},
+            {"path": "/liv_cos/reel/NOFIELD/", "visibleNumericTexts": ["12"]},
+        ],
+        final_url="https://www.instagram.com/liv_cos/reels/",
+        profile_handle="liv_cos",
+    )
+
+    # Positive detection is trusted; non-detection (False or missing) is reported
+    # as unknown (None), never a confident "not pinned", because the pinned-marker
+    # selector is not probe-verified.
+    assert [row.pinned_marker_present for row in rows] == [True, None, None]
+
+
 def test_static_profile_post_never_promotes_visible_number_to_view_count() -> None:
     rows = normalize_dom_grid_rows(
         [
