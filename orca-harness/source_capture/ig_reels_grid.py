@@ -50,6 +50,11 @@ class IgReelsGridDomRow:
     comments_text: str | None
     parse_status: str
     rect: dict[str, object] | None = None
+    # Best-effort pinned-marker signal. True = a "Pinned" accessible label was
+    # detected in the tile DOM; None = not detected. The /reels/ pinned-marker
+    # selector is NOT probe-verified, so absence is reported as unknown (None),
+    # never a confident False. See capture_metadata.pinned_marker_detection.
+    pinned_marker_present: bool | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -168,6 +173,10 @@ def normalize_dom_grid_rows(
             hidden_candidates=hidden_candidates,
             ambiguous_hidden=ambiguous_hidden,
         )
+        # Trust a positive detection; treat non-detection as unknown (None) until
+        # the pinned-marker selector is confirmed by a live probe -- never assert
+        # a confident "not pinned" under an unverified selector.
+        pinned_marker_present = True if raw.get("pinned") is True else None
         rows.append(
             IgReelsGridDomRow(
                 index=len(rows),
@@ -184,6 +193,7 @@ def normalize_dom_grid_rows(
                 comments_text=comments_text,
                 parse_status=parse_status,
                 rect=raw.get("rect") if isinstance(raw.get("rect"), dict) else None,
+                pinned_marker_present=pinned_marker_present,
             )
         )
         if max_rows is not None and len(rows) >= max_rows:

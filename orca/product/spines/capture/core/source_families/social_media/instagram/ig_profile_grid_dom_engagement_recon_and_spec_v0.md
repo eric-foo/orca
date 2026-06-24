@@ -187,6 +187,7 @@ creator_profile_snapshot:
   display_name:
   bio:
   external_url:
+  bio_links:                   # list of {title, url} public link-in-bio destinations (not just a count)
   follower_count:
   following_count:
   post_or_media_count:
@@ -253,6 +254,33 @@ media_observation:
   limitations:
 ```
 
+### v0 emit posture (derivable vs. captured)
+
+The `media_observation` shape above is the full conceptual record. The v0 optimized runner
+(`run_source_capture_ig_reels_grid_packet.py`) does **not** separately emit the typed restatement
+fields below, because they are losslessly **derivable** from evidence the packet already preserves
+(`dom_rows[].parse_status`, the full `joined_rows[].source_surface_candidates` list, and the
+capture-level `selection_policy_version`). Deferring them keeps the shared Source Capture Packet
+schema small until a downstream consumer (projection/ECR) pins its contract; the consumer derives
+them, or a field is promoted then. Derivable-not-emitted in v0:
+
+- `join_status` — derive from a row's candidate set: candidates present -> `joined_by_shortcode`,
+  empty -> `missing_json`, `parse_status == ambiguous_hidden_numeric` -> `ambiguous`. The runner also
+  records the missing-join case as the slice limitation `no_passive_json_join_for_shortcode`.
+- `extraction_mode` — constant `no_hover_dom` for this single route.
+- `route_status` — implied by the runner exit code and `capture_metadata`.
+- `selected_fields` / per-row `selection_policy_version` / `selection_limitations` — the selected
+  metric values are emitted as typed `metric_observations`; the selection is recomputable by
+  re-running the capture-level `selection_policy_version` over the preserved candidates.
+
+`pinned_marker_present` is the exception: it is a point-in-time fact (a creator pins/unpins) that is
+**not** derivable from the JSON candidates, so the runner captures it now. Detection is best-effort
+and selector-honest: a positive "Pinned" accessible label is trusted (`true`); a non-detection is
+reported as `unknown` (null), never a confident `false`, because the `/reels/` pinned-marker DOM
+shape is not yet probe-verified (`capture_metadata.pinned_marker_detection =
+best_effort_accessible_pinned_label_v0`). A live `/reels/` probe is required to confirm the marker
+selector before a confident `false` is emitted.
+
 `caption_text` is allowed only when it is directly present in joined JSON or a later explicitly
 configured item-page source. If absent, it stays null. The capture runner must not infer topic,
 sponsor status, content category, or creator intent from thumbnails, engagement, or grid order.
@@ -294,7 +322,8 @@ These are appropriate for runner checks, assertions, or tests:
 - Do not record `video_url`, fetch media bytes, or treat thumbnail/display URLs as proof of content
   topic by default.
 - Join JSON metadata only by shortcode. If a shortcode is absent from JSON, leave date/caption fields
-  null and record `join_status: missing_json`; do not extrapolate exact dates from grid order.
+  null and surface the missing join (v0 runner: the slice limitation `no_passive_json_join_for_shortcode`,
+  from which `join_status: missing_json` is derivable); do not extrapolate exact dates from grid order.
 - Record `source_surface` for every numeric/count candidate. Do not collapse DOM views,
   `/clips/user` play/view counts, and `web_profile_info` video/play counts into one unqualified value.
 - Preserve all count candidates when source surfaces disagree; selection/reconciliation is a versioned
