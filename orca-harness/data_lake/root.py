@@ -63,6 +63,21 @@ _SAFE_SEGMENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 _APPENDABLE_SUBTREES = ("derived", "acknowledgements")
 
 
+# Raw container physical fanout (decided 2026-06-25): raw packets live under a
+# deterministic opaque shard prefix — raw/<packet_shard>/<packet_id>/ — so no
+# single directory accumulates an unbounded packet count at scale. The shard is
+# the first RAW_SHARD_HEX_WIDTH lowercase hex chars of sha256(packet_id): even
+# spread, physical fanout ONLY (no family/date/identity/content meaning), and
+# by-key lookup RECOMPUTES it from packet_id (never via an index).
+RAW_SHARD_HEX_WIDTH = 3  # 4096 buckets
+
+
+def raw_shard(packet_id: str) -> str:
+    """Deterministic opaque shard segment for ``packet_id`` (physical fanout
+    only; never stored as authority — every by-key read recomputes it)."""
+    return hashlib.sha256(packet_id.encode("ascii")).hexdigest()[:RAW_SHARD_HEX_WIDTH]
+
+
 class DataLakeRootError(Exception):
     """Fail-closed error. Raised instead of writing to an unsafe or unverified
     location; the caller must surface it, never silently fall back."""
@@ -195,12 +210,13 @@ def _availability_entry_from_raw(packet_id: str, container: Path) -> dict:
     if not manifest.is_file():
         raise DataLakeRootError(f"committed raw packet missing manifest.json: {packet_id}")
     data = json.loads(manifest.read_text(encoding="utf-8"))
+    shard = raw_shard(packet_id)
     return {
         "packet_id": packet_id,
         "source_family": data.get("source_family"),
         "source_surface": data.get("source_surface"),
-        "raw_path": f"raw/{packet_id}",
-        "manifest_relpath": f"raw/{packet_id}/manifest.json",
+        "raw_path": f"raw/{shard}/{packet_id}",
+        "manifest_relpath": f"raw/{shard}/{packet_id}/manifest.json",
         "manifest_sha256": hash_file(manifest),
     }
 
@@ -410,8 +426,8 @@ class DataLakeRoot:
         ``stage_raw_packet`` + ``publish_raw_packet`` instead."""
         self._reverify()
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
-        (self._path / "raw").mkdir(parents=True, exist_ok=True)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
+        container.parent.mkdir(parents=True, exist_ok=True)
         try:
             container.mkdir(parents=False, exist_ok=False)
         except FileExistsError as exc:
@@ -427,7 +443,7 @@ class DataLakeRoot:
         ``raw/`` (DL-002)."""
         self._reverify()
         _validate_packet_id(packet_id)
-        final = self._within("raw", packet_id)
+        final = self._within("raw", raw_shard(packet_id), packet_id)
         if final.exists():
             raise DataLakeRootError(f"raw packet container already exists (write-once): {final}")
         staging_parent = self._path / _STAGING_DIRNAME
@@ -441,8 +457,8 @@ class DataLakeRoot:
         ``raw/<packet_id>`` (write-once)."""
         self._reverify()
         _validate_packet_id(packet_id)
-        final = self._within("raw", packet_id)
-        (self._path / "raw").mkdir(parents=True, exist_ok=True)
+        final = self._within("raw", raw_shard(packet_id), packet_id)
+        final.parent.mkdir(parents=True, exist_ok=True)
         if final.exists():
             raise DataLakeRootError(f"raw packet container already exists (write-once): {final}")
         try:
@@ -580,7 +596,7 @@ class DataLakeRoot:
         (so the whole index is rebuildable). Index entry: create-or-replace."""
         self._reverify()
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
         if not container.is_dir():
             raise DataLakeRootError(
                 f"cannot record availability; raw packet not committed: {packet_id}"
@@ -593,7 +609,7 @@ class DataLakeRoot:
     def find_packet(self, packet_id: str) -> Path | None:
         """Return the committed raw packet container by key, or None."""
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
         return container if container.is_dir() else None
 
     def load_raw_packet(self, packet_id: str) -> LoadedRawPacket:
@@ -642,7 +658,7 @@ class DataLakeRoot:
                     f"raw manifest preserved file {file_id!r} missing relative_packet_path: {packet_id}"
                 )
             parts = _preserved_path_parts(relative_packet_path, file_id=file_id)
-            file_path = self._within("raw", packet_id, *parts)
+            file_path = self._within("raw", raw_shard(packet_id), packet_id, *parts)
             try:
                 file_path.relative_to(container_root)
             except ValueError as exc:
@@ -712,12 +728,41 @@ class DataLakeRoot:
         raw_dir = self._path / "raw"
         count = 0
         if raw_dir.is_dir():
-            for container in sorted(raw_dir.iterdir()):
-                if (
-                    container.is_dir()
-                    and _CROCKFORD_26.fullmatch(container.name)
-                    and (container / "manifest.json").is_file()
-                ):
-                    self.record_availability(container.name)
-                    count += 1
+            for shard_dir in sorted(raw_dir.iterdir()):
+                if not shard_dir.is_dir():
+                    continue
+                for container in sorted(shard_dir.iterdir()):
+                    if (
+                        container.is_dir()
+                        and _CROCKFORD_26.fullmatch(container.name)
+                        and (container / "manifest.json").is_file()
+                    ):
+                        self.record_availability(container.name)
+                        count += 1
         return count
+
+    def relocate_raw_to_sharded(self) -> int:
+        """One-time migration to the sharded raw layout: move any legacy flat
+        ``raw/<packet_id>/`` container to ``raw/<packet_shard>/<packet_id>/``.
+        Idempotent and re-runnable: already-sharded packets are untouched, and a
+        packet whose sharded target already exists is left in place (never
+        overwritten — write-once raw). Returns the count relocated. Run
+        ``rebuild_availability`` afterwards so the index points at the new paths."""
+        self._reverify()
+        raw_dir = self._path / "raw"
+        if not raw_dir.is_dir():
+            return 0
+        moved = 0
+        for child in sorted(raw_dir.iterdir()):
+            # A legacy flat packet is a direct child of raw/ whose name is a full
+            # packet_id (Crockford-26). Shard dirs are short hex and are skipped.
+            if not (child.is_dir() and _CROCKFORD_26.fullmatch(child.name)):
+                continue
+            packet_id = child.name
+            target = self._within("raw", raw_shard(packet_id), packet_id)
+            if target.exists():
+                continue  # already migrated / collision -> never overwrite
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.rename(child, target)  # atomic same-fs move; bytes/hashes unchanged
+            moved += 1
+        return moved
