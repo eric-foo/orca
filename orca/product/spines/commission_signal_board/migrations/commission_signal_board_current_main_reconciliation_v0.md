@@ -54,12 +54,12 @@ The current tree contains these CSB spine files:
 ```text
 orca/product/spines/commission_signal_board/README.md
 orca/product/spines/commission_signal_board/spine.yaml
-orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
+orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
 orca/product/spines/commission_signal_board/dispatch_rules/orca_demand_gate_run_commission_criteria_v0.md
 orca/product/spines/commission_signal_board/harness/validator.md
 orca/product/spines/commission_signal_board/migrations/commission_signal_board_current_main_reconciliation_v0.md
 orca/product/spines/commission_signal_board/migrations/moved_paths_index.md
-orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
 orca/product/spines/commission_signal_board/tests/validator_tests.md
 orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
 ```

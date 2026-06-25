@@ -15,7 +15,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
-  - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
+  - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
   - .agents/hooks/check_commission_signal_board_output.py
   - .agents/workflow-overlay/prompt-orchestration.md
   - .agents/workflow-overlay/source-loading.md
@@ -27,7 +27,7 @@ stale_if:
   - A graph artifact/schema contract supersedes this prompt's graph-light contract.
 ```
 
-- Prompt Structure path: `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md`.
+- Prompt Structure path: `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md`.
 - Prompt family: product-planning / Prompt Structure.
 - Prompt output mode: `chat-only`.
 - Prompt authoring route: authored through `workflow-prompt-orchestrator` mechanics in the legacy-named `codex/commission-gate` lane.
@@ -637,8 +637,8 @@ direction_change_propagation:
     - product_doctrine
     - output_authority
   controlling_sources_updated:
-    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
-    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
+    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
   downstream_surfaces_checked:
     - AGENTS.md
     - .agents/workflow-overlay/README.md
@@ -697,8 +697,8 @@ direction_change_propagation:
   related_triggers:
     - output_authority
   controlling_sources_updated:
-    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
-    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
+    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
     - orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
     - .agents/hooks/check_commission_signal_board_output.py
     - orca-harness/tests/unit/test_commission_signal_board_output_validator.py

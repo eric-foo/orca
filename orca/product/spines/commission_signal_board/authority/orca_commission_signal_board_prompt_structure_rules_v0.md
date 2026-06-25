@@ -13,7 +13,7 @@ use_when:
   - Preparing owner sign-off on commission signal-board naming, source-routing, and classifier handoff.
 authority_boundary: retrieval_only
 open_next:
-  - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+  - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
   - orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
   - .agents/workflow-overlay/prompt-orchestration.md
   - orca/product/spines/scanning/admissibility_checkability/orca_demand_scan_gate_adjudication_packet_v0.md

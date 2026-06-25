@@ -241,7 +241,7 @@ direction_change_propagation:
     - orca/product/spines/foundation/demand_read_taxonomy/orca_demand_read_taxonomy_adjudication_v0.md
     - orca/product/spines/scanning/scan_core/orca_demand_scan_core_spec_v0.md
     - orca/product/spines/commission_signal_board/dispatch_rules/orca_demand_gate_run_commission_criteria_v0.md
-    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
     - orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_v0.md
     - orca/product/spines/judgment/demand_read/core/judgment_spine_demand_read_machinery_architecture_v0.md
     - orca/product/spines/judgment/demand_read/c2_weighting/judgment_spine_c2_ledger_read_contract_v0.md

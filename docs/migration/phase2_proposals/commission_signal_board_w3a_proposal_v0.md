@@ -46,7 +46,7 @@ Evidence per file:
   Removing it breaks the manifest contract for the pilot spine.
 - Verdict: not a candidate.
 
-**Prompt Structure Rules: authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md**
+**Prompt Structure Rules: authority/orca_commission_signal_board_prompt_structure_rules_v0.md**
 - External inbound:
   `docs/migration/phase2_proposals/scanning_w3a_proposal_v0.md:31` (reverse-ref
   check on scanning area); `scanning_w3a_proposal_v0.md:36` (second cite for
@@ -85,7 +85,7 @@ Evidence per file:
   `docs/` into the spine. Active reverse plan documented.
 - Verdict: not a candidate.
 
-**Prompt Structure: prompts/orca_commission_signal_board_prompt_v0.md**
+**Prompt Structure: prompts/orca_commission_signal_board_prompt_structure_v0.md**
 - External inbound: `spine.yaml:15`; `README.md:34`; `workflows/...playbook_v0.md:16,26,178`.
 - Role: the full v0 durable prompt artifact (chat-only mode). No v1 or
   successor exists; still the live dispatching artifact.
