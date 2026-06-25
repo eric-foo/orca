@@ -277,7 +277,10 @@ def test_within_rejects_symlinked_component(tmp_path: Path) -> None:
     root = _init(tmp_path)
     outside = tmp_path / "outside"
     outside.mkdir()
-    link = root.path / "derived" / "linked"
+    # append_record now resolves to derived/<shard>/linked/l/r, so symlink the
+    # shard component the traversal actually crosses (DL-003 rejects any symlinked
+    # lake-owned component along the path).
+    link = root.path / "derived" / raw_shard("linked")
     try:
         link.symlink_to(outside, target_is_directory=True)
     except (OSError, NotImplementedError):
