@@ -344,6 +344,32 @@ at `orca-harness/tests/unit/test_csb_scanning_artifact_validator.py`. A pass is
 receipt-shape only, never scan-quality validation, buyer proof, candidate
 approval, or Capture route authorization.
 
+**Doctrine-change receipt-shape gate (EP-09) + retrieval-header forbidden-field
+scan (EP-07).** Two further substrates built under owner authorization, following
+this pattern:
+
+- `.agents/hooks/check_dcp_receipt.py` — diff-scoped, forward-only CI gate
+  (registered in `.github/workflows/ci.yml`, a sibling to the deletion-evidence
+  gate): validates the SHAPE of any real `direction_change_propagation` receipt
+  or `direction_change_propagation_blocker` in changed `.md` files — required
+  keys, `trigger`/`related_triggers` drawn only from the seven controlled trigger
+  values, `non_claims` non-empty — referencing `source-of-truth.md` (Doctrine
+  Change Propagation Contract). It skips contract templates and non-receipt
+  note-markers, never requires a receipt to be *present* (doctrine-ness is
+  judgment), and never asserts a listed surface was truly updated/checked. The
+  inline-cap / archive-pointer / no-standalone rules are intentionally not gated
+  (not born-green). `--audit` = whole-repo advisory backlog; `--selftest` present.
+- `.agents/hooks/check_retrieval_header.py` — its shared predicate
+  (`header_problems_for_lines`) now also rejects status-leak header keys
+  (approval / validation / readiness / lifecycle / deployment / install /
+  resolver / publication / source-of-truth), flowing through both the write-time
+  `--hook` and the `header_index.py --strict` CI gate. Born-green;
+  `edit_permission` / `verdict` / `status` are intentionally allowed (review and
+  prompt frontmatter use them). `--selftest` present.
+
+Both enforce shape, never truth; a clean run is not validation, readiness, or
+approval.
+
 **Future agents: reuse this pattern.** To enforce the next load-bearing,
 deterministically-checkable rule, do not add another instruction -- add a
 sibling checker under `.agents/hooks/` that references the rule's authority
