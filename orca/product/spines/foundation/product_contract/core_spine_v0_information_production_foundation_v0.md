@@ -116,6 +116,21 @@ Use when available:
 - visibility class such as buyer-visible, market-visible,
   analyst-discoverable, archive-visible, or post-window.
 
+### Public-Reaction Evidence Unit Rule
+
+When an Evidence Unit is based on public reactions such as comments, replies,
+reviews, social/video engagement, or source-native vote/helpfulness systems, the
+Evidence Unit must carry engagement context availability rather than a bare text
+summary. At minimum, record whether source-visible counts, score state, sort
+order, reply depth, helpful votes, views/likes/comments, pinned/hearted/official
+markers, and metric missingness were preserved, unavailable, hidden, approximate,
+or not attempted.
+
+This context is not a score. It may inform attention, resonance, objection,
+distribution, manipulation-risk, or social-proof analysis. Judgment still owns
+whether the context affects Signal Integrity, Signal Use, Decision Strength,
+Action Ceiling, credibility, independence, artificial amplification, exclusion,
+or demand support.
 ### Evidence Unit States
 
 | State | Meaning |

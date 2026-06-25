@@ -106,6 +106,18 @@ The board must NOT:
 - treat graph usefulness as signal strength;
 - invent evidence that was not supplied or source-backed.
 
+Public-reaction engagement handling:
+
+- preserve visible reaction context such as upvotes, helpful votes, likes,
+  views, shares, comment counts, reply counts, source-native score state, sort
+  order, and pinned/hearted/official-response markers when supplied or
+  source-backed;
+- use those facts as attention, resonance, objection, distribution,
+  manipulation-risk, or social-proof context only;
+- do not treat engagement counts, source rank, or high/low reaction volume as a
+  demand verdict, proof, graph weight, classifier result, Commit/Scale support,
+  credibility label, or Action Ceiling.
+
 ## Start Preflight
 
 If you are running inside the Orca repo, read `AGENTS.md` and

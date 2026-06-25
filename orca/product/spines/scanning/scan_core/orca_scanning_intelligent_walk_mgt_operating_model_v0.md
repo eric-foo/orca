@@ -185,6 +185,20 @@ publication, or source-state date when available. If an older source is carried
 forward, record why it is still load-bearing and whether a re-verify or
 `stale_after` note is needed before downstream use.
 
+## Public-Reaction Engagement Priority
+
+Public-reaction engagement is an attention and routing cue, not proof. When a
+frontier exposes upvotes, helpful votes, likes, views, shares, comment counts,
+reply counts, source-native score state, visible sort/rank/order, or
+pinned/hearted/official-response markers, scanning may use that context to
+prioritize the next read, explain venue value, or request Capture preservation.
+
+For same-source and same-strength public-reaction evidence, a detailed signal
+with materially higher visible engagement usually deserves more scan attention
+than a drive-by signal with little or no engagement. This is a route-priority
+claim only. Scanning must not use engagement context to decide demand,
+credibility, independence, artificial amplification, gate clearance, graph
+weight, or Action Ceiling.
 ## Exact Query Discovery
 
 An `exact_query` is a bounded public query string crafted to test a CSB row,

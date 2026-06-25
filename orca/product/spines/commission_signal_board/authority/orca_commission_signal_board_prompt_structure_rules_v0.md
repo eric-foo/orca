@@ -87,6 +87,13 @@ values, but only as output shape: same-strength newer/current URL-backed rows
 can deserve more scan attention, and that attention is not buyer proof, demand
 classification, classifier mapping, evidence weighting, or graph weight.
 
+Public-reaction engagement belongs in the board as context, not judgment. CSB
+may ask rows to preserve source-visible upvotes, helpful votes, likes, views,
+shares, comment counts, reply counts, score state, visible sort/rank/order, and
+pinned/hearted/official-response markers when supplied or source-backed. CSB
+must not turn those facts into demand proof, Commit/Scale support, credibility,
+independence, graph weight, classifier mapping, or Action Ceiling.
+
 The temporary prompt is too high-lock-in to adopt wholesale because it mixes
 five different objects in one artifact: commission intake, venue playbook,
 source registry, forecast-target schema, and graph retrieval schema. Installing

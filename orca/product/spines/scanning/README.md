@@ -86,6 +86,14 @@ used to test CSB rows, find hidden venues, and record pointers, negatives, or
 access notes. It is not search-volume proof, AEO proof, SEO keyword research,
 a standing query monitor, or a crawler substitute.
 
+Public-reaction engagement context is a scan-routing input. If a scan observes
+source-visible upvotes, helpful votes, likes, views, shares, comment counts,
+reply counts, source-native score state, visible sort/rank/order, or
+pinned/hearted/official-response markers, it may use them to prioritize a
+frontier, explain venue value, or request Capture preservation. Scanning must
+not turn those metrics into demand proof, credibility, independence,
+amplification, gate clearance, graph weight, or Action Ceiling.
+
 Before closeout, a fresh CSB-first scan artifact must pass
 `.agents/hooks/check_csb_scanning_artifact.py` or record why the checker was not
 run. The checker enforces receipt shape only: source context, caps,

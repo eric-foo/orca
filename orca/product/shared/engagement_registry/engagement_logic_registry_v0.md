@@ -1,5 +1,24 @@
 # Engagement Logic Registry v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Product artifact
+scope: Core Spine engagement interpretation and cross-layer public-reaction engagement handling.
+use_when:
+  - Interpreting public engagement signals without collapsing them into a demand score.
+  - Checking how Capture, Projection, Cleaning, Data Lake, and Judgment should handle source-visible engagement facts.
+  - Preventing public-reaction counts from becoming demand proof, credibility, or Action Ceiling by shortcut.
+authority_boundary: retrieval_only
+open_next:
+  - orca/product/spines/foundation/product_contract/core_spine_v0_information_production_foundation_v0.md
+  - orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_foundation_v0.md
+  - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_medallion_gold_readiness_contract_v0.md
+stale_if:
+  - Judgment ownership of Signal Integrity, Signal Use, Decision Strength, or Action Ceiling changes.
+  - Cleaning gains a persisted engagement-context schema or Data Lake writer.
+  - The owner authorizes numeric engagement weighting or a scoring engine.
+```
+
 - Status: PROPOSED_FREEZE
 - Artifact type: Product artifact
 - Scope: Core Spine engagement interpretation skeleton
@@ -27,6 +46,43 @@ engines, or automation.
 Use it to classify and reason about evidence in decision memos (Memo), backtests (Case),
 competitive intelligence, source-quality review, and satellite proof plans.
 
+## Public Reaction Engagement Rule
+
+Public-reaction engagement means source-visible reaction facts such as upvotes,
+helpful votes, likes, views, shares, comment counts, reply counts, source-native
+scores, pinned/hearted/official-response markers, visible sort order, and
+source-exposed ranking or recency posture.
+
+Orca must preserve those facts when they are visible and relevant to a public
+reaction source. They can change what a later operator should inspect: a
+23-upvote detailed objection is not the same signal surface as a 0-upvote
+drive-by objection. That difference is engagement context, not automatic truth.
+
+Layer split:
+
+- Capture preserves route-visible public-reaction facts, source order, timing,
+  hierarchy, and missingness when the source exposes them.
+- Projection may carry those facts into mechanical rows with raw anchors and
+  loss/residual notes; it must not create demand, credibility, or action labels.
+- Cleaning may produce an `engagement_context` working view that makes the
+  reaction structure inspectable: high-engagement units, low-engagement repeated
+  units, disagreement/counter-units, source order, metric posture, residuals,
+  and raw-pull triggers.
+- Data Lake stores raw engagement facts as Bronze and mechanical
+  `engagement_context` outputs as Silver when Cleaning lake wiring exists.
+- Judgment alone decides what the engagement context means for Signal
+  Integrity, Signal Use, Decision Strength, Action Ceiling, demand support,
+  credibility, independence, artificial amplification, or exclusion.
+
+Non-claims:
+
+- Engagement context is not a score boost.
+- High engagement does not prove demand, credibility, independence, buyer pull,
+  or willingness to pay.
+- Low or missing engagement does not make a signal worthless by default.
+- No public-reaction engagement pattern clears Commit, Scale, buyer proof, or a
+  demand gate without separate costly behavior, audience fit, independence, and
+  counterevidence review under the owning Judgment or proof contract.
 ## Core Spine Relationship
 
 This registry is a rubric for Core Spine primitives, not a separate product
@@ -137,3 +193,74 @@ standard unless they pass leakage controls.
 - Exact numeric or qualitative weighting method: UNKNOWN - requires owner input.
 - Exact backtest case-selection policy: UNKNOWN - requires owner input.
 - Exact satellite-specific engagement patterns: UNKNOWN - requires owner input.
+## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Public-reaction engagement facts now have a cross-layer handling rule:
+    Capture preserves visible metrics/context, Projection and Cleaning may carry
+    mechanical context, Data Lake places raw facts in Bronze and mechanical
+    context in Silver, and Judgment alone interprets meaning or action effect.
+  trigger: product_doctrine
+  related_triggers:
+    - architecture_doctrine
+    - workflow_authority
+  controlling_sources_updated:
+    - orca/product/shared/engagement_registry/engagement_logic_registry_v0.md
+    - orca/product/spines/capture/core/contracts/obligation_contracts/core_spine_v0_data_capture_spine_obligation_contract_v0.md
+    - orca/product/shared/projection_doctrine/core_spine_v0_projection_doctrine_v0.md
+    - orca/product/spines/foundation/product_contract/core_spine_v0_data_and_cleaning_spine_boundary_v0.md
+    - orca/product/spines/foundation/product_contract/core_spine_v0_information_production_foundation_v0.md
+    - orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_foundation_v0.md
+    - orca/product/spines/cleaning/contracts/core_spine_v0_cleaning_spine_readme_v0.md
+    - orca/product/spines/cleaning/contracts/core_spine_v0_corroboration_vs_amplification_discipline_v0.md
+    - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_medallion_gold_readiness_contract_v0.md
+    - docs/decisions/cleaning_spine_data_lake_representation_defer_v0.md
+    - orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
+    - orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
+    - orca/product/spines/scanning/README.md
+    - orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/README.md
+    - .agents/workflow-overlay/source-of-truth.md
+    - .agents/workflow-overlay/validation-gates.md
+    - .agents/workflow-overlay/prompt-orchestration.md
+    - orca/product/spines/judgment/demand_read/core/judgment_spine_demand_read_machinery_architecture_v0.md
+    - orca/product/spines/judgment/demand_read/c2_weighting/judgment_spine_c2_ledger_read_contract_v0.md
+  intentionally_not_updated:
+    - path: orca-harness/cleaning/
+      reason: >
+        This turn reflects future behavior in durable documents only. Runtime
+        enforcement through Cleaning models, projection adapters, and tests is a
+        separate explicitly bounded implementation unit.
+    - path: orca/product/spines/product_lead/buyer_proof/orca_buyer_proof_packet_v0.md
+      reason: >
+        Existing buyer-proof language already rejects engagement volume as a
+        proof or Commit-grade floor-clearance shortcut. This patch points the
+        cross-layer handling rule through the engagement registry and Judgment
+        foundation rather than duplicating buyer-proof gates.
+  stale_language_search: >
+    rg -n "engagement|upvote|helpful|likes|views|comment count|score_state|Commit|Scale"
+    orca/product/shared/engagement_registry
+    orca/product/spines/capture
+    orca/product/spines/cleaning
+    orca/product/shared/projection_doctrine
+    orca/product/spines/data_lake
+    orca/product/spines/commission_signal_board
+    orca/product/spines/scanning
+    orca/product/spines/foundation/product_contract
+  stale_language_search_result: >
+    Executed during the patch. Live edited surfaces now route public-reaction
+    engagement through the registry, Capture preservation, Projection/Cleaning
+    mechanical context, Data Lake medallion placement, CSB/Scanning attention
+    routing, and Judgment-owned interpretation. Existing no-score/no-proof
+    boundaries were preserved.
+  non_claims:
+    - not validation
+    - not readiness
+    - not implementation authorization
+    - not a scoring engine
+    - not buyer proof
+```
