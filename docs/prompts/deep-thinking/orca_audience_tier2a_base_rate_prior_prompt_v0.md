@@ -4,10 +4,11 @@
 retrieval_header_version: 1
 artifact_role: >
   Prompt artifact (deep-thinking / external data-sourcing reasoning). Paste-ready,
-  NO-REPO prompt for a ChatGPT Pro pass that produces the SOURCED, VERSIONED
-  per-category base-rate table that seeds Orca's Tier-2-A category->gender (and
-  age-band) DEFEASIBLE prior. External sourcing only; the table schema, ledger-schema
-  home, and the defeasible-prior deciding module are built in-repo afterward.
+  NO-REPO prompt for a ChatGPT Pro pass that produces the SOURCED, VERSIONED Tier-2-A
+  priors: a per-category base-rate table seeding the category->gender (and age-band)
+  DEFEASIBLE prior, PLUS a slang/register->age-cohort lexicon for the audience-age
+  signal. External sourcing only; the table schema, ledger-schema home, and the
+  defeasible-prior deciding module are built in-repo afterward.
 scope: >
   Unblocks the one build/data gate the owner cannot default: a cited base-rate
   distribution P(gender | fragrance/beauty category) (+ age-band where available),
@@ -50,7 +51,7 @@ You are ChatGPT Pro. This is a NO-REPO data-sourcing reasoning pass. Produce a *
 
 ### Objective
 
-An audience-inference system infers "who is a creator's content for?" from the creator's OWN public text. Most fields are content-positioning. One **gated** slice estimates the creator's **aggregate audience gender-skew** (and age-band). For the category→gender component it uses a **defeasible documented base-rate prior**: a Bayesian distribution `P(gender | category)` that a specific creator's own evidence then updates and can **override**. The prior must be a **cited statistic, never a stereotype guess.** Your job is to produce that prior table for the **fragrance / beauty** space.
+An audience-inference system infers "who is a creator's content for?" from the creator's OWN public text. Most fields are content-positioning. One **gated** slice estimates the creator's **aggregate audience gender-skew** (and age-band). For the category→gender component it uses a **defeasible documented base-rate prior**: a Bayesian distribution `P(gender | category)` that a specific creator's own evidence then updates and can **override**. The prior must be a **cited statistic, never a stereotype guess.** Your job is to produce that prior table for the **fragrance / beauty** space — and, for the **age-band** signal, a **slang/register → age-cohort lexicon** (a creator's language register — kid/meme slang vs casual vs professional jargon — is a strong text signal for who the content is *for*).
 
 ### Hard constraints (the prior must respect these)
 
@@ -69,7 +70,8 @@ An audience-inference system infers "who is a creator's content for?" from the c
 3. A **category → age-band table** where data exists (e.g. 18–24 / 25–34 / 35–44 / 45+), same sourcing discipline.
 4. A **prior-strength** marker per row (how concentrated/reliable the prior is) so the consuming system knows how readily creator evidence should override it.
 5. A **table shape / schema spec** — the exact columns + types + a `version` field — so the distribution loads as a versioned data file.
-6. **Sources** (full citations) and **limitations / risks** — data gaps, region/recency bias, where the prior is weak or should not be trusted.
+6. A **slang / register → age-cohort lexicon.** A strong *text* signal for audience **age** is the creator's **language register**: kid/meme slang (e.g. "six seven"), casual, or professional/technical jargon. Produce a lexicon mapping a **marker** (a slang term or a register feature) → a likely **age cohort**, each with a source/era, a **prior-strength**, and a **volatility/decay** note (slang turns over fast → this table needs periodic refresh). Same discipline as the base rate: the marker is what an extractor *detects*; the **lexicon** (never a model's gut) maps marker→cohort; and it is **defeasible** (irony, nostalgia, the creator's own age ≠ their target).
+7. **Sources** (full citations) and **limitations / risks** — data gaps, region/recency bias, slang volatility, where any prior is weak or should not be trusted.
 
 ### Required output format
 
@@ -77,7 +79,8 @@ An audience-inference system infers "who is a creator's content for?" from the c
 2. Category → gender table (`category · P(women) · P(men) · P(neutral/unknown) · prior_strength · source · year`).
 3. Category → age-band table (where available).
 4. Table shape / schema spec (`column · type · meaning`, plus the `version` field).
-5. Sources (full citations).
-6. Limitations / risks / coverage gaps.
+5. Slang / register → age-cohort lexicon (`marker · age_cohort · register_class · era/source · prior_strength · volatility`).
+6. Sources (full citations).
+7. Limitations / risks / coverage gaps.
 
 Use `sourced`, `estimated-from`, `low-confidence`, `data-gap` labels where useful. Do not invent precise numbers without a source — prefer a cited range or an explicit `data-gap`. Do not write code, and do not claim the table is validated, calibrated, or production-ready.
