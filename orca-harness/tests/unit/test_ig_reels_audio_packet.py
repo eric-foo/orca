@@ -40,12 +40,12 @@ def _lake(tmp_path: Path) -> DataLakeRoot:
 
 
 def _packet_id_from_msg(msg: str) -> str:
-    # msg: "derived/<packet_id>/transcript_asr/<record_id> [posture, N cues]"
-    return msg.split("/")[1]
+    # flat: derived/<packet_id>/transcript_asr/<record_id>; sharded: derived/<shard>/<packet_id>/...
+    return msg.split(" ")[0].split("/")[-3]
 
 
 def _load_derived(root: DataLakeRoot, msg: str) -> dict:
-    rel = msg.split(" ")[0]  # derived/<pid>/transcript_asr/<rid>
+    rel = msg.split(" ")[0]
     return json.loads((root.path / rel).read_text(encoding="utf-8"))
 
 
@@ -58,6 +58,12 @@ def _load_capture_metadata(root: DataLakeRoot, packet_id: str) -> dict:
     }
     metadata_file_id = next(fid for fid, path in file_paths.items() if path.endswith("capture_metadata.json"))
     return json.loads(loaded.bodies[metadata_file_id].decode("utf-8"))
+
+
+def _manifest_path(root: DataLakeRoot, packet_id: str) -> Path:
+    packet_dir = root.find_packet(packet_id)
+    assert packet_dir is not None
+    return packet_dir / "manifest.json"
 
 
 def test_transcribed_writes_ig_audio_packet_and_derived_record(tmp_path):
@@ -74,7 +80,7 @@ def test_transcribed_writes_ig_audio_packet_and_derived_record(tmp_path):
     pid = _packet_id_from_msg(msg)
 
     # audio packet: IG identity, contract-valid, raw-only, no transcript laundered in
-    manifest = json.loads((root.path / "raw" / pid / "manifest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(_manifest_path(root, pid).read_text(encoding="utf-8"))
     packet = SourceCapturePacket(**manifest)
     assert packet.source_family == "instagram_creator"
     assert packet.source_surface == "ig_reels_audio"
@@ -177,7 +183,7 @@ def test_no_speech_records_posture_without_cues(tmp_path):
     assert rec["cue_count"] == 0
     assert rec["cues"] == []
     pid = _packet_id_from_msg(msg)
-    assert (root.path / "raw" / pid / "manifest.json").is_file()
+    assert _manifest_path(root, pid).is_file()
 
 
 def test_invalid_shortcode_refused(tmp_path):
@@ -227,7 +233,7 @@ def test_transcriber_exception_records_failed_posture(tmp_path):
     assert rec["cue_count"] == 0
     assert rec["cues"] == []
     assert "failure_message" in rec["provenance"]
-    assert (root.path / "raw" / _packet_id_from_msg(msg) / "manifest.json").is_file()
+    assert _manifest_path(root, _packet_id_from_msg(msg)).is_file()
 
 
 def test_transcribed_without_cues_normalizes_to_no_speech(tmp_path):
@@ -249,7 +255,7 @@ def test_rerun_is_a_new_observation_not_an_overwrite(tmp_path):
     c1, _ = write_ig_reels_asr_transcript(shortcode=_SHORTCODE, audio_bytes=_AUDIO, audio_ext="m4a", transcribe_fn=t, data_root=root)
     c2, _ = write_ig_reels_asr_transcript(shortcode=_SHORTCODE, audio_bytes=_AUDIO, audio_ext="m4a", transcribe_fn=t, data_root=root)
     assert c1 == 0 and c2 == 0
-    assert len(list((root.path / "raw").iterdir())) == 2  # two distinct audio packets, not a refusal
+    assert len(list((root.path / "raw").glob("**/manifest.json"))) == 2  # two distinct audio packets, not a refusal
 
 
 # --- yt-dlp fetch classifier + URL parse + pre-network guard (no network) ------

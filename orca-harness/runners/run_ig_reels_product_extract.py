@@ -65,9 +65,24 @@ def _capture_metadata(loaded, files: dict[str, str]) -> dict:
         return {}
 
 
+def _lane_dir(data_root, *, raw_anchor: str, lane: str):
+    resolver = getattr(data_root, "lane_dir", None)
+    if resolver is not None:
+        return resolver(subtree="derived", raw_anchor=raw_anchor, lane=lane)
+    return data_root.path / "derived" / raw_anchor / lane
+
+
+def _record_path(data_root, *, raw_anchor: str, lane: str, record_id: str):
+    resolver = getattr(data_root, "record_path", None)
+    if resolver is not None:
+        return resolver(
+            subtree="derived", raw_anchor=raw_anchor, lane=lane, record_id=record_id
+        )
+    return data_root.path / "derived" / raw_anchor / lane / record_id
+
 def _asr_records(data_root, audio_packet_id: str) -> list[dict]:
     """Read transcript_asr derived records by path (derived records carry no by-key hash)."""
-    lane_dir = data_root.path / "derived" / audio_packet_id / _ASR_LANE
+    lane_dir = _lane_dir(data_root, raw_anchor=audio_packet_id, lane=_ASR_LANE)
     if not lane_dir.is_dir():
         return []
     records: list[dict] = []
@@ -160,7 +175,9 @@ def run_extraction(
                         {"anchor": anchor, "video_id": transcript.video_id, "status": "skipped_done"}
                     )
                     continue
-                member_path = data_root.path / "derived" / anchor / PRODUCT_MENTIONS_LANE / rid
+                member_path = _record_path(
+                    data_root, raw_anchor=anchor, lane=PRODUCT_MENTIONS_LANE, record_id=rid
+                )
                 if member_path.exists():
                     results.append(
                         {"anchor": anchor, "video_id": transcript.video_id, "status": "partial_needs_cleanup"}
