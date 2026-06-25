@@ -43,9 +43,9 @@ same_vendor_rationale: not_applicable
 | `.agents/hooks/check_commission_signal_board_output.py` | Primary target | read this session at HEAD (matches impl commit) | clean |
 | `orca-harness/tests/unit/test_commission_signal_board_output_validator.py` | Primary target | read this session at HEAD | clean |
 | All 10 fixture files (`commission_signal_board_outputs/`) | Primary target | read via diff + direct read of 2 representative fixtures | clean |
-| `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md` | Primary target | read this session at HEAD | clean |
+| `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md` | Primary target | read this session at HEAD | clean |
 | `orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md` | Primary target | read this session at HEAD | clean |
-| `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md` | Primary target | read this session at HEAD | clean |
+| `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md` | Primary target | read this session at HEAD | clean |
 | `orca/product/spines/scanning/README.md` | Adjacent doctrine (leakage check) | read this session | clean |
 | `orca/product/spines/scanning/scan_core/orca_scanning_intelligent_walk_mgt_operating_model_v0.md` | Adjacent doctrine (leakage check) | read partial (first 100 lines for vocabulary/boundary check) | clean |
 | Capture playbook + Judgment machinery arch | Adjacent doctrine (leakage check) | NOT directly read — relied on DCP claim and prior review | unverified |
@@ -126,7 +126,7 @@ None of the 7 bad fixtures exercise an invalid `row_purpose`, `graph_role`, or `
 
 #### AR-02 (minor · correctness) — Adjudication packet's Graph-Light Contract field taxonomy omits `recency_priority` from `row_purpose` values
 
-**Location**: `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md` · "Graph-Light Contract" section · field schema YAML block.
+**Location**: `orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md` · "Graph-Light Contract" section · field schema YAML block.
 
 **Evidence**: The adjudication packet's proposed field taxonomy lists:
 ```yaml
@@ -160,7 +160,7 @@ The patch to the adjudication packet was limited to the "Current prompt amendmen
 
 #### AR-03 (minor · correctness) — `recency_priority` row_purpose is accepted by the checker but not explained in the prompt body's Section 4 rules
 
-**Location**: `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md` · "### 4. Signal Board Rows" · Rules sub-section.
+**Location**: `orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md` · "### 4. Signal Board Rows" · Rules sub-section.
 
 **Evidence**: The Section 4 rules block contains:
 ```
@@ -290,9 +290,9 @@ Target files reviewed:
   .agents/hooks/check_commission_signal_board_output.py
   orca-harness/tests/unit/test_commission_signal_board_output_validator.py
   orca-harness/tests/fixtures/commission_signal_board_outputs/ (all 10 fixtures)
-  orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_structure_v0.md
+  orca/product/spines/commission_signal_board/prompts/orca_commission_signal_board_prompt_v0.md
   orca/product/spines/commission_signal_board/workflows/commission_signal_board_playbook_v0.md
-  orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_structure_rules_v0.md
+  orca/product/spines/commission_signal_board/authority/orca_commission_signal_board_prompt_adjudication_packet_v0.md
 
 Enforcement goals:
   E-01 (row-shape burden reduction): CLOSED
