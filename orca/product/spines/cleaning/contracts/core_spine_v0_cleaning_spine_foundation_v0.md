@@ -182,14 +182,19 @@ Allowed `engagement_context` contents include:
   sort/rank/order, and pinned/hearted/official-response markers;
 - high-engagement units, low-engagement repeated units, disagreement or
   counter-units, and source-order context as navigation aids;
+- source-visible resonance qualifiers such as positive, negative, mixed, or
+  unclear direction; visible audience-fit basis; baseline context when
+  mechanically available; and discount reasons as raw context, not Judgment
+  effect;
 - timing, hierarchy, parent/child chain, and metric-to-row binding;
 - residuals, omissions, warnings, and raw-pull triggers.
 
 Forbidden `engagement_context` contents include credible, not credible,
 independent corroboration, artificial amplification, supports demand,
-weak/strong evidence, Signal Use, Decision Strength, Action Ceiling, or any
-ranking that treats engagement as proof. If the correct next statement is what
-the engagement means, the owner is Judgment, not Cleaning.
+weak/strong evidence, final resonance weight, Signal Use, Decision Strength,
+Action Ceiling, or any ranking that treats engagement as proof. If the correct
+next statement is what the engagement means, the owner is Judgment, not
+Cleaning.
 
 Candidate shape:
 
@@ -200,6 +205,10 @@ engagement_context_candidate:
   projection_anchor: "<projection row, when used>"
   metric_basis: ["<source-visible metric names>"]
   metric_posture: "<observed | hidden | approximate | unavailable_with_reason | not_attempted>"
+  resonance_direction_context: "<positive | negative | mixed | unclear | unknown>"
+  visible_audience_fit_basis: "<high | medium | low | unknown, with source-visible reason>"
+  baseline_context: "<above_typical | typical | below_typical | unknown>"
+  discount_reasons: ["<manipulation risk | audience mismatch | ambiguity | other visible context>"]
   row_bound_units:
     - unit_ref: "<comment/review/reply/media row ref>"
       visible_metric_facts: {}

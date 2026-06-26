@@ -97,7 +97,7 @@ The board must NOT:
 
 - output `admit`, `hold`, `fail`, `pass`, `reject`, or any demand verdict;
 - decide whether demand exists;
-- label weak/attention-only evidence as transient demand;
+- label weak, attention-only, or resonance-only evidence as transient demand;
 - emit a durable/transient/manufactured demand-state verdict;
 - decide buyer proof or readiness;
 - score evidence strength;
@@ -112,8 +112,10 @@ Public-reaction engagement handling:
   views, shares, comment counts, reply counts, source-native score state, sort
   order, and pinned/hearted/official-response markers when supplied or
   source-backed;
-- use those facts as attention, resonance, objection, distribution,
-  manipulation-risk, or social-proof context only;
+- use those facts as qualitative resonance context by default, preserving
+  direction, visible audience-fit basis, baseline context, objection,
+  distribution, manipulation-risk, or social-proof context when supplied or
+  source-backed;
 - do not treat engagement counts, source rank, or high/low reaction volume as a
   demand verdict, proof, graph weight, classifier result, Commit/Scale support,
   credibility label, or Action Ceiling.

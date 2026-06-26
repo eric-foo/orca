@@ -127,11 +127,13 @@ posture was `observed`, `hidden`, `approximate`, `unavailable_with_reason`, or
 the unit. This uses the same canonical `metric_posture` vocabulary as Cleaning's
 `engagement_context` candidate.
 
-This context is not a score. It may inform attention, resonance, objection,
-distribution, manipulation-risk, or social-proof analysis. Judgment still owns
-whether the context affects Signal Integrity, Signal Use, Decision Strength,
-Action Ceiling, credibility, independence, artificial amplification, exclusion,
-or demand support.
+This context is not a score. Source-visible public reaction should be
+interpreted as qualitative resonance weight by default, attached to the specific
+claim, frame, pain, objection, or artifact receiving the reaction. Direction,
+audience fit, baseline context, manipulation risk, and ambiguity decide how much
+weight it carries. Judgment still owns whether the context affects Signal
+Integrity, Signal Use, Decision Strength, Action Ceiling, credibility,
+independence, artificial amplification, exclusion, or demand support.
 ### Evidence Unit States
 
 | State | Meaning |
@@ -269,6 +271,7 @@ Use these categories:
 - demand evidence;
 - attention evidence;
 - resonance evidence;
+- resonance-direction evidence;
 - positioning evidence;
 - objection evidence;
 - distribution evidence;

@@ -91,15 +91,18 @@ Public-reaction engagement follows the same epistemic boundary:
   material.
 - **Silver:** Projection rows, ECR/SCR records, Cleaning ledgers/views, or
   mechanical `engagement_context` records that normalize, preserve, summarize,
-  or group those raw facts without deciding meaning.
+  or group those raw facts without deciding meaning. Silver may preserve
+  source-visible resonance qualifiers such as direction, visible audience-fit
+  basis, baseline context, and discount reasons, but not their Judgment effect.
 - **Pre-gold:** mechanical candidate alerts only, such as an outside-usual-range
-  engagement movement or Spike/Movement Alert, still with explicit non-claims.
+  engagement movement, resonance-context candidate, or Spike/Movement Alert,
+  still with explicit non-claims.
 - **Gold-ready:** a decision-bounded evidence assembly that gathers raw,
   Silver, and any Pre-gold engagement evidence for a specific Judgment question
   with `judgment_status: not_evaluated` or equivalent.
 - **Gold:** Judgment-owned interpretation of what the engagement means for
-  credibility, independence, Signal Integrity, Signal Use, Decision Strength,
-  Action Ceiling, demand support, or exclusion.
+  resonance weight, credibility, independence, Signal Integrity, Signal Use,
+  Decision Strength, Action Ceiling, demand support, or exclusion.
 
 ## Spike Alert Contract
 

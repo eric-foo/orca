@@ -89,9 +89,12 @@ a standing query monitor, or a crawler substitute.
 Public-reaction engagement context is a scan-routing input. If a scan observes
 source-visible upvotes, helpful votes, likes, views, shares, comment counts,
 reply counts, source-native score state, visible sort/rank/order, or
-pinned/hearted/official-response markers, it may use them to prioritize a
-frontier, explain venue value, or request Capture preservation. Scanning must
-not turn those metrics into demand proof, credibility, independence,
+pinned/hearted/official-response markers, it should treat them as qualitative
+resonance context by default and may use them to prioritize a frontier, explain
+venue value, or request Capture preservation. Direction, visible audience fit,
+baseline context, manipulation risk, and ambiguity decide how much routing
+priority the context deserves. Scanning must not turn those metrics into demand
+proof, credibility, independence,
 amplification, gate clearance, graph weight, or Action Ceiling.
 
 Before closeout, a fresh CSB-first scan artifact must pass

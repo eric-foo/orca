@@ -83,8 +83,10 @@ Public-reaction engagement context is one named working view inside this generic
 contract. When Capture or Projection preserves visible reaction metrics, Cleaning
 may surface `engagement_context` for navigation and traceability. It must keep
 raw/projection refs, metric posture, row binding, residuals, and non-claims; it
-must not decide credibility, independence, amplification, demand support, or
-Action Ceiling.
+may preserve direction, visible audience-fit basis, baseline context, and
+discount reasons as resonance context; it must not decide final resonance
+weight, credibility, independence, amplification, demand support, or Action
+Ceiling.
 
 ## What Is Not Generic
 

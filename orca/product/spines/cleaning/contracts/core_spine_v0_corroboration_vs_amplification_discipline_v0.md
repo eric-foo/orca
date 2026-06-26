@@ -81,8 +81,11 @@ the wedge and must stay rigorous.
 - Engagement context is one of the mechanical inputs that makes this judgment
   inspectable. Cleaning may preserve high/low reaction metrics, source order,
   reply depth, repetition, and disagreement structure, but only as context for
-  Judgment to inspect. Cleaning must not decide that high engagement equals
-  independent corroboration or that low engagement makes the signal useless.
+  Judgment to inspect. High source-visible engagement should be carried forward
+  as possible resonance weight with its direction, visible audience fit, baseline
+  context, and discount reasons, but Cleaning must not decide that resonance
+  weight, high engagement equals independent corroboration, or low engagement
+  makes the signal useless.
 
 ## Non-Claims
 

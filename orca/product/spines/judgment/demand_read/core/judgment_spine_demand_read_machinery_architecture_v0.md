@@ -148,9 +148,12 @@ so contamination can be tell-audited and lessons extracted.
   Durable means the read names an evidence-supported basis for projecting strong
   demand over the relevant decision horizon; transient means strong current-window
   demand whose durability is not called, or whose evidence supports decay. Weak,
-  attention-only, or manufactured signals are not transient demand. The ceiling is
-  capped by the weakest load-bearing evidence — costly behavior can reach
-  Commit-grade; engagement volume alone caps lower (buyer-proof rule).
+  attention-only, resonance-only, or manufactured signals are not transient
+  demand. Public-reaction engagement should be interpreted as qualitative
+  resonance weight by default, with direction, audience fit, baseline,
+  manipulation risk, and ambiguity shaping the weight. The ceiling is capped by
+  the weakest load-bearing evidence — costly behavior can reach Commit-grade;
+  engagement/resonance alone caps lower (buyer-proof rule).
   **Persistence-axis** risk patterns (resale/flip, event/one-time,
   scarcity/panic) are classified **here** as transient, not capped at C2 (their
   discriminator families arrive from C2 Rule 3); **manufactured-axis** integrity
