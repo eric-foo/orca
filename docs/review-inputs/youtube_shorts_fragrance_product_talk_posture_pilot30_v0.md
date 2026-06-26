@@ -27,6 +27,17 @@ This pilot asks a narrower question than generic tone: when the creator talks ab
 
 Transcript bodies were read transiently from the existing hard30 data-lake pointers and were not copied into this repo artifact.
 
+## Placement
+
+Canonical durable row data belongs in the data lake derived tree, not in this repo file. This repo artifact is a pilot mirror/receipt for review and prompt iteration only.
+
+Admissible lake promotion is split:
+
+- quote/timestamp-backed product mentions and source-visible commercial signals: `derived/<transcript-packet>/silver__cleaning__product_mentions/<id>` or a sibling Cleaning silver lane under the same raw anchor when the row is not itself a product mention
+- product posture, recommendation strength, and claim-frame features: future derived rows only after they carry transcript source pointers and a stable row contract
+
+Do not append this pilot table to silver as-is. The current rows were created from transient transcript reads and do not all satisfy the YouTube spec's CE2/CE9 quote-pointer admission requirement.
+
 ## Field Contract
 
 Pilot-only fields:
@@ -128,5 +139,6 @@ Do not expand this as a vague tone score. If expanded, keep it as product-talk p
 - not creator-level generalization
 - not proof that product-talk posture is worth full instrumentation
 - not a claim that transcript-only labels capture sarcasm or delivery reliably
+- not canonical durable data-lake row storage
 
 Machine-readable labels are in `docs/review-inputs/youtube_shorts_fragrance_product_talk_posture_pilot30_v0.json`.

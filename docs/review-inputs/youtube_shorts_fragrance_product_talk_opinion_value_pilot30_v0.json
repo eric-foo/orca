@@ -2,10 +2,12 @@
   "generated_at_utc": "2026-06-26T20:03:03Z",
   "purpose": "Row-level advisory pass over the product-talk pilot to separate product identity, source-visible commercial signals, and independent-opinion evidence value.",
   "placement_decision": {
-    "current_repo_home": "docs/review-inputs",
-    "reason": "review-input/Judgment-prep artifact over a pilot fixture; not an accepted recurring data-lake derived record",
-    "future_silver_home_for_mechanical_mentions": "derived/<transcript-packet>/silver__cleaning__product_mentions/<id>",
-    "boundary": "product mentions and source-visible commercial signals may become silver features; opinion evidence value is interpretive and must not be treated as silver/gold truth without a later Judgment/assembly contract"
+    "repo_role": "transitional pilot mirror/receipt only; not canonical durable row storage",
+    "canonical_row_data_home": "data_lake_derived",
+    "silver_home_for_admissible_observations": "derived/<transcript-packet>/silver__cleaning__product_mentions/<id> or a sibling Cleaning silver lane when the record is source-visible commercial context rather than a product mention",
+    "gold_ready_or_computed_home_for_opinion_value": "bounded gold-ready/Judgment-prep assembly or consumption-time computed view with judgment_status:not_evaluated; not silver",
+    "do_not_promote_as_is": "current rows lack full CE2/CE9 quote/timestamp admission for every row and include independent-opinion evidence value interpretation",
+    "boundary": "product mentions and source-visible commercial signals may become silver only when quote-backed and schema-admitted; independent opinion value, downweighting, source value, credibility, sponsorship truth, and action meaning stay out of silver"
   },
   "input_artifacts": {
     "product_talk_posture_pilot30": "docs/review-inputs/youtube_shorts_fragrance_product_talk_posture_pilot30_v0.json",
@@ -937,6 +939,7 @@
     "not buyer proof",
     "not a sponsorship truth label",
     "not a paid-activity, credibility, or Signal Integrity judgment",
+    "not canonical durable data-lake row storage",
     "not data-lake silver output despite using silver placement language for future mechanical mentions",
     "not inter-rater reliability",
     "not creator-level generalization",

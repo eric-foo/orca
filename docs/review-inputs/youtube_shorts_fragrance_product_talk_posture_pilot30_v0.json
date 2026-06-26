@@ -2,6 +2,16 @@
   "generated_at_utc": "2026-06-26T19:43:59Z",
   "purpose": "Narrow pilot over the hard30 YouTube Shorts fragrance fixture to test whether transcript-only product-talk posture adds useful signal beyond rhetorical mode.",
   "scope": "Product-talk posture labels from transcript text only; no audio energy/prosody, visuals, comments, likes, or creator-level generalization.",
+  "placement_decision": {
+    "repo_role": "transitional pilot mirror/receipt only; not canonical durable row storage",
+    "canonical_row_data_home": "data_lake_derived",
+    "candidate_lake_homes": {
+      "quote_backed_product_mentions_and_source_visible_commercial_signals": "derived/<transcript-packet>/silver__cleaning__product_mentions/<id> or a sibling Cleaning silver lane under the same raw anchor when the row is not itself a product mention",
+      "posture_and_claim_frame_features": "future derived lane only after a stable row contract and source-pointer admission"
+    },
+    "do_not_promote_as_is": "pilot rows do not all carry CE2/CE9 quote/timestamp pointers and include provisional qualitative labels",
+    "boundary": "silver may carry traceable transcript-visible features; it must not carry buyer proof, credibility, sponsorship truth, or independent preference/source-value conclusions"
+  },
   "input_artifacts": {
     "hard30_fixture": "docs/review-inputs/youtube_shorts_fragrance_tone_fixture_hard30_v0.json",
     "hard30_second_pass_tone_labels": "docs/review-inputs/youtube_shorts_fragrance_tone_labeling_run_v1.json",
@@ -1193,6 +1203,7 @@
     "not audio tone, energy, pace, volume, or prosody",
     "not creator-level generalization",
     "not proof that product-talk posture is worth full instrumentation",
-    "not a claim that transcript-only labels capture sarcasm or delivery reliably"
+    "not a claim that transcript-only labels capture sarcasm or delivery reliably",
+    "not canonical durable data-lake row storage"
   ]
 }

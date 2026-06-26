@@ -28,11 +28,14 @@ This artifact accepts the owner direction: sponsored, brand-sent, direct-CTA, an
 
 ## Placement
 
-Current home: `docs/review-inputs/`.
+Canonical durable row data belongs in the data lake derived tree. This repo file is only a transitional review mirror/receipt for the pilot rows.
 
-Future mechanical product mentions belong in the YouTube transcript-product silver lane named by the YouTube spec: `derived/<transcript-packet>/silver__cleaning__product_mentions/<id>`. That silver layer may carry product mentions and source-visible commercial signals. It must not carry final opinion value, credibility, sponsorship truth, Signal Integrity, or action meaning.
+Admissible lake promotion is split:
 
-So this pilot stays as review input / Judgment-prep. It is not itself silver output.
+- quote/timestamp-backed product mentions and source-visible commercial signals: `derived/<transcript-packet>/silver__cleaning__product_mentions/<id>` or a sibling Cleaning silver lane under the same raw anchor when the row is not itself a product mention
+- independent-opinion evidence tier, down-weighting advice, and source-value interpretation: a bounded gold-ready/Judgment-prep assembly or consumption-time computed view with `judgment_status: not_evaluated`, not silver
+
+Do not append this pilot table to silver as-is. It lacks full CE2/CE9 quote/timestamp admission for every row and includes interpretive opinion-value fields.
 
 ## Evidence Tiers
 
@@ -86,6 +89,7 @@ Rows with unresolved/low-confidence product identity remain useful only after en
 - not buyer proof
 - not a sponsorship truth label
 - not a paid-activity, credibility, or Signal Integrity judgment
+- not canonical durable data-lake row storage
 - not data-lake silver output despite using silver placement language for future mechanical mentions
 - not inter-rater reliability
 - not creator-level generalization
