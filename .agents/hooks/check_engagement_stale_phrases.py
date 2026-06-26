@@ -460,6 +460,10 @@ def main(argv: list[str]) -> int:
         relpaths.extend(changed_paths(root))
     relpaths.extend(to_relposix(path, root) for path in args.paths)
 
+    selection_requested = bool(args.paths or args.live or args.staged or args.changed)
+    if not relpaths and selection_requested:
+        print("engagement-stale-phrases: no live doctrine files selected -- OK")
+        return 0
     if not relpaths:
         parser.print_usage(sys.stderr)
         return 2

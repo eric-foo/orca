@@ -24,9 +24,8 @@ via exit code — so they are **harness-portable**: the *logic* runs anywhere; o
 | `check_repo_map_freshness.py` | **post-tool** (after a write) | Reports structural drift vs the repo map as advisory output; exits 2 when the repo map itself is dirty after edit so the next action is an explicit-path commit; has a `--strict` gate for commit/CI use. |
 | `remind_sci.py` | **pre-tool** (before a `git commit`) | Advisory (exit 0): when the commit includes durable-artifact changes, re-injects the Smallest Complete Intervention rule (verbatim from AGENTS.md) as a nudge before scope is locked in. Never blocks; silent for code/scratch/config-only commits. |
 
-Each has a `--selftest`. Rule authority lives in the overlay
-(`.agents/workflow-overlay/safety-rules.md`, `validation-gates.md`) — the scripts
-reference it, they don't restate it.
+Each has a `--selftest`. Each script names its own rule authority in its module
+header and references that source instead of restating it.
 
 ## The contract (harness-agnostic)
 
