@@ -105,25 +105,26 @@ deferred" for the cadence knobs only; scheduler/runtime selection and the gap-re
 home stay deferred. These are starting values to operate and tune against observed block
 rate, not a platform guarantee or a final lock.
 
-- **Active window:** captures run inside a daily active window of about **8 hours**, NOT 24/7.
-  The cap is therefore NOT `panel_size / 24h`; throughput is bounded by the window x spacing
-  ceiling below.
-- **Minimum spacing:** **30 seconds** between any two captures. This is the block-safe floor;
-  do not drop below it to force more throughput.
+- **Active window:** captures run across **three ~4h active sessions (~12h active/day total),
+  with breaks between sessions**, NOT 24/7. The cap is therefore NOT `panel_size / 24h`;
+  throughput is bounded by the active-time x average-spacing ceiling below.
+- **Spacing:** **~30 seconds average** between captures, **jittered per gap** (each gap drawn
+  from roughly a **15-45s window**) so the schedule is an average rate with natural variance,
+  not a fixed interval. The **average** -- not a floor -- is what sets throughput.
 - **Per-creator interval (two tiers):**
   - **Tier 1 baseline:** **1x/day** for every creator. This yields spike *detection* at roughly
     one-day latency -- a jump shows at the next daily capture.
   - **Tier 2 escalated:** **2-4x/day**, only for creators with an active Spike Alert. This
     *tracks* a spike once detected; de-escalate when the creator returns to usual range.
-- **Throughput ceiling (derived, not a separate knob):** `active_window / spacing` =
-  `8h x 3600 / 30s` = **~960 captures/day** per 8h/30s window.
+- **Throughput ceiling (derived, not a separate knob):** `active_time / avg_spacing` =
+  `12h x 3600 / 30s` = **~1,440 captures/day** across the three sessions.
 - **Capacity vs. panel size:**
-  - A 1x/day baseline fits comfortably up to ~**750-800 creators** in an 8h/30s window
-    (~20% headroom for Tier-2 escalation).
-  - The **1,000-creator target exceeds a single 8h/30s window**: 1,000 baseline alone is
-    `1000 x 30s` = 8.3h, before any escalation. At 1k, relieve by **widening the daily window**
-    (~10-11h covers 1k + modest escalation), adding a **second window**, or **splitting the
-    panel** -- NOT by dropping spacing below the 30s floor.
+  - A 1x/day baseline fits comfortably up to ~**1,150 creators** in the 12h / 30s-average
+    budget (~20% headroom for Tier-2 escalation).
+  - The **1,000-creator target fits** the v0 budget: 1,000 baseline = `1000 x 30s` = 8.3h
+    active (~69% of the 12h), leaving ~**440 captures/day** of headroom for Tier-2 escalation.
+    Beyond ~1,150 creators, relieve by **adding session time** or **splitting the panel** --
+    NOT by dropping the average spacing.
 
 **Spike model (explicit accepted limit).** Real-time spike catching is out of reach: it would
 require hourly monitoring of the whole panel, which does not fit the window/spacing budget at
@@ -147,8 +148,8 @@ attempted, slowed, paused, or recorded as gaps.
 
 - The concrete cadence numbers are now **set as owner v0 (2026-06-26)** -- see "v0 Cadence
   Budget" above. They are starting values to tune against observed block rate, not a final
-  lock; the **1k panel's window/throughput relief** (longer window, second window, or panel
-  split) is the open sub-decision to make when the panel actually approaches that size.
+  lock. The 1k target fits the v0 12h budget (~69% utilization); beyond ~1,150 creators, add
+  session time or split the panel.
 - Scheduler/runtime selection -- deferred; not chosen here.
 - Whether the gap-recording home for a skipped/blocked timepoint is a capture-side artifact or
   a downstream-series-side annotation -- resolve when the momentum lane is scoped. The
