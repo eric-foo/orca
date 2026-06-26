@@ -10,8 +10,11 @@ scope: >
   orca-harness/cleaning/transcript_product_lake.py. Records the agreed v0 shape (per-video gold),
   the pattern to mirror, and what stays deferred (cross-creator aggregation).
 use_when:
-  - Starting the gold-write lake adapter for product verdicts.
+  - Starting or resuming ANY of these by name — "gold writes", "the gold lane", "the gold layer",
+    "product-verdict gold", "product verdict gold write", "the product gold lane" — for product verdicts.
+  - Building the gold-write lake adapter that persists Pass-2 ProductVerdicts to the data lake.
   - Confirming the agreed shape and what is in vs out of v0 before building.
+aliases: [gold writes, gold lane, gold layer, product verdict gold, product gold lane, verdict gold write]
 authority_boundary: retrieval_only
 open_next:
   - orca-harness/scoring/product_fusion.py
