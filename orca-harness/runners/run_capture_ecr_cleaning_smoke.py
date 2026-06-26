@@ -112,8 +112,11 @@ def run_capture_ecr_cleaning_smoke(
     retail_entries = _entry_list(manifest, "retail")
     reddit_entries = _entry_list(manifest, "reddit")
     instagram_entries = _entry_list(manifest, "instagram")
-    if not retail_entries and not reddit_entries and not instagram_entries:
-        raise ValueError("smoke manifest must name at least one retail, reddit, or instagram source")
+    youtube_entries = _entry_list(manifest, "youtube")
+    if not retail_entries and not reddit_entries and not instagram_entries and not youtube_entries:
+        raise ValueError(
+            "smoke manifest must name at least one retail, reddit, instagram, or youtube source"
+        )
 
     output_dir = output_dir.resolve()
     output_paths = {
@@ -171,6 +174,16 @@ def run_capture_ecr_cleaning_smoke(
         receipts.append(result["ecr_receipt"])
         source_summaries.append(result["source_summary"])
 
+    for index, entry in enumerate(youtube_entries, start=1):
+        result = _process_youtube_entry(
+            entry=entry,
+            index=index,
+            manifest_dir=manifest_dir,
+        )
+        handles.extend(result["handles"])
+        receipts.append(result["ecr_receipt"])
+        source_summaries.append(result["source_summary"])
+
     transform_ledger = (
         _cleaning_transform_smoke_entries(transform_candidates)
         if include_cleaning_transform_smoke
@@ -194,6 +207,7 @@ def run_capture_ecr_cleaning_smoke(
             "retail_sources": len(retail_entries),
             "reddit_sources": len(reddit_entries),
             "instagram_sources": len(instagram_entries),
+            "youtube_sources": len(youtube_entries),
             "ecr_receipts": len(receipts),
             "cleaning_handles": len(cleaning_packet.handles),
             "cleaning_transform_entries": len(cleaning_packet.transform_ledger),
@@ -210,6 +224,80 @@ def run_capture_ecr_cleaning_smoke(
     _write_json(output_paths["smoke_summary"], summary_payload)
 
     return {key: str(path) for key, path in output_paths.items()}
+
+
+def _process_youtube_entry(
+    *,
+    entry: dict[str, Any],
+    index: int,
+    manifest_dir: Path,
+) -> dict[str, Any]:
+    source_label = _optional_text(entry, "source_label") or f"youtube:{index}"
+    packet_dir = _resolve_manifest_path(manifest_dir, entry, "packet_dir")
+    packet = _load_packet(packet_dir)
+
+    if packet.source_family != "youtube":
+        raise ValueError(
+            f"{source_label} packet source_family must be 'youtube'; got {packet.source_family!r}"
+        )
+
+    ecr_receipt, ecr_ref = _derive_ecr_receipt(
+        packet=packet,
+        packet_dir=packet_dir,
+        source_label=source_label,
+    )
+
+    handles: list[CleaningInputHandle] = []
+    files_by_id = {preserved.file_id: preserved for preserved in packet.preserved_files}
+    for source_slice in packet.source_slices:
+        for file_id in source_slice.preserved_file_ids:
+            raw_file = files_by_id.get(file_id)
+            if raw_file is None:
+                raise ValueError(
+                    f"{source_label} packet {packet.packet_id} slice {source_slice.slice_id!r} "
+                    f"references absent preserved file {file_id!r}"
+                )
+            verified_file, _raw_path = _verified_preserved_file(
+                packet_dir=packet_dir,
+                packet=packet,
+                file_id=raw_file.file_id,
+                expected_relative_packet_path=raw_file.relative_packet_path,
+                expected_sha256=raw_file.sha256,
+            )
+            handles.append(
+                CleaningInputHandle(
+                    handle_id=(
+                        f"{source_label}:{packet.packet_id}:{source_slice.slice_id}:"
+                        f"{verified_file.file_id}"
+                    ),
+                    source_family=packet.source_family,
+                    source_surface=packet.source_surface,
+                    raw_anchor=CleaningRawAnchor(
+                        packet_id=packet.packet_id,
+                        slice_id=source_slice.slice_id,
+                        file_id=verified_file.file_id,
+                        relative_packet_path=verified_file.relative_packet_path,
+                        sha256=verified_file.sha256,
+                        hash_basis=verified_file.hash_basis,
+                        anchor_kind="file",
+                    ),
+                    ecr_ref=ecr_ref,
+                )
+            )
+
+    return {
+        "handles": handles,
+        "ecr_receipt": ecr_receipt,
+        "source_summary": {
+            "source_label": source_label,
+            "packet_id": packet.packet_id,
+            "packet_dir": str(packet_dir),
+            "source_surface": packet.source_surface,
+            "slice_count": len(packet.source_slices),
+            "preserved_file_count": len(packet.preserved_files),
+            "handle_count": len(handles),
+        },
+    }
 
 
 def _process_retail_entry(

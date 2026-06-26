@@ -32,6 +32,8 @@ from source_capture.models import (
 from source_capture.ig_projection import write_ig_creator_momentum_projection
 from source_capture.reddit_consolidation import consolidate_reddit_packet
 from source_capture.retail_pdp_projection import write_retail_pdp_projection
+from source_capture.transcript.caption_packet import write_caption_packet
+from source_capture.transcript.youtube_captions import CaptionFetch
 from source_capture.writer import write_local_source_capture_packet
 
 
@@ -72,6 +74,7 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_retail_and_reddit(
         "retail_sources": 1,
         "reddit_sources": 1,
         "instagram_sources": 0,
+        "youtube_sources": 0,
         "ecr_receipts": 2,
         "cleaning_handles": len(cleaning_packet.handles),
         "cleaning_transform_entries": 0,
@@ -168,6 +171,7 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_instagram(
         "retail_sources": 0,
         "reddit_sources": 0,
         "instagram_sources": 1,
+        "youtube_sources": 0,
         "ecr_receipts": 1,
         "cleaning_handles": len(instagram_projection.rows),
         "cleaning_transform_entries": 0,
@@ -201,6 +205,81 @@ def test_runner_writes_ecr_receipts_and_cleaning_packet_for_instagram(
     assert instagram_source["handle_count"] == len(instagram_projection.rows)
     assert instagram_source["row_count"] == len(instagram_projection.rows)
     assert instagram_source["structure_preserved"] is True
+    assert summary["findings"] == []
+
+
+def test_runner_writes_ecr_receipts_and_cleaning_packet_for_youtube(
+    tmp_path: Path,
+) -> None:
+    youtube_packet_dir = _write_youtube_caption_packet_dir(tmp_path)
+    smoke_manifest_path = _write_smoke_manifest(
+        tmp_path,
+        youtube_packet_dir=youtube_packet_dir,
+        youtube_source_label="youtube:caption",
+    )
+
+    outputs = run_capture_ecr_cleaning_smoke(
+        smoke_manifest_path=smoke_manifest_path,
+        output_dir=tmp_path / "smoke_outputs",
+    )
+
+    ecr_receipts = _load_json(Path(outputs["ecr_source_side_receipts"]))
+    cleaning_packet = CleaningPacket.model_validate(
+        _load_json(Path(outputs["cleaning_packet"]))
+    )
+    summary = _load_json(Path(outputs["smoke_summary"]))
+
+    assert summary["counts"] == {
+        "retail_sources": 0,
+        "reddit_sources": 0,
+        "instagram_sources": 0,
+        "youtube_sources": 1,
+        "ecr_receipts": 1,
+        "cleaning_handles": 2,
+        "cleaning_transform_entries": 0,
+    }
+    assert len(ecr_receipts["receipts"]) == 1
+    receipt = ecr_receipts["receipts"][0]
+    assert receipt["source_label"] == "youtube:caption"
+    assert set(receipt["postures"]) == {
+        "identity",
+        "inspectability",
+        "timing",
+        "source_visibility",
+    }
+    assert receipt["clears"] == {
+        "identity": True,
+        "inspectability": True,
+        "timing": False,
+        "source_visibility": False,
+    }
+    assert receipt["postures"]["timing"][0]["residual"]["status"] == "not_applicable"
+    assert receipt["postures"]["source_visibility"][0]["value"] == "current_capture_only"
+    assert receipt["postures"]["source_visibility"][0]["clears_source_visibility"] is False
+
+    youtube_handles = [
+        handle
+        for handle in cleaning_packet.handles
+        if handle.handle_id.startswith("youtube:caption:")
+    ]
+    assert len(youtube_handles) == 2
+    assert all(handle.source_family == "youtube" for handle in youtube_handles)
+    assert all(handle.source_surface == "youtube_captions" for handle in youtube_handles)
+    assert all(handle.raw_anchor.anchor_kind == "file" for handle in youtube_handles)
+    assert all(handle.projection_ref is None for handle in youtube_handles)
+    assert all(handle.ecr_ref is not None for handle in youtube_handles)
+    assert all(
+        handle.ecr_ref.packet_id == handle.raw_anchor.packet_id
+        for handle in youtube_handles
+        if handle.ecr_ref is not None
+    )
+    youtube_source = next(
+        source for source in summary["sources"] if source["source_label"] == "youtube:caption"
+    )
+    assert youtube_source["source_surface"] == "youtube_captions"
+    assert youtube_source["slice_count"] == 1
+    assert youtube_source["preserved_file_count"] == 2
+    assert youtube_source["handle_count"] == 2
     assert summary["findings"] == []
 
 def test_retail_capture_validity_flags_error_page_without_blocking(tmp_path: Path) -> None:
@@ -710,7 +789,7 @@ def test_runner_refuses_empty_manifest_and_existing_outputs(tmp_path: Path) -> N
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="at least one retail, reddit, or instagram source"):
+    with pytest.raises(ValueError, match="at least one retail, reddit, instagram, or youtube source"):
         run_capture_ecr_cleaning_smoke(
             smoke_manifest_path=empty_manifest,
             output_dir=tmp_path / "empty_outputs",
@@ -1785,6 +1864,8 @@ def _write_smoke_manifest(
     instagram_handle: str | None = None,
     instagram_packet_dir: Path | None = None,
     instagram_projection_path: Path | None = None,
+    youtube_packet_dir: Path | None = None,
+    youtube_source_label: str | None = None,
 ) -> Path:
     manifest: dict[str, object] = {"run_id": "fixture_real_data_shape_smoke"}
     if retail_packet_dir is not None and retail_projection_path is not None:
@@ -1810,6 +1891,13 @@ def _write_smoke_manifest(
                 "projection_json": str(instagram_projection_path),
             }
         ]
+    if youtube_packet_dir is not None:
+        manifest["youtube"] = [
+            {
+                "source_label": youtube_source_label or "youtube:caption",
+                "packet_dir": str(youtube_packet_dir),
+            }
+        ]
     path = tmp_path / f"smoke_manifest_{len(list(tmp_path.glob('smoke_manifest_*.json')))}.json"
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
@@ -1833,6 +1921,48 @@ def _write_audit_manifest(
     path = tmp_path / f"audit_manifest_{len(list(tmp_path.glob('audit_manifest_*.json')))}.json"
     path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return path
+
+
+def _write_youtube_caption_packet_dir(tmp_path: Path) -> Path:
+    json3 = json.dumps(
+        {
+            "events": [
+                {
+                    "tStartMs": 1000,
+                    "dDurationMs": 2000,
+                    "segs": [{"utf8": "Today I'm testing Dior Sauvage Elixir"}],
+                },
+                {
+                    "tStartMs": 3000,
+                    "dDurationMs": 3000,
+                    "segs": [{"utf8": "and it is an absolute beast in the heat"}],
+                },
+            ]
+        }
+    ).encode("utf-8")
+    cap = CaptionFetch(
+        video_id="vid12345678",
+        found=True,
+        note="ok",
+        lang="en",
+        caption_kind="auto",
+        json3_bytes=json3,
+        flat_text="Today I'm testing Dior Sauvage Elixir\nand it is an absolute beast in the heat",
+        cue_count=2,
+        title="Fixture fragrance video",
+        channel_id="UC_fixture",
+        publish_date_iso="2026-06-20",
+        duration_s=42,
+        tooling={"tool": "yt-dlp", "tool_version": "test", "client": "yt-dlp-default"},
+    )
+    code, msg = write_caption_packet(
+        cap,
+        output_directory=tmp_path / "youtube_caption_packet",
+        decision_question="What product mentions are preserved in this YouTube caption packet?",
+        now_iso="2026-06-20T00:00:00Z",
+    )
+    assert code == 0
+    return Path(msg)
 
 
 def _write_instagram_packet_dir(tmp_path: Path) -> Path:
