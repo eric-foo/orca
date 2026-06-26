@@ -19,6 +19,7 @@ via exit code — so they are **harness-portable**: the *logic* runs anywhere; o
 | `pre_push_guard.py` | local Git **pre-push** adapter policy | Blocks pushes targeting `main`, branch deletes, non-fast-forward updates, and unverifiable update safety when `.githooks/pre-push` is installed through `core.hooksPath`. Bypassable with `--no-verify`; misses GitHub API merges. |
 | `check_retrieval_header.py` | **post-tool** (after a write) | Advisory (exit 0): warns if an in-scope artifact is missing its retrieval header. Forward-only; never blocks. |
 | `check_dcp_receipt_hygiene.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on deterministic DCP receipt storage defects in changed durable docs: more than two inline receipts, missing archive pointer, or unauthorized standalone DCP receipt files. Shape only; never receipt truth, validation, readiness, or acceptance. |
+| `check_registry_list_sync.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on explicitly registered vocabulary-list drift. Current binding: Foundation Allowed Signal Uses must be contained by the engagement registry Signal Use Classification list. Shape only; never category correctness or auto-promotion. |
 | `check_repo_map_freshness.py` | **post-tool** (after a write) | Reports structural drift vs the repo map as advisory output; exits 2 when the repo map itself is dirty after edit so the next action is an explicit-path commit; has a `--strict` gate for commit/CI use. |
 | `remind_sci.py` | **pre-tool** (before a `git commit`) | Advisory (exit 0): when the commit includes durable-artifact changes, re-injects the Smallest Complete Intervention rule (verbatim from AGENTS.md) as a nudge before scope is locked in. Never blocks; silent for code/scratch/config-only commits. |
 
@@ -59,6 +60,7 @@ Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_dcp_receipt_hygiene.py --selftest
+python .agents/hooks/check_registry_list_sync.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 ```
 
@@ -102,6 +104,7 @@ Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
 python .agents/hooks/check_dcp_receipt_hygiene.py --selftest
+python .agents/hooks/check_registry_list_sync.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 python .codex/hooks/orca_guard_codex_adapter.py --selftest
 ```
