@@ -6,8 +6,8 @@ quality, validate candidates, bind Capture routes, or prove a scan is good. It
 only checks that a CSB-first scan artifact preserves the mechanical receipt
 shape needed for review: source context, caps, broad-scout accounting,
 CSB-row accountability, exact-query accounting, venue/hidden-venue accounting,
-observations, negatives/access notes, capture-request accounting, and a bounded
-candidate closeout.
+observations, negatives/access notes, capture-request accounting, bounded
+candidate closeout, and mechanical engagement/resonance overclaim language.
 """
 from __future__ import annotations
 
@@ -150,6 +150,85 @@ BROAD_SCOUT_DETAIL_PATTERNS = {
     ),
 }
 
+ENGAGEMENT_RULE_AUTHORITY = "orca/product/shared/engagement_registry/engagement_logic_registry_v0.md"
+ENGAGEMENT_SIGNAL_RE = (
+    r"(?:engagement(?:\s+counts?)?|public[- ]reaction|reaction\s+volume|"
+    r"high[- ]engagement|low[- ]engagement|upvotes?|helpful\s+votes?|likes?|"
+    r"views?|shares?|comments?|reply\s+counts?|source[- ]native\s+scores?|"
+    r"source\s+rank|source\s+order|visible\s+sort|visible\s+rank|resonance)"
+)
+NEGATED_OVERCLAIM_RE = re.compile(
+    r"\b(?:no|not|never|without|cannot|can't|must\s+not|does\s+not|do\s+not|"
+    r"don't|is\s+not|are\s+not|not\s+enough\s+to)\b",
+    re.IGNORECASE,
+)
+ENGAGEMENT_OVERCLAIM_PATTERNS = {
+    "engagement_as_proof": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:proves?|proof|validates?|confirms?|"
+        rf"establishes|demonstrates|clears?|means|counts\s+as)\b.{{0,80}}\b(?:demand|buyer\s+pull|"
+        rf"willingness\s+to\s+pay|market\s+pull|purchase\s+intent)\b|"
+        rf"\b(?:demand|buyer\s+pull|willingness\s+to\s+pay|market\s+pull|purchase\s+intent)\b"
+        rf".{{0,80}}\b(?:is\s+)?(?:proven|proved|validated|confirmed|established|demonstrated|cleared|"
+        rf"proof)\b.{{0,80}}\b(?:by|from|because\s+of|due\s+to|through|via)\b.{{0,80}}\b"
+        rf"{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_gate_clearance_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:clears?|passes?|satisfies|unlocks?|"
+        rf"establishes|justifies?|means|counts\s+as)\b.{{0,80}}\b(?:gate(?:\s+clearance)?|"
+        rf"demand\s+gate|admissibility|candidate\s+clearance)\b|"
+        rf"\b(?:gate(?:\s+clearance)?|demand\s+gate|admissibility|candidate\s+clearance)\b"
+        rf".{{0,80}}\b(?:is|was|cleared|passed|satisfied|unlocked|established|justified|"
+        rf"because\s+of|due\s+to|from|by|based\s+on)\b.{{0,80}}\b{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_route_binding_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:binds?|sets?|selects?|authorizes?|clears?|"
+        rf"recommends?|establishes)\b.{{0,80}}\b(?:Capture\s+route|capture\s+method|"
+        rf"route[_ -]?binding(?:[_ -]?state)?|source[- ]access\s+route|capture[- ]owned\s+route)\b|"
+        rf"\b(?:Capture\s+route|capture\s+method|route[_ -]?binding(?:[_ -]?state)?|"
+        rf"source[- ]access\s+route|capture[- ]owned\s+route)\b.{{0,80}}\b(?:is|was|bound|set|"
+        rf"selected|authorized|cleared|recommended|established|because\s+of|due\s+to|from|by|"
+        rf"based\s+on)\b.{{0,80}}\b{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_graph_weight_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:sets?|determines|drives|raises|"
+        rf"increases|justifies|supports?|becomes|is|means|counts\s+as)\b.{{0,80}}\b(?:graph[_ -]?weight"
+        rf"(?:[_ -]?hint)?|graph\s+score|graph\s+strength)\b|"
+        rf"\b(?:graph[_ -]?weight(?:[_ -]?hint)?|graph\s+score|graph\s+strength)\b"
+        rf".{{0,80}}\b(?:is|was|becomes|sets?|determined|driven|raised|increased|justified|supported|"
+        rf"because\s+of|due\s+to|from|by|based\s+on)\b.{{0,80}}\b{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_credibility_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:proves?|confirms?|establishes|"
+        rf"supports?|justifies?|sets?|labels?|means|counts\s+as)\b.{{0,80}}\b(?:credibility|credible|"
+        rf"independence|trustworthy|trust)\b|"
+        rf"\b(?:credibility|credible|independence|trustworthy|trust)\b"
+        rf".{{0,80}}\b(?:is|was|proven|confirmed|established|supported|justified|set|labeled|"
+        rf"because\s+of|due\s+to|from|by|based\s+on)\b.{{0,80}}\b{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_amplification_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:proves?|confirms?|establishes|"
+        rf"decides|labels?|sets?|means|counts\s+as)\b.{{0,80}}\b(?:artificial\s+amplification|"
+        rf"amplification|manipulation|bot(?:-like)?\s+activity)\b|"
+        rf"\b(?:artificial\s+amplification|amplification|manipulation|bot(?:-like)?\s+activity)\b"
+        rf".{{0,80}}\b(?:is|was|proven|confirmed|established|decided|labeled|set|because\s+of|"
+        rf"due\s+to|from|by|based\s+on)\b.{{0,80}}\b{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_action_ceiling_shortcut": re.compile(
+        rf"(?:\b{ENGAGEMENT_SIGNAL_RE}\b.{{0,80}}\b(?:clears?|sets?|raises|supports?|"
+        rf"justifies?|establishes|means|counts\s+as)\b.{{0,80}}\bAction\s+Ceiling\b|"
+        rf"\bAction\s+Ceiling\b.{{0,80}}\b(?:is|was|cleared|set|raised|supported|justified|"
+        rf"established|because\s+of|due\s+to|from|by|based\s+on)\b.{{0,80}}\b"
+        rf"{ENGAGEMENT_SIGNAL_RE}\b)",
+        re.IGNORECASE,
+    ),
+    "engagement_final_resonance_weight": re.compile(r"\bfinal\s+resonance\s+weight\b", re.IGNORECASE),
+}
 FORBIDDEN_TEXT_PATTERNS = {
     "recency_as_proof": re.compile(
         r"\b(recency|recent|currentness|current-state|current state)\b.{0,60}\b(proves|proof|gate clearance|clears? gate|demand verdict)\b",
@@ -567,6 +646,53 @@ def _validate_yaml_overclaims(blocks: list[Any]) -> list[Finding]:
     return findings
 
 
+def _line_number(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def _excerpt(value: str, limit: int = 120) -> str:
+    compact = " ".join(value.split())
+    if len(compact) <= limit:
+        return compact
+    return compact[: limit - 3] + "..."
+
+
+def _is_nonclaim_context(text: str, start: int, end: int) -> bool:
+    left_bounds = [text.rfind(boundary, 0, start) for boundary in (".", "\n", ";")]
+    right_bounds = [idx for idx in (text.find(boundary, end) for boundary in (".", "\n", ";")) if idx != -1]
+    left = max(left_bounds) + 1
+    right = min(right_bounds) if right_bounds else min(len(text), end + 80)
+    window = text[left:right]
+    return NEGATED_OVERCLAIM_RE.search(window) is not None
+
+
+def _validate_engagement_overclaims(text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    seen: set[tuple[str, int, str]] = set()
+    for code, pattern in ENGAGEMENT_OVERCLAIM_PATTERNS.items():
+        position = 0
+        while True:
+            match = pattern.search(text, position)
+            if match is None:
+                break
+            position = match.start() + 1
+            if _is_nonclaim_context(text, match.start(), match.end()):
+                continue
+            line = _line_number(text, match.start())
+            excerpt = _excerpt(match.group(0))
+            key = (code, line, excerpt)
+            if key in seen:
+                continue
+            seen.add(key)
+            findings.append(
+                Finding(
+                    code,
+                    "Forbidden engagement/resonance overclaim language "
+                    f"near line {line}: {excerpt!r}. See {ENGAGEMENT_RULE_AUTHORITY}.",
+                )
+            )
+    return findings
+
 def _validate_forbidden_text(text: str) -> list[Finding]:
     findings: list[Finding] = []
     for code, pattern in FORBIDDEN_TEXT_PATTERNS.items():
@@ -600,6 +726,7 @@ def validate_text(text: str) -> list[Finding]:
     findings.extend(_validate_capture_requests(blocks))
     findings.extend(_validate_closeout(text, blocks, intake))
     findings.extend(_validate_yaml_overclaims(blocks))
+    findings.extend(_validate_engagement_overclaims(text))
     findings.extend(_validate_forbidden_text(text))
     return findings
 

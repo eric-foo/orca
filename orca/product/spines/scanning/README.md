@@ -100,11 +100,14 @@ Ceiling.
 
 Before closeout, a fresh CSB-first scan artifact must pass
 `.agents/hooks/check_csb_scanning_artifact.py` or record why the checker was not
-run. The checker enforces receipt shape only: source context, caps,
-broad-scout accounting, CSB-row accountability, exact-query accounting,
-venue/hidden-venue accounting, observations, negatives/access notes,
-capture-request accounting, and candidate closeout. It does not grade signal
-quality, prove buyer demand, validate candidates, or bind Capture routes.
+run. The checker enforces receipt shape and mechanical public-reaction overclaim
+language only: source context, caps, broad-scout accounting, CSB-row
+accountability, exact-query accounting, venue/hidden-venue accounting,
+observations, negatives/access notes, capture-request accounting, candidate
+closeout, and explicit engagement/resonance shortcuts into proof, gate
+clearance, route binding, graph weight, credibility, amplification, Action
+Ceiling, or final resonance weight. It does not grade signal quality, prove
+buyer demand, validate candidates, or bind Capture routes.
 
 `precursor_signal` and `precursor_surface` are routing inputs. They may steer a
 walk or explain why a venue deserves inspection. They are not a generic label
@@ -245,3 +248,5 @@ direction_change_propagation:
     - not source-access authorization
     - not implementation authorization
 ```
+
+Older receipts archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.
