@@ -494,7 +494,7 @@ nickname: "crawling graph." The runner is
 | `.agents/workflow-overlay/communication-style.md` | Orca response style. |
 | `.agents/workflow-overlay/validation-gates.md` | Validation gate expectations. |
 | `.agents/workflow-overlay/review-lanes.md` | Review lane rules. |
-| `.agents/workflow-overlay/delegated-review-patch.md` | Provisional, opt-in Delegated Review-and-Patch convention for high-stakes authored artifacts; not a bound review lane. |
+| `.agents/workflow-overlay/delegated-review-patch.md` | Provisional, opt-in Delegated Review-and-Patch convention for high-stakes authored artifacts (and bounded multi-file code diffs via the `delegated_code_review_and_patch` sibling mode); not a bound review lane. |
 | `.agents/workflow-overlay/safety-rules.md` | Safety and forbidden drift. |
 | `.agents/workflow-overlay/skill-adoption.md` | Skill source and adoption status. |
 
