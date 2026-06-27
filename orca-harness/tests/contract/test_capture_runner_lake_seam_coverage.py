@@ -23,17 +23,7 @@ _SEAM_TOKEN = "data_root"
 # Packet-producing runners that intentionally do NOT route into the lake yet.
 # Each MUST carry a reason. Remove an entry when you wire its seam. Adding a new
 # packet runner without the seam and without an entry here fails the test below.
-KNOWN_UNSYNCED: dict[str, str] = {
-    "run_source_capture_browser_packet.py": "browser-snapshot surface not yet captured live into the lake",
-    "run_source_capture_authenticated_browser_packet.py": "authenticated-browser surface not yet captured live",
-    "run_source_capture_cloakbrowser_packet.py": "anti-detect browser surface not yet captured live",
-    "run_source_capture_antiblock_http_packet.py": "anti-blocking HTTP surface not yet captured live",
-    "run_source_capture_archive_packet.py": "archive.org / archive.today surface not yet captured live",
-    "run_source_capture_historical_packet.py": "multi-archive historical surface not yet captured live",
-    "run_source_capture_media_packet.py": "media-asset surface not yet captured live",
-    "run_source_capture_price_payload_packet.py": "vendor-pricing payload surface not yet captured live",
-    "run_source_capture_ig_calls_packet.py": "instagram creator-momentum surface not yet captured live",
-}
+KNOWN_UNSYNCED: dict[str, str] = {}
 
 
 def _packet_producers() -> dict[str, bool]:

@@ -8,6 +8,9 @@ import pytest
 from data_lake.root import (
     DataLakeRoot,
     DataLakeRootError,
+    EPOCH_MARKER_FILENAME,
+    LAKE_EPOCH,
+    LAKE_EPOCH_POLICY,
     LAKE_SUBDIRECTORIES,
     ROOT_MARKER_CONTRACT_VERSION,
     ROOT_MARKER_FILENAME,
@@ -65,6 +68,24 @@ def test_resolve_success_with_env(tmp_path: Path) -> None:
     assert resolved.root_uuid == root.root_uuid
 
 
+def test_resolve_rejects_legacy_v0_root(tmp_path: Path) -> None:
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / ROOT_MARKER_FILENAME).write_text(
+        json.dumps({"root_uuid": "LEGACY", "contract_version": "v0"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(DataLakeRootError, match="contract_version mismatch"):
+        DataLakeRoot.resolve(explicit=legacy, env={}, repo_root=None)
+
+
+def test_resolve_rejects_missing_epoch_marker(tmp_path: Path) -> None:
+    root = _init(tmp_path)
+    (root.path / EPOCH_MARKER_FILENAME).unlink()
+    with pytest.raises(DataLakeRootError, match="missing epoch marker"):
+        DataLakeRoot.resolve(explicit=root.path, env={}, repo_root=None)
+
+
 def test_resolve_precedence_explicit_over_env(tmp_path: Path) -> None:
     a = _init(tmp_path, "a")
     b = _init(tmp_path, "b")
@@ -91,6 +112,13 @@ def test_initialize_creates_skeleton_and_marker(tmp_path: Path) -> None:
     marker = json.loads((root.path / ROOT_MARKER_FILENAME).read_text(encoding="utf-8"))
     assert marker["root_uuid"]
     assert marker["contract_version"] == ROOT_MARKER_CONTRACT_VERSION
+    epoch = json.loads((root.path / EPOCH_MARKER_FILENAME).read_text(encoding="utf-8"))
+    assert epoch == {
+        "compatibility_migration": False,
+        "epoch_policy": LAKE_EPOCH_POLICY,
+        "lake_epoch": LAKE_EPOCH,
+        "legacy_roots": [],
+    }
 
 
 def test_initialize_refuses_nonempty_foreign_dir(tmp_path: Path) -> None:
