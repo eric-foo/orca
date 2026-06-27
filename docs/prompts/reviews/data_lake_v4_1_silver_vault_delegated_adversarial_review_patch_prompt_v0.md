@@ -9,7 +9,7 @@ scope: >
 use_when:
   - Commissioning a de-correlated controller to stress-test and patch the Silver
     Vault v4.1 contract before treating it as the forward foundation.
-authority_boundary: prompt_input
+authority_boundary: retrieval_only
 open_next:
   - AGENTS.md
   - .agents/workflow-overlay/README.md
