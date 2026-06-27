@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from collections import Counter
@@ -7,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
+from capture_spine.creator_public_handle_linkage.models import CreatorPublicHandleLinkageError
 from capture_spine.creator_public_handle_linkage.validation import assert_no_forbidden_output_fields
 
 
@@ -104,8 +106,42 @@ _ALLOWED_CREATOR_CLASSIFICATIONS = frozenset(
     {"creator_or_channel_observed", "brand_or_platform_account_observed"}
 )
 _ALLOWED_SOURCE_SURFACES = frozenset({"youtube_captions", "youtube_audio"})
+_YOUTUBE_FORBIDDEN_OUTPUT_FIELDS = frozenset(
+    {
+        "average_views",
+        "caption_body",
+        "caption_text",
+        "comment_count",
+        "comments",
+        "engagement_rate",
+        "full_transcript",
+        "instagram_account_id",
+        "instagram_handle",
+        "instagram_profile_url",
+        "instagram_public_handle",
+        "instagram_url",
+        "like_count",
+        "likes",
+        "raw_transcript",
+        "share_count",
+        "subscriber_count",
+        "tiktok_account_id",
+        "tiktok_handle",
+        "tiktok_profile_url",
+        "tiktok_public_handle",
+        "tiktok_url",
+        "transcript_body",
+        "transcript_text",
+        "view_count",
+        "views",
+    }
+)
 _PACKET_ID_RE = re.compile(r"[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
 _RAW_RELPATH_RE = re.compile(r"raw/[0-9a-f]{3}/[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
+_METADATA_RELPATH_RE = re.compile(
+    r"raw/[0-9a-f]{3}/[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}/raw/[0-9]{2}_[A-Za-z0-9_]+_metadata\.json"
+)
+_SHA256_RE = re.compile(r"[0-9a-f]{64}")
 
 
 class YoutubeCreatorObservationLedgerError(ValueError):
@@ -124,7 +160,11 @@ def load_youtube_creator_observation_ledger(path: str | Path) -> dict[str, Any]:
 
 
 def validate_youtube_creator_observation_ledger(ledger: Mapping[str, Any]) -> None:
-    assert_no_forbidden_output_fields(ledger)
+    _assert_no_youtube_forbidden_output_fields(ledger)
+    try:
+        assert_no_forbidden_output_fields(ledger)
+    except CreatorPublicHandleLinkageError as exc:
+        _fail(getattr(exc, "code", "forbidden_output_field"), str(exc))
     _reject_unknown_keys(ledger, _ALLOWED_TOP_LEVEL_KEYS, "ledger top-level")
     wrapper = _wrapper(ledger)
     _reject_unknown_keys(wrapper, _ALLOWED_WRAPPER_KEYS, "ledger")
@@ -150,6 +190,7 @@ def validate_source_rebuild(ledger: Mapping[str, Any], source_creator_ledger: Ma
     source_creators = source_creator_ledger.get("creators")
     if not _is_list(source_creators):
         _fail("invalid_source_creator_ledger", "source creator ledger must contain a creators list")
+    _validate_source_input_hashes(wrapper)
     observations = wrapper["creator_observations"]
     if len(observations) != len(source_creators):
         _fail("source_rebuild_row_count_mismatch", "ledger row count does not match source creators")
@@ -158,6 +199,7 @@ def validate_source_rebuild(ledger: Mapping[str, Any], source_creator_ledger: Ma
             _fail("invalid_source_creator_row", f"source creators[{index}] must be a mapping")
         _assert_equal(observation["creator_handle_query"], source["creator_handle_query"], "creator_handle_query")
         _assert_equal(observation["creator_classification"], source["creator_classification"], "creator_classification")
+        _assert_source_subject_key(observation, source)
         _assert_equal(observation["admitted_video_count"], source["admitted_rows_total"], "admitted_video_count")
         _assert_equal(observation["observed_author_names"], source["observed_author_names"], "observed_author_names")
         _assert_equal(
@@ -212,11 +254,11 @@ def validate_youtube_creator_observation_ledger_against_live_lake(
                 _fail("live_lake_metadata_missing", f"missing metadata for {ref['packet_id']}")
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-            _assert_equal(manifest.get("packet_id"), ref["packet_id"], "live_lake_manifest_packet_id")
-            _assert_equal(manifest.get("source_family"), "youtube", "live_lake_source_family")
-            _assert_equal(manifest.get("source_surface"), ref["source_surface"], "live_lake_source_surface")
-            _assert_equal(metadata.get("platform_video_id"), ref["video_id"], "live_lake_platform_video_id")
-            _assert_equal(metadata.get("channel_id"), ref["channel_id_or_none"], "live_lake_channel_id")
+            _assert_live_equal(manifest.get("packet_id"), ref["packet_id"], "live_lake_manifest_packet_id")
+            _assert_live_equal(manifest.get("source_family"), "youtube", "live_lake_source_family")
+            _assert_live_equal(manifest.get("source_surface"), ref["source_surface"], "live_lake_source_surface")
+            _assert_live_equal(metadata.get("platform_video_id"), ref["video_id"], "live_lake_platform_video_id")
+            _assert_live_equal(metadata.get("channel_id"), ref["channel_id_or_none"], "live_lake_channel_id")
 
 
 def _validate_source_inputs(value: Any) -> None:
@@ -227,6 +269,8 @@ def _validate_source_inputs(value: Any) -> None:
             _fail("invalid_source_input", "source_inputs entries must be mappings")
         _reject_unknown_keys(source_input, _ALLOWED_SOURCE_INPUT_KEYS, "source_input")
         _require(source_input, ("source_pointer", "role"), "source_input")
+        if "sha256" in source_input and not _SHA256_RE.fullmatch(str(source_input["sha256"])):
+            _fail("invalid_source_input_sha256", "source_input sha256 must be lowercase hex sha256")
 
 
 def _validate_niche_scope(value: Any) -> None:
@@ -269,8 +313,12 @@ def _validate_observations(value: Any) -> list[Mapping[str, Any]]:
             _fail("invalid_platform_subject_key_type", "platform_subject_key_type must be youtube_channel_id")
         if observation["creator_classification"] not in _ALLOWED_CREATOR_CLASSIFICATIONS:
             _fail("invalid_creator_classification", "creator_classification is not allowed")
-        if not str(observation["platform_subject_key"]).startswith("UC"):
+        subject_key = str(observation["platform_subject_key"])
+        if not subject_key.startswith("UC"):
             _fail("invalid_youtube_channel_id", "platform_subject_key must be a YouTube channel id")
+        _validate_public_profile_url(observation["public_profile_url"], subject_key)
+        _validate_non_empty_str(observation["identity_boundary"], "identity_boundary")
+        _validate_non_empty_str(observation["niche_scope"], "observation_niche_scope")
         _validate_required_non_claims(observation["non_claims"], "creator_observation")
         row_video_ids = _validate_str_list(observation["video_ids"], "video_ids", allow_empty=False)
         if len(row_video_ids) != observation["admitted_video_count"]:
@@ -307,6 +355,8 @@ def _validate_packet_refs(observation: Mapping[str, Any], row_video_ids: Sequenc
             _fail("invalid_packet_id", "packet_id must be a Crockford-26 lake packet id")
         if not _RAW_RELPATH_RE.fullmatch(str(ref["packet_relpath"])):
             _fail("invalid_packet_relpath", "packet_relpath must be raw/<shard>/<packet_id>")
+        if not _METADATA_RELPATH_RE.fullmatch(str(ref["metadata_relpath"])):
+            _fail("invalid_metadata_relpath", "metadata_relpath must be raw/<shard>/<packet_id>/raw/<nn>_*_metadata.json")
         if ref["source_surface"] not in _ALLOWED_SOURCE_SURFACES:
             _fail("invalid_source_surface", "source_surface must be youtube_captions or youtube_audio")
         channel_id = ref["channel_id_or_none"]
@@ -372,6 +422,72 @@ def _validate_counts(counts: Any, observations: Sequence[Mapping[str, Any]]) -> 
     )
 
 
+
+def _validate_source_input_hashes(wrapper: Mapping[str, Any]) -> None:
+    for source_input in wrapper["source_inputs"]:
+        sha256 = source_input.get("sha256")
+        if sha256 is None:
+            continue
+        source_pointer = str(source_input["source_pointer"])
+        source_path = _resolve_repo_relative_path(source_pointer)
+        if source_path is None:
+            _fail("source_input_hash_file_missing", f"source input is not a local file: {source_pointer}")
+        actual = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if actual != sha256:
+            _fail("source_input_hash_mismatch", f"source input sha256 mismatch for {source_pointer}")
+
+
+def _resolve_repo_relative_path(source_pointer: str) -> Path | None:
+    candidate = Path(source_pointer)
+    if candidate.is_absolute():
+        return candidate if candidate.is_file() else None
+    roots = [Path.cwd(), *Path.cwd().parents, Path(__file__).resolve().parents[3]]
+    for root in roots:
+        path = root / source_pointer
+        if path.is_file():
+            return path
+    return None
+
+
+def _assert_source_subject_key(observation: Mapping[str, Any], source: Mapping[str, Any]) -> None:
+    observed = source.get("observed_channel_ids")
+    if not _is_list(observed):
+        _fail("invalid_source_creator_row", "source observed_channel_ids must be a list")
+    source_channel_ids = {
+        str(item.get("channel_id"))
+        for item in observed
+        if isinstance(item, Mapping) and item.get("channel_id") not in (None, "UNKNOWN")
+    }
+    subject_key = str(observation["platform_subject_key"])
+    if subject_key not in source_channel_ids:
+        _fail("source_platform_subject_key_mismatch", "platform_subject_key must match a source observed channel id")
+
+
+def _validate_public_profile_url(value: Any, subject_key: str) -> None:
+    expected = f"https://www.youtube.com/channel/{subject_key}"
+    if value != expected:
+        _fail("invalid_public_profile_url", f"public_profile_url must be {expected}")
+
+
+def _validate_non_empty_str(value: Any, context: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        _fail(f"invalid_{context}", f"{context} must be a non-empty string")
+    return value
+
+
+def _assert_no_youtube_forbidden_output_fields(value: Any, *, path: str = "$") -> None:
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            key_name = str(key)
+            if key_name.lower() in _YOUTUBE_FORBIDDEN_OUTPUT_FIELDS:
+                _fail("forbidden_youtube_observation_field", f"forbidden YouTube observation field at {path}.{key_name}")
+            _assert_no_youtube_forbidden_output_fields(child, path=f"{path}.{key_name}")
+        return
+    if _is_list(value):
+        for index, child in enumerate(value):
+            _assert_no_youtube_forbidden_output_fields(child, path=f"{path}[{index}]")
+
+
 def _source_root_uuid(wrapper: Mapping[str, Any]) -> str:
     for source_input in wrapper["source_inputs"]:
         if "root_uuid" in source_input:
@@ -420,6 +536,11 @@ def _validate_required_non_claims(value: Any, context: str) -> None:
 def _assert_equal(actual: Any, expected: Any, context: str) -> None:
     if actual != expected:
         _fail("source_rebuild_mismatch", f"{context} mismatch: expected {expected!r}, got {actual!r}")
+
+
+def _assert_live_equal(actual: Any, expected: Any, context: str) -> None:
+    if actual != expected:
+        _fail("live_lake_metadata_mismatch", f"{context} mismatch: expected {expected!r}, got {actual!r}")
 
 
 def _is_list(value: Any) -> bool:

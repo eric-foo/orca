@@ -127,6 +127,74 @@ def _raises_code(ledger: dict, expected_code: str) -> None:
     assert exc_info.value.code == expected_code
 
 
+def _raises_rebuild_code(ledger: dict, expected_code: str) -> None:
+    with pytest.raises(YoutubeCreatorObservationLedgerError) as exc_info:
+        validate_source_rebuild(ledger, _source_creator_ledger())
+    assert exc_info.value.code == expected_code
+
+
+def _single_ref_live_lake_ledger() -> dict:
+    ledger = copy.deepcopy(_ledger())
+    wrapper = _ledger_wrapper(ledger)
+    row = copy.deepcopy(wrapper["creator_observations"][0])
+    ref = row["data_lake_packet_refs"][0]
+    row["video_ids"] = [row["video_ids"][0]]
+    row["data_lake_packet_refs"] = [ref]
+    row["pool_ids"] = [row["pool_ids"][0]]
+    row["admitted_video_count"] = 1
+    if ref["channel_id_or_none"] is None:
+        row["resolved_lake_channel_ids"] = []
+        row["lake_channel_id_missing_video_count"] = 1
+    else:
+        row["resolved_lake_channel_ids"] = [{"channel_id": ref["channel_id_or_none"], "count": 1}]
+        row["lake_channel_id_missing_video_count"] = 0
+    wrapper["creator_observations"] = [row]
+    wrapper["counts"] = {
+        **wrapper["counts"],
+        "creator_observations_total": 1,
+        "creator_or_channel_observed": 1 if row["creator_classification"] == "creator_or_channel_observed" else 0,
+        "brand_or_platform_account_observed": 1 if row["creator_classification"] == "brand_or_platform_account_observed" else 0,
+        "source_pool_rows_total": 1,
+        "unique_video_ids": 1,
+        "data_lake_youtube_packets_matched": 1,
+        "data_lake_youtube_caption_packets": 1 if ref["source_surface"] == "youtube_captions" else 0,
+        "data_lake_youtube_audio_packets": 1 if ref["source_surface"] == "youtube_audio" else 0,
+        "unique_youtube_channel_ids": 1,
+        "video_channel_id_missing_in_lake_metadata": row["lake_channel_id_missing_video_count"],
+    }
+    return ledger
+
+
+def _write_live_lake_ref(root: Path, ledger: dict, *, platform_video_id: str | None = None) -> None:
+    wrapper = _ledger_wrapper(ledger)
+    root_uuid = next(item["root_uuid"] for item in wrapper["source_inputs"] if "root_uuid" in item)
+    ref = wrapper["creator_observations"][0]["data_lake_packet_refs"][0]
+    (root / ".orca-data-root").write_text(json.dumps({"root_uuid": root_uuid}), encoding="utf-8")
+    packet_dir = root / ref["packet_relpath"]
+    packet_dir.mkdir(parents=True)
+    (packet_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "packet_id": ref["packet_id"],
+                "source_family": "youtube",
+                "source_surface": ref["source_surface"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    metadata_path = root / ref["metadata_relpath"]
+    metadata_path.parent.mkdir(parents=True)
+    metadata_path.write_text(
+        json.dumps(
+            {
+                "platform_video_id": platform_video_id or ref["video_id"],
+                "channel_id": ref["channel_id_or_none"],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 def test_youtube_creator_observation_ledger_rejects_duplicate_video_ids() -> None:
     ledger = copy.deepcopy(_ledger())
     row = _ledger_wrapper(ledger)["creator_observations"][0]
@@ -156,18 +224,143 @@ def test_youtube_creator_observation_ledger_rejects_metric_smuggling() -> None:
     ledger = copy.deepcopy(_ledger())
     _ledger_wrapper(ledger)["creator_observations"][0]["average_views"] = 12345
 
-    _raises_code(ledger, "unknown_field")
+    _raises_code(ledger, "forbidden_youtube_observation_field")
 
 
 def test_youtube_creator_observation_ledger_rejects_cross_platform_link_smuggling() -> None:
     ledger = copy.deepcopy(_ledger())
     _ledger_wrapper(ledger)["creator_observations"][0]["tiktok_public_handle"] = "samehandle"
 
-    _raises_code(ledger, "unknown_field")
+    _raises_code(ledger, "forbidden_youtube_observation_field")
 
 
 def test_youtube_creator_observation_ledger_rejects_transcript_body_smuggling() -> None:
     ledger = copy.deepcopy(_ledger())
     _ledger_wrapper(ledger)["creator_observations"][0]["transcript_body"] = "copied transcript text"
 
-    _raises_code(ledger, "unknown_field")
+    _raises_code(ledger, "forbidden_youtube_observation_field")
+
+
+def test_youtube_creator_observation_ledger_rejects_duplicate_observation_ids() -> None:
+    ledger = copy.deepcopy(_ledger())
+    observations = _ledger_wrapper(ledger)["creator_observations"]
+    observations[1]["creator_observation_id"] = observations[0]["creator_observation_id"]
+
+    _raises_code(ledger, "duplicate_creator_observation_id")
+
+
+def test_youtube_creator_observation_ledger_rejects_duplicate_video_ids_across_rows() -> None:
+    ledger = copy.deepcopy(_ledger())
+    observations = _ledger_wrapper(ledger)["creator_observations"]
+    observations[1]["video_ids"][0] = observations[0]["video_ids"][0]
+    observations[1]["data_lake_packet_refs"][0]["video_id"] = observations[0]["video_ids"][0]
+
+    _raises_code(ledger, "duplicate_video_id_across_ledger")
+
+
+def test_youtube_creator_observation_ledger_rejects_duplicate_packet_ids_across_rows() -> None:
+    ledger = copy.deepcopy(_ledger())
+    observations = _ledger_wrapper(ledger)["creator_observations"]
+    observations[1]["data_lake_packet_refs"][0]["packet_id"] = observations[0]["data_lake_packet_refs"][0]["packet_id"]
+    observations[1]["data_lake_packet_refs"][0]["packet_relpath"] = observations[0]["data_lake_packet_refs"][0]["packet_relpath"]
+    observations[1]["data_lake_packet_refs"][0]["metadata_relpath"] = observations[0]["data_lake_packet_refs"][0]["metadata_relpath"]
+
+    _raises_code(ledger, "duplicate_packet_id_across_ledger")
+
+
+def test_youtube_creator_observation_ledger_rejects_packet_video_misalignment() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0]["data_lake_packet_refs"][0]["video_id"] = "DIFFERENT_VIDEO"
+
+    _raises_code(ledger, "source_rebuild_mismatch")
+
+
+def test_youtube_creator_observation_ledger_rejects_invalid_metadata_relpath() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0]["data_lake_packet_refs"][0]["metadata_relpath"] = "../metadata.json"
+
+    _raises_code(ledger, "invalid_metadata_relpath")
+
+
+def test_youtube_creator_observation_ledger_rejects_invalid_metric_policy_status() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["metric_rollup_policy"]["current_status"] = "present"
+
+    _raises_code(ledger, "invalid_metric_rollup_status")
+
+
+def test_youtube_creator_observation_ledger_rejects_metric_absence_as_zero() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["metric_rollup_policy"]["do_not_store_absence_as_zero"] = False
+
+    _raises_code(ledger, "metric_absence_zero_forbidden")
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "container"),
+    [
+        ("tiktok_public_handle", "samehandle", "identity_boundary"),
+        ("instagram_url", "https://www.instagram.com/samehandle/", "identity_boundary"),
+        ("transcript_body", "copied transcript", "niche_scope"),
+        ("average_views", 12345, "identity_boundary"),
+        ("engagement_rate", 0.07, "niche_scope"),
+    ],
+)
+def test_youtube_creator_observation_ledger_rejects_nested_boundary_smuggling(
+    field: str, value: object, container: str
+) -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0][container] = {field: value}
+
+    _raises_code(ledger, "forbidden_youtube_observation_field")
+
+
+def test_youtube_creator_observation_ledger_wraps_shared_forbidden_field_errors() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0]["identity_boundary"] = {"email": "x@example.com"}
+
+    _raises_code(ledger, "forbidden_output_field")
+
+
+def test_youtube_creator_observation_ledger_rejects_non_string_boundary_fields() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0]["identity_boundary"] = {"label": "youtube-only"}
+
+    _raises_code(ledger, "invalid_identity_boundary")
+
+
+def test_youtube_creator_observation_ledger_rebuild_rejects_source_field_drift() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["creator_observations"][0]["creator_handle_query"] = "DRIFTED"
+
+    _raises_rebuild_code(ledger, "source_rebuild_mismatch")
+
+
+def test_youtube_creator_observation_ledger_rebuild_rejects_unobserved_subject_key() -> None:
+    ledger = copy.deepcopy(_ledger())
+    row = _ledger_wrapper(ledger)["creator_observations"][0]
+    fake_channel_id = "UC00000000000000000000FAKE"
+    row["platform_subject_key"] = fake_channel_id
+    row["public_profile_url"] = f"https://www.youtube.com/channel/{fake_channel_id}"
+    for ref in row["data_lake_packet_refs"]:
+        if ref["channel_id_or_none"] is not None:
+            ref["channel_id_or_none"] = fake_channel_id
+    row["resolved_lake_channel_ids"] = [{"channel_id": fake_channel_id, "count": row["admitted_video_count"]}]
+
+    _raises_rebuild_code(ledger, "source_platform_subject_key_mismatch")
+
+
+def test_youtube_creator_observation_ledger_rebuild_rejects_source_input_hash_drift() -> None:
+    ledger = copy.deepcopy(_ledger())
+    _ledger_wrapper(ledger)["source_inputs"][0]["sha256"] = "0" * 64
+
+    _raises_rebuild_code(ledger, "source_input_hash_mismatch")
+
+
+def test_youtube_creator_observation_ledger_live_lake_mismatch_uses_live_error_code(tmp_path: Path) -> None:
+    ledger = _single_ref_live_lake_ledger()
+    _write_live_lake_ref(tmp_path, ledger, platform_video_id="WRONG_VIDEO")
+
+    with pytest.raises(YoutubeCreatorObservationLedgerError) as exc_info:
+        validate_youtube_creator_observation_ledger_against_live_lake(ledger, tmp_path)
+    assert exc_info.value.code == "live_lake_metadata_mismatch"
