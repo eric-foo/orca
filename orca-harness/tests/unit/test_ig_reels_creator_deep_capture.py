@@ -79,6 +79,30 @@ def test_rank_falls_back_to_views_when_likes_are_hidden() -> None:
     assert ranked[0].view_count == 50000 and ranked[0].like_count is None
 
 
+def test_rank_keeps_a_visible_like_when_a_tied_candidate_only_has_views() -> None:
+    # A reel can join multiple surfaces with TIED engagement: one carrying a visible like, another
+    # only views. The like-bearing candidate must not be discarded for the higher-view one, and the
+    # grid must NOT be treated as likes-hidden just because the tie-break selected a no-likes surface.
+    dom_rows = normalize_dom_grid_rows(
+        [
+            {"path": "/creator/reel/HASLIKES/", "visibleNumericTexts": ["1"]},
+            {"path": "/creator/reel/VIEWSONLY/", "visibleNumericTexts": ["1"]},
+        ],
+        final_url="https://www.instagram.com/creator/reels/",
+        profile_handle="creator",
+    )
+    candidates = (
+        list(iter_json_media_candidates({"code": "HASLIKES", "like_count": 10, "comment_count": 0}, source_surface=CLIPS_USER_JSON_METADATA))
+        + list(iter_json_media_candidates({"code": "HASLIKES", "comment_count": 10, "play_count": 100}, source_surface=CLIPS_USER_JSON_METADATA))
+        + list(iter_json_media_candidates({"code": "VIEWSONLY", "comment_count": 1, "play_count": 99999}, source_surface=CLIPS_USER_JSON_METADATA))
+    )
+    ranked = rank_reels_by_engagement(join_dom_rows_with_json_candidates(dom_rows, candidates))
+    by_code = {r.shortcode: r for r in ranked}
+    assert not any(r.likes_hidden for r in ranked)        # a visible like exists in the grid
+    assert by_code["HASLIKES"].like_count == 10           # the visible like was not discarded
+    assert ranked[0].shortcode == "HASLIKES"              # likes regime: engagement(10) beats views
+
+
 def test_rank_reels_orders_by_likes_plus_comments_descending() -> None:
     # Build joined rows through the real grid pipeline so ranking is exercised end-to-end.
     dom_rows = normalize_dom_grid_rows(

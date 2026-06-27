@@ -126,7 +126,11 @@ def _best_engagement_candidate(
         return None
     return max(
         candidates,
-        key=lambda candidate: (_candidate_engagement(candidate), candidate.video_or_play_count or 0),
+        key=lambda candidate: (
+            _candidate_engagement(candidate),
+            candidate.like_count is not None,  # on an engagement tie, never discard a visible like
+            candidate.video_or_play_count or 0,
+        ),
     )
 
 
@@ -144,6 +148,15 @@ def rank_reels_by_engagement(joined_rows: Sequence[IgReelsJoinedRow]) -> list[Ra
     comment counts. None counts are 0. Rows without a shortcode are dropped. The sort is STABLE, so
     ties keep grid (DOM) order -- deterministic.
     """
+    # Regime is grid-level: likes are "hidden" only when NO candidate ANYWHERE in the grid carries a
+    # like count. Computed across ALL joined candidates -- not the per-reel SELECTED one -- so the
+    # ranking-candidate choice (which may tie-break to a no-likes surface) cannot flip the regime; a
+    # visible like on an unselected candidate still counts.
+    likes_hidden = not any(
+        candidate.like_count is not None
+        for joined in joined_rows
+        for candidate in joined.source_surface_candidates
+    )
     scored: list[tuple[str, int, int | None, int | None, int | None]] = []
     for joined in joined_rows:
         shortcode = (joined.dom_row.shortcode or "").strip()
@@ -155,7 +168,6 @@ def rank_reels_by_engagement(joined_rows: Sequence[IgReelsJoinedRow]) -> list[Ra
         view_count = best.video_or_play_count if best is not None else None
         engagement = (like_count or 0) + (comment_count or 0)
         scored.append((shortcode, engagement, like_count, comment_count, view_count))
-    likes_hidden = not any(item[2] is not None for item in scored)
     if likes_hidden:
         scored.sort(key=lambda item: ((item[4] or 0), item[1]), reverse=True)  # views, then comments
     else:
