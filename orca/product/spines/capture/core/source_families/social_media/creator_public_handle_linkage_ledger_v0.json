@@ -7,7 +7,7 @@
       "docs/decisions/wind_caller_calibration_carveout_v0.md",
       "orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_spec_v0.md"
     ],
-    "source_policy_posture": "Tier-2-B public-handle-to-public-handle linkage only; no non-public-handle joins; no live platform capture; no contact, outreach, audience, follower, or person-identity surface.",
+    "source_policy_posture": "Empty pre-SQLite scaffold for Tier-2-B public-handle-to-public-handle linkage only; rows require source-backed public-handle evidence; no non-public-handle joins; no live platform capture; no contact, outreach, audience, follower, or person-identity surface.",
     "platform_accounts": [],
     "account_link_evidence": [],
     "creator_records": [],
@@ -16,7 +16,10 @@
       "not non-public-handle join",
       "not contact or outreach authorization",
       "not follower or audience graph",
-      "not public person-level product surface"
+      "not public person-level product surface",
+      "not SQLite migration",
+      "not populated creator ledger",
+      "not row admission without source-backed public-handle evidence"
     ]
   }
 }

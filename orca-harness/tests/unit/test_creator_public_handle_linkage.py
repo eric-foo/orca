@@ -20,6 +20,8 @@ FIXTURE_PATH = (
     / "valid_synthetic_ledger.json"
 )
 PRODUCT_LEDGER_PATH = (
+    # Product-artifact contract check: this intentionally reaches from the
+    # harness test tree to the repo-root product ledger scaffold.
     Path(__file__).resolve().parents[3]
     / "orca"
     / "product"
@@ -245,5 +247,3 @@ def test_synthetic_fixture_rejects_lookalike_host_url() -> None:
     )
 
     _raises_code(ledger, "synthetic_fixture_url_required")
-
-
