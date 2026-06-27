@@ -16,8 +16,8 @@ authority_boundary: retrieval_only
 open_next:
   - .agents/workflow-overlay/source-loading.md
   - docs/workflows/data_capture_spine_consolidation_map_v0.md
-  - orca/product/spines/capture/source_families/instagram/orca_creator_momentum_pipeline_architecture_v0.md
-  - orca/product/spines/capture/source_families/instagram/ig_creator_discovery_spec_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_momentum_pipeline_architecture_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md
   - docs/decisions/wind_caller_calibration_carveout_v0.md
 stale_if:
   - `main` is updated past local `origin/main` or the receiver is not on the recorded HEAD/ref.
@@ -81,9 +81,9 @@ stale_if:
 - overlay source-loading policy: `.agents/workflow-overlay/source-loading.md`
 - targets to enter the ladder:
   - `docs/workflows/data_capture_spine_consolidation_map_v0.md`
-  - `orca/product/spines/capture/source_families/instagram/orca_creator_momentum_pipeline_architecture_v0.md`
-  - `orca/product/spines/capture/source_families/instagram/ig_creator_discovery_spec_v0.md`
-  - `orca/product/spines/capture/source_families/instagram/ig_creator_roster_frontier_ledger_spec_v0.md`
+  - `orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_momentum_pipeline_architecture_v0.md`
+  - `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md`
+  - `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md`
   - `docs/decisions/wind_caller_calibration_carveout_v0.md`
   - `orca-harness/source_capture/models.py`
   - `orca-harness/source_capture/ig_projection.py`
@@ -92,10 +92,10 @@ stale_if:
 
 ### Earlier-decided concepts and behaviors
 
-- creator-momentum pipeline is discover -> deep-capture -> per-call curves, IG first; verify in `orca/product/spines/capture/source_families/instagram/orca_creator_momentum_pipeline_architecture_v0.md` blob `093d185d26febb0d96cd801a21b430d530d0c29c`.
-- discovery roster is beauty sub-niche + follower band and covers both established and rising creators; verify in `orca/product/spines/capture/source_families/instagram/ig_creator_discovery_spec_v0.md` blob `5c6b8f3c915793ddf7150d5470e5be1bf07514cd`.
+- creator-momentum pipeline is discover -> deep-capture -> per-call curves, IG first; verify in `orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_momentum_pipeline_architecture_v0.md` blob `dc486e94966c68c25df4169799bc903b63d6d9d3`.
+- discovery roster is beauty sub-niche + follower band and covers both established and rising creators; verify in `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md` blob `64089c83f6d90b241bdfec2d2d1136a35fbd589e`.
 - subject-creator roster is uncapped/all-in-vertical; <=10 is Orca's own operating/capture account ceiling, not a tracked-creator cap; verify in `docs/decisions/wind_caller_calibration_carveout_v0.md` blob `d02a284f95831934e0cb370db78c5f692d5e15bf`.
-- current serious-v0 roster gates are 250 -> 500 -> 1,000; verify in `orca/product/spines/capture/source_families/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` blob `9f660a8f02bbfc8081d608791ed65f392ed38c6f`.
+- current serious-v0 roster gates are 250 -> 500 -> 1,000; verify in `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` blob `f2a03e947c39e50d3ddc4d6e7611e60ccf2af15c`.
 - typed metric-observation core exists but per-platform satellite producer and packet-level coverage claim are deferred/need verification; verify in `orca-harness/source_capture/models.py` blob `121c3dcc8126467ac7f02a6d267209e948cf0083` and `orca-harness/source_capture/ig_projection.py` blob `63876d7a97a42819efcb8394bf474b24a208afb0`.
 
 ## Active Objective
@@ -121,9 +121,9 @@ Re-orient the IG creator-momentum lane on the current spine-first repo shape and
 - `.agents/workflow-overlay/retrieval-metadata.md` - durable artifact header contract; load-bearing yes; blob `f675c5dd9357d4c53000ff8beb040839b3e06343`.
 - `docs/workflows/orca_repo_map_v0.md` - navigation and Wave E product path shape; load-bearing yes; blob `efb1b91e01e563257da6d3618a60e9f4eec6237e`.
 - `docs/workflows/data_capture_spine_consolidation_map_v0.md` - Capture/Armory front door and IG projection helper route; load-bearing yes; blob `495f652a0965892e6e8053351261084c3148f860`.
-- `orca/product/spines/capture/source_families/instagram/orca_creator_momentum_pipeline_architecture_v0.md` - proposed creator architecture; load-bearing yes; blob `093d185d26febb0d96cd801a21b430d530d0c29c`.
-- `orca/product/spines/capture/source_families/instagram/ig_creator_discovery_spec_v0.md` - discovery spec; load-bearing yes; blob `5c6b8f3c915793ddf7150d5470e5be1bf07514cd`.
-- `orca/product/spines/capture/source_families/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` - roster/frontier gates; load-bearing yes; blob `9f660a8f02bbfc8081d608791ed65f392ed38c6f`.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_momentum_pipeline_architecture_v0.md` - proposed creator architecture; load-bearing yes; blob `dc486e94966c68c25df4169799bc903b63d6d9d3`.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md` - discovery spec; load-bearing yes; blob `64089c83f6d90b241bdfec2d2d1136a35fbd589e`.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` - roster/frontier gates; load-bearing yes; blob `f2a03e947c39e50d3ddc4d6e7611e60ccf2af15c`.
 - `docs/decisions/wind_caller_calibration_carveout_v0.md` - owner-signed cap/posture authority; load-bearing yes; blob `d02a284f95831934e0cb370db78c5f692d5e15bf`.
 - `orca-harness/source_capture/models.py` - current packet model with metric observations; load-bearing yes; blob `121c3dcc8126467ac7f02a6d267209e948cf0083`.
 - `orca-harness/source_capture/ig_projection.py` - IG creator-momentum view-only projection; load-bearing yes for projection-current claims; blob `63876d7a97a42819efcb8394bf474b24a208afb0`.
@@ -147,9 +147,9 @@ Re-orient the IG creator-momentum lane on the current spine-first repo shape and
 ## Changed / Inspected / Tested Files
 
 - `docs/hygiene/ig_creator_momentum_lane_handoff_v0.md` - overwritten by this packet; stable cold-lane checkpoint.
-- `orca/product/spines/capture/source_families/instagram/orca_creator_momentum_pipeline_architecture_v0.md` - inspected; proposed architecture; body placement prose still stale.
-- `orca/product/spines/capture/source_families/instagram/ig_creator_discovery_spec_v0.md` - inspected; discovery spec with subject roster uncapped and active/passive posture resolved.
-- `orca/product/spines/capture/source_families/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` - inspected/search-read; 250 -> 500 -> 1,000 gates.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/orca_creator_momentum_pipeline_architecture_v0.md` - inspected; proposed architecture; body placement prose still stale.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_discovery_spec_v0.md` - inspected; discovery spec with subject roster uncapped and active/passive posture resolved.
+- `orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md` - inspected/search-read; 250 -> 500 -> 1,000 gates.
 - `orca-harness/source_capture/models.py` - inspected targeted lines 128-227; typed metric observation exists.
 - `orca-harness/tests/unit/test_source_capture_metric_observation.py` - inspected targeted lines 1-184; tests encode observed-zero vs absence invariant and back-compat default empty list.
 - `docs/decisions/wind_caller_calibration_carveout_v0.md` - inspected; cap and posture authority.
