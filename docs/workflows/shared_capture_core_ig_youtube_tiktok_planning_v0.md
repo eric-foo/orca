@@ -7,11 +7,14 @@ scope: >
   Source-backed planning note for a shared capture core across Instagram Reels,
   YouTube videos/Shorts, and later TikTok. It maps current IG and YouTube
   capture/transcript/save/extraction paths, compares the core architecture
-  options, and sequences the IG<->YouTube sync after owner selection.
+  options, and sequences the IG<->YouTube sync after owner selection. It keeps
+  acquisition method, transcript priority, and runner shape open for lane-first
+  exploration rather than forcing a common internal capture mechanism.
 use_when:
   - Deciding whether to accept a thin shared capture core, defer to minimal shared extraction, or build a heavier capture framework.
   - Planning IG<->YouTube capture-core synchronization without moving code.
   - Checking which current capture/transcript/save responsibilities are already shared versus platform-owned.
+  - Choosing a lane-first exploration route where one platform becomes the behavioral reference before backporting contract wins.
 authority_boundary: retrieval_only
 branch_or_commit: origin/main @ ba9b36b5; handoff orientation read from origin/claude/handoff-unify-capture-core @ d4437209
 open_next:
@@ -49,6 +52,12 @@ capture substrate. YouTube's served-HTML plus `youtubei` path and caption-first
 transcript path are not the same shape as IG's browser-rendered Reels grid,
 transient media-handle, and ASR-first path. A heavy framework would lock in fake
 uniformity before the owner chooses that fork.
+
+Clarification: the thin core is not a decision to freeze each platform exactly
+as-is. It should make the lanes behaviorally comparable while leaving room to
+explore better acquisition methods, transcript priority rules, persistence
+anchors, and runner shapes per platform. The convergence target is shared
+observable behavior, not shared internal machinery.
 
 ## Confirm-Don't-Trust Receipt
 
@@ -252,6 +261,9 @@ Accepted residuals:
   persistence normalization pass.
 - IG ASR and YouTube ASR completion semantics remain mismatched until the sync
   sequence resolves them.
+- Acquisition method, transcript priority, and runner shape remain exploratory;
+  they are standardized only after a lane proves that standardization improves
+  behavior without hiding source-specific truth.
 
 ### AO-B: Framework Core
 
@@ -322,6 +334,30 @@ Satellite responsibilities:
   bridging, and YouTube persistence mapping.
 - TikTok adapter: not specified until TikTok source analysis exists.
 
+## Lane-First Exploration Strategy
+
+Default exploration route: make YouTube the first complete behavioral lane, then
+use that completed YouTube lane to back-fix IG.
+
+This does not mean making YouTube capture like IG. It means borrowing the useful
+IG behavioral wins into YouTube first: a complete lifecycle receipt, explicit
+comment/transcript/persistence correlation, durable completion semantics, and
+clear limits on transient or non-authoritative artifacts. YouTube should still
+use served HTML, `youtubei`, captions-first transcript capture, and ASR fallback
+where those remain the honest source-specific routes.
+
+Once YouTube has the complete behavioral contract, use it as the reference for
+IG. The IG back-fix should normalize only the proven contract surface:
+transcript-source fields, completion semantics, run receipt, persistence
+correlation, and extraction feed. It should not force IG to adopt YouTube's HTTP
+path, caption priority, packet anchors, or runner structure.
+
+This lane-first loop is the SCI-compatible way to reach the MGT target: push one
+lane past the cheap parity point until it is behaviorally complete, name the
+accepted residuals, then backport only the contract wins. Do not average the
+lanes into a vague abstraction, and do not build a framework before the lane
+loop proves that a framework is needed.
+
 ## IG<->YouTube Sync Sequence
 
 This sequence is planning-only. It starts only after the owner accepts or revises
@@ -329,23 +365,27 @@ the recommended thin-core target.
 
 1. Owner fork decision: accept `AO-A_THIN_SHARED_CORE`, choose the heavier
    framework route, or intentionally stop at minimal shared extraction.
-2. Transcript-source contract: write the shared fields and completion semantics
-   before touching runners. The first issue to settle is the IG append-only
-   `transcript_asr` record versus YouTube's completed `transcript_asr` record
-   set.
-3. Persistence correlation decision: choose whether YouTube metadata/comments
-   remain a satellite legacy packet path or get a bridge into
-   SourceCapturePacket/DataLakeRoot. Separately choose whether IG deep capture
-   remains shortcode-anchored or gains a packet/correlation index.
-4. Adapter-boundary documentation: document IG and YouTube adapters against the
-   thin core without moving code. This should name exact source-owned methods:
-   enumerate, fetch/render, comments, transcript acquisition, and persistence
-   mapping.
-5. Contract-test plan: after implementation is authorized, add tests around the
+2. Accept or revise the YT-first lane exploration route. If the owner chooses
+   IG-first instead, keep the same loop but reverse the lane order.
+3. YouTube completion pass: use IG's stronger behavioral surfaces as prompts,
+   not templates. Bring YouTube metadata/comments, captions/ASR, persistence,
+   receipts, and extraction feed into one complete behavioral lane without
+   changing YouTube's honest acquisition route.
+4. IG back-fix pass: use completed YouTube behavior to normalize IG
+   transcript-source fields, completion semantics, run receipts, and persistence
+   correlation. Do not force YouTube's caption-first priority or HTTP shape onto
+   IG.
+5. Shared contract extraction: after both lanes express the same behavior,
+   extract the stable `TranscriptSource`, receipt, persistence-completion, and
+   extraction-feed contracts into the thin core.
+6. Contract-test plan: after implementation is authorized, add tests around the
    shared `TranscriptSource` and persistence-completion contract, plus existing
    no-LLM and product-extraction tests. Do not use current passing extraction
    tests as proof that the capture core is validated.
-6. TikTok recon gate: only after the IG<->YouTube contract is stable, run a
+7. Framework reconsideration gate: consider runner or scheduler consolidation
+   only if the lane loop proves that duplicated mechanics are causing behavioral
+   inconsistency or unacceptable maintenance cost.
+8. TikTok recon gate: only after the IG<->YouTube contract is stable, run a
    TikTok-specific recon to decide whether TikTok joins through the same thin
    adapter contract or needs a different branch.
 
