@@ -63,7 +63,7 @@ Architect reserves final authority over what is kept and may veto any change it
 judges to add no benefit or net-negative value, even when individually
 defensible.
 
-**Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only via the portable review method (registry id `portable-adversarial-artifact-review-method`), returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a bounded post-patch re-review** before keep — closure-of-findings plus any new blocker/major in the touched delta. Because that recheck is a narrow, near-mechanical verification against the findings' explicit closure conditions rather than open seam-discovery, it runs as a **same-family, different (lower / mechanical-tier) model** (a who-constraint, not a runtime-model recommendation), **not** a cross-family pass. **Cross-family de-correlation is reserved for discovery** (the original full adversarial review) and is **required to claim** the *survives-an-adversarial-review-with-no-new-seam* standard; a bounded same-family recheck does not by itself support that claim. The recheck is CA-adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the portable method's **freshness gate** (hash-compare its `derived_from` pins to live sources; re-derive on mismatch) before bundling, recording the result in the commission. The default package shape is a **self-contained bundle**: the verbatim target attachment(s) plus a guardrail-complete `README` that carries the method, the authority excerpts, and the target's contract, delivered with a **thin-wrapper** chat prompt that points the reviewer at the in-bundle `README` — the wrapper still carries the cross-vendor who-constraint, which must not migrate silently into the bundle. When the reviewer cannot read in-bundle files, fall back to **inlining** the method block in the chat prompt; never ship a wrapper that points at a `README` a repo-blind reviewer cannot open. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
+**Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only and returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a bounded post-patch re-review** before keep — closure-of-findings plus any new blocker/major in the touched delta. The no-repo review method is target-kind specific: `authored_artifact` uses the portable review method (registry id `portable-adversarial-artifact-review-method`), while `delegated_code_review_and_patch` uses a repo-blind code-review package/prompt that preserves `workflow-code-review` method requirements as far as no-repo access permits. Because the post-patch recheck is a narrow, near-mechanical verification against the findings' explicit closure conditions rather than open seam-discovery, it runs as a **same-family, different (lower / mechanical-tier) model** (a who-constraint, not a runtime-model recommendation), **not** a cross-family pass. **Cross-family de-correlation is reserved for discovery** (the original full adversarial review) and is **required to claim** the *survives-an-adversarial-review-with-no-new-seam* standard; a bounded same-family recheck does not by itself support that claim. The recheck is CA-adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the target-kind method's **freshness gate** before bundling, recording the result in the commission. The default package shape is a **self-contained bundle**: the verbatim target attachment(s) plus a guardrail-complete `README` that carries the method, the authority excerpts, and the target's contract, delivered with a **thin-wrapper** chat prompt that points the reviewer at the in-bundle `README` — the wrapper still carries the cross-vendor who-constraint, which must not migrate silently into the bundle. When the reviewer cannot read in-bundle files, fall back to **inlining** the method block in the chat prompt; never ship a wrapper that points at a `README` a repo-blind reviewer cannot open. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
 
 **Citations.** The delegate's citations are neutral in tone — factual source
 evidence, no advocacy or editorializing — but decision-sufficient in substance,
@@ -144,9 +144,11 @@ delegate's own adversarial analysis as the review. A bounded multi-file
 implementation/code diff is handled by this **sibling mode**: the same
 commissioned convention with exactly two binding deltas. Everything else —
 explicit commission, the de-correlation who-constraint and two-bar rule, the
-`repo` / `no_repo` access modes, CA adjudication of the returned diff before any
-keep, the `NEEDS_ARCHITECTURE_PASS` escalation, the strict-claim boundary, and
-the no-runtime-model-recommendation rule — is inherited unchanged.
+`repo` / `no_repo` access-mode obligations, CA adjudication of the returned diff
+before any keep, the `NEEDS_ARCHITECTURE_PASS` escalation, the strict-claim
+boundary, and the no-runtime-model-recommendation rule — is inherited unchanged.
+The code-review method remains the method in both access modes; `no_repo` only
+changes repository access and patch authorship.
 
 1. **The review method is the code review lane, not artifact review.** The
    delegate's review portion is `workflow-code-review` run under the Review
@@ -229,9 +231,10 @@ delegated_review_patch_overlay_interface:
       are named and can fail. Patch authority is an explicit commission
       subordinate to the implementation-authorization boundary in safety-rules.md
       / AGENTS.md, never assumed from the category. All other convention machinery
-      (commission, de-correlation / two-bar, access modes, CA adjudication before
-      keep, NEEDS_ARCHITECTURE_PASS, strict-claim boundary, no runtime-model
-      recommendation) is inherited unchanged.
+      (commission, de-correlation / two-bar, access-mode obligations, CA
+      adjudication before keep, NEEDS_ARCHITECTURE_PASS, strict-claim boundary,
+      no runtime-model recommendation) is inherited unchanged. no_repo changes
+      repository access and patch authorship, not the code-review method.
   incomplete_commission_route_out:
     owner: workflow-prompt-orchestrator
     output_mode: paste-ready-chat
@@ -261,7 +264,7 @@ delegated_review_patch_overlay_interface:
     rungs: author -> de_correlated_controller -> cheap_executor
     de_correlation_criterion: >
       family = vendor / model lineage (Claude vs GPT), NOT tier. Vendor = the
-      upstream model developer/provider, NOT hosting platform / API reseller /
+      upstream model developer/provider, NOT hosting platform / API reseller or
       wrapper or fine-tune owner; unknown or undisclosed lineage cannot satisfy
       cross-vendor. Cross-vendor de-correlation (author vendor != delegate vendor,
       recorded in the commission) is the DISCOVERY bar, required to claim the
@@ -275,12 +278,14 @@ delegated_review_patch_overlay_interface:
   access_modes:
     values: [repo, no_repo]   # default repo; operator/commission access constraint, NOT model routing
     no_repo: >
-      delegate advisory-only via portable-adversarial-artifact-review-method (returns findings, not a diff);
-      CA applies the patch; REQUIRED post-patch re-review before keep, BOUNDED to closure-of-findings + new
+      delegate advisory-only (returns findings, not a diff); authored_artifact uses
+      portable-adversarial-artifact-review-method, while delegated_code_review_and_patch uses a
+      repo-blind code-review package/prompt that preserves workflow-code-review method requirements as far as
+      no-repo access permits; CA applies the patch; REQUIRED post-patch re-review before keep, BOUNDED to closure-of-findings + new
       blocker/major in the touched delta and run by a SAME-VENDOR different/lower (mechanical-tier) model, NOT
       cross-vendor (the recheck is verification, not discovery); cross-vendor de-correlation is reserved for the
       discovery pass and is required to claim the no-new-seam standard; review target shipped as a
-      hash-confirmable verbatim attachment; assembler/CA runs the portable-method freshness gate pre-bundle and records the result. Default package shape: a self-contained bundle (verbatim target attachment(s) + a guardrail-complete README carrying the method/authority/contract) delivered with a thin-wrapper chat prompt pointing at the in-bundle README; the wrapper still carries the cross-vendor who-constraint; inline the method in chat when the reviewer cannot read in-bundle files.
+      hash-confirmable verbatim attachment; assembler/CA runs the target-kind method's freshness gate pre-bundle and records the result. Default package shape: a self-contained bundle (verbatim target attachment(s) + a guardrail-complete README carrying the method/authority/contract) delivered with a thin-wrapper chat prompt pointing at the in-bundle README; the wrapper still carries the cross-vendor who-constraint; inline the method in chat when the reviewer cannot read in-bundle files.
   preflight_schema:
     - orca_start_preflight (.agents/workflow-overlay/source-loading.md)
     - Required Preflight Fields (.agents/workflow-overlay/prompt-orchestration.md)
@@ -325,7 +330,7 @@ direction_change_propagation:
     (everything outside it flag-only), names validation/test obligations that can fail, and keeps
     patch authority an explicit commission subordinate to the implementation-authorization boundary
     in safety-rules.md / AGENTS.md. All other convention machinery (commission, de-correlation /
-    two-bar, repo/no_repo access modes, CA adjudication of the returned diff before keep,
+    two-bar, repo/no_repo access-mode obligations, CA adjudication of the returned diff before keep,
     NEEDS_ARCHITECTURE_PASS, strict-claim boundary, no runtime-model recommendation) is inherited
     unchanged. Legitimizes the shape practice already ran as a disclosed per-commission deviation
     (e.g. docs/prompts/reviews/source_capture_lenient_read_slice_delegated_adversarial_code_review_and_patch_prompt_v0.md).
