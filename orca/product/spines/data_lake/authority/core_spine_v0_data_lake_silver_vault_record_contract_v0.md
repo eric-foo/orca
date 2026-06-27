@@ -167,7 +167,7 @@ Entity records define stable source-backed identity only.
   "record_kind": "entity",
   "payload_kind": "PlatformAccountEntity",
   "entity": {
-    "entity_type": "product | platform_public_account | public_content_object | retailer_listing | review | text_artifact | category | claim | campaign",
+    "entity_type": "product | platform_public_account | public_content_object | retailer_listing | review | text_artifact | category | claim",
     "entity_key": {
       "namespace": "instagram",
       "kind": "platform_public_account",
@@ -190,6 +190,9 @@ Entity invariants:
 - Creator Vault account entities are per-platform public account objects.
 - Creator Vault v0 must not emit a default global `person_id` or cross-platform
   person identity.
+- Campaign or coordination entities are not Silver Vault v0 entity types unless a
+  future source-captured campaign object contract defines their source identity.
+  Manufactured-demand or campaign-coordination meaning belongs to Gold/Judgment.
 
 ## Relationship Records
 
@@ -234,8 +237,6 @@ comment_on_content
 review_of_product
 review_on_listing
 listing_of_product
-campaign_touches_product
-campaign_touches_content
 corrects_record
 supersedes_record
 tombstones_record
@@ -278,6 +279,8 @@ Metric observations must mirror the live `MetricObservation` discipline:
       "end": "2026-06-28T00:00:00Z"
     },
     "source_surface": "instagram_grid",
+    "source_publication_or_event": null,
+    "source_surface_count_candidates": [],
     "unit": "count"
   }
 }
@@ -292,6 +295,8 @@ Metric posture invariants:
 | `metric_value = 0` | Valid only as a real observed zero from the source. Never means missing. |
 | Missing, hidden, blocked, not attempted, not applicable, outside window | Must be represented by posture + reason, not by numeric value. |
 | `coverage_window` | Required for time-series/durability use where the observation claims a measurement window. |
+| `source_publication_or_event` | Preserve the live producer field name when the source row distinguishes publication/event timing from capture time. |
+| `source_surface_count_candidates` | Preserve live source-surface candidate counts when present; candidates are evidence for generated selection policy, not Silver trust adjudication. |
 
 Allowed v0 posture values must map to the live source-capture posture vocabulary
 instead of inventing a looser free-text set.
@@ -349,6 +354,8 @@ Required behavior:
 - Per-reel counts must not supersede grid-primary current metric snapshots unless
   a later selection policy version explicitly changes that rule.
 - Generated metric read models must expose `selection_policy_version`.
+- Generated metric read models must preserve `source_surface_count_candidates`
+  when present so grid-primary selection remains mechanically auditable.
 
 Use the existing IG precedent `selection_policy_version`; do not introduce a
 global `metric_policy_id` as lake authority.
@@ -451,11 +458,13 @@ The contract is satisfied when downstream scoping can prove, in principle, that:
    metrics cannot be read as numeric zero.
 7. Corrections, supersessions, tombstones, and conflicts are append-only
    relationship records.
-8. Generated read models and Creator Vault envelopes are manifest-backed,
+8. Campaign/coordination entities or edges are excluded from Silver v0 unless a
+   future source-captured campaign object contract defines them mechanically.
+9. Generated read models and Creator Vault envelopes are manifest-backed,
    rebuildable, and non-authoritative.
-9. Creator Vault envelopes are per-platform, public-evidence-only, and contain no
+10. Creator Vault envelopes are per-platform, public-evidence-only, and contain no
    Gold/Judgment fields.
-10. IG grid-primary metrics cannot be silently overwritten by per-reel detail
+11. IG grid-primary metrics cannot be silently overwritten by per-reel detail
     captures under the same selection policy version.
 
 ## Mini God Tier Accepted Residuals
