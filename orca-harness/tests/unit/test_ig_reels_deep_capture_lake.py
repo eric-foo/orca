@@ -131,3 +131,29 @@ def test_persist_helper_allows_env_resolution(tmp_path: Path, monkeypatch: pytes
     assert root.is_record_set_complete(
         subtree="derived", raw_anchor="DaA8n7EhqTR", record_id=rid, completion_lane=DEEP_CAPTURE_SET_LANE
     )
+
+
+def test_nc_ht_host_preserved_while_full_signed_url_redacted_from_payloads(tmp_path: Path) -> None:
+    # Combined high-risk regression: an IG media URL carries the host in _nc_ht=<host> (which was
+    # clobbering the media_host provenance field) AND the full signed URL is embedded in comment +
+    # cue text. media_host must be PRESERVED (host is not a secret) while the full URL + signature
+    # (oh/oe values) are redacted from BOTH lanes.
+    root = _root(tmp_path)
+    signed = (
+        "https://scontent.cdninstagram.com/o1/v/clip.mp4"
+        "?_nc_ht=scontent.cdninstagram.com&oh=SECRET_SIGNATURE_TOKEN&oe=DEADBEEF"
+    )
+    comment = _comment().model_copy(update={"text": f"source: {signed}"})
+    result = ReelDeepCaptureResult(
+        reel_shortcode="DaA8n7EhqTR",
+        comments=(comment,),
+        transcript_posture="transcribed",
+        transcript_cues=({"start_ms": 0, "end_ms": 90, "text": "clip", "debug_media_url": signed},),
+        media_url_used=signed,
+    )
+    written = write_reel_deep_capture_into_lake(data_root=root, result=result, generated_at="t")
+    comments_doc = json.loads(written[AUDIENCE_COMMENTS_LANE].read_text(encoding="utf-8"))
+    assert comments_doc["media_provenance"]["media_host"] == "scontent.cdninstagram.com"
+    raw = written[AUDIENCE_COMMENTS_LANE].read_bytes() + written[REEL_TRANSCRIPT_LANE].read_bytes()
+    for forbidden in (signed, "SECRET_SIGNATURE_TOKEN", "DEADBEEF"):
+        assert forbidden.encode("utf-8") not in raw
