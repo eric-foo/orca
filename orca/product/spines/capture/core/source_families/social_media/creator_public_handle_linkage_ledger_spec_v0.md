@@ -14,6 +14,7 @@ use_when:
   - Checking the evidence threshold for declared, probable, candidate, or rejected public-handle links.
   - Validating a static creator public-handle linkage fixture before any database migration.
 open_next:
+  - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_spec_v0.md
   - orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_v0.json
   - docs/decisions/wind_caller_calibration_carveout_v0.md
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_roster_frontier_ledger_spec_v0.md
@@ -67,6 +68,12 @@ Use a static table-shaped ledger first:
 
 The ledger is intentionally relational even when stored as JSON. SQLite can
 come later by mapping each list to a table without changing the core contract.
+
+The one-stop operator surface is a separate derived view, not this identity
+ledger. Use `creator_profile_current_view_spec_v0.md` for the dashboard-ready
+join over identity, metric observations, metric rollups, and ideal-audience
+profile snapshots. Average views, engagement rate, and other influence rollups
+must not be added to `creator_records`.
 
 ## Creator Record Contract
 
