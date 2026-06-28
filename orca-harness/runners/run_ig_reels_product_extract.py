@@ -23,7 +23,14 @@ ig_reels_transcript_product_extraction_spec_v0.md (IG delta; daemon-readiness in
 
 from __future__ import annotations
 
+import argparse
 import json
+import sys
+from pathlib import Path
+from typing import Sequence
+
+if __package__ in {None, ""}:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from cleaning.transcript_product_extractor import TranscriptInput
 from cleaning.transcript_product_lake import (
@@ -37,6 +44,7 @@ from cleaning.transcript_product_lake import (
 _ASR_LANE = "transcript_asr"
 _IG_SOURCE_FAMILY = "instagram_creator"
 _IG_AUDIO_SURFACE = "ig_reels_audio"
+DEFAULT_EXTRACTION_MODEL = "codex-extraction-v0"
 
 
 def _file_paths(manifest: dict) -> dict[str, str]:
@@ -136,6 +144,56 @@ def _transcripts_for_packet(data_root, packet_id: str) -> list[TranscriptInput]:
     return transcripts
 
 
+def _mentions_set_state(data_root, transcript: TranscriptInput, model: str) -> str:
+    rid = mentions_record_id(transcript, model)
+    if data_root.is_record_set_complete(
+        subtree="derived",
+        raw_anchor=transcript.transcript_anchor,
+        record_id=rid,
+        completion_lane=PRODUCT_MENTIONS_SET_LANE,
+    ):
+        return "complete"
+    member_path = _record_path(
+        data_root,
+        raw_anchor=transcript.transcript_anchor,
+        lane=PRODUCT_MENTIONS_LANE,
+        record_id=rid,
+    )
+    if member_path.exists():
+        return "partial_needs_cleanup"
+    return "extractable"
+
+
+def pending_extraction_counts(*, data_root, model: str = DEFAULT_EXTRACTION_MODEL) -> dict[str, int]:
+    """Count extractable and crash-partial IG Reel transcript mention sets.
+
+    Scheduler gate helper: no LLM and no network. Discovery may best-effort
+    rebuild the disposable availability index, matching ``run_extraction``.
+    Corrupt packets are isolated the same way discovery is isolated there.
+    """
+    counts = {"extractable": 0, "partial_needs_cleanup": 0}
+    for packet_id in _candidate_packet_ids(data_root):
+        try:
+            transcripts = _transcripts_for_packet(data_root, packet_id)
+        except Exception:  # noqa: BLE001 - corrupt packet discovery must not abort the poll
+            continue
+        for transcript in transcripts:
+            state = _mentions_set_state(data_root, transcript, model)
+            if state in counts:
+                counts[state] += 1
+    return counts
+
+
+def count_pending_extractions(*, data_root, model: str = DEFAULT_EXTRACTION_MODEL) -> int:
+    """Count transcripts that can be extracted now without manual cleanup."""
+    return pending_extraction_counts(data_root=data_root, model=model)["extractable"]
+
+
+def count_partial_extractions(*, data_root, model: str = DEFAULT_EXTRACTION_MODEL) -> int:
+    """Count incomplete mention sets that need operator cleanup before retry."""
+    return pending_extraction_counts(data_root=data_root, model=model)["partial_needs_cleanup"]
+
+
 def run_extraction(
     *,
     data_root,
@@ -207,3 +265,54 @@ def run_extraction(
                     {"anchor": anchor, "video_id": transcript.video_id, "status": "failed", "error": f"{type(exc).__name__}: {exc}"[:200]}
                 )
     return results
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="IG Reels product extraction runner utilities."
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Print the LLM-free count of extractable IG Reel transcripts.",
+    )
+    parser.add_argument(
+        "--check-partials",
+        action="store_true",
+        help="Print the LLM-free count of partial mentions sets needing cleanup.",
+    )
+    parser.add_argument(
+        "--data-root",
+        default=None,
+        help="Orca data lake root. Defaults to ORCA_DATA_ROOT.",
+    )
+    parser.add_argument(
+        "--model",
+        default=DEFAULT_EXTRACTION_MODEL,
+        help="Model token used in the deterministic mentions record_id.",
+    )
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = _build_parser()
+    args = parser.parse_args(argv)
+    if args.check and args.check_partials:
+        parser.exit(status=2, message="choose exactly one of --check or --check-partials\n")
+    if not args.check and not args.check_partials:
+        parser.exit(status=2, message="no action requested; use --check or --check-partials\n")
+
+    from data_lake.root import DataLakeRoot
+
+    try:
+        data_root = DataLakeRoot.resolve(explicit=args.data_root)
+    except Exception as exc:  # noqa: BLE001 - CLI must surface root resolution failures
+        parser.exit(status=2, message=f"data root required: {type(exc).__name__}: {exc}\n")
+    counts = pending_extraction_counts(data_root=data_root, model=args.model)
+    key = "extractable" if args.check else "partial_needs_cleanup"
+    print(counts[key])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

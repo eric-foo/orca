@@ -2,9 +2,10 @@
 """Validate Commission Signal Board classifier handoff rows.
 
 This is a local/manual checker. It does not run retrieval, classify demand,
-construct graphs, or prove a board is correct. It only checks that rows listed
-in the classifier handoff are evidence-backed and cutoff-safe according to the
-board's own row table, and that the row table carries the mechanically required
+construct graphs, or prove a board is correct. It only checks that saved full
+board outputs preserve the prompt's mechanical shape, that rows listed in the
+classifier handoff are evidence-backed and cutoff-safe according to the board's
+own row table, and that Section 4 carries the mechanically required
 recency/current-state attention fields.
 """
 from __future__ import annotations
@@ -29,8 +30,26 @@ HANDOFF_SECTION_RE = re.compile(
     r"(?=^###\s+\d+\.|\Z)",
     re.IGNORECASE | re.MULTILINE | re.DOTALL,
 )
+BOARD_STATUS_SECTION_RE = re.compile(
+    r"^###\s+10\.\s+Board Status And Run Boundary\s*$"
+    r"(?P<body>.*?)"
+    r"(?=^###\s+\d+\.|\Z)",
+    re.IGNORECASE | re.MULTILINE | re.DOTALL,
+)
 YAML_FENCE_RE = re.compile(r"```yaml\s*(?P<body>.*?)\s*```", re.IGNORECASE | re.DOTALL)
 
+EXPECTED_SECTIONS = [
+    "Commission Intake Receipt",
+    "Boundary Statement",
+    "Source-Family Coverage Plan",
+    "Signal Board Rows",
+    "Mandatory Counterevidence Paths",
+    "Campaign And Duplication Risk",
+    "Graph Retrieval Brief",
+    "Demand-Classifier Handoff Packet",
+    "Visible Limitations",
+    "Board Status And Run Boundary",
+]
 REQUIRED_ROW_COLUMNS = {
     "row_id",
     "source_family",
@@ -44,7 +63,30 @@ REQUIRED_ROW_COLUMNS = {
     "surface_cutoff_status",
     "cutoff_status",
 }
-VALID_HANDOFF_MODES = {"backtest", "forward", "unknown"}
+VALID_HANDOFF_MODES = {"backtest", "forward"}
+VALID_SOURCE_FAMILIES = {
+    "forums_community",
+    "reviews",
+    "creator_social_video",
+    "retail_pdp",
+    "search_discovery",
+    "aeo_answer_engines",
+    "news_editorial_trade",
+    "professional_org_motion",
+    "owned_channels",
+    "other",
+}
+VALID_SIGNAL_ROLES = {
+    "consumer_language",
+    "review_experience",
+    "creator_attention",
+    "retail_corroboration",
+    "search_interest",
+    "aeo_visibility",
+    "org_motion",
+    "owned_claim",
+    "none",
+}
 VALID_ROW_PURPOSES = {
     "chronology",
     "source_route",
@@ -72,6 +114,39 @@ VALID_GRAPH_ROLES = {
     "none",
 }
 VALID_GRAPH_WEIGHT_HINTS = {"high", "medium", "low", "none"}
+VALID_EVIDENCE_STATUSES = {
+    "provided",
+    "source_backed",
+    "to_retrieve",
+    "gap",
+    "not_authorized",
+    "not_applicable",
+    "excluded_future_info",
+}
+VALID_CUTOFF_STATUSES = {"in_window", "post_cutoff_excluded", "uncertain", "not_applicable"}
+VALID_SURFACE_CUTOFF_STATUSES = {"existed_by_cutoff", "post_cutoff_surface", "uncertain", "not_applicable"}
+VALID_BOARD_STATUSES = {
+    "READY_FOR_RETRIEVAL_HANDOFF",
+    "COLLECTION_BOARD_ONLY",
+    "NEEDS_COMMISSION_INTAKE",
+    "NEEDS_CUTOFF_DATE",
+    "NEEDS_OWNER_DECISION",
+}
+VALID_RUN_BOUNDARIES = {"CHAT_ONLY_BOARD_COMPLETE", "INTAKE_ONLY", "OWNER_DECISION_NEEDED"}
+REQUIRED_HANDOFF_PACKET_FIELDS = {
+    "candidate_or_subject",
+    "decision_context",
+    "mode",
+    "cutoff_date",
+    "signal_rows_for_handoff",
+    "counterevidence_rows_for_handoff",
+    "source_family_gaps",
+    "provenance_gaps",
+    "cutoff_uncertainties",
+    "classifier_mapping_status",
+    "prohibited_claims",
+}
+ROW_ID_RE = re.compile(r"^SBR-(\d{3})$")
 
 
 @dataclass(frozen=True)
@@ -99,77 +174,40 @@ def _is_separator_row(cells: list[str]) -> bool:
     return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell.strip()) for cell in cells)
 
 
-def _extract_section(pattern: re.Pattern[str], text: str, missing_code: str, missing_message: str) -> tuple[str, list[Finding]]:
+def _extract_section(
+    pattern: re.Pattern[str], text: str, missing_code: str, missing_message: str
+) -> tuple[str, list[Finding]]:
     match = pattern.search(text)
     if not match:
         return "", [Finding(missing_code, missing_message)]
     return match.group("body"), []
 
 
-
-def _validate_vocab_field(
-    row_id: str,
-    row: dict[str, str],
-    field_name: str,
-    valid_values: set[str],
-    finding_code: str,
-) -> list[Finding]:
-    raw_value = row.get(field_name, "")
-    normalized = _normalize_vocab(raw_value)
-    if normalized in valid_values:
+def validate_section_contract(text: str) -> list[Finding]:
+    headings = [
+        (int(match.group("number")), _normalize_header(match.group("title")))
+        for match in re.finditer(r"^###\s+(?P<number>\d+)\.\s+(?P<title>.+?)\s*$", text, re.MULTILINE)
+    ]
+    expected = [(index, _normalize_header(title)) for index, title in enumerate(EXPECTED_SECTIONS, start=1)]
+    if headings == expected:
         return []
-    valid_display = ", ".join(sorted(valid_values))
     return [
         Finding(
-            finding_code,
-            f"{field_name} must be one of {valid_display}, got {raw_value or '<blank>'}.",
-            row_id,
+            "invalid_section_contract",
+            "Full board output must contain Sections 1-10 in the prompt-defined order.",
         )
     ]
 
 
-def _validate_signal_row_vocab(row_id: str, row: dict[str, str]) -> list[Finding]:
-    findings: list[Finding] = []
-    findings.extend(
-        _validate_vocab_field(row_id, row, "row_purpose", VALID_ROW_PURPOSES, "invalid_row_purpose")
+def _finding_for_invalid_vocab(row_id: str, field: str, value: str, valid_values: set[str]) -> Finding | None:
+    normalized = _normalize_vocab(value)
+    if normalized in valid_values:
+        return None
+    return Finding(
+        f"invalid_{field}",
+        f"{field} must be one of {', '.join(sorted(valid_values))}; got {value or '<blank>'}.",
+        row_id,
     )
-    findings.extend(
-        _validate_vocab_field(
-            row_id,
-            row,
-            "recency_status",
-            VALID_RECENCY_STATUSES,
-            "invalid_recency_status",
-        )
-    )
-    findings.extend(
-        _validate_vocab_field(
-            row_id,
-            row,
-            "recency_attention",
-            VALID_RECENCY_ATTENTIONS,
-            "invalid_recency_attention",
-        )
-    )
-    findings.extend(
-        _validate_vocab_field(
-            row_id,
-            row,
-            "graph_role",
-            VALID_GRAPH_ROLES,
-            "invalid_graph_role",
-        )
-    )
-    findings.extend(
-        _validate_vocab_field(
-            row_id,
-            row,
-            "graph_weight_hint",
-            VALID_GRAPH_WEIGHT_HINTS,
-            "invalid_graph_weight_hint",
-        )
-    )
-    return findings
 
 
 def parse_signal_rows(text: str) -> tuple[dict[str, dict[str, str]], list[Finding]]:
@@ -217,11 +255,35 @@ def parse_signal_rows(text: str) -> tuple[dict[str, dict[str, str]], list[Findin
         if not row_id:
             out_findings.append(Finding("missing_row_id", "Signal board row is missing Row ID."))
             continue
+        if not ROW_ID_RE.fullmatch(row_id):
+            out_findings.append(Finding("invalid_row_id_format", "Row ID must use SBR-001 format.", row_id))
+            continue
+        expected_row_id = f"SBR-{len(rows) + 1:03d}"
+        if row_id != expected_row_id:
+            out_findings.append(
+                Finding("non_monotonic_row_id", f"Expected next row ID {expected_row_id}, got {row_id}.", row_id)
+            )
         if row_id in rows:
             out_findings.append(Finding("duplicate_row_id", f"Duplicate signal board row ID {row_id}.", row_id))
             continue
-        out_findings.extend(_validate_signal_row_vocab(row_id, row))
         rows[row_id] = row
+
+        vocab_checks = {
+            "source_family": VALID_SOURCE_FAMILIES,
+            "signal_role": VALID_SIGNAL_ROLES,
+            "row_purpose": VALID_ROW_PURPOSES,
+            "recency_status": VALID_RECENCY_STATUSES,
+            "recency_attention": VALID_RECENCY_ATTENTIONS,
+            "graph_role": VALID_GRAPH_ROLES,
+            "graph_weight_hint": VALID_GRAPH_WEIGHT_HINTS,
+            "evidence_status": VALID_EVIDENCE_STATUSES,
+            "surface_cutoff_status": VALID_SURFACE_CUTOFF_STATUSES,
+            "cutoff_status": VALID_CUTOFF_STATUSES,
+        }
+        for field, valid_values in vocab_checks.items():
+            finding = _finding_for_invalid_vocab(row_id, field, row.get(field, ""), valid_values)
+            if finding:
+                out_findings.append(finding)
     return rows, out_findings
 
 
@@ -248,6 +310,30 @@ def parse_classifier_handoff(text: str) -> tuple[dict[str, Any], list[Finding]]:
     if not isinstance(packet, dict):
         return {}, [Finding("missing_classifier_handoff_packet", "Section 8 YAML lacks classifier_handoff_packet.")]
     return packet, []
+
+
+def parse_board_status(text: str) -> tuple[dict[str, Any], list[Finding]]:
+    section, findings = _extract_section(
+        BOARD_STATUS_SECTION_RE,
+        text,
+        "missing_board_status_section",
+        "Missing Section 10 Board Status And Run Boundary.",
+    )
+    if findings:
+        return {}, findings
+
+    fence = YAML_FENCE_RE.search(section)
+    if not fence:
+        return {}, [Finding("missing_board_status_yaml", "Section 10 has no yaml fence.")]
+
+    try:
+        data = yaml.safe_load(fence.group("body")) or {}
+    except yaml.YAMLError as exc:
+        return {}, [Finding("invalid_board_status_yaml", f"Section 10 YAML is invalid: {exc}")]
+
+    if not isinstance(data, dict):
+        return {}, [Finding("invalid_board_status_yaml", "Section 10 YAML must be a mapping.")]
+    return data, []
 
 
 def _handoff_ids(packet: dict[str, Any], key: str) -> tuple[list[str], list[Finding]]:
@@ -318,12 +404,67 @@ def _validate_handoff_row(row_id: str, row: dict[str, str], mode: str) -> list[F
     return findings
 
 
+def _validate_packet_shape(packet: dict[str, Any]) -> list[Finding]:
+    findings: list[Finding] = []
+    missing_handoff_fields = sorted(REQUIRED_HANDOFF_PACKET_FIELDS - set(packet))
+    if missing_handoff_fields:
+        findings.append(
+            Finding(
+                "missing_handoff_packet_fields",
+                "classifier_handoff_packet is missing required fields: " + ", ".join(missing_handoff_fields),
+            )
+        )
+
+    mapping_status = _normalize_vocab(packet.get("classifier_mapping_status"))
+    if mapping_status != "classifier_owned":
+        findings.append(
+            Finding(
+                "invalid_classifier_mapping_status",
+                "classifier_handoff_packet.classifier_mapping_status must be classifier_owned.",
+            )
+        )
+
+    prohibited_claims = packet.get("prohibited_claims")
+    if not isinstance(prohibited_claims, list) or not all(isinstance(item, str) for item in prohibited_claims):
+        findings.append(
+            Finding("invalid_prohibited_claims", "classifier_handoff_packet.prohibited_claims must be a list of strings.")
+        )
+    return findings
+
+
+def _validate_board_status_shape(status_packet: dict[str, Any]) -> list[Finding]:
+    findings: list[Finding] = []
+    board_status = str(status_packet.get("board_status", "")).strip()
+    if board_status not in VALID_BOARD_STATUSES:
+        findings.append(
+            Finding(
+                "invalid_board_status",
+                "board_status must be one of " + ", ".join(sorted(VALID_BOARD_STATUSES)) + ".",
+            )
+        )
+    run_boundary = str(status_packet.get("run_boundary", "")).strip()
+    if run_boundary not in VALID_RUN_BOUNDARIES:
+        findings.append(
+            Finding(
+                "invalid_run_boundary",
+                "run_boundary must be one of " + ", ".join(sorted(VALID_RUN_BOUNDARIES)) + ".",
+            )
+        )
+    if "next_authorized_step" not in status_packet:
+        findings.append(Finding("missing_next_authorized_step", "Section 10 must include next_authorized_step."))
+    return findings
+
+
 def validate_text(text: str) -> list[Finding]:
+    section_findings = validate_section_contract(text)
     rows, row_findings = parse_signal_rows(text)
     packet, packet_findings = parse_classifier_handoff(text)
-    findings = [*row_findings, *packet_findings]
+    status_packet, status_findings = parse_board_status(text)
+    findings = [*section_findings, *row_findings, *packet_findings, *status_findings]
     if packet_findings or not rows:
         return findings
+
+    findings.extend(_validate_packet_shape(packet))
 
     mode = _normalize_vocab(packet.get("mode"))
     if not mode:
@@ -354,6 +495,9 @@ def validate_text(text: str) -> list[Finding]:
             findings.append(Finding("handoff_row_unknown", f"Row {row_id} is not present in Section 4.", row_id))
             continue
         findings.extend(_validate_handoff_row(row_id, row, mode))
+
+    if status_packet:
+        findings.extend(_validate_board_status_shape(status_packet))
 
     return findings
 

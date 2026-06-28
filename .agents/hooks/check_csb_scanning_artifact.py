@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 """Validate minimum receipt shape for CSB-first scanning artifacts.
 
-This is a local/manual checker. It does not run retrieval, grade signal
-quality, validate candidates, bind Capture routes, or prove a scan is good. It
-only checks that a CSB-first scan artifact preserves the mechanical receipt
-shape needed for review: source context, caps, broad-scout accounting,
-CSB-row accountability, exact-query accounting, venue/hidden-venue accounting,
-observations, negatives/access notes, capture-request accounting, and a bounded
-candidate closeout.
+This is a local/manual checker with a forward-only changed-file mode for CI.
+It does not run retrieval, grade signal quality, validate candidates, bind
+Capture routes, or prove a scan is good. It only checks that a CSB-first scan
+artifact preserves the mechanical receipt shape needed for review: source
+context, caps, broad-scout accounting, CSB-row accountability, exact-query
+accounting, venue/hidden-venue accounting, observations, negatives/access notes,
+capture-request accounting, and a bounded candidate closeout.
 """
 from __future__ import annotations
 
+import argparse
 from dataclasses import dataclass
 from datetime import date
+import os
 from pathlib import Path
 import re
+import subprocess
 import sys
 from typing import Any, Iterable
 
@@ -68,6 +71,18 @@ VALID_ROUTE_BINDING_STATES = {
     "blocked_outside_current_binding",
     "not_applicable",
 }
+AUTO_SCAN_PREFIXES = ("docs/research/",)
+AUTO_SCAN_REQUIRED_MARKERS = (
+    "commission_id:",
+    "source_context_status:",
+    "closeout_state:",
+)
+AUTO_SCAN_ROUTE_MARKERS = (
+    "csb-first",
+    "csb board",
+    "csb_rows_consumed",
+    "rows consumed as route map",
+)
 REQUIRED_OBSERVATION_FIELDS = {
     "observation_id",
     "source_move_id",
@@ -604,6 +619,105 @@ def validate_text(text: str) -> list[Finding]:
     return findings
 
 
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+
+def _git_lines(root: Path, args: list[str]) -> list[str] | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(root), *args],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode != 0:
+        return None
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def _dedupe(values: Iterable[str]) -> list[str]:
+    seen: list[str] = []
+    for value in values:
+        if value not in seen:
+            seen.append(value)
+    return seen
+
+
+def changed_paths(root: Path) -> list[str]:
+    paths: list[str] = []
+    for args in (
+        ["diff", "--name-only", "--diff-filter=ACMR"],
+        ["diff", "--cached", "--name-only", "--diff-filter=ACMR"],
+        ["ls-files", "--others", "--exclude-standard"],
+    ):
+        lines = _git_lines(root, args)
+        if lines:
+            paths.extend(lines)
+    return _dedupe(paths)
+
+
+def resolve_base_ref(cli_base: str | None) -> str:
+    github_base = os.environ.get("GITHUB_BASE_REF", "").strip()
+    if github_base:
+        return f"origin/{github_base}"
+    if cli_base:
+        return cli_base
+    return "origin/main"
+
+
+def diff_paths(root: Path, base_ref: str) -> list[str] | None:
+    lines = _git_lines(root, ["diff", "--name-only", "--diff-filter=ACMR", f"{base_ref}...HEAD"])
+    if lines is not None:
+        return lines
+    return _git_lines(root, ["diff", "--name-only", "--diff-filter=ACMR", base_ref, "HEAD"])
+
+
+def looks_like_csb_first_scan_artifact(relposix: str, text: str) -> bool:
+    if not relposix.endswith(".md"):
+        return False
+    if not any(relposix.startswith(prefix) for prefix in AUTO_SCAN_PREFIXES):
+        return False
+    lower = text.lower()
+    return all(marker in lower for marker in AUTO_SCAN_REQUIRED_MARKERS) and any(
+        marker in lower for marker in AUTO_SCAN_ROUTE_MARKERS
+    )
+
+
+def auto_targets(root: Path, relpaths: Iterable[str]) -> list[Path]:
+    targets: list[Path] = []
+    for rel in _dedupe(relpaths):
+        path = root / rel
+        if not path.is_file():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        if looks_like_csb_first_scan_artifact(rel, text):
+            targets.append(path)
+    return targets
+
+
+def validate_paths(paths: Iterable[Path]) -> int:
+    exit_code = 0
+    for path in paths:
+        findings = validate_text(path.read_text(encoding="utf-8"))
+        if findings:
+            exit_code = 1
+            print(f"FAIL {path}")
+            for finding in findings:
+                print(f"  {finding.code}: {finding.message}")
+        else:
+            print(f"PASS {path}")
+    return exit_code
+
+
 def _expected_from_fixture(path: Path) -> str:
     first_line = path.read_text(encoding="utf-8").splitlines()[0]
     match = re.search(r"fixture_expected:\s*(pass|fail)", first_line)
@@ -637,24 +751,50 @@ def selftest() -> int:
 
 
 def main(argv: list[str]) -> int:
-    if "--selftest" in argv:
+    parser = argparse.ArgumentParser(
+        description="Validate CSB-first scanning artifact receipt shape."
+    )
+    parser.add_argument("paths", nargs="*", help="explicit scan artifact paths")
+    parser.add_argument("--changed", action="store_true", help="auto-check changed CSB-first docs/research scan artifacts")
+    parser.add_argument("--diff", metavar="BASE", help="auto-check CSB-first docs/research scan artifacts changed in BASE...HEAD")
+    parser.add_argument("--strict", action="store_true", help="accepted for CI readability; findings already exit 1")
+    parser.add_argument("--selftest", action="store_true", help="run fixture selftest")
+    args = parser.parse_args(argv)
+
+    if args.selftest:
         return selftest()
-    paths = [Path(arg) for arg in argv if not arg.startswith("-")]
+
+    root = repo_root()
+    explicit_paths = [Path(path) for path in args.paths]
+    auto_relpaths: list[str] = []
+
+    if args.changed:
+        auto_relpaths.extend(changed_paths(root))
+    if args.diff:
+        base = resolve_base_ref(args.diff)
+        diff_relpaths = diff_paths(root, base)
+        if diff_relpaths is None:
+            print(
+                f"check_csb_scanning_artifact: diff-scoping unavailable for {base}; failing open.",
+                file=sys.stderr,
+            )
+            diff_relpaths = []
+        auto_relpaths.extend(diff_relpaths)
+
+    paths = explicit_paths + auto_targets(root, auto_relpaths)
+    paths = [Path(path) for path in _dedupe(str(path) for path in paths)]
+
     if not paths:
-        print("usage: check_csb_scanning_artifact.py [--selftest] <scan-artifact> [...]", file=sys.stderr)
+        if args.changed or args.diff:
+            print("check_csb_scanning_artifact: no changed CSB-first scan artifacts detected")
+            return 0
+        print(
+            "usage: check_csb_scanning_artifact.py [--selftest] [--changed] [--diff BASE] <scan-artifact> [...]",
+            file=sys.stderr,
+        )
         return 2
 
-    exit_code = 0
-    for path in paths:
-        findings = validate_text(path.read_text(encoding="utf-8"))
-        if findings:
-            exit_code = 1
-            print(f"FAIL {path}")
-            for finding in findings:
-                print(f"  {finding.code}: {finding.message}")
-        else:
-            print(f"PASS {path}")
-    return exit_code
+    return validate_paths(paths)
 
 
 if __name__ == "__main__":
