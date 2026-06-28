@@ -193,9 +193,16 @@ Current profile view:
 Soft links live in the public-handle linkage ledger as
 `candidate_public_account_link` rows with `candidate_needs_review`. A candidate
 link is a reversible pre-review bridge so the transition from similar unlinked
-accounts to a linked cluster can be seamless after human review. It is not a
-final creator identity, not a real-world identity claim, and not enough by
-itself for cross-platform aggregate rollups.
+accounts to a linked cluster can be seamless after human review. It may surface
+as `identity_state: candidate_public_account_link` and
+`link_state_or_none: candidate_public_account_link` for review/drill-back, but
+it is not a final creator identity, not a real-world identity claim, and not
+enough by itself for cross-platform aggregate rollups.
+
+A promoted public-handle link means the linkage ledger `link_state` is
+`probable_public_account_link` or `declared_public_account_link`.
+`candidate_public_account_link` and `rejected_public_account_link` are not
+promoted link states and must not produce cross-platform aggregate rollups.
 
 ## Suggested Record Shapes
 
@@ -205,7 +212,9 @@ These are architecture contracts, not implemented schemas.
 creator_metric_observation:
   metric_observation_id: required stable id
   platform_account_id: required platform account id
-  creator_record_id_or_none: nullable linkage-ledger id, present only after public-handle linkage
+  profile_subject_kind: required literal platform_account
+  profile_subject_id: required platform_account_id
+  creator_record_id_or_none: nullable linkage-ledger id for drill-back, not rollup authorization
   platform: required enum instagram, tiktok, youtube
   content_id_or_none: nullable platform-local content id
   content_url_or_none: nullable public content URL
@@ -227,7 +236,9 @@ creator_metric_observation:
 ```yaml
 creator_metric_rollup:
   metric_rollup_id: required stable id
-  creator_record_id_or_none: nullable linkage-ledger id, required only for cross_platform rollups
+  profile_subject_kind: required enum platform_account, creator_record
+  profile_subject_id: required subject id matching profile_subject_kind
+  creator_record_id_or_none: nullable linkage-ledger id, required only for promoted cross_platform rollups
   platform_scope: required enum instagram, tiktok, youtube, cross_platform
   platform_account_ids: required list
   rollup_window: required enum 7d, 30d, 90d, lifetime_known, custom
@@ -252,7 +263,7 @@ creator_ideal_audience_profile_snapshot:
   profile_subject_kind: required enum platform_account, creator_record
   profile_subject_id: required subject id matching profile_subject_kind
   platform_account_ids: required list
-  creator_record_id_or_none: nullable linkage-ledger id, present only after public-handle linkage
+  creator_record_id_or_none: nullable linkage-ledger id, required when profile_subject_kind is creator_record
   platform_scope: required enum instagram, tiktok, youtube, cross_platform
   observation_window_start: required timestamp
   observation_window_end: required timestamp
@@ -276,9 +287,9 @@ creator_profile_current:
   profile_subject_id: required subject id matching profile_subject_kind
   platform_account_id_or_none: required when profile_subject_kind is platform_account
   creator_record_id_or_none: required when profile_subject_kind is creator_record
-  identity_state: required enum single_platform_observed, cross_platform_candidate, probable_public_account_link, declared_public_account_link, rejected_public_account_link
-  link_state_or_none: nullable from identity ledger
-  review_state_or_none: nullable from identity ledger
+  identity_state: required enum single_platform_observed, candidate_public_account_link, probable_public_account_link, declared_public_account_link, rejected_public_account_link
+  link_state_or_none: nullable from identity ledger; required when identity_state is not single_platform_observed and must match identity_state
+  review_state_or_none: nullable from identity ledger; required whenever link_state_or_none is present
   platform_accounts: required joined public handles
   identity_evidence_summary: required short summary and pointers
   current_metric_rollups: required latest non-stale rollups by platform/window
@@ -293,6 +304,20 @@ creator_profile_current:
   non_claims: required list
 ```
 
+Identity-state mapping:
+
+- `single_platform_observed` means no linkage-ledger row is active for the
+  profile subject; `link_state_or_none` and `review_state_or_none` are null.
+- `candidate_public_account_link`, `probable_public_account_link`,
+  `declared_public_account_link`, and `rejected_public_account_link` mirror the
+  linkage ledger `link_state`; `review_state_or_none` mirrors the same row's
+  `review_state`.
+- Candidate subjects may be shown as reviewable soft-linked clusters, but their
+  metric rollups, audience snapshots, and wind-calling summaries remain
+  account-scoped until a human-reviewed promoted link exists.
+- Rejected links may be shown only as limitation/disambiguation context; they
+  must not collapse accounts or produce `creator_record` aggregate rollups.
+
 ## Aggregate Influence Rules
 
 Average views and engagement rate belong in `creator_metric_rollup`, not in the
@@ -303,10 +328,15 @@ Minimum rollup rules:
 - Always state the window: 7d, 30d, 90d, or custom.
 - Always state the platform scope: one platform or cross-platform.
 - Always state which observation rows fed the rollup.
-- Before public-handle linkage, aggregate influence attaches to
-  `platform_account_id`.
-- After public-handle linkage, cross-platform aggregate influence attaches to
-  `creator_record_id` and lists the linked `platform_account_ids`.
+- Before a promoted public-handle link, aggregate influence attaches to
+  `platform_account_id`; candidate and rejected linkage rows may appear only as
+  identity/drill-back context.
+- Cross-platform aggregate influence may attach to `creator_record_id` only
+  when the linkage ledger `link_state` is `probable_public_account_link` or
+  `declared_public_account_link`, and it must list the linked
+  `platform_account_ids`.
+- `candidate_public_account_link` and `rejected_public_account_link` rows must
+  not produce `cross_platform` rollups.
 - Cross-platform rollups must recompute from source metric observations or an
   equivalent deduplicated observation set; they must not sum stored
   account-level rollups as if those were independent raw observations.
@@ -406,9 +436,11 @@ direction_change_propagation:
   doctrine_changed: >
     Channel-neutral creator profile patch: single-platform public accounts may seed
     creator_profile_current as platform_account subjects; soft links live as
-    candidate_public_account_link rows until human review; metric observations and
-    account rollups are account-primary before linkage, and creator-cluster rollups
-    require linked creator_record evidence.
+    candidate_public_account_link rows until human review; identity_state mirrors
+    the linkage-ledger link_state when present; metric observations and account
+    rollups are account-primary before promoted linkage, and cross-platform
+    creator_record rollups require probable_public_account_link or
+    declared_public_account_link evidence.
   trigger: architecture_doctrine
   related_triggers:
     - product_doctrine
@@ -437,7 +469,7 @@ direction_change_propagation:
         Product ledger scaffold stays empty; this patch changes contract semantics
         only and adds no real rows.
   stale_language_search: >
-    rg -n "creator_record_id|candidate_public_account_link|candidate_needs_review|profile_subject_kind|platform_account_id"
+    rg -n "creator_record_id|candidate_public_account_link|candidate_needs_review|profile_subject_kind|platform_account_id|identity_state|cross_platform_candidate"
     orca/product/spines/capture/core/source_families/social_media orca/product/spines/creator_signal orca-harness
   non_claims:
     - not validation
@@ -507,3 +539,5 @@ direction_change_propagation:
     - not dashboard implementation
     - not public person-level product surface
 ```
+
+Older receipts, when cycled out, are archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.

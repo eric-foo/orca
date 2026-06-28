@@ -78,7 +78,7 @@ functional equivalent:
 
 | Section | Required contents | Source owner |
 | --- | --- | --- |
-| Identity and account cluster | `profile_subject_kind`, `profile_subject_id`, `identity_state`, `platform_account_id` when account-scoped, `creator_record_id_or_none` when linked, link/review state when present, public platform handles, linkage evidence summary | Capture identity linkage |
+| Identity and account cluster | `profile_subject_kind`, `profile_subject_id`, `identity_state` (`single_platform_observed` or the linkage-ledger `link_state` when present), `platform_account_id` when account-scoped, `creator_record_id_or_none` when linked, link/review state when present, public platform handles, linkage evidence summary | Capture identity linkage |
 | Aggregate influence | Latest allowed rollups by platform/window: average views, engagement rate, median views, cadence, recent velocity when present | Capture metric rollups |
 | Ideal/content-fit audience | Latest allowed Tier-1 ideal-audience profile fields: segment, audience_role, purchase_intent, skill_level, price_tier, with support bands and evidence pointers | Capture ideal-audience inference + ballot taxonomy |
 | Freshness | identity update timestamp, metric computation timestamp, audience computation timestamp, profile view computation timestamp, stale/partial/blocked state | Capture current view |
@@ -154,8 +154,9 @@ The surface must not provide or imply:
   authorize an aggregate slice;
 - unstamped, sourceless, or LLM-only influence claims;
 - hidden/blocked/not-applicable metrics as observed zeroes;
-- candidate public-account links as final linked creator identities before
-  human review promotes or rejects them;
+- candidate public-account links as final linked creator identities or
+  cross-platform aggregate influence before human review promotes or rejects
+  them;
 - buyer proof, validation, readiness, commercial usefulness, or guaranteed
   creator performance;
 - live capture, source-access, dashboard, SQLite, or data-lake job readiness.

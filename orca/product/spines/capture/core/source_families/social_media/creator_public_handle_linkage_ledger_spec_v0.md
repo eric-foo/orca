@@ -34,13 +34,13 @@ wind-caller carve-out. The controlling decision says Tier-2-B public-handle
 stitching is activated for public-handle-to-public-handle joins, while
 non-public-handle joins remain gated and Tier-3 exclusions remain absolute.
 
-This spec does not authorize inventing or capturing real creator rows. The
-first implementation uses a synthetic fixture and validator so the linkage
-semantics can be tested hard before promoting the shape to SQLite or a runtime
-store. The static product ledger artifact starts as an empty
-`public_handle_ledger` scaffold at
-`orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_v0.json`;
-rows require source-backed public-handle evidence before entry.
+This spec does not authorize inventing or live-capturing creator rows. Synthetic
+fixtures remain test-only validator fixtures. The product ledger artifact at
+`orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_v0.json`
+may be populated from source-backed archive/lake artifacts, and each admitted
+row must point back to its source. Single-platform account observations may seed
+`platform_accounts`; `creator_records` require source-backed public-handle
+evidence spanning at least two platforms before entry.
 
 ## Source Reconciliation
 
@@ -233,6 +233,44 @@ This spec is not:
 - buyer proof, validation, readiness, or commercial-scale authorization.
 
 ## Direction Change Propagation
+
+```yaml
+direction_change_propagation:
+  trigger: product_doctrine
+  related_triggers:
+    - architecture_doctrine
+    - lifecycle_boundary
+  doctrine_changed: >
+    The public_handle_ledger product artifact is no longer an empty scaffold:
+    it may hold source-backed real platform_account rows from archived/lake
+    creator observation artifacts while keeping synthetic rows test-only and
+    keeping creator_records empty until two-platform public-handle linkage
+    evidence exists.
+  controlling_sources_updated:
+    - orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_spec_v0.md
+    - orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_v0.json
+    - orca-harness/tests/unit/test_creator_public_handle_linkage.py
+  downstream_surfaces_checked:
+    - orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_observation_ledger_v0.json
+    - docs/review-inputs/youtube_shorts_fragrance_creator_ledger_v0.json
+    - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_spec_v0.md
+  intentionally_not_updated:
+    - path: orca-harness/tests/fixtures/creator_public_handle_linkage/valid_synthetic_ledger.json
+      reason: >
+        Synthetic fixture remains test-only coverage for edge states and
+        validator failure cases; synthetic rows are not copied into the product
+        public_handle_ledger artifact.
+  stale_language_search: >
+    rg -n "empty public_handle_ledger|not populated creator ledger|synthetic fixture and validator|creator_public_handle_linkage_ledger_v0"
+    orca docs orca-harness -g "*.md" -g "*.json" -g "*.py"
+  non_claims:
+    - not real-world identity proof
+    - not cross-platform account linkage
+    - not public-handle stitching evidence
+    - not SQLite migration
+    - not live capture authorization
+    - not validation or readiness
+```
 
 ```yaml
 direction_change_propagation:

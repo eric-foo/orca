@@ -61,14 +61,34 @@ def test_valid_synthetic_fixture_loads_and_validates() -> None:
     }
 
 
-def test_product_public_handle_ledger_scaffold_loads_and_validates() -> None:
+def test_candidate_link_requires_candidate_needs_review() -> None:
+    ledger = _fixture()
+    candidate = next(
+        record
+        for record in _wrapper(ledger)["creator_records"]
+        if record["link_state"] == "candidate_public_account_link"
+    )
+    candidate["review_state"] = "human_reviewed_probable"
+
+    _raises_code(ledger, "candidate_link_review_state_mismatch")
+
+
+def test_product_public_handle_ledger_seed_loads_and_validates() -> None:
     loaded = load_creator_public_handle_linkage_ledger(PRODUCT_LEDGER_PATH)
 
     wrapper = _wrapper(loaded)
     assert wrapper["ledger_mode"] == "public_handle_ledger"
-    assert wrapper["platform_accounts"] == []
+    assert len(wrapper["platform_accounts"]) == 30
     assert wrapper["account_link_evidence"] == []
     assert wrapper["creator_records"] == []
+    assert "not populated creator ledger" not in wrapper["non_claims"]
+    assert {account["platform"] for account in wrapper["platform_accounts"]} == {"youtube"}
+    assert all("synthetic_fixture" not in account for account in wrapper["platform_accounts"])
+
+    first_account = wrapper["platform_accounts"][0]
+    assert first_account["platform_account_id"] == "acct_yt_fragrance_001"
+    assert first_account["platform_public_account_id_or_none"] == "UCVvzGrPSok_sf8hfDhvTg7w"
+    assert first_account["public_handle"] == "BowTieFragranceGuy"
 
 
 def test_unknown_top_level_sibling_key_raises() -> None:
