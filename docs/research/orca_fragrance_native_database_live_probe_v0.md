@@ -408,12 +408,73 @@ next_route_condition: >
   bytes.
 ```
 
+### Basenotes Exact Product Re-Diagnosis Addendum
+
+```yaml
+operator_question: >
+  Should Basenotes wait for the Fragrantica lane structure, or should it be
+  diagnosed now?
+route_answer: >
+  Do not wait for Fragrantica to complete before diagnosing Basenotes access.
+  Wait for Fragrantica/Parfumo before building the shared projection and
+  Cleaning shape, but Basenotes has a separate access bottleneck that must be
+  proven independently before it can adopt the same wrapper structure.
+new_route_fact:
+  kind: known_exact_basenotes_product_url
+  source: local code fixture evidence
+  url: https://www.basenotes.com/fragrances/mojave-ghost-by-byredo.26143979/
+direct_http_result:
+  http_status: 403
+  final_url: https://basenotes.com/fragrances/mojave-ghost-by-byredo.26143979/
+  server: cloudflare
+  cf_mitigated: challenge
+  title: Just a moment...
+  source_content_seen: false
+  product_markers_seen:
+    Mojave Ghost: false
+    Reviews: false
+br540_locator_pass:
+  public_search_locator_result: no usable Basenotes BR540 product URL surfaced
+  candidate_slug_direct_http_result: Cloudflare 403 challenge; no BR540 marker
+  wayback_available_result: no closest snapshot for tested candidate BR540 URL variants
+exact_product_cloakbrowser_packet:
+  packet_id: 01KW7WT678TBFK1609QTE07B5E
+  packet_lifecycle_note: Local ignored scratch packet, not fixture-admitted.
+  scratch_path: orca-harness/_test_runs/fragrance_native_20260629/basenotes_exact_product_cloakbrowser_packet
+  source_surface: basenotes_exact_product_cloakbrowser_snapshot
+  url_requested: https://www.basenotes.com/fragrances/mojave-ghost-by-byredo.26143979/
+  url_landed: https://basenotes.com/fragrances/mojave-ghost-by-byredo.26143979/
+  rendered_dom_bytes: 27498
+  visible_text_bytes: 262
+  viewport_screenshot_bytes: 26232
+  title: Just a moment...
+  visible_text_result: Cloudflare security verification page, not Basenotes source content.
+  receipt_warning: residual Cloudflare challenge marker
+  integrity_note: >
+    The packet metadata recorded `access_blocked: false`, but the rendered
+    title and visible text show an interstitial. Under the source-capture
+    playbook's rendered-access honesty rule, this is classified as blocked
+    source access, not a successful source read.
+diagnosis_verdict: no_working_pin_current_environment_reconfirmed_exact_product
+why_this_matters: >
+  The failure is no longer just a Basenotes search-page or BR540 locator issue.
+  A known exact product URL also fails through direct HTTP and anonymous
+  CloakBrowser, so Basenotes should remain CSB/Scanning value plus access-note,
+  not Capture-wrapper work, until a materially different access route is proven.
+next_route_condition: >
+  Re-probe only with a new access fact: approved proxy/profile route, stored
+  manual browser session success, owner-supplied entitled/rendered bytes, a
+  verified exact BR540 URL that returns source-visible content, or a usable
+  archive/snippet route that exposes product or thread content rather than an
+  access interstitial.
+```
+
 ## Route Pins
 | Pin ID | Source | Step 0 access classification | Signal substrate | Cheapest working route | Verdict | Re-probe trigger |
 | --- | --- | --- | --- | --- | --- | --- |
 | PIN-001 | Fragrantica | publicly-viewable public web content | large product-page HTML plus search HTML | `direct_http` with at least 2 MB cap for product pages | pinned_for_capture_probe | route returns block shell, body degrades, product markers disappear, or packet field extraction cannot preserve source-visible content |
 | PIN-002 | Parfumo | publicly-viewable public web content | product-page HTML; perfume-search locator route | `direct_http`; resolve exact product URL through `s_perfumes_x.php` when needed | pinned_for_capture_probe | route returns block shell, product URL changes, search locator changes, or packet field extraction cannot preserve source-visible content |
-| PIN-003 | Basenotes | publicly-viewable but bot-mitigated in current environment | source content not reached; Cloudflare challenge seen across direct, anti-block, browser, and search-snippet routes | none pinned | no_working_pin_current_environment | new anti-bot/proxy route, manual visible-browser success, usable archive/snippet locator, or owner-supplied entitled bytes |
+| PIN-003 | Basenotes | publicly-viewable but bot-mitigated in current environment | source content not reached; Cloudflare challenge seen across direct, anti-block, browser, search-snippet, and known exact-product routes | none pinned | no_working_pin_current_environment_reconfirmed_exact_product | new anti-bot/proxy route, manual visible-browser success, usable archive/snippet locator, verified non-interstitial exact product URL, or owner-supplied entitled bytes |
 
 ## Candidate Decision
 
@@ -434,4 +495,4 @@ candidate_decision:
 
 `capture_preservation_only`.
 
-Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo is pinned as a direct product-page plus first-party AJAX pagination route for a future complete reviews/statements capture, but this addendum did not run the full 369-review / 1390-statement corpus. Basenotes is explicitly not pinned in this environment; direct HTTP, anti-block HTTP, screening browser, and full anonymous CloakBrowser all failed to reach source content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
+Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo is pinned as a direct product-page plus first-party AJAX pagination route for a future complete reviews/statements capture, but this addendum did not run the full 369-review / 1390-statement corpus. Basenotes is explicitly not pinned in this environment; direct HTTP, anti-block HTTP, screening browser, search-page CloakBrowser, and known exact-product CloakBrowser all failed to reach source content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
