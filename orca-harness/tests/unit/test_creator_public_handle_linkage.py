@@ -61,6 +61,18 @@ def test_valid_synthetic_fixture_loads_and_validates() -> None:
     }
 
 
+def test_candidate_link_requires_candidate_needs_review() -> None:
+    ledger = _fixture()
+    candidate = next(
+        record
+        for record in _wrapper(ledger)["creator_records"]
+        if record["link_state"] == "candidate_public_account_link"
+    )
+    candidate["review_state"] = "human_reviewed_probable"
+
+    _raises_code(ledger, "candidate_link_review_state_mismatch")
+
+
 def test_product_public_handle_ledger_scaffold_loads_and_validates() -> None:
     loaded = load_creator_public_handle_linkage_ledger(PRODUCT_LEDGER_PATH)
 
