@@ -11,6 +11,7 @@ authority_boundary: Retrieval-only. This artifact does not score review integrit
 open_next:
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_site_registry_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_contract_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_capture_pilot_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md

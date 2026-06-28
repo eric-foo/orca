@@ -12,6 +12,7 @@ authority_boundary: retrieval_only; defines candidate rows only. It does not aut
 open_next:
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_site_registry_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_retailer_recon_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_capture_pilot_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/retail_pdp_projection_contract_v0.md
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_attachment_record_implementation_contract_v0.md
 stale_if:
@@ -98,8 +99,8 @@ empty review containers, or no-review text are not `candidate_fragrance_review_r
 | Ministry of Scent | Direct HTTP Judge.me row HTML. | Unknown until selector inspection; candidate key is acceptable for pilot if raw row anchor and body exist. | Body/title/verified/source-app/product/vote fields may be visible; blank title is allowed with `title_absent`. |
 | Luckyscent / Scent Bar | CloakBrowser rendered review rows after progressive scroll. | Unknown until selector inspection; candidate key is acceptable for pilot if raw row anchor and body exist. | Preserve date, reviewer/country, variant, verified/store-invitation labels when visible. |
 | Twisted Lily | CloakBrowser rendered review rows after progressive scroll. | Unknown until selector inspection; candidate key is acceptable for pilot if raw row anchor and body exist. | Preserve reviewer/date/location/verified/Shop App labels when visible; record final Shopify variant URL. |
-| ZGO Perfumery | Not in v0 row set. | Not applicable. | Do not emit rows from widget config or zero-count substrate. |
-| Indigo Perfumery | Not in v0 row set. | Not applicable. | Do not emit rows from empty Shopify review container. |
+| ZGO Perfumery | Direct HTTP static Yotpo review section on the selected known-reviewed fixture. | Candidate key acceptable when no native row id is exposed. | Preserve reviewer/rating/body from the Yotpo section; record date residual when absent; do not reuse the original zero-count Orpheon fixture. |
+| Indigo Perfumery | CloakBrowser rendered JSON-LD / Judge.me `Review` objects on the selected sampler-set fixture. | Candidate key acceptable when no native row id is exposed. | Carry a visible-row residual: rows are schema objects in rendered DOM, not visible customer-review text rows. Do not emit rows from the original empty fixture. |
 
 ## Companion Aggregate Substrate
 
@@ -150,7 +151,7 @@ later. If the body text is absent, do not produce a usable row.
 
 ## Pilot Acceptance
 
-The first pilot passes this row-contract stage when each primary source produces
+The first pilot passes this row-contract stage when each locked fixture produces
 at least one candidate row with:
 
 - body text;
@@ -164,7 +165,7 @@ at least one candidate row with:
 The pilot fails for a source if the preserved material only contains aggregate
 review substrate, widget configuration, or empty containers. In that case, do not
 fill the gap with prose or downstream interpretation; either choose another
-known-reviewed SKU under the registry promotion rule or leave the source partial.
+known-reviewed SKU under the registry promotion rule or leave the fixture partial.
 
 ## Non-Claims
 

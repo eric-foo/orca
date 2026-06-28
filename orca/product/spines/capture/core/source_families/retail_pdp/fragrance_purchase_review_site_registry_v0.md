@@ -11,6 +11,7 @@ use_when:
 authority_boundary: retrieval_only; no live capture, adapter build, scraping scale, ECR, Cleaning, Judgment, or source-quality scoring authority.
 open_next:
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_contract_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_capture_pilot_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_retailer_recon_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
