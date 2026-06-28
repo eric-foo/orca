@@ -469,30 +469,132 @@ next_route_condition: >
   access interstitial.
 ```
 
+### Basenotes Authorized Chrome Extension Route Addendum
+
+```yaml
+operator_authorization: >
+  Owner explicitly authorized Chrome extension/profile access for Basenotes
+  diagnosis after anonymous direct HTTP and CloakBrowser routes failed.
+access_route:
+  method: chrome_extension_profile_browser_read
+  posture: profile_backed_visible_browser_access
+  non_claims:
+    - not anonymous automation
+    - not direct_http
+    - not CloakBrowser
+    - not login-state assertion
+    - not complete Basenotes database capture
+known_product_probe:
+  url_requested: https://www.basenotes.com/fragrances/mojave-ghost-by-byredo.26143979/
+  url_landed: https://basenotes.com/fragrances/mojave-ghost-by-byredo.26143979
+  title: Mojave Ghost by Byredo - Basenotes
+  visible_text_length: 3804
+  source_content_seen: true
+  product_fields_seen:
+    - perfume house
+    - parent company
+    - parent at launch
+    - fragrance notes split by head, heart, and base
+    - latest review cards
+    - review sentiment breakdown
+    - same-house links
+  review_window_seen:
+    declared_visible_total: 18
+    visible_sentiment_breakdown: 4 Positive / 8 Neutral / 6 Negative
+basenotes_search_probe:
+  query: Baccarat Rouge 540
+  url_landed: https://basenotes.com/search/1023503/?q=Baccarat+Rouge+540&o=relevance
+  title: "Search results for query: Baccarat Rouge 540 | Basenotes"
+  visible_text_length: 5359
+  source_content_seen: true
+  useful_result_classes:
+    - current forum mentions
+    - exact BR540 Extrait thread
+    - appraisal/authenticity thread
+    - scent-of-day and weekend-sync mentions
+br540_forum_thread_probe:
+  url_page_1: https://basenotes.com/threads/baccarat-rouge-540-extrait.571027/
+  url_page_2: https://basenotes.com/threads/baccarat-rouge-540-extrait.571027/page-2
+  title_page_1: Baccarat Rouge 540 Extrait | Basenotes
+  title_page_2: Baccarat Rouge 540 Extrait | Page 2 | Basenotes
+  start_date: 2026-01-01
+  latest_observed_post_date: 2026-02-10
+  pages_observed: 2
+  posts_observed: 24
+  visible_text_lengths:
+    page_1: 12798
+    page_2: 5560
+  tags_seen:
+    - baccarat
+    - baccarat rouge 540
+    - extrait
+    - rouge
+  signal_categories_seen:
+    - purchase intent
+    - price objection
+    - EDP versus extrait comparison
+    - anosmia or nose-blindness complaints
+    - projection and scent-cloud language
+    - clone substitution and dupe comparisons
+    - Amazon or third-party buying discussion
+    - headache or cloying complaints
+    - compliments and public reaction language
+  similar_thread_markers_seen:
+    - BR540 scented body oil authenticity/appraisal thread from 2026-04
+    - BR540 Extrait authenticity/appraisal thread from 2024-09
+    - BR540 news/discussion thread from 2024-04 with 68 replies and 13K views
+directory_product_locator_probe:
+  directory_home_accessible: true
+  product_search_form_seen: true
+  query: Baccarat Rouge 540
+  result: unresolved
+  observed_failure: >
+    The Directory product search remained at `Searching Perfumes`; one direct
+    GET using the form query contract hung long enough to reset the Chrome
+    control session. No BR540 Basenotes product-page URL was pinned in this run.
+capture_route_verdict: profile_backed_capture_probe_pinned_for_forum_and_known_product_surfaces
+why_this_matters: >
+  Basenotes should no longer be treated as globally no-pin. It is blocked for
+  anonymous direct/CloakBrowser capture, but authorized Chrome/profile access
+  reaches source-visible product and forum content. Capture can proceed only if
+  the packet clearly records the profile-backed/human-led route and does not
+  claim anonymous repeatability.
+next_capture_step: >
+  Build or run a profile-backed/human-led source packet path for Basenotes forum
+  and known-product pages: preserve rendered DOM, visible text, screenshot, final
+  URL, title, route posture, profile/session non-claims, and pagination state.
+  Keep product-directory search as an unresolved locator gap until it returns
+  product cards or a stable BR540 product URL.
+```
+
 ## Route Pins
 | Pin ID | Source | Step 0 access classification | Signal substrate | Cheapest working route | Verdict | Re-probe trigger |
 | --- | --- | --- | --- | --- | --- | --- |
 | PIN-001 | Fragrantica | publicly-viewable public web content | large product-page HTML plus search HTML | `direct_http` with at least 2 MB cap for product pages | pinned_for_capture_probe | route returns block shell, body degrades, product markers disappear, or packet field extraction cannot preserve source-visible content |
 | PIN-002 | Parfumo | publicly-viewable public web content | product-page HTML; perfume-search locator route | `direct_http`; resolve exact product URL through `s_perfumes_x.php` when needed | pinned_for_capture_probe | route returns block shell, product URL changes, search locator changes, or packet field extraction cannot preserve source-visible content |
-| PIN-003 | Basenotes | publicly-viewable but bot-mitigated in current environment | source content not reached; Cloudflare challenge seen across direct, anti-block, browser, search-snippet, and known exact-product routes | none pinned | no_working_pin_current_environment_reconfirmed_exact_product | new anti-bot/proxy route, manual visible-browser success, usable archive/snippet locator, verified non-interstitial exact product URL, or owner-supplied entitled bytes |
+| PIN-003 | Basenotes | publicly-viewable through authorized Chrome/profile route, bot-mitigated for anonymous automation | source content reached for known product and BR540 forum/search surfaces; directory product locator unresolved | `chrome_extension_profile_browser_read` / human-led packet route | profile_backed_capture_probe_pinned_for_forum_and_known_product_surfaces | Chrome/profile route blocks, login wall appears, thread/product markers disappear, directory product locator starts returning stable product URLs, or a non-profile route becomes available |
 
 ## Candidate Decision
 
 ```yaml
 candidate_decision:
-  closeout_state: capture_preservation_only
+  closeout_state: capture_preservation_plus_profile_backed_basenotes_probe
   independent_origins_seen:
     - Fragrantica product page substrate reachable by direct HTTP
     - Parfumo product page substrate reachable by direct HTTP
+    - Basenotes product and forum substrates reachable by authorized Chrome/profile route
   reason: >
-    The probe found two preservation-worthy public product-page substrates and
-    one high-value but currently blocked source. This supports packet-grade
-    preservation requests for Fragrantica and Parfumo only, not demand proof,
-    not full database capture, and not a Basenotes capture route.
+    The probe found two direct-HTTP preservation-worthy public product-page
+    substrates and one high-value Basenotes substrate that is blocked for
+    anonymous automation but reachable through an authorized Chrome/profile
+    route. This supports packet-grade preservation for Fragrantica and Parfumo
+    by direct route, plus a separate profile-backed/human-led Basenotes capture
+    probe. It is not demand proof, not full database capture, and not an
+    anonymous Basenotes capture route.
 ```
 
 ## Closeout
 
-`capture_preservation_only`.
+`capture_preservation_plus_profile_backed_basenotes_probe`.
 
-Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo is pinned as a direct product-page plus first-party AJAX pagination route for a future complete reviews/statements capture, but this addendum did not run the full 369-review / 1390-statement corpus. Basenotes is explicitly not pinned in this environment; direct HTTP, anti-block HTTP, screening browser, search-page CloakBrowser, and known exact-product CloakBrowser all failed to reach source content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
+Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo is pinned as a direct product-page plus first-party AJAX pagination route for a future complete reviews/statements capture, but this addendum did not run the full 369-review / 1390-statement corpus. Basenotes remains blocked for anonymous direct HTTP, anti-block HTTP, screening browser, search-page CloakBrowser, and known exact-product CloakBrowser, but authorized Chrome/profile access reached source-visible product, search, and BR540 forum-thread content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, full-database crawling, or anonymous Basenotes repeatability.
