@@ -71,6 +71,21 @@ Out of scope:
 | Indigo Perfumery | Direct HTTP failed before packet write with local certificate verification error: `CERTIFICATE_VERIFY_FAILED`. | CloakBrowser preserved the rendered PDP shell and `CUSTOMER REVIEW` / `shopify-product-reviews` container posture, but sampled page had no visible review rows. | `PARTIAL_SAMPLED_EMPTY` | Use CloakBrowser for access. Do not claim row-level capture until another product fixture exposes rows. |
 | Ministry of Scent | HTTP 200 PDP body preserved. Static HTML exposed Judge.me review rows directly, including `jdgm-rev__body`, titles, verified-buyer labels, dates, product title, review source labels, and thumbs counts. | Not needed for the sampled fixture. | `GO_ROW_LEVEL_DIRECT_HTTP` | Direct HTTP packet is sufficient first rung. Escalate to CloakBrowser only if a later product uses lazy-loaded rows. |
 
+## Rung-1 / Rung-2 Recheck
+
+The first pass used Direct HTTP and CloakBrowser. After owner challenge, two
+intermediate rungs were checked explicitly:
+
+| Rung | Status in this lane | Result |
+| --- | --- | --- |
+| `anti_blocking_http` rung 1 | Built packet runner. Wrote scratch packets for Luckyscent, Twisted Lily, ZGO, and Ministry; Indigo failed with the same local certificate verification error as Direct HTTP. | Did not add row-level signal beyond the original verdicts. Luckyscent remained aggregate-only; Twisted Lily exposed review-widget/Judge.me configuration strings but not review rows; ZGO remained zero-count/widget-shell; Ministry still exposed Judge.me rows. |
+| `curl_cffi` rung 2 | Installed locally, but no shared Source Capture packet runner is built in this branch; the documented shared rung is gated/unbuilt. A read-only ad hoc `curl_cffi` diagnostic was run with Chrome impersonation, so it is diagnostic evidence, not packeted Armory output. | HTTP 200 for all five. It did not expose additional row bodies: Luckyscent remained aggregate-only, Twisted Lily remained config-only, ZGO remained widget/zero-count only, Indigo returned the Shopify review container but no rows, and Ministry still exposed rows. |
+
+Impact: the ZGO/Indigo diagnosis is stronger after the recheck. They are not
+"worthless" as source families, but the sampled PDPs are not useful row-level
+purchase-review fixtures. Keep them as known-reviewed-SKU follow-up targets, not
+as immediate row-capture sources.
+
 ## Recipe Notes
 
 1. Start with Direct HTTP when the page body is the target. For this lane, Direct
