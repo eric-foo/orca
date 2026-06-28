@@ -19,8 +19,8 @@ open_next:
   - orca-harness/tests/contract/test_capture_runner_lake_seam_coverage.py
 branch_or_commit: >
   PR #422, codex/data-lake-v4-1-runner-unblock @
-  6b58b6504dbdaf9a8c9921d6cd6d956d0ed9057f, base main @
-  8c33757d71c1372eb834eab5fdb4be2535ef8a75
+  39bb8729982c66aacd69b128b3ae38276a2cc9de, base main @
+  190e1ef25a579a6f9085ab14d16fcd3deb813411
 stale_if:
   - PR #422 head commit, base commit, branch state, or target worktree dirty state changes.
   - DataLakeRoot, runner CLIs, seam coverage tests, sharding tests, or the v4.1 contract changes.
@@ -63,8 +63,8 @@ preflight_defaults: `docs/prompts/templates/shared/orca_preflight_defaults_v0.md
 - expected_target_worktree: `C:\Users\vmon7\Desktop\projects\orca\worktrees\data-lake-v4-1-runner-unblock-merge-update`
 - expected_pr_branch: `codex/data-lake-v4-1-runner-unblock`
 - expected_local_branch_at_prompt_authoring: `codex/data-lake-v4-1-runner-unblock-merge-update`
-- expected_head_at_prompt_authoring: `6b58b6504dbdaf9a8c9921d6cd6d956d0ed9057f`
-- expected_base_at_prompt_authoring: `8c33757d71c1372eb834eab5fdb4be2535ef8a75`
+- expected_head_at_prompt_authoring: `39bb8729982c66aacd69b128b3ae38276a2cc9de`
+- expected_base_at_prompt_authoring: `190e1ef25a579a6f9085ab14d16fcd3deb813411`
 - expected_pr: `https://github.com/eric-foo/orca/pull/422`
 - controlling_source_state_at_prompt_authoring:
   - PR #422 verified open and draft with head `codex/data-lake-v4-1-runner-unblock` and base `main`.
@@ -89,7 +89,7 @@ Why: the task is source-backed implementation review across shared lake behavior
 
 Decomposition: layer-based, with risk-first attention on `DataLakeRoot` invariants before runner wiring.
 
-Current bottleneck: verifying that one shared v4.1 layout contract covers raw writes, derived writes, availability lookup/rebuild, and all 12 packet-producing runners after the post-review seam-coverage hardening commit.
+Current bottleneck: verifying that one shared v4.1 layout contract covers raw writes, derived writes, availability lookup/rebuild, and all 12 packet-producing runners after the post-review seam-coverage hardening and CI test-alignment commits.
 
 Riskiest assumption: the strengthened seam coverage plus focused tests prove old flat/v0 behavior cannot still be reached through an unreviewed runner path, environment fallback, or packet-writer bypass.
 
@@ -104,7 +104,7 @@ Disallowed next move: patch files, run live capture, write to `F:\orca-data-lake
 You are performing a read-only adversarial implementation/code review for Orca.
 
 Review target:
-PR #422, `codex/data-lake-v4-1-runner-unblock` at commit `6b58b6504dbdaf9a8c9921d6cd6d956d0ed9057f`.
+PR #422, `codex/data-lake-v4-1-runner-unblock` at commit `39bb8729982c66aacd69b128b3ae38276a2cc9de`.
 
 Target worktree:
 `C:\Users\vmon7\Desktop\projects\orca\worktrees\data-lake-v4-1-runner-unblock-merge-update`
@@ -202,7 +202,7 @@ Findings first. Be adversarial within this commission:
 
 ## Implementer-Reported Validation To Verify Or Label
 
-The implementer reported these checks after updating PR #422 onto current `origin/main` and hardening the runner seam contract. Treat this as evidence to verify, not as a substitute for your source review:
+The implementer reported these checks after updating PR #422 onto current `origin/main`, hardening the runner seam contract, and aligning the ig reels grid output-precedence unit test. Treat this as evidence to verify, not as a substitute for your source review:
 
 ```powershell
 git diff --check
@@ -221,15 +221,15 @@ compile succeeded for all listed runner files
 ```
 
 ```powershell
-python -m pytest -p no:cacheprovider --basetemp pytest_tmp_datalake_v41_runner_after_seam_guard orca-harness/tests/contract/test_capture_runner_lake_seam_coverage.py orca-harness/tests/test_data_lake_root.py orca-harness/tests/test_data_lake_availability.py orca-harness/tests/test_data_lake_sharding.py orca-harness/tests/test_data_lake_record_set.py orca-harness/tests/test_data_lake_rebuild_proof.py orca-harness/tests/test_data_lake_read_loader.py orca-harness/tests/unit/test_anti_blocking_http_adapter.py orca-harness/tests/unit/test_source_capture_media_asset.py orca-harness/tests/unit/test_price_payload_retry.py orca-harness/tests/unit/test_source_capture_archive_org.py orca-harness/tests/unit/test_run_source_capture_historical_packet.py orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_source_capture_authenticated_browser_snapshot.py orca-harness/tests/unit/test_source_capture_cloakbrowser_snapshot.py orca-harness/tests/unit/test_source_capture_ig_calls_packet.py
+python -m pytest -p no:cacheprovider --basetemp pytest_tmp_datalake_v41_runner_current_main orca-harness/tests/contract/test_capture_runner_lake_seam_coverage.py orca-harness/tests/test_data_lake_root.py orca-harness/tests/test_data_lake_availability.py orca-harness/tests/test_data_lake_sharding.py orca-harness/tests/test_data_lake_record_set.py orca-harness/tests/test_data_lake_rebuild_proof.py orca-harness/tests/test_data_lake_read_loader.py orca-harness/tests/unit/test_anti_blocking_http_adapter.py orca-harness/tests/unit/test_source_capture_media_asset.py orca-harness/tests/unit/test_price_payload_retry.py orca-harness/tests/unit/test_source_capture_archive_org.py orca-harness/tests/unit/test_run_source_capture_historical_packet.py orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_source_capture_authenticated_browser_snapshot.py orca-harness/tests/unit/test_source_capture_cloakbrowser_snapshot.py orca-harness/tests/unit/test_source_capture_ig_calls_packet.py orca-harness/tests/unit/test_source_capture_ig_reels_grid_packet.py
 ```
 
 ```text
-...................................s.................................... [ 29%]
-........................................................................ [ 59%]
-........................................................................ [ 88%]
-...........................                                              [100%]
-242 passed, 1 skipped in 27.79s
+...................................s.................................... [ 28%]
+........................................................................ [ 56%]
+........................................................................ [ 84%]
+.......................................                                  [100%]
+254 passed, 1 skipped in 26.30s
 ```
 
 If you rerun tests, use temp roots only. Do not write to `F:\orca-data-lake` and do not run live capture.
