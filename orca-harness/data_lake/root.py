@@ -8,20 +8,25 @@ Implements the foundation slice of the adopted decision contracts:
 - write-boundary enforcement: a single deterministic writer; write-once raw;
   append-only derived/ack; per-root UUID marker; atomic no-overwrite create.
 - raw admission + key grammar: ``packet_id`` is an opaque Crockford-26 handle;
-  raw container is ``raw/<packet_id>/`` at packet depth, published atomically.
-- derived layout: ``derived/<raw-anchor>/<lane>/<record-id>`` and the split
+  raw container is ``raw/<packet_shard>/<packet_id>/`` -- an opaque deterministic
+  shard prefix (``sha256(packet_id)[:3]``, 4096 buckets) physically fans the
+  write-once packets out so no single directory grows unbounded; by-key reads
+  recompute the shard, never look it up.
+- derived layout: ``derived/<anchor_shard>/<raw-anchor>/<lane>/<record-id>``
+  (acknowledgements likewise) -- the same opaque fanout -- and the split
   ``indexes/availability`` (content-free) vs ``indexes/derived_retrieval``
   (rebuildable, non-authoritative; created empty, population build-deferred).
 
-This module is filesystem-incumbent and selects no storage engine,
-serialization, or queue.
+This module is the v4.1 filesystem-incumbent foundation. It is not the
+engine/backend selection record; that choice belongs to the Data Lake Storage
+Contract physicalization boundary.
 
 Threat model / accepted residual (DL-003): the write guard re-verifies the
 root marker identity and rejects symlinked components immediately before each
 write session, which catches a swapped/remounted root and static symlink
 escapes. It does NOT fully exclude an *active* adversary racing same-host
 symlink/reparse swaps between the check and the syscall; full exclusion needs
-OS-level no-follow / directory-handle primitives and is out of scope for the v0
+OS-level no-follow / directory-handle primitives and is out of scope for the v4.1
 local single-operator deployment.
 """
 from __future__ import annotations
@@ -37,19 +42,30 @@ from typing import Any
 from harness_utils import generate_ulid, hash_file, utc_now_z
 
 ROOT_MARKER_FILENAME = ".orca-data-root"
-ROOT_MARKER_CONTRACT_VERSION = "v0"
+ROOT_MARKER_CONTRACT_VERSION = "v4.1"
+ROOT_MARKER_DEFAULT_LABEL = "orca-canonical-v4-1"
+EPOCH_MARKER_FILENAME = ".orca-lake-epoch.json"
+LAKE_EPOCH = "v4.1"
+LAKE_EPOCH_POLICY = "clean_forward_epoch"
 _STAGING_DIRNAME = ".staging"
 
-# v0 logical directory grammar. ``indexes/`` is split into a content-free
+# v4.1 logical directory grammar. ``indexes/`` is split into a content-free
 # availability subslot and a rebuildable, non-authoritative derived_retrieval
-# subslot (created empty here; population is governance-gated/build-deferred).
+# subslot. Silver Vault folders are generated read-model homes, not authority.
 LAKE_SUBDIRECTORIES: tuple[str, ...] = (
+    _STAGING_DIRNAME,
     "raw",
     "attachments",
     "derived",
     "acknowledgements",
     "indexes/availability",
     "indexes/derived_retrieval",
+    "indexes/derived_retrieval/silver_vault/core/query_tables",
+    "indexes/derived_retrieval/silver_vault/core/manifests",
+    "indexes/derived_retrieval/silver_vault/creator_vault/accounts",
+    "indexes/derived_retrieval/silver_vault/creator_vault/content",
+    "indexes/derived_retrieval/silver_vault/creator_vault/query_tables",
+    "indexes/derived_retrieval/silver_vault/creator_vault/manifests",
 )
 
 # packet_id grammar: incumbent Crockford base32, 26 chars (harness generate_ulid).
@@ -61,6 +77,30 @@ _CROCKFORD_26 = re.compile(r"[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
 _SAFE_SEGMENT = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 
 _APPENDABLE_SUBTREES = ("derived", "acknowledgements")
+
+
+# Raw container physical fanout (decided 2026-06-25): raw packets live under a
+# deterministic opaque shard prefix — raw/<packet_shard>/<packet_id>/ — so no
+# single directory accumulates an unbounded packet count at scale. The shard is
+# the first RAW_SHARD_HEX_WIDTH lowercase hex chars of sha256(packet_id): even
+# spread, physical fanout ONLY (no family/date/identity/content meaning), and
+# by-key lookup RECOMPUTES it from packet_id (never via an index).
+RAW_SHARD_HEX_WIDTH = 3  # 4096 buckets
+
+
+def _sha256_hex_shard(value: str) -> str:
+    return hashlib.sha256(value.encode("ascii")).hexdigest()[:RAW_SHARD_HEX_WIDTH]
+
+
+def raw_shard(packet_id: str) -> str:
+    """Deterministic opaque shard segment for ``packet_id`` (physical fanout
+    only; never stored as authority -- every by-key read recomputes it)."""
+    return _sha256_hex_shard(packet_id)
+
+
+def anchor_shard(raw_anchor: str) -> str:
+    """Deterministic opaque shard segment for a derived/ack raw anchor."""
+    return _sha256_hex_shard(raw_anchor)
 
 
 class DataLakeRootError(Exception):
@@ -117,20 +157,73 @@ def _read_marker(root: Path) -> dict:
         raise DataLakeRootError(f"unreadable root marker at {marker}: {exc}") from exc
     if not isinstance(data, dict) or "root_uuid" not in data or "contract_version" not in data:
         raise DataLakeRootError(f"malformed root marker at {marker}")
+    if data["contract_version"] != ROOT_MARKER_CONTRACT_VERSION:
+        raise DataLakeRootError(
+            "unsupported Orca data root contract_version "
+            f"{data['contract_version']!r} at {marker}; expected "
+            f"{ROOT_MARKER_CONTRACT_VERSION!r}. Archive or abandon the legacy root "
+            "and initialize a clean v4.1 root."
+        )
     return data
+
+
+def _read_epoch_marker(root: Path) -> dict:
+    marker = root / EPOCH_MARKER_FILENAME
+    if not marker.is_file():
+        raise DataLakeRootError(
+            f"missing epoch marker {EPOCH_MARKER_FILENAME!r}; not a forward v4.1 Orca data root: {root}"
+        )
+    try:
+        data = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise DataLakeRootError(f"unreadable epoch marker at {marker}: {exc}") from exc
+    if not isinstance(data, dict):
+        raise DataLakeRootError(f"malformed epoch marker at {marker}")
+    if data.get("lake_epoch") != LAKE_EPOCH:
+        raise DataLakeRootError(
+            f"unsupported lake_epoch {data.get('lake_epoch')!r} at {marker}; expected {LAKE_EPOCH!r}"
+        )
+    if data.get("epoch_policy") != LAKE_EPOCH_POLICY:
+        raise DataLakeRootError(
+            f"unsupported epoch_policy {data.get('epoch_policy')!r} at {marker}; "
+            f"expected {LAKE_EPOCH_POLICY!r}"
+        )
+    if data.get("compatibility_migration") is not False:
+        raise DataLakeRootError(f"v4.1 root must declare compatibility_migration=false at {marker}")
+    if not isinstance(data.get("legacy_roots"), list):
+        raise DataLakeRootError(f"v4.1 root epoch marker must carry legacy_roots list at {marker}")
+    return data
+
+
+def _verify_root_markers(root: Path) -> dict:
+    marker = _read_marker(root)
+    _read_epoch_marker(root)
+    return marker
 
 
 def _write_marker(root: Path, *, root_uuid: str, label: str | None) -> None:
     payload = {
         "root_uuid": root_uuid,
         "contract_version": ROOT_MARKER_CONTRACT_VERSION,
-        "label": label,
+        "label": label if label is not None else ROOT_MARKER_DEFAULT_LABEL,
         "created_at": utc_now_z(),
     }
     (root / ROOT_MARKER_FILENAME).write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
 
+
+def _write_epoch_marker(root: Path, *, legacy_roots: list[str] | None) -> None:
+    payload = {
+        "lake_epoch": LAKE_EPOCH,
+        "epoch_policy": LAKE_EPOCH_POLICY,
+        "legacy_roots": list(legacy_roots or []),
+        "compatibility_migration": False,
+        "created_at": utc_now_z(),
+    }
+    (root / EPOCH_MARKER_FILENAME).write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
 
 def _atomic_create(target: Path, data: bytes) -> None:
     """Create-only, no-overwrite, crash-tolerant publish of a single record.
@@ -195,12 +288,13 @@ def _availability_entry_from_raw(packet_id: str, container: Path) -> dict:
     if not manifest.is_file():
         raise DataLakeRootError(f"committed raw packet missing manifest.json: {packet_id}")
     data = json.loads(manifest.read_text(encoding="utf-8"))
+    shard = raw_shard(packet_id)
     return {
         "packet_id": packet_id,
         "source_family": data.get("source_family"),
         "source_surface": data.get("source_surface"),
-        "raw_path": f"raw/{packet_id}",
-        "manifest_relpath": f"raw/{packet_id}/manifest.json",
+        "raw_path": f"raw/{shard}/{packet_id}",
+        "manifest_relpath": f"raw/{shard}/{packet_id}/manifest.json",
         "manifest_sha256": hash_file(manifest),
     }
 
@@ -269,7 +363,7 @@ class DataLakeRoot:
             raise DataLakeRootError("construct DataLakeRoot via resolve()/initialize()/for_test()")
         self._path = path
         # Identity captured at construction; re-checked before every write (DL-003).
-        self._root_uuid = _read_marker(path)["root_uuid"]
+        self._root_uuid = _verify_root_markers(path)["root_uuid"]
 
     @property
     def path(self) -> Path:
@@ -313,7 +407,7 @@ class DataLakeRoot:
             )
         if not path.is_dir():
             raise DataLakeRootError(f"data root is not a directory: {path}")
-        marker = _read_marker(path)  # raises if missing/malformed
+        marker = _verify_root_markers(path)  # raises if missing/malformed or not v4.1
         if expected_uuid is not None and marker["root_uuid"] != expected_uuid:
             raise DataLakeRootError(
                 "root marker identity mismatch (drive letter may have been reassigned): "
@@ -329,6 +423,7 @@ class DataLakeRoot:
         path: str | os.PathLike[str],
         *,
         label: str | None = None,
+        legacy_roots: list[str] | None = None,
         root_uuid: str | None = None,
         repo_root: Path | None = _ORCA_REPO_ROOT,
     ) -> "DataLakeRoot":
@@ -340,7 +435,7 @@ class DataLakeRoot:
             raise DataLakeRootError(f"data root must be an absolute path: {path}")
         if _is_inside_repo(path, repo_root):
             raise DataLakeRootError(f"data root must be OUTSIDE the repo working tree: {path}")
-        return cls._init_at(path, label=label, root_uuid=root_uuid)
+        return cls._init_at(path, label=label, legacy_roots=legacy_roots, root_uuid=root_uuid)
 
     @classmethod
     def for_test(cls, path: str | os.PathLike[str], *, label: str = "test") -> "DataLakeRoot":
@@ -351,25 +446,34 @@ class DataLakeRoot:
         path = Path(path)
         if not path.is_absolute():
             raise DataLakeRootError(f"for_test path must be absolute: {path}")
-        return cls._init_at(path, label=label, root_uuid=None)
+        return cls._init_at(path, label=label, legacy_roots=None, root_uuid=None)
 
     @classmethod
-    def _init_at(cls, path: Path, *, label: str | None, root_uuid: str | None) -> "DataLakeRoot":
+    def _init_at(
+        cls,
+        path: Path,
+        *,
+        label: str | None,
+        legacy_roots: list[str] | None,
+        root_uuid: str | None,
+    ) -> "DataLakeRoot":
         marker = path / ROOT_MARKER_FILENAME
         if path.exists():
             if not path.is_dir():
                 raise DataLakeRootError(f"data root path is not a directory: {path}")
             if marker.is_file():
-                _read_marker(path)  # verify the existing marker is well-formed
+                _verify_root_markers(path)  # verify the existing markers are well-formed v4.1
             elif any(path.iterdir()):
                 raise DataLakeRootError(
                     f"refusing to initialize a non-empty directory that lacks a root marker: {path}"
                 )
             else:
                 _write_marker(path, root_uuid=root_uuid or generate_ulid(), label=label)
+                _write_epoch_marker(path, legacy_roots=legacy_roots)
         else:
             path.mkdir(parents=True, exist_ok=False)
             _write_marker(path, root_uuid=root_uuid or generate_ulid(), label=label)
+            _write_epoch_marker(path, legacy_roots=legacy_roots)
         for sub in LAKE_SUBDIRECTORIES:
             (path / sub).mkdir(parents=True, exist_ok=True)
         return cls(path, _verified=True)
@@ -383,7 +487,7 @@ class DataLakeRoot:
         volume). See the module-level accepted residual for active syscall races."""
         if not self._path.is_dir():
             raise DataLakeRootError(f"data root is no longer a directory: {self._path}")
-        if _read_marker(self._path).get("root_uuid") != self._root_uuid:
+        if _verify_root_markers(self._path).get("root_uuid") != self._root_uuid:
             raise DataLakeRootError(f"data root identity changed since resolution: {self._path}")
 
     def _within(self, *parts: str) -> Path:
@@ -404,14 +508,15 @@ class DataLakeRoot:
     # -- guarded writes -----------------------------------------------------
 
     def allocate_raw_packet_dir(self, packet_id: str) -> Path:
-        """Create the write-once raw packet container ``raw/<packet_id>/`` and
-        return it. Create-only: fails if it already exists. For atomic packet
+        """Create the write-once raw packet container
+        ``raw/<packet_shard>/<packet_id>/`` and return it. Create-only: fails if it
+        already exists. For atomic packet
         publication (a partial packet never appears under ``raw/``), prefer
         ``stage_raw_packet`` + ``publish_raw_packet`` instead."""
         self._reverify()
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
-        (self._path / "raw").mkdir(parents=True, exist_ok=True)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
+        container.parent.mkdir(parents=True, exist_ok=True)
         try:
             container.mkdir(parents=False, exist_ok=False)
         except FileExistsError as exc:
@@ -422,12 +527,12 @@ class DataLakeRoot:
 
     def stage_raw_packet(self, packet_id: str) -> Path:
         """Reserve a non-authoritative staging directory for an incumbent packet.
-        The completed staging dir is published atomically to ``raw/<packet_id>``
-        by ``publish_raw_packet``, so a partial packet never appears under
-        ``raw/`` (DL-002)."""
+        The completed staging dir is published atomically to
+        ``raw/<packet_shard>/<packet_id>`` by ``publish_raw_packet``, so a partial
+        packet never appears under ``raw/`` (DL-002)."""
         self._reverify()
         _validate_packet_id(packet_id)
-        final = self._within("raw", packet_id)
+        final = self._within("raw", raw_shard(packet_id), packet_id)
         if final.exists():
             raise DataLakeRootError(f"raw packet container already exists (write-once): {final}")
         staging_parent = self._path / _STAGING_DIRNAME
@@ -438,11 +543,11 @@ class DataLakeRoot:
 
     def publish_raw_packet(self, staging_dir: Path, packet_id: str) -> Path:
         """Atomically publish a completed staging directory to
-        ``raw/<packet_id>`` (write-once)."""
+        ``raw/<packet_shard>/<packet_id>`` (write-once)."""
         self._reverify()
         _validate_packet_id(packet_id)
-        final = self._within("raw", packet_id)
-        (self._path / "raw").mkdir(parents=True, exist_ok=True)
+        final = self._within("raw", raw_shard(packet_id), packet_id)
+        final.parent.mkdir(parents=True, exist_ok=True)
         if final.exists():
             raise DataLakeRootError(f"raw packet container already exists (write-once): {final}")
         try:
@@ -455,7 +560,8 @@ class DataLakeRoot:
         self, *, subtree: str, raw_anchor: str, lane: str, record_id: str, data: bytes
     ) -> Path:
         """Append-only create of a derived or acknowledgement record at
-        ``<subtree>/<raw_anchor>/<lane>/<record_id>``. Refuses overwrite."""
+        ``<subtree>/<anchor_shard>/<raw_anchor>/<lane>/<record_id>`` (the anchor
+        shard is recomputed from ``raw_anchor``). Refuses overwrite."""
         if subtree not in _APPENDABLE_SUBTREES:
             raise DataLakeRootError(
                 f"append_record subtree must be one of {_APPENDABLE_SUBTREES}: {subtree!r}"
@@ -464,7 +570,7 @@ class DataLakeRoot:
         _validate_segment(raw_anchor, role="raw_anchor")
         _validate_segment(lane, role="lane")
         _validate_segment(record_id, role="record_id")
-        target = self._within(subtree, raw_anchor, lane, record_id)
+        target = self._within(subtree, anchor_shard(raw_anchor), raw_anchor, lane, record_id)
         _atomic_create(target, data)
         return target
 
@@ -509,10 +615,12 @@ class DataLakeRoot:
         for lane in members:
             _validate_segment(lane, role="lane")
 
+        anchor_prefix = anchor_shard(raw_anchor)
         member_targets = {
-            lane: self._within(subtree, raw_anchor, lane, record_id) for lane in members
+            lane: self._within(subtree, anchor_prefix, raw_anchor, lane, record_id)
+            for lane in members
         }
-        marker_target = self._within(subtree, raw_anchor, completion_lane, record_id)
+        marker_target = self._within(subtree, anchor_prefix, raw_anchor, completion_lane, record_id)
         existing = [t for t in (*member_targets.values(), marker_target) if t.exists()]
         if existing:
             raise DataLakeRootError(
@@ -521,12 +629,21 @@ class DataLakeRoot:
             )
 
         written: dict[str, Path] = {}
+        member_sha256: dict[str, str] = {}
         for lane, data in members.items():
             _atomic_create(member_targets[lane], data)
             written[lane] = member_targets[lane]
+            # The lake computes each member's content sha256 from the bytes IT writes (never
+            # caller-supplied): the marker becomes a derivation-time content-integrity manifest,
+            # trustworthy by construction.
+            member_sha256[lane] = hashlib.sha256(data).hexdigest()
         marker_body = (
             json.dumps(
-                {"record_id": record_id, "member_lanes": sorted(members)},
+                {
+                    "record_id": record_id,
+                    "member_lanes": sorted(members),
+                    "member_sha256": member_sha256,
+                },
                 indent=2,
                 sort_keys=True,
             )
@@ -549,7 +666,8 @@ class DataLakeRoot:
         _validate_segment(raw_anchor, role="raw_anchor")
         _validate_segment(record_id, role="record_id")
         _validate_segment(completion_lane, role="completion_lane")
-        marker = self._within(subtree, raw_anchor, completion_lane, record_id)
+        anchor_prefix = anchor_shard(raw_anchor)
+        marker = self._within(subtree, anchor_prefix, raw_anchor, completion_lane, record_id)
         if not marker.is_file():
             return False
         try:
@@ -568,9 +686,89 @@ class DataLakeRoot:
                 _validate_segment(lane, role="lane")
             except DataLakeRootError:
                 return False
-            if not self._within(subtree, raw_anchor, lane, record_id).is_file():
+            if not self._within(subtree, anchor_prefix, raw_anchor, lane, record_id).is_file():
                 return False
         return True
+
+    def read_record_set_member_sha256(
+        self,
+        *,
+        subtree: str,
+        raw_anchor: str,
+        record_id: str,
+        completion_lane: str,
+        member_lane: str,
+    ) -> str | None:
+        """Return a record-set member's derivation-time content sha256 committed in the completion
+        marker, or ``None`` ONLY when the marker file is ABSENT (a legitimate legacy
+        ``append_record`` record that never wrote a marker -- the caller's stitch-time fallback).
+
+        Fail-closed on corruption -- this is the integrity crux (never collapse a damaged marker
+        into the "old record" None): a marker that is PRESENT but malformed (unreadable / not a JSON
+        object / wrong ``record_id``), or present but whose ``member_sha256`` is missing, not a
+        mapping, lacks ``member_lane``, or carries a non-string sha, RAISES ``DataLakeRootError``.
+        Every record written via ``append_record_set`` has a well-formed marker, so a new record
+        whose marker cannot yield its sha must surface, never silently downgrade. Validates segments
+        like the sibling marker methods."""
+        if subtree not in _APPENDABLE_SUBTREES:
+            raise DataLakeRootError(
+                f"read_record_set_member_sha256 subtree must be one of {_APPENDABLE_SUBTREES}: {subtree!r}"
+            )
+        self._reverify()
+        _validate_segment(raw_anchor, role="raw_anchor")
+        _validate_segment(record_id, role="record_id")
+        _validate_segment(completion_lane, role="completion_lane")
+        _validate_segment(member_lane, role="member_lane")
+        anchor_prefix = anchor_shard(raw_anchor)
+        marker = self._within(subtree, anchor_prefix, raw_anchor, completion_lane, record_id)
+        if not marker.is_file():
+            # Marker ABSENT: the only legitimate None (legacy markerless record).
+            return None
+        try:
+            body = json.loads(marker.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise DataLakeRootError(
+                f"record-set marker present but unreadable/malformed: {marker}: {exc}"
+            ) from exc
+        if not isinstance(body, dict) or body.get("record_id") != record_id:
+            raise DataLakeRootError(
+                f"record-set marker present but malformed (record_id mismatch or non-object): {marker}"
+            )
+        member_sha256 = body.get("member_sha256")
+        if not isinstance(member_sha256, dict):
+            raise DataLakeRootError(
+                f"record-set marker present but missing a member_sha256 mapping: {marker}"
+            )
+        sha = member_sha256.get(member_lane)
+        if not isinstance(sha, str) or not sha:
+            raise DataLakeRootError(
+                f"record-set marker present but missing member_sha256 for lane {member_lane!r}: {marker}"
+            )
+        return sha
+
+    def record_path(self, *, subtree: str, raw_anchor: str, lane: str, record_id: str) -> Path:
+        """Resolve a derived/ack record's on-disk path BY KEY (sharded), without
+        writing. The anchor shard is recomputed from ``raw_anchor`` (never looked
+        up); the returned path may or may not exist, so callers must check it."""
+        if subtree not in _APPENDABLE_SUBTREES:
+            raise DataLakeRootError(
+                f"record_path subtree must be one of {_APPENDABLE_SUBTREES}: {subtree!r}"
+            )
+        _validate_segment(raw_anchor, role="raw_anchor")
+        _validate_segment(lane, role="lane")
+        _validate_segment(record_id, role="record_id")
+        return self._within(subtree, anchor_shard(raw_anchor), raw_anchor, lane, record_id)
+
+    def lane_dir(self, *, subtree: str, raw_anchor: str, lane: str) -> Path:
+        """Resolve a derived/ack lane DIRECTORY by key (sharded), without writing.
+        Callers iterate it to read the lane's records; it may not exist."""
+        if subtree not in _APPENDABLE_SUBTREES:
+            raise DataLakeRootError(
+                f"lane_dir subtree must be one of {_APPENDABLE_SUBTREES}: {subtree!r}"
+            )
+        _validate_segment(raw_anchor, role="raw_anchor")
+        _validate_segment(lane, role="lane")
+        return self._within(subtree, anchor_shard(raw_anchor), raw_anchor, lane)
 
     # -- availability index (content-free, rebuildable) ---------------------
 
@@ -580,7 +778,7 @@ class DataLakeRoot:
         (so the whole index is rebuildable). Index entry: create-or-replace."""
         self._reverify()
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
         if not container.is_dir():
             raise DataLakeRootError(
                 f"cannot record availability; raw packet not committed: {packet_id}"
@@ -593,7 +791,7 @@ class DataLakeRoot:
     def find_packet(self, packet_id: str) -> Path | None:
         """Return the committed raw packet container by key, or None."""
         _validate_packet_id(packet_id)
-        container = self._within("raw", packet_id)
+        container = self._within("raw", raw_shard(packet_id), packet_id)
         return container if container.is_dir() else None
 
     def load_raw_packet(self, packet_id: str) -> LoadedRawPacket:
@@ -642,7 +840,7 @@ class DataLakeRoot:
                     f"raw manifest preserved file {file_id!r} missing relative_packet_path: {packet_id}"
                 )
             parts = _preserved_path_parts(relative_packet_path, file_id=file_id)
-            file_path = self._within("raw", packet_id, *parts)
+            file_path = self._within("raw", raw_shard(packet_id), packet_id, *parts)
             try:
                 file_path.relative_to(container_root)
             except ValueError as exc:
@@ -654,7 +852,12 @@ class DataLakeRoot:
                 raise DataLakeRootError(
                     f"preserved file {file_id!r} missing at {relative_packet_path!r}: {packet_id}"
                 )
-            body = file_path.read_bytes()
+            try:
+                body = file_path.read_bytes()
+            except OSError as exc:
+                raise DataLakeRootError(
+                    f"unreadable preserved file {file_id!r} at {relative_packet_path!r}: {packet_id}: {exc}"
+                ) from exc
             expected_size = preserved.get("size_bytes")
             if type(expected_size) is not int or expected_size < 0:
                 raise DataLakeRootError(
@@ -712,12 +915,60 @@ class DataLakeRoot:
         raw_dir = self._path / "raw"
         count = 0
         if raw_dir.is_dir():
-            for container in sorted(raw_dir.iterdir()):
-                if (
-                    container.is_dir()
-                    and _CROCKFORD_26.fullmatch(container.name)
-                    and (container / "manifest.json").is_file()
-                ):
-                    self.record_availability(container.name)
-                    count += 1
+            for shard_dir in sorted(raw_dir.iterdir()):
+                if not shard_dir.is_dir():
+                    continue
+                for container in sorted(shard_dir.iterdir()):
+                    if (
+                        container.is_dir()
+                        and _CROCKFORD_26.fullmatch(container.name)
+                        # A packet sitting in the wrong shard dir is corruption/
+                        # misplacement: skip it rather than record a wrong-path
+                        # availability entry (failure stays visible as absence).
+                        and shard_dir.name == raw_shard(container.name)
+                        and (container / "manifest.json").is_file()
+                    ):
+                        self.record_availability(container.name)
+                        count += 1
         return count
+
+    def relocate_to_sharded(self) -> int:
+        """One-time migration to the sharded layout: move any legacy flat
+        ``<subtree>/<key>/`` container -- a raw packet under ``raw/``, or a
+        raw-anchor-first ``derived/``/``acknowledgements/`` subtree -- to
+        ``<subtree>/<shard>/<key>/``. Idempotent and re-runnable: already-sharded
+        entries are not direct children, so they are skipped. A flat entry whose
+        sharded target ALSO exists is a collision and FAILS CLOSED (write-once
+        material is never overwritten and a hidden duplicate is never tolerated).
+        Returns the total relocated. Run ``rebuild_availability`` afterwards so the
+        index points at the new paths."""
+        self._reverify()
+        return sum(
+            self._relocate_subtree_to_sharded(subtree)
+            for subtree in ("raw", *_APPENDABLE_SUBTREES)
+        )
+
+    def _relocate_subtree_to_sharded(self, subtree: str) -> int:
+        base = self._path / subtree
+        if not base.is_dir():
+            return 0
+        moved = 0
+        for child in sorted(base.iterdir()):
+            # A legacy flat entry is a direct child whose name is a full key
+            # (Crockford-26 packet_id / raw-anchor). Shard dirs are short hex,
+            # so they are not Crockford-26 and are skipped.
+            if not (child.is_dir() and _CROCKFORD_26.fullmatch(child.name)):
+                continue
+            key = child.name
+            shard = raw_shard(key) if subtree == "raw" else anchor_shard(key)
+            target = self._within(subtree, shard, key)
+            if target.exists():
+                raise DataLakeRootError(
+                    f"relocate collision under {subtree}/: both flat {subtree}/{key}/ "
+                    f"and sharded {target} exist; resolve the duplicate before "
+                    f"migrating (write-once material is never overwritten)"
+                )
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.rename(child, target)  # atomic same-fs move; bytes/hashes unchanged
+            moved += 1
+        return moved

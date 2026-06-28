@@ -39,6 +39,12 @@ stale_if:
 
 Naming note: **Prompt Structure** is the runnable CSB prompt/template. **Prompt Structure Rules** is the durable authority/rules doc for that prompt structure. File paths now use role-aligned names.
 
+## Legacy Non-Controlling Artifacts
+
+| Artifact | Status | Current authority |
+| --- | --- | --- |
+| `orca/product/spines/commission_signal_board/dispatch_rules/orca_demand_gate_run_commission_criteria_v0.md` | Historical only; not a live CSB dispatch rule | Use the CSB prompt and playbook. CSB is an evidence/signals-only board and must not emit admit/hold/fail gate verdicts. |
+
 ## Boundaries
 
 This spine does not authorize retrieval, scraping, capture, graph construction,

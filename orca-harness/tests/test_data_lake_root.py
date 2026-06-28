@@ -8,9 +8,14 @@ import pytest
 from data_lake.root import (
     DataLakeRoot,
     DataLakeRootError,
+    EPOCH_MARKER_FILENAME,
+    LAKE_EPOCH,
+    LAKE_EPOCH_POLICY,
     LAKE_SUBDIRECTORIES,
     ROOT_MARKER_CONTRACT_VERSION,
+    ROOT_MARKER_DEFAULT_LABEL,
     ROOT_MARKER_FILENAME,
+    raw_shard,
 )
 from harness_utils import generate_ulid
 from source_capture.models import known_fact
@@ -64,6 +69,24 @@ def test_resolve_success_with_env(tmp_path: Path) -> None:
     assert resolved.root_uuid == root.root_uuid
 
 
+def test_resolve_rejects_legacy_v0_root(tmp_path: Path) -> None:
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / ROOT_MARKER_FILENAME).write_text(
+        json.dumps({"root_uuid": "LEGACY", "contract_version": "v0"}),
+        encoding="utf-8",
+    )
+    with pytest.raises(DataLakeRootError, match="contract_version"):
+        DataLakeRoot.resolve(explicit=legacy, env={}, repo_root=None)
+
+
+def test_resolve_rejects_missing_epoch_marker(tmp_path: Path) -> None:
+    root = _init(tmp_path)
+    (root.path / EPOCH_MARKER_FILENAME).unlink()
+    with pytest.raises(DataLakeRootError, match="missing epoch marker"):
+        DataLakeRoot.resolve(explicit=root.path, env={}, repo_root=None)
+
+
 def test_resolve_precedence_explicit_over_env(tmp_path: Path) -> None:
     a = _init(tmp_path, "a")
     b = _init(tmp_path, "b")
@@ -90,6 +113,42 @@ def test_initialize_creates_skeleton_and_marker(tmp_path: Path) -> None:
     marker = json.loads((root.path / ROOT_MARKER_FILENAME).read_text(encoding="utf-8"))
     assert marker["root_uuid"]
     assert marker["contract_version"] == ROOT_MARKER_CONTRACT_VERSION
+    epoch = json.loads((root.path / EPOCH_MARKER_FILENAME).read_text(encoding="utf-8"))
+    assert epoch["lake_epoch"] == LAKE_EPOCH
+    assert epoch["epoch_policy"] == LAKE_EPOCH_POLICY
+    assert epoch["compatibility_migration"] is False
+    assert epoch["legacy_roots"] == []
+
+
+def test_initialize_creates_default_v4_1_label_and_legacy_roots(tmp_path: Path) -> None:
+    legacy = "F:\\orca-data-lake"
+    root = DataLakeRoot.initialize(tmp_path / "forward", repo_root=None, legacy_roots=[legacy])
+    marker = json.loads((root.path / ROOT_MARKER_FILENAME).read_text(encoding="utf-8"))
+    assert marker["label"] == ROOT_MARKER_DEFAULT_LABEL
+    epoch = json.loads((root.path / EPOCH_MARKER_FILENAME).read_text(encoding="utf-8"))
+    assert epoch["legacy_roots"] == [legacy]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "match"),
+    [
+        ("lake_epoch", "v4.0", "lake_epoch"),
+        ("epoch_policy", "compatibility_migration", "epoch_policy"),
+        ("compatibility_migration", True, "compatibility_migration=false"),
+        ("legacy_roots", "F:\\orca-data-lake", "legacy_roots list"),
+    ],
+)
+def test_resolve_malformed_epoch_marker_values_rejected(
+    tmp_path: Path, field: str, value: object, match: str
+) -> None:
+    root = _init(tmp_path)
+    marker_path = root.path / EPOCH_MARKER_FILENAME
+    epoch = json.loads(marker_path.read_text(encoding="utf-8"))
+    epoch[field] = value
+    marker_path.write_text(json.dumps(epoch), encoding="utf-8")
+
+    with pytest.raises(DataLakeRootError, match=match):
+        DataLakeRoot.resolve(explicit=root.path, env={}, repo_root=None)
 
 
 def test_initialize_refuses_nonempty_foreign_dir(tmp_path: Path) -> None:
@@ -107,7 +166,7 @@ def test_allocate_raw_packet_dir_is_create_only(tmp_path: Path) -> None:
     pid = generate_ulid()
     container = root.allocate_raw_packet_dir(pid)
     assert container.is_dir()
-    assert container == root.path / "raw" / pid
+    assert container == root.path / "raw" / raw_shard(pid) / pid
     with pytest.raises(DataLakeRootError):
         root.allocate_raw_packet_dir(pid)  # write-once: second allocation fails
 
@@ -128,7 +187,7 @@ def test_append_record_is_append_only(tmp_path: Path) -> None:
         subtree="derived", raw_anchor=pid, lane="projection", record_id="rec_01", data=b"{}"
     )
     assert target.read_bytes() == b"{}"
-    assert target == root.path / "derived" / pid / "projection" / "rec_01"
+    assert target == root.path / "derived" / raw_shard(pid) / pid / "projection" / "rec_01"
     with pytest.raises(DataLakeRootError):
         root.append_record(
             subtree="derived", raw_anchor=pid, lane="projection", record_id="rec_01", data=b"{}"
@@ -179,7 +238,7 @@ def test_writer_routes_go_forward_writes_through_root(tmp_path: Path) -> None:
     src.write_text("hello", encoding="utf-8")
     result = write_local_source_capture_packet(data_root=root, **_writer_common(src))
     out = Path(result.output_directory)
-    assert out == root.path / "raw" / result.packet.packet_id
+    assert out == root.path / "raw" / raw_shard(result.packet.packet_id) / result.packet.packet_id
     assert (out / "manifest.json").is_file()
 
 
@@ -215,7 +274,7 @@ def test_data_root_write_publishes_atomically_no_staging_leftover(tmp_path: Path
     src.write_text("hello", encoding="utf-8")
     result = write_local_source_capture_packet(data_root=root, **_writer_common(src))
     out = Path(result.output_directory)
-    assert out == root.path / "raw" / result.packet.packet_id
+    assert out == root.path / "raw" / raw_shard(result.packet.packet_id) / result.packet.packet_id
     assert (out / "manifest.json").is_file()
     staging = root.path / ".staging"
     assert not staging.exists() or not any(staging.iterdir())
@@ -228,7 +287,7 @@ def test_publish_raw_packet_is_write_once(tmp_path: Path) -> None:
     staging = root.stage_raw_packet(pid)
     (staging / "x").write_text("1", encoding="utf-8")
     published = root.publish_raw_packet(staging, pid)
-    assert published == root.path / "raw" / pid
+    assert published == root.path / "raw" / raw_shard(pid) / pid
     with pytest.raises(DataLakeRootError):
         root.stage_raw_packet(pid)  # final already exists -> write-once
 
@@ -259,8 +318,10 @@ def test_reverify_catches_root_identity_change(tmp_path: Path) -> None:
     # DL-003: a swapped/remounted root (same path, different marker identity) is
     # caught before any write.
     root = _init(tmp_path)
+    marker = json.loads((root.path / ROOT_MARKER_FILENAME).read_text(encoding="utf-8"))
+    marker["root_uuid"] = "DIFFERENTIDENTITY"
     (root.path / ROOT_MARKER_FILENAME).write_text(
-        json.dumps({"root_uuid": "DIFFERENTIDENTITY", "contract_version": "v0"}),
+        json.dumps(marker),
         encoding="utf-8",
     )
     with pytest.raises(DataLakeRootError):
@@ -276,7 +337,10 @@ def test_within_rejects_symlinked_component(tmp_path: Path) -> None:
     root = _init(tmp_path)
     outside = tmp_path / "outside"
     outside.mkdir()
-    link = root.path / "derived" / "linked"
+    # append_record now resolves to derived/<shard>/linked/l/r, so symlink the
+    # shard component the traversal actually crosses (DL-003 rejects any symlinked
+    # lake-owned component along the path).
+    link = root.path / "derived" / raw_shard("linked")
     try:
         link.symlink_to(outside, target_is_directory=True)
     except (OSError, NotImplementedError):

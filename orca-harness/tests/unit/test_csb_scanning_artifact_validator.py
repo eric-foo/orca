@@ -47,6 +47,39 @@ def test_fixture_expected_fail_has_broad_scout_error() -> None:
     assert [finding.code for finding in findings] == ["missing_broad_scout_accounting"]
 
 
+def test_auto_detection_targets_docs_research_csb_first_scan_artifacts() -> None:
+    assert validator.looks_like_csb_first_scan_artifact("docs/research/example_scan.md", _valid_text())
+
+
+def test_auto_detection_ignores_non_research_paths() -> None:
+    assert not validator.looks_like_csb_first_scan_artifact("docs/prompts/reviews/example_prompt.md", _valid_text())
+
+
+def test_auto_detection_requires_csb_route_marker() -> None:
+    text = (
+        _valid_text()
+        .replace("CSB-first", "scan")
+        .replace("CSB-First", "Scan")
+        .replace("CSB Board", "Board")
+        .replace("Rows consumed as route map", "Rows consumed")
+    )
+
+    assert not validator.looks_like_csb_first_scan_artifact("docs/research/example_scan.md", text)
+
+
+def test_auto_targets_reads_only_detected_artifacts(tmp_path: Path) -> None:
+    good = tmp_path / "docs" / "research" / "scan.md"
+    ignored = tmp_path / "docs" / "prompts" / "scan_prompt.md"
+    good.parent.mkdir(parents=True)
+    ignored.parent.mkdir(parents=True)
+    good.write_text(_valid_text(), encoding="utf-8")
+    ignored.write_text(_valid_text(), encoding="utf-8")
+
+    targets = validator.auto_targets(tmp_path, ["docs/research/scan.md", "docs/prompts/scan_prompt.md"])
+
+    assert targets == [good]
+
+
 @pytest.mark.parametrize(
     ("old", "new", "expected_code"),
     [
