@@ -1,0 +1,174 @@
+from __future__ import annotations
+
+import hashlib
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[3]
+VIEW_PATH = (
+    ROOT
+    / "orca"
+    / "product"
+    / "spines"
+    / "capture"
+    / "core"
+    / "source_families"
+    / "social_media"
+    / "creator_profile_current_view_v0.json"
+)
+ACCOUNT_LEDGER_PATH = (
+    ROOT
+    / "orca"
+    / "product"
+    / "spines"
+    / "capture"
+    / "core"
+    / "source_families"
+    / "social_media"
+    / "creator_public_handle_linkage_ledger_v0.json"
+)
+METRIC_SEED_PATH = (
+    ROOT
+    / "orca"
+    / "product"
+    / "spines"
+    / "capture"
+    / "core"
+    / "source_families"
+    / "social_media"
+    / "youtube"
+    / "youtube_shorts_fragrance_creator_metric_seed_v0.json"
+)
+
+
+def _json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def _view() -> dict:
+    return _json(VIEW_PATH)["creator_profile_current_view"]
+
+
+def _account_ledger() -> dict:
+    return _json(ACCOUNT_LEDGER_PATH)["creator_public_handle_linkage_ledger"]
+
+
+def _metric_seed() -> dict:
+    return _json(METRIC_SEED_PATH)["youtube_shorts_fragrance_creator_metric_seed"]
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_creator_profile_current_counts_and_boundaries() -> None:
+    view = _view()
+
+    assert view["schema_version"] == "creator_profile_current_view_v0"
+    assert view["counts"] == {
+        "profiles_total": 30,
+        "platform_account_profiles": 30,
+        "creator_record_profiles": 0,
+        "profiles_with_metric_rollups": 30,
+        "profiles_with_ideal_audience_profiles": 0,
+        "engagement_rate_observed_profiles": 0,
+        "cross_platform_rollup_profiles": 0,
+    }
+
+    for profile in view["profiles"]:
+        assert profile["profile_subject_kind"] == "platform_account"
+        assert profile["profile_subject_id"] == profile["platform_account_id_or_none"]
+        assert profile["creator_record_id_or_none"] is None
+        assert profile["identity_state"] == "single_platform_observed"
+        assert profile["link_state_or_none"] is None
+        assert profile["review_state_or_none"] is None
+        assert profile["ideal_audience_profile"] is None
+        assert profile["wind_calling_summary"] is None
+        assert len(profile["current_metric_rollups"]) == 1
+
+        rollup = profile["current_metric_rollups"][0]
+        assert rollup["platform_scope"] == "youtube"
+        assert rollup["freshness_state"] == "partial"
+        assert rollup["metric_rollups"]["average_views"]["posture"] == "observed"
+        assert rollup["metric_rollups"]["median_views"]["posture"] == "observed"
+        assert rollup["metric_rollups"]["engagement_rate"]["posture"] == "unavailable_with_reason"
+
+
+def test_creator_profile_current_rebuilds_from_identity_and_metric_seed() -> None:
+    view = _view()
+    account_ledger = _account_ledger()
+    metric_seed = _metric_seed()
+
+    accounts_by_id = {
+        account["platform_account_id"]: account
+        for account in account_ledger["platform_accounts"]
+    }
+    rollups_by_subject = {
+        rollup["profile_subject_id"]: rollup
+        for rollup in metric_seed["metric_rollups"]
+    }
+
+    assert set(accounts_by_id) == set(rollups_by_subject)
+    assert set(accounts_by_id) == {
+        profile["profile_subject_id"] for profile in view["profiles"]
+    }
+
+    for profile in view["profiles"]:
+        subject_id = profile["profile_subject_id"]
+        account = accounts_by_id[subject_id]
+        expected_rollup = rollups_by_subject[subject_id]
+        actual_rollup = profile["current_metric_rollups"][0]
+
+        assert profile["platform_accounts"] == [account]
+        assert actual_rollup["metric_rollup_id"] == expected_rollup["metric_rollup_id"]
+        assert actual_rollup["platform_account_ids"] == expected_rollup["platform_account_ids"]
+        assert actual_rollup["rollup_window"] == expected_rollup["rollup_window"]
+        assert actual_rollup["rollup_window_description"] == expected_rollup["rollup_window_description"]
+        assert actual_rollup["metric_rollups"] == expected_rollup["metric_rollups"]
+        assert actual_rollup["source_metric_observation_ids"] == expected_rollup["source_metric_observation_ids"]
+        assert actual_rollup["observation_count"] == expected_rollup["observation_count"]
+        assert actual_rollup["computed_at"] == expected_rollup["computed_at"]
+        assert profile["freshness"]["identity_updated_at"] == account["handle_observed_at"]
+        assert profile["freshness"]["metrics_computed_at_or_none"] == expected_rollup["computed_at"]
+
+
+def test_creator_profile_current_source_hashes_are_current() -> None:
+    view = _view()
+    inputs_by_pointer = {
+        source_input["source_pointer"]: source_input
+        for source_input in view["source_inputs"]
+    }
+
+    account_pointer = (
+        "orca/product/spines/capture/core/source_families/social_media/"
+        "creator_public_handle_linkage_ledger_v0.json"
+    )
+    metric_pointer = (
+        "orca/product/spines/capture/core/source_families/social_media/youtube/"
+        "youtube_shorts_fragrance_creator_metric_seed_v0.json"
+    )
+
+    assert inputs_by_pointer[account_pointer]["sha256"] == _sha256(ACCOUNT_LEDGER_PATH)
+    assert inputs_by_pointer[metric_pointer]["sha256"] == _sha256(METRIC_SEED_PATH)
+
+
+def test_creator_profile_current_does_not_smuggle_forbidden_scope() -> None:
+    view = _view()
+    forbidden_claim_fragments = (
+        "channel-wide creator influence",
+        "engagement rate",
+        "buyer proof",
+        "cross-platform rollup",
+    )
+
+    for profile in view["profiles"]:
+        non_claims = " ".join(profile["non_claims"])
+        for fragment in forbidden_claim_fragments:
+            assert fragment in non_claims
+
+        assert "not SQLite or data-lake physicalization" in profile["non_claims"]
+        rollup = profile["current_metric_rollups"][0]
+        assert rollup["metric_rollups"]["average_like_count"]["value_or_none"] is None
+        assert rollup["metric_rollups"]["average_comment_count"]["value_or_none"] is None
+        assert rollup["metric_rollups"]["engagement_rate"]["value_or_none"] is None

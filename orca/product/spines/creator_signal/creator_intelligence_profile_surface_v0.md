@@ -17,6 +17,7 @@ authority_boundary: retrieval_only
 open_next:
   - docs/decisions/orca_creator_signal_spine_promotion_binding_v0.md
   - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_spec_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_v0.json
   - orca/product/spines/capture/core/source_families/social_media/creator_public_handle_linkage_ledger_spec_v0.md
   - orca/product/spines/capture/core/source_families/social_media/instagram/ig_creator_ideal_audience_inference_spec_v0.md
   - docs/decisions/orca_audience_ballot_taxonomy_v0.md
@@ -176,6 +177,10 @@ Detailed per-content reels/videos stay below the fold or in drill-back. They are
 not copied into the identity ledger or into this surface contract as source truth.
 
 ## Physicalization and testing sequence
+
+The first static `creator_profile_current` export may test source-backed identity
+rows, metric observations, and metric rollups against this surface before a
+storage engine or dashboard exists.
 
 The correct next sequence remains:
 

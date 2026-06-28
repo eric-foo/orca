@@ -95,11 +95,16 @@ Forbidden claim:
 
 The hard pushback is important: this seed is useful, but it is not the final creator intelligence answer. It is the first source-backed metric layer under that answer.
 
-## Next Step
+## Profile-Current Application
 
-Use this seed to test `creator_profile_current` with real metric rows and missingness:
+This seed now supports a static `creator_profile_current` export:
+
+`orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_v0.json`
+
+The export should:
 
 - show view-count rollups with `freshness_state: partial`;
 - show engagement-rate fields as `unavailable_with_reason`;
 - keep cross-platform rollups blocked until public-handle linkage is promoted;
-- run a separate metric-bearing capture probe when we want likes/comments/subscribers.
+- leave ideal-audience fields unavailable until source-backed audience snapshots are joined;
+- require a separate metric-bearing capture probe when we want likes/comments/subscribers.
