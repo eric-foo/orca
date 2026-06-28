@@ -1,4 +1,6 @@
 # YouTube Behavioral Contract From Merged Main v0
+
+```yaml
 retrieval_header_version: 1
 artifact_role: Workflow record
 scope: Source-backed extraction of the merged YouTube behavioral projection contract observed on origin/main at 6517dd10.
@@ -6,6 +8,7 @@ use_when:
   - Comparing Instagram/Reels capture behavior against the merged YouTube projection behavior before designing a shared capture core.
   - Recovering the YouTube-side field, status, source-key, residual, and boundary semantics without rereading the full implementation first.
 authority_boundary: retrieval_only
+```
 
 ## Scope
 
@@ -38,6 +41,8 @@ The projection module declares:
 - `behavioral_completeness`
 
 `behavioral_completeness.status` is exactly the transcript extraction rollup status. `behavioral_completeness.complete` is true only when the rollup status is exactly `complete`. Residuals are accumulated in `behavioral_completeness.residuals`.
+
+The projection requires a resolvable single video id. It uses the explicit `platform_video_id`, then the normalized metadata video id, then a single video id from transcript sources. It raises `ValueError` when no video id can be resolved, or when transcript sources span multiple video ids before an explicit or metadata video id is available.
 
 ## Metadata And Comments
 
@@ -165,6 +170,8 @@ Extraction results match in this order:
 
 Anchor-level fallback is rejected as `ambiguous_anchor_result` when the anchor has duplicate eligible sources. Multiple anchor-level results for one source are also rejected as `ambiguous_anchor_result`.
 
+When an eligible source has a matching extraction result, the source receives `extraction_status`. Matching results may also enrich the source with `extraction_record_path` from a result `path` and `extraction_error` from a result `error`.
+
 ## Extraction Statuses And Rollup
 
 Complete extraction statuses:
@@ -281,5 +288,3 @@ Important residuals to preserve as explicit design pressure:
 - Availability-index discovery is read-only by default and can under-report when stale. Callers that need raw-derived discovery must opt into `rebuild_availability=True`.
 - YouTube's strongest behavior is transcript/extraction completeness projection. Its weaker area remains acquisition coverage. Instagram should be compared against the behavioral completeness contract before any attempt to reuse machinery.
 - The shared core should separate behavior projection concepts from lane-specific acquisition, packet discovery, and transcript-source discovery.
-
-review_routing_status: not_needed
