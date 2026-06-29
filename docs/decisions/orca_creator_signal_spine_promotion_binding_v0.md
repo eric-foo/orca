@@ -17,7 +17,7 @@ open_next:
   - orca/product/spines/creator_signal/README.md
   - orca/product/spines/creator_signal/creator_intelligence_profile_surface_v0.md
   - docs/decisions/orca_spine_first_target_structure_binding_v0.md
-  - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_spec_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_profile_current_view_spec_v0.md
   - .agents/workflow-overlay/artifact-folders.md
 supersedes: []
 stale_if:

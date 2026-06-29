@@ -13,7 +13,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json
-  - orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_spec_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_profile_current_view_spec_v0.md
   - orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_observation_ledger_v0.json
 stale_if:
   - The YouTube Shorts fragrance creator observation ledger changes.
@@ -99,7 +99,7 @@ The hard pushback is important: this seed is useful, but it is not the final cre
 
 This seed now supports a static `creator_profile_current` export:
 
-`orca/product/spines/capture/core/source_families/social_media/creator_profile_current_view_v0.json`
+`orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_profile_current_view_v0.json`
 
 The export should:
 
