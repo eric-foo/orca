@@ -7,11 +7,12 @@ scope: >
   Proposed architecture for cutting the committed creator_profile_current registry over to
   lake-sourced metrics: a committed, operator-regenerated rollup snapshot that materialize reads in
   place of the hand-kept seed rollups, verified lake-free in CI and reconciled against the live
-  external lake by an operator-local gate. Synthesized from a three-architect planning pass; PENDING
-  adversarial review; NOT ratified.
+  external lake by a NON-OPTIONAL freshness mechanism (write-time receipt gate + scheduled drift
+  check). Synthesized from a three-architect pass; revised per adversarial review (gpt-5-codex,
+  needs_architecture_rework); PENDING re-review; NOT ratified.
 use_when:
   - Reviewing or implementing the creator_profile_current lake cut-over.
-  - Deciding the committed-vs-operator-regenerated split and the latest-rollup-per-account rule.
+  - Deciding the committed-vs-operator-regenerated split, the discovery contract, the latest-rollup-per-account rule, and the freshness mechanism.
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_profile_current_lake_native_record_mapping_v0.md
@@ -20,20 +21,41 @@ open_next:
   - orca-harness/capture_spine/creator_profile_current/silver_metric_reader.py
   - orca-harness/capture_spine/creator_profile_current/silver_metric_producer.py
   - orca-harness/data_lake/root.py
+  - orca-harness/source_capture/ig_reels_behavioral_lake.py
   - orca-harness/tests/unit/test_creator_profile_current_static_view.py
   - orca-harness/tests/unit/test_youtube_creator_observation_ledger.py
 stale_if:
   - The cut-over is implemented and ratified (this proposal becomes the record or is superseded).
   - materialize's rollup-input contract or the Silver MetricRollupObservation shape changes.
-  - The owner selects a different v0 scope (certify-only or full Creator Vault) than the recommended snapshot cut.
+  - The discovery raw families (instagram_creator, youtube) or DataLakeRoot availability/discovery semantics change.
 ```
 
 ## Status
 
-`PROPOSAL` — pre-ratification. Synthesized from a three-architect planning pass
-(minimal-lock-in, long-term-fidelity, and CI-determinism lenses). Pending
-cross-vendor adversarial review. NOT a ratified contract; asserts no validation,
-readiness, or implementation authority.
+`PROPOSAL` — pre-ratification. Synthesized from a three-architect pass, then
+**revised to address the adversarial review** (`gpt-5-codex`, verdict
+`needs_architecture_rework`, 2 blockers / 4 majors / 1 minor; report:
+`docs/review-outputs/adversarial-artifact-reviews/creator_profile_current_lake_cutover_architecture_adversarial_review_v0.md`).
+All seven findings were adjudicated `ACCEPT` by the home model; the blockers
+(AR-01 discovery, AR-02 freshness) are resolved below. Pending re-review. NOT a
+ratified contract; asserts no validation, readiness, or implementation authority.
+
+### Review-response map (what changed)
+
+- **AR-01 (blocker, discovery):** discovery binds the real raw families
+  (`instagram_creator`, `youtube`), not `"social_media"` — see *Discovery*.
+- **AR-02 (blocker, freshness):** freshness is now a **non-optional** mechanism
+  (write-time receipt gate + scheduled drift check), not a follow-on — see
+  *Freshness mechanism*.
+- **AR-03 (major):** the CI gate is renamed `snapshot_seed_equivalence_gate` and
+  is explicitly internal-consistency only, not a freshness/correctness proof.
+- **AR-04 (major):** latest-per-account no longer trusts semantic `computed_at`
+  alone — see *Latest-rollup-per-account*.
+- **AR-05 (major):** the exact view provenance/schema delta is named — see *How
+  materialize consumes it*.
+- **AR-06 (major):** YouTube is a separate **fold-in stage**, not "zero registry
+  changes" — see *YouTube fold-in stage*.
+- **AR-07 (minor):** a *Reversibility / rollback* section is added.
 
 ## Problem
 
@@ -47,33 +69,30 @@ production uses the reader. Hard constraints:
 
 1. The real lake is **external** (`F:\orca-data-lake`, `ORCA_DATA_ROOT`,
    fail-closed outside the repo). **CI has no lake.**
-2. The view is a **committed git artifact**, CI-verified deterministically
-   (`test_creator_profile_current_materializer_matches_checked_in_view`;
-   `run_creator_profile_current_materialize.py --check`). Determinism must hold.
-3. The seed carries metadata **not** in the Silver records (`source_inputs`
-   hashes, `selection_policy`, counts, residuals) — the seed file cannot be
-   byte-regenerated from records.
+2. The view is a **committed git artifact**, CI-verified deterministically.
+   Determinism must hold with no lake present.
+3. The seed carries metadata **not** in the Silver records — the seed file
+   cannot be byte-regenerated from records.
 4. The view consumes only `seed["metric_rollups"]` plus the seed file sha256.
 5. Only Instagram has a producer today; the YouTube producer (30 accounts) is in
-   a parallel lane and will emit the **same** record shapes.
+   a parallel lane (PR #487) and will emit the **same** record shapes.
 
 ## Convergent architecture (all three lenses independently agreed)
 
 - CI **never** resolves the real lake; it verifies a committed lake-derived
   artifact → the committed registry, lake-free.
-- A **committed, lake-derived artifact** becomes the CI-deterministic seam. The
-  seed is **kept** — it carries metadata records can't (#3) and remains the
-  no-drift oracle — but loses authority over the registry's numbers.
+- A **committed, lake-derived artifact** is the CI-deterministic seam. The seed
+  is **kept** (metadata + no-drift oracle) but loses authority over the numbers.
 - A **no-drift equivalence guard** (committed artifact == the proven seed
-  rollups, provable with no lake) is the transition bridge.
-- The **operator regenerates** the artifact from the real lake; provenance ties
-  each number to a content-addressed Silver record; staleness is surfaced
-  loudly, never auto-healed.
-- The reader needs **lake-wide discovery** (`list_available` + per-anchor lane
-  scan; no new lake API) and **latest-rollup-per-account selection** across
-  append-only records — the riskiest new logic, flagged by all three.
-- Real-lake drift is catchable **only off-CI**.
-- **YouTube fold-in is purely additive** (platform-keyed; same record shapes).
+  rollups, no lake) is the *internal-consistency* bridge — **not** a freshness
+  proof (AR-03).
+- The **operator regenerates** from the real lake; provenance ties each number
+  to a content-addressed Silver record; **a non-optional freshness mechanism**
+  ensures drift is never silent (AR-02).
+- The reader needs **discovery bound to the real raw families** and
+  **latest-rollup-per-account selection** that cannot be fooled by a regressed
+  timestamp (AR-01, AR-04).
+- **YouTube is a distinct fold-in stage** (AR-06).
 
 ## Recommended v0 — Frozen Rollup Snapshot
 
@@ -84,126 +103,190 @@ replaces `seed["metric_rollups"]` as the rollup source:
   per-account rollups in the reader's seed-rollup shape, each carrying a
   `source_record` block `{record_id, content_hash, raw_anchor, lane_namespace}`
   (the exact Silver `MetricRollupObservation` it was lifted from), plus a
-  `snapshot_provenance` header (`snapshot_generated_at`,
-  `oldest_rollup_computed_at`, per-platform).
-- **materialize change (smallest input swap):** `_collect_metric_rollup_records`
-  reads the snapshot's rollups instead of `seed["metric_rollups"]`; the
-  downstream profile-building (`_build_platform_account_profile`,
-  `_profile_rollup`) is **unchanged** because the snapshot is already in the
-  consumed shape. The view's `source_inputs` and `source_drill_back` flip from
-  the seed pointer to the snapshot pointer; drill-back now resolves to a real
-  lake record content-hash (strictly stronger provenance than today).
+  `snapshot_provenance` header (`snapshot_generated_at`, `lake_high_watermark`,
+  `selection_run_id`, per-platform).
 - **No-drift bridge:** the first IG snapshot is asserted **byte-equal** to
   today's `seed["metric_rollups"]`, so the regenerated view is **byte-identical**
-  to the committed view (the cut-over's correctness proof).
-- The **seed stays committed** for `source_inputs`/`selection_policy`/metadata
-  and as the no-drift oracle; it is not deleted and is not regenerated.
+  to the committed view. This proves the *adapter* is no-drift; it does **not**
+  prove lake freshness (AR-03).
+- The **seed stays committed** for metadata and as the no-drift oracle.
 
-Rejected alternatives (named for the review): **certify-only** (A1 — add the
-equivalence gate but leave `materialize` reading the seed) is honest but
-under-delivers, the registry is still hand-kept ("lake-verified", not
-"lake-fed"); **full Creator Vault envelopes now** (A2 — the mapping doc's
-end-state) is the right long-term shape but higher lock-in (committed envelope
-schema/path become sticky) and premature before the snapshot proves the pattern.
+### How materialize consumes it (AR-05 — exact schema delta)
 
-## Two gates
+`_collect_metric_rollup_records` reads the snapshot's rollups instead of
+`seed["metric_rollups"]`; downstream profile-building is unchanged because the
+snapshot is already in the consumed shape. The **view provenance change is named
+explicitly** (not "just flip the pointer"):
 
-- **Equivalence gate (CI, lake-free):** run the producer into a
+- The view's `source_drill_back` field `metric_seed_pointer` is **renamed**
+  `metric_snapshot_pointer` (it would be semantically false pointing at a
+  snapshot). This requires updating `validation.py`'s `_ALLOWED_SOURCE_DRILL_BACK_KEYS`
+  and the view spec/tests — a real, bounded schema delta, not a free swap.
+- **Lake record provenance (`source_record` / `content_hash`) lives INSIDE the
+  snapshot, not in the view.** The view points at the snapshot; a consumer
+  resolves lake-record drill-back by opening the snapshot. So the view schema
+  gains only the rename; it does **not** carry `source_record` (which the current
+  validator would reject).
+- `source_inputs` flips its `source_pointer`/`sha256` from the seed file to the
+  snapshot file (the allowed keys `{source_pointer, sha256, role}` are
+  unchanged).
+
+## Two gates (AR-03 — renamed and re-scoped)
+
+- **`snapshot_seed_equivalence_gate` (CI, lake-free):** run the producer into a
   `DataLakeRoot.for_test` temp lake, read rollups via the reader, assert
   reconstruction == committed seed rollups == committed snapshot. Deterministic,
-  no `ORCA_DATA_ROOT`. Proves internal consistency.
-- **Live-lake reconciliation gate (operator-local):** mirrors
-  `test_youtube_..._live_lake_refs_when_available` — `pytest.skip` when
-  `ORCA_DATA_ROOT` is unset; otherwise resolve the lake, re-run latest-per-account
-  selection, and assert the committed snapshot's per-account `content_hash` ==
-  the live selection's. The drift detector. Green-by-skip in CI; load-bearing on
-  an operator box (or a future scheduled job).
+  no `ORCA_DATA_ROOT`. **Proves internal consistency only** — it can catch
+  adapter/shape/snapshot-seed drift; it **cannot** prove the snapshot was
+  generated from the live lake or is current. A stale-but-consistent snapshot
+  passes it. It is **not** the cut-over correctness proof.
+- **`live_lake_freshness_gate` (the sole freshness proof):** resolves the real
+  lake, re-runs latest-per-account selection, and asserts the committed
+  snapshot's per-account `content_hash` + `lake_high_watermark` == the live
+  selection's. This is the **only** proof of external-lake freshness, and it is
+  **non-optional** (see below).
 
-## Latest-rollup-per-account selection (load-bearing detail)
+## Freshness mechanism (AR-02 — non-optional, two triggers)
 
-`append_record` is write-once, so multiple rollup records accrue per account over
-runs; the current reader returns all matches (and `materialize` then raises
-`duplicate metric rollups` — safe but blocking). Rule:
+"Silent staleness" is drift accruing *between* regenerations, so a write-time
+check alone cannot close it. The `live_lake_freshness_gate` is therefore bound at
+**both** triggers of the same check:
 
-- Select the record with **max `payload.observation.computed_at`** per
-  `subject.ref.orca_platform_account_id` (`computed_at` == the producer-run
-  `generated_at_utc`).
-- Tie-break **`record_id` descending** (ULID time-ordered prefix).
-- **Fail closed (`ambiguous_latest_rollup`)** if two records share the max
-  `computed_at` but differ in `content_hash`; collapse identical-`content_hash`
-  duplicates. (Same-millisecond distinct-content runs against a single external
-  drive are an accepted, named residual — not engineered around.)
-- Lives in a new reader function `select_latest_rollup_per_account`, not in
-  `materialize`.
+1. **Write-time receipt gate (required):** the snapshot regeneration runner
+   (`run_creator_metric_rollup_snapshot.py`) must pass the freshness gate and
+   emit a durable **freshness receipt** (`lake_high_watermark`, per-account
+   `content_hash`, `selection_run_id`, `reconciled_at`) committed *with* the
+   snapshot. A snapshot update cannot land without a passing receipt — you cannot
+   commit a known-stale snapshot.
+2. **Scheduled drift check (required):** a scheduled operator-box job runs the
+   `live_lake_freshness_gate` on a cadence and **fails loudly / opens or updates
+   a visible issue** when the lake's latest rollups advance past the committed
+   snapshot (`snapshot_behind_lake`). This catches "operator captured new data
+   but didn't refresh the registry" — the silent-drift case.
 
-## Provenance & freshness
+Together these emit and check durable evidence, so **drift is never unnoticed.**
+The external lake makes a human *regen* step unavoidable; what this retires is
+staleness going *silent*. CI remains lake-free (it runs only the equivalence
+gate); the freshness gate runs only where a lake exists (operator box /
+scheduled job), `pytest.skip` in CI — mirroring
+`test_youtube_creator_observation_ledger`.
 
-Each snapshot rollup is bound to its source `MetricRollupObservation`
-`content_hash` (→ `derived_refs` → source observations → raw refs), so editing a
-number without updating the hash is detectable and the live gate recomputes the
-selection and compares hashes. Staleness surfaces as the live gate's
-`snapshot_behind_lake` failure when the lake holds a newer rollup than the
-committed snapshot. **Named residual:** with no lake in CI, **nothing in CI can
-detect that the lake moved on** — that detection lives only in the
-operator/scheduled gate, and this proposal makes that explicit rather than
-pretending CI covers it.
+**Accepted residual:** if the operator stops running the scheduled check, drift
+detection lapses. This is bounded by making the scheduled check a required part
+of the operator release contract, and by the write-time receipt recording the
+last reconciled watermark so a reviewer can see the registry's freshness epoch.
 
-## YouTube fold-in
+## Latest-rollup-per-account (AR-04 — not semantic timestamp alone)
 
-Additive: when the YouTube producer lands, the operator runs the snapshot runner
-`--platform youtube` → a 30-account YT snapshot; `materialize`'s existing
-multi-source path adds it with no per-platform branching; the
-`engagement_rate: unavailable_with_reason` posture flows through unchanged
-(missing != zero); the gates extend automatically. Cost: one producer + one
-snapshot file, **zero registry changes**.
+`append_record` is write-once, so multiple rollup records accrue per account, and
+`computed_at` (= caller-supplied `generated_at_utc`) can regress or be reused —
+so it cannot be the sole "latest" key. Rule:
+
+- "Latest" is defined by an **append/run-order signal**, not semantic
+  `computed_at`: each snapshot regeneration stamps a monotonic `selection_run_id`
+  and records, per account, the chosen `record_id` + `content_hash` in the
+  snapshot-run manifest. Selection picks the rollup from the newest run that
+  covers the account.
+- **Fail closed on regression:** if a newer-appended rollup carries a
+  `computed_at` *older* than the currently-selected record (a regressed/reused
+  timestamp), selection fails `computed_at_regression` rather than silently
+  keeping the old one.
+- Same-`computed_at` distinct-`content_hash` still fails `ambiguous_latest_rollup`;
+  identical-`content_hash` duplicates collapse.
+- Because `DataLakeRoot.append_record` carries no append timestamp/sequence
+  today, the run manifest supplies the append/run order. (A minimal
+  lake-controlled append sequence is a possible future hardening; not required
+  for v0.)
+- Lives in `select_latest_rollup_per_account` in the reader.
+
+## Discovery (AR-01 — bind the real raw families)
+
+Discovery binds the **actual raw packet families**, verified in source:
+IG raw = `source_family="instagram_creator"`
+(`ig_reels_grid_projection.py`), YouTube raw = `source_family="youtube"`
+(`youtube_watch_packet.py`, `caption_packet.py`). The snapshot runner iterates
+the known platform families and, per packet, scans the rollup lane:
+
+```
+for family in ("instagram_creator", "youtube"):
+    for packet_id in data_root.list_available(source_family=family):
+        lane_dir(subtree="derived", raw_anchor=packet_id, lane="creator_metric_rollup_silver")
+```
+
+This mirrors the existing precedent `ig_reels_behavioral_lake.py:123`
+(`list_available(source_family=_IG_SOURCE_FAMILY)`), so **"no new lake API"
+remains true** and **no producer change is required** (the producer's
+`_SOURCE_FAMILY="social_media"` is derived-record metadata, never the raw
+availability key). The live gate **fails closed on a missing/incomplete expected
+account set** — "no discovered rollups" is never treated as a valid latest set.
+
+Deferred alternative (named, not chosen): a first-class derived-record discovery
+index would avoid hardcoding the family list as platforms grow, but it is a
+larger, cross-lane change; the raw-family binding is the smallest-complete v0 fix.
 
 ## Reader gaps to build
 
-1. `select_latest_rollup_per_account` (+ `ambiguous_latest_rollup` fail-closed) —
-   the most important gap.
-2. Lake-wide discovery: `list_available(source_family="social_media")` → per
-   packet `lane_dir(subtree="derived", raw_anchor, lane="creator_metric_rollup_silver")`.
-   No new lake API.
-3. Snapshot emission (new `silver_metric_snapshot.py`; keeps the reader a pure
-   record→seed-shape mapper).
-4. Observation reconstruction: **deferred non-goal** (the registry consumes
-   rollups only).
+1. `select_latest_rollup_per_account` (+ run-order selection, `computed_at`
+   regression fail-closed, `ambiguous_latest_rollup`).
+2. Discovery over the bound raw families (above).
+3. Snapshot emission + the snapshot-run manifest (new `silver_metric_snapshot.py`).
+4. The `live_lake_freshness_gate` runner + freshness-receipt emission.
+5. Observation reconstruction: **deferred non-goal** (registry consumes rollups).
 
-## Staging toward Creator Vault (named evolution, deferred)
+## YouTube fold-in stage (AR-06 — a stage, not "zero changes")
 
-The flat snapshot is a strict step toward the mapping doc's generated Creator
-Vault read model (`indexes/derived_retrieval/silver_vault/creator_vault/`): both
-carry the same seed-shaped rollup payload, so the snapshot can later be promoted
-to per-account envelopes + manifests without reworking `materialize`. Deferred
-until actually needed (their own Silver-contract triggers): query tables, content
-envelopes, entity/relationship records, a derived-retrieval discovery index,
-SQLite/backend selection.
+YouTube is a **separate fold-in stage**, accepted independently of IG v0. It is
+**not** "zero registry changes": it changes default runner inputs, source hashes,
+the view's `source_inputs`, the drift-witness/oracle strategy (once the YT seed
+is no longer authoritative for rollups), and it depends on the YouTube producer
+(**PR #487**) landing first. The stage carries its own producer contract,
+snapshot, `snapshot_seed_equivalence_gate` + `live_lake_freshness_gate`, and a
+seed-retirement rule naming what evidence replaces the YT seed oracle. The only
+thing that is genuinely automatic is rollup *consumption* (`materialize` stays
+platform-agnostic at the rollup layer); everything else is staged work.
 
-## Open owner decisions (forks for the review and the owner)
+## Reversibility / rollback (AR-07)
 
-1. **v0 scope:** Frozen Rollup Snapshot (recommended) vs certify-only
-   (under-delivers) vs full Creator Vault now (premature lock-in).
-2. **Drift trigger:** operator-runs-on-regen (manual) vs a scheduled
-   operator-box job that fails loudly / opens an issue on `snapshot_behind_lake`.
-   Recommendation: build the snapshot + both gates now; the scheduled job is an
-   opt-in follow-on. This is the *does-it-actually-retire-staleness* decision and
-   does not change the architecture, only who pulls the trigger.
+The cut-over reverts as a set, not "one input swap":
+- **Reverts together:** the `metric_snapshot_pointer` rename (back to
+  `metric_seed_pointer`), `_collect_metric_rollup_records` input, the runner
+  defaults, the snapshot file, and the flipped test expected-paths + `--check`.
+- **Committed snapshots:** revert = stop consuming them; the files may remain as
+  historical artifacts or be removed (no other artifact references them).
+- **Freshness receipts:** retained as historical freshness evidence even on
+  revert (they record what the registry reflected at each epoch); they are not
+  load-bearing for the seed-fed path.
+- **One-way-ish:** once external consumers read the snapshot path/schema, that
+  surface is sticky (mitigated by the `_v0` version). Reverting before any
+  external consumer binds is clean.
+
+## Open owner decisions (remaining after this rework)
+
+1. **v0 scope:** Frozen Rollup Snapshot (recommended; the review concurred —
+   certify-only under-delivers, full Creator Vault is premature). No change.
+2. **Freshness operating cost (AR-02):** the scheduled drift check implies a
+   modest operator-box scheduler + `gh issue` on drift. Owner-confirmed direction
+   is the non-optional mechanism above; the honest alternative (if no scheduler)
+   is to downgrade the claim to "lake-verifiable snapshot."
 
 ## Migration (smallest-first)
 
-1. `select_latest_rollup_per_account` + tests (multiple runs in a temp lake); no
-   production wiring.
-2. Discovery + `silver_metric_snapshot.py` emission + snapshot schema/validator;
-   temp-lake tested.
-3. Operator runner `run_creator_metric_rollup_snapshot.py` (`DataLakeRoot.resolve`).
+1. `select_latest_rollup_per_account` + run-order selection + tests (multiple
+   runs, regressed-timestamp case); no production wiring.
+2. Discovery (bound raw families) + `silver_metric_snapshot.py` + snapshot +
+   run-manifest schema/validator; temp-lake tested.
+3. Operator runner `run_creator_metric_rollup_snapshot.py` (`DataLakeRoot.resolve`)
+   + freshness-receipt emission + the write-time receipt gate.
 4. Operator generates the first IG snapshot; assert == today's seed rollups
    (no-drift bridge).
-5. Re-point `materialize` to the IG snapshot (keep the YT seed; mixed sources are
-   already supported); regenerated view must be byte-identical.
-6. Add the live-lake reconciliation gate.
-7. Flip the three CI tests' expected paths (seed → snapshot) and `--check`.
-8. YouTube: repeat 4–5 when its producer lands; retire the YT seed from the
-   rollup path.
+5. Re-point `materialize` to the IG snapshot (keep the YT seed); rename the view
+   pointer field + update validator/spec/tests; regenerated view byte-identical
+   except the renamed pointer.
+6. Add the `live_lake_freshness_gate` + the scheduled drift check + its failure
+   surface.
+7. Flip the CI tests' expected paths (seed → snapshot) and `--check`.
+8. **YouTube fold-in stage** (after PR #487 lands): its own producer, snapshot,
+   gates, and seed-retirement.
 
 ## Non-Goals
 
@@ -211,6 +294,6 @@ SQLite/backend selection.
 - No dual read-lake-or-snapshot path in `materialize` (a fake-success dual path).
 - No byte-regeneration of the seed file from records; no deleting the seeds.
 - No Creator Vault envelopes / query tables / content objects / derived-retrieval
-  index yet.
+  discovery index yet (the raw-family binding defers the latter).
 - Not validation, readiness, buyer proof, backend selection, or live-capture
   authorization.
