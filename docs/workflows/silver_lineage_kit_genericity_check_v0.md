@@ -17,14 +17,18 @@ open_next:
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_core_contract_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
   - orca-harness/data_lake/root.py
+  - docs/review-outputs/adversarial-artifact-reviews/silver_lineage_kit_delegated_adversarial_review_v0.md
+input_hashes:
+  - docs/review-outputs/adversarial-artifact-reviews/silver_lineage_kit_delegated_adversarial_review_v0.md: sha256:1BD07A9027F77C6535FB4644FD04B5643034794EB0C759239987469E1CB477EF
 branch_or_commit: >
   Authored on codex/silver-lineage-kit from origin/main e5dfd03d. Source scan
   also included the active IG deep-capture implementation worktree
   codex/ig-deep-capture-e2e at 5cda34b1 for the pending one-render deep-capture
-  record shape.
+  record shape. Post-review adjudication accepted AR-01 and AR-02 from the
+  delegated review report hash above.
 stale_if:
   - Silver Vault common header fields, raw_refs, derived_refs, or DataLakeRoot derived path grammar change.
-  - Projection raw_ref/raw_anchor models, CleaningRawAnchor, or transcript_asr record semantics change.
+  - Projection raw_ref/raw_anchor models, CleaningRawAnchor, CleaningProjectionRef, or transcript_asr record semantics change.
   - IG one-render deep capture gains a raw packet, Attachment Record, or other persisted raw source object.
 ```
 
@@ -76,6 +80,25 @@ That covers the current lanes because the real commonality is not "audio",
 source-visible fact anchored to either preserved raw material or an exact
 derived record.
 
+## Relationship to the Silver Vault Common Record Header
+
+The Silver Vault Common Record Header remains the single persisted authority for
+`raw_refs`, `derived_refs`, `source_surface`, `observed_at`, `captured_at`,
+`producer_id`, and `producer_schema_version`.
+
+The `silver_lineage` shape below is a helper/builder contract for constructing
+those header fields and the adjacent lineage-specific decisions. It must not
+become a second persisted home for `raw_refs` or `derived_refs`. A writer may
+group lineage inputs while building a record, but the emitted Silver Vault record
+must populate the common header fields in place unless a later accepted Silver
+Vault contract revision explicitly changes that storage shape.
+
+`source_object` is source-local identity metadata. Where it names an entity-like
+subject, it uses the Silver Vault `entity_key` vocabulary:
+`namespace + kind + native_id`. `lineage_limitations` is an additive limitation
+axis for this helper; its final physical home is a later implementation/spec
+decision, but it must not be used to duplicate or weaken the header refs.
+
 ## Coverage Scan
 
 | Lane/source shape | Observed current shape | Kit fit |
@@ -89,16 +112,31 @@ derived record.
 | IG legacy and reels-grid projection | Rows carry packet/slice/file/hash anchors, JSON pointers, source-surface candidates, and selection policy data. | Fits directly; source-surface disagreement belongs in payload, lineage points to raw evidence. |
 | YouTube caption packets | Caption json3 is raw source material in a SourceCapturePacket; flat text is non-authoritative. | Fits raw packet/file refs. |
 | YouTube and IG standalone ASR | Raw audio is staged as a SourceCapturePacket; generated transcript lives as a `transcript_asr` derived record with provenance back to packet/file/hash. | Fits raw refs for the ASR record and derived refs for downstream consumers. |
-| Cleaning projection handles | `CleaningRawAnchor` already supports preserved-file anchors and `derived_record` anchors; projection refs remain separate. | Strong fit; this is existing proof that file refs and derived-record refs both need first-class support. |
+| Cleaning projection handles | `CleaningRawAnchor` already supports preserved-file anchors and `derived_record` anchors; `CleaningProjectionRef` separately carries `row_id` and `row_kind`. | Strong fit; this is existing proof that file refs, derived-record refs, and projection-row identity all need first-class support. |
 | Product mentions from transcripts | Current product-mention silver records key by transcript anchor/source but need exact transcript derived-record identity to avoid same-shortcode ambiguity. | Fits, but this is a current gap the helper should close first. |
 | IG one-render deep capture | Current pending shape writes comments and transcript members keyed by shortcode; media URL is transient and redacted; no raw media bytes or raw render packet are persisted. | Fits only with explicit `lineage_limitations`. Full source-backed completeness would require a raw packet or Attachment Record later. |
+
+Coverage source basis checked for this artifact and the delegated review:
+
+- DataLakeRoot append/record-set mechanics: `orca-harness/data_lake/root.py`.
+- ECR and Signal Content rows: source-capture playbook and current derived-record conventions named in the Data Lake contracts.
+- Reddit projection: `orca-harness/source_capture/reddit_projection.py`.
+- Retail/PDP projection: `orca-harness/source_capture/retail_pdp_projection.py`.
+- Fragrantica projection: `orca-harness/source_capture/fragrantica_projection.py`.
+- IG reels-grid projection: `orca-harness/source_capture/ig_reels_grid_projection.py`.
+- YouTube caption and ASR packet lineage: `orca-harness/source_capture/transcript/asr_packet.py`.
+- IG one-render deep capture: `orca-harness/source_capture/ig_reels_deep_capture_lake.py`.
+- Cleaning anchors and projection handles: `orca-harness/cleaning/models.py`.
+- Product mentions from transcripts: `orca-harness/cleaning/transcript_product_lake.py`.
 
 ## Required v0 Grammar
 
 The kit should be additive. It should not force every existing producer into a
 new universal wrapper before value is proven.
 
-Recommended v0 block:
+Recommended v0 helper/builder shape. This is not a second persisted wrapper; it
+is the in-process shape the helper can use before it writes or validates the
+Common Record Header fields:
 
 ```json
 {
@@ -109,7 +147,7 @@ Recommended v0 block:
     "source_surface": "source-visible-surface-token",
     "source_object": {
       "namespace": "instagram|youtube|reddit|retail|fragrantica|...",
-      "object_type": "platform_content|platform_account|thread|comment|pdp|review|transcript|...",
+      "kind": "platform_content|platform_account|thread|comment|pdp|review|transcript|...",
       "native_id": "source-local-id",
       "source_url": null
     },
@@ -133,6 +171,7 @@ Raw refs should be able to express:
   "packet_id": "packet-id",
   "slice_id": "slice-id-or-null",
   "file_id": "file-id-or-null",
+  "relative_packet_path": "packet-relative-path-or-null",
   "sha256": "hash-or-null",
   "hash_basis": "raw_stored_bytes|...",
   "anchor": {
@@ -151,6 +190,10 @@ Derived refs should be able to express:
   "raw_anchor": "raw-anchor-or-shortcode",
   "lane": "transcript_asr|silver__capture__reel_transcript|...",
   "record_id": "record-id.json",
+  "row_locator": {
+    "row_id": "projection-row-id-or-null",
+    "row_kind": "projection-row-kind-or-null"
+  },
   "sha256": "derived-record-bytes-hash-or-null",
   "hash_basis": "derived_record_bytes|derived_record_marker_sha256|null",
   "relation": "derived_from|consumed|selected|corrects|supersedes|conflicts_with",
@@ -162,9 +205,18 @@ For a record-set member, `lane + record_id` identifies the member. The
 completion marker remains the detectable-completeness guard; it does not replace
 the member's address.
 
+For a projection-derived fact, `row_locator` is required when the consumed
+derived record is a multi-row projection record and the fact depends on one row.
+This preserves the `row_id`/`row_kind` distinction already modeled by
+`CleaningProjectionRef` without requiring a third top-level ref bucket in v0.
+If a producer has an existing projection-ref object, the helper should preserve
+that same row identity rather than reducing the lineage to `lane + record_id`.
+
 `lineage_limitations` is mandatory when a record has no resolvable raw ref and
 no exact derived ref. A limitation is not a defect by itself, but it blocks a
-full source-backed completeness claim.
+full source-backed completeness claim. Limitation entries should use controlled
+reason tokens where the implementing lane has them; free text is only an escape
+hatch for a source-specific limitation that has not yet been enumerated.
 
 ## Agent Use Contract
 
@@ -179,8 +231,9 @@ Use cases:
 2. Producer read a prior derived record: build `derived_refs` from exact
    `raw_anchor`, lane, record id, and record bytes hash when available.
 3. Producer read a projection row: preserve the projection row's raw ref/anchor
-   and carry the projection row identity as a derived or secondary traceability
-   ref, depending on the producer's input.
+   and carry the projection row identity (`row_id` and `row_kind`) in the
+   relevant derived ref's `row_locator`, or in an equivalent producer-native
+   projection ref if the lane already has one.
 4. Producer used transient live material that is not persisted: write
    `lineage_limitations` and do not claim full source-backed completeness.
 5. Producer writes a record set: every member record that contains facts gets
@@ -195,8 +248,13 @@ Mechanical checks should enforce this at the write boundary where possible:
 - `raw_refs` must have enough packet/file/hash material to resolve or audit.
 - `derived_refs` must name exact lane and record id, not just a shortcode or
   video id.
+- Projection-sourced facts must not collapse a multi-row projection record to
+  `lane + record_id` alone; they need `row_id`/`row_kind` or an explicit
+  limitation.
 - A record with only `lineage_limitations` can be valid, but it is not eligible
   for full behavioral-completeness claims.
+- `lineage_limitations` should prefer controlled reason tokens over free text
+  once the implementing lane has an accepted vocabulary.
 
 ## Patch Implications
 
