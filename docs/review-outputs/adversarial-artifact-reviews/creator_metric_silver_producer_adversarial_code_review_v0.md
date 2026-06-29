@@ -6,7 +6,7 @@ artifact_role: adversarial code review-and-patch report
 scope: >
   Cross-vendor delegated review-and-patch result for the creator-metric Silver
   producer, its unit test, and producer-owned MetricRollupObservation contract.
-authority_boundary: review_output_decision_input_only
+authority_boundary: retrieval_only
 reviewed_by: OpenAI GPT-5 Codex
 authored_by: Anthropic Claude (version unrecorded)
 de_correlation_bar: cross_vendor_discovery
