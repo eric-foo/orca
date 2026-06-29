@@ -15,7 +15,7 @@ from typing import Any
 import pytest
 
 from cleaning.audience_extractor import RawApiProvider
-from cleaning.transcript_product_extractor import TranscriptInput
+from cleaning.transcript_product_extractor import TranscriptInput, parse_mentions
 from cleaning.transcript_product_lake import (
     PRODUCT_MENTIONS_LANE,
     PRODUCT_MENTIONS_SET_LANE,
@@ -24,6 +24,7 @@ from cleaning.transcript_product_lake import (
     cues_from_json3,
     extract_products_into_lake,
     mentions_record_id,
+    write_product_mentions_result_into_lake,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError
 from data_lake.silver_lineage import SilverDerivedRef
@@ -182,6 +183,27 @@ def test_driver_persists_to_silver_lane(tmp_path) -> None:
     written = json.loads(paths[PRODUCT_MENTIONS_LANE].read_text(encoding="utf-8"))
     assert written["mention_count"] == 1
     assert written["mentions"][0]["start_ms"] == 3000  # CE5 timestamp from the cue
+
+
+def test_operator_result_writer_reuses_silver_lane_shape(tmp_path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    transcript = _transcript()
+    parsed = parse_mentions(json.dumps([_item()]), transcript, model="operator")
+
+    paths = write_product_mentions_result_into_lake(
+        data_root=data_root,
+        transcript=transcript,
+        result=parsed,
+        model="operator",
+        extraction_backend="operator_codex_assisted",
+        extraction_provenance={"packet_kind": "ig_reels_operator_product_extract_v0"},
+    )
+
+    rec = json.loads(paths[PRODUCT_MENTIONS_LANE].read_text(encoding="utf-8"))
+    assert rec["extraction_backend"] == "operator_codex_assisted"
+    assert rec["extraction_provenance"]["packet_kind"] == "ig_reels_operator_product_extract_v0"
+    assert rec["mention_count"] == 1
+    assert rec["mentions"][0]["video_id"] == "vid12345678"
 
 
 def test_driver_refuses_duplicate_write(tmp_path) -> None:

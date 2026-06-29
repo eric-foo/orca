@@ -21,6 +21,7 @@ import re
 
 from cleaning.transcript_product_extractor import (
     EXTRACTOR_RUBRIC_VERSION,
+    TranscriptExtractionResult,
     TranscriptInput,
     extract_transcript_products,
 )
@@ -131,6 +132,82 @@ def mentions_record_id(transcript: TranscriptInput, model: str) -> str:
     return f"mentions_{token}__{digest[:16]}.json"
 
 
+def _product_mentions_payload(
+    *,
+    transcript: TranscriptInput,
+    result: TranscriptExtractionResult,
+    model: str,
+    extraction_backend: str,
+    extraction_provenance: dict | None = None,
+) -> dict:
+    payload = {
+        "video_id": transcript.video_id,
+        "transcript_anchor": transcript.transcript_anchor,
+        "transcript_source_key": transcript.transcript_source_key,
+        "source_route": transcript.source_route,
+        "asr_record_id": transcript.asr_record_id,
+        "transcript_source": transcript.transcript_source,
+        "model": model,
+        "rubric_version": EXTRACTOR_RUBRIC_VERSION,
+        "extraction_backend": extraction_backend,
+        "mention_count": len(result.mentions),
+        "rejected_count": len(result.rejected),
+        "mentions": [m.model_dump(mode="json") for m in result.mentions],
+        "rejected": result.rejected,
+    }
+    if extraction_provenance:
+        payload["extraction_provenance"] = dict(extraction_provenance)
+    # Silver lineage (additive): when the runner threaded the exact consumed source
+    # (the transcript_asr derived record for ASR, or the json3 preserved file for
+    # caption), populate the record's lineage fields IN PLACE so a downstream agent
+    # can resolve the exact source consumed -- closing the same-shortcode ambiguity.
+    # AR-01: these are top-level header-shaped fields, never a nested silver_lineage
+    # block. Re-validated at this write boundary (fail-closed) before persistence.
+    if transcript.source_lineage is not None:
+        payload.update(validate_silver_lineage(transcript.source_lineage).to_record_fields())
+    return payload
+
+
+def write_product_mentions_result_into_lake(
+    *,
+    data_root,
+    transcript: TranscriptInput,
+    result: TranscriptExtractionResult,
+    model: str,
+    record_id: str | None = None,
+    extraction_backend: str,
+    extraction_provenance: dict | None = None,
+) -> dict[str, "object"]:
+    """Append an already-validated product extraction result to the silver lane.
+
+    Provider-backed extraction and operator-assisted extraction share this write boundary so
+    downstream projection reads one product-mention record shape. Re-appending the same
+    record_id is refused by the lake (write-once); callers check completion before writing.
+    """
+    rid = record_id or mentions_record_id(transcript, model)
+    payload = _product_mentions_payload(
+        transcript=transcript,
+        result=result,
+        model=model,
+        extraction_backend=extraction_backend,
+        extraction_provenance=extraction_provenance,
+    )
+    members = {
+        # allow_nan=False: a non-finite float fails closed (the runner records `failed`) rather
+        # than writing a literal NaN/Infinity token that is invalid RFC-8259 JSON.
+        PRODUCT_MENTIONS_LANE: (
+            json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
+        ).encode("utf-8")
+    }
+    return data_root.append_record_set(
+        subtree="derived",
+        raw_anchor=transcript.transcript_anchor,
+        record_id=rid,
+        members=members,
+        completion_lane=PRODUCT_MENTIONS_SET_LANE,
+    )
+
+
 def extract_products_into_lake(
     *,
     data_root,
@@ -147,7 +224,6 @@ def extract_products_into_lake(
     Returns the written member paths. Re-appending the same record_id is refused by the lake
     (write-once); the runner avoids that by checking `is_record_set_complete` first.
     """
-    rid = record_id or mentions_record_id(transcript, model)
     result = extract_transcript_products(
         transcript,
         transport=transport,
@@ -156,39 +232,11 @@ def extract_products_into_lake(
         api_key=api_key,
         max_tokens=max_tokens,
     )
-    payload = {
-        "video_id": transcript.video_id,
-        "transcript_anchor": transcript.transcript_anchor,
-        "transcript_source_key": transcript.transcript_source_key,
-        "source_route": transcript.source_route,
-        "asr_record_id": transcript.asr_record_id,
-        "transcript_source": transcript.transcript_source,
-        "model": model,
-        "rubric_version": EXTRACTOR_RUBRIC_VERSION,
-        "mention_count": len(result.mentions),
-        "rejected_count": len(result.rejected),
-        "mentions": [m.model_dump(mode="json") for m in result.mentions],
-        "rejected": result.rejected,
-    }
-    # Silver lineage (additive): when the runner threaded the exact consumed source
-    # (the transcript_asr derived record for ASR, or the json3 preserved file for
-    # caption), populate the record's lineage fields IN PLACE so a downstream agent
-    # can resolve the exact source consumed -- closing the same-shortcode ambiguity.
-    # AR-01: these are top-level header-shaped fields, never a nested silver_lineage
-    # block. Re-validated at this write boundary (fail-closed) before persistence.
-    if transcript.source_lineage is not None:
-        payload.update(validate_silver_lineage(transcript.source_lineage).to_record_fields())
-    members = {
-        # allow_nan=False: a non-finite float fails closed (the runner records `failed`) rather
-        # than writing a literal NaN/Infinity token that is invalid RFC-8259 JSON.
-        PRODUCT_MENTIONS_LANE: (
-            json.dumps(payload, ensure_ascii=False, indent=2, allow_nan=False) + "\n"
-        ).encode("utf-8")
-    }
-    return data_root.append_record_set(
-        subtree="derived",
-        raw_anchor=transcript.transcript_anchor,
-        record_id=rid,
-        members=members,
-        completion_lane=PRODUCT_MENTIONS_SET_LANE,
+    return write_product_mentions_result_into_lake(
+        data_root=data_root,
+        transcript=transcript,
+        result=result,
+        model=model,
+        record_id=record_id,
+        extraction_backend="provider_api",
     )

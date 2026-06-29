@@ -355,6 +355,43 @@ def _deep_capture_transcript_candidates(data_root) -> list[tuple[TranscriptInput
     return candidates
 
 
+def discover_transcript_candidates(data_root) -> list[tuple[TranscriptInput | None, dict | None]]:
+    """Return all IG transcript candidates with discovery failures isolated per source.
+
+    The order matches ``run_extraction``: committed packet-backed transcripts first, then
+    completed deep-capture transcripts. A candidate is ``(transcript, None)``; a damaged
+    source is ``(None, failure_dict)`` so callers can surface the failure without aborting.
+    """
+    candidates: list[tuple[TranscriptInput | None, dict | None]] = []
+    for packet_id in _candidate_packet_ids(data_root):
+        try:
+            transcripts = _transcripts_for_packet(data_root, packet_id)
+        except Exception as exc:  # noqa: BLE001 - corrupt packet discovery must not abort the poll
+            candidates.append(
+                (
+                    None,
+                    {
+                        "packet_id": packet_id,
+                        "status": "discovery_failed",
+                        "error": f"{type(exc).__name__}: {exc}"[:200],
+                    },
+                )
+            )
+            continue
+        candidates.extend((transcript, None) for transcript in transcripts)
+    candidates.extend(_deep_capture_transcript_candidates(data_root))
+    return candidates
+
+
+def iter_transcripts(data_root) -> list[TranscriptInput]:
+    """Return transcript candidates only, dropping isolated discovery failures."""
+    return [
+        transcript
+        for transcript, failure in discover_transcript_candidates(data_root)
+        if transcript is not None and failure is None
+    ]
+
+
 def _mentions_set_state(data_root, transcript: TranscriptInput, model: str) -> str:
     rid = mentions_record_id(transcript, model)
     if data_root.is_record_set_complete(
@@ -428,26 +465,7 @@ def run_extraction(
     dict per packet/transcript.
     """
     results: list[dict] = []
-    for packet_id in _candidate_packet_ids(data_root):
-        try:
-            transcripts = _transcripts_for_packet(data_root, packet_id)
-        except Exception as exc:  # noqa: BLE001 - a corrupt packet -> discovery_failed, batch continues
-            results.append(
-                {"packet_id": packet_id, "status": "discovery_failed", "error": f"{type(exc).__name__}: {exc}"[:200]}
-            )
-            continue
-        for transcript in transcripts:
-            _extract_one_transcript(
-                data_root=data_root,
-                transcript=transcript,
-                transport=transport,
-                provider=provider,
-                model=model,
-                api_key=api_key,
-                max_tokens=max_tokens,
-                results=results,
-            )
-    for transcript, failure in _deep_capture_transcript_candidates(data_root):
+    for transcript, failure in discover_transcript_candidates(data_root):
         if failure is not None:
             results.append(failure)
             continue
