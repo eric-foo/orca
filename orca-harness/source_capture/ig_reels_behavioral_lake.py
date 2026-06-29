@@ -13,6 +13,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
+from cleaning.transcript_product_lake import (
+    PRODUCT_MENTIONS_LANE,
+    PRODUCT_MENTIONS_SET_LANE,
+)
 from source_capture.ig_reels_behavioral_projection import project_ig_reels_behavioral_item
 from source_capture.ig_reels_deep_capture_lake import (
     AUDIENCE_COMMENTS_LANE,
@@ -29,8 +33,8 @@ _IG_SOURCE_FAMILY = "instagram_creator"
 _IG_AUDIO_SURFACE = "ig_reels_audio"
 _IG_GRID_SURFACE = "ig_reels_grid_dom_passive_json"
 _ASR_LANE = "transcript_asr"
-_PRODUCT_MENTIONS_LANE = "silver__cleaning__product_mentions"
-_PRODUCT_MENTIONS_SET_LANE = "silver__cleaning__product_mentions__set"
+_PRODUCT_MENTIONS_LANE = PRODUCT_MENTIONS_LANE
+_PRODUCT_MENTIONS_SET_LANE = PRODUCT_MENTIONS_SET_LANE
 
 
 @dataclass
@@ -96,27 +100,34 @@ def _collect_ig_reels_behavioral_inputs(
         data_root.rebuild_availability()
 
     index: dict[str, _BehavioralInputs] = {}
-    _collect_packet_backed_inputs(data_root, index)
+    global_residuals: list[str] = []
+    _collect_packet_backed_inputs(data_root, index, global_residuals)
     _collect_deep_capture_inputs(data_root, index)
-    _collect_product_extraction_results(data_root, index)
+    _collect_product_extraction_results(data_root, index, global_residuals)
 
     for shortcode in target_shortcodes:
         index.setdefault(shortcode, _BehavioralInputs())
+    _append_global_residuals_to_index(index, target_shortcodes, global_residuals)
     return index
 
 
-def _collect_packet_backed_inputs(data_root: Any, index: dict[str, _BehavioralInputs]) -> None:
+def _collect_packet_backed_inputs(
+    data_root: Any,
+    index: dict[str, _BehavioralInputs],
+    global_residuals: list[str],
+) -> None:
     for packet_id in data_root.list_available(source_family=_IG_SOURCE_FAMILY):
         try:
             loaded = data_root.load_raw_packet(packet_id)
-        except Exception:  # noqa: BLE001 - discovery failure is not target-attributable here
+        except Exception:  # noqa: BLE001 - preserve target-visible discovery failure below
+            _append_once(global_residuals, f"ig_lake_raw_packet_discovery_failed:{packet_id}")
             continue
         manifest = loaded.manifest
         surface = manifest.get("source_surface")
         if surface == _IG_AUDIO_SURFACE:
-            _collect_audio_packet_inputs(data_root, packet_id, loaded, index)
+            _collect_audio_packet_inputs(data_root, packet_id, loaded, index, global_residuals)
         elif surface == _IG_GRID_SURFACE:
-            _collect_grid_packet_inputs(loaded, index)
+            _collect_grid_packet_inputs(packet_id, loaded, index, global_residuals)
 
 
 def _collect_audio_packet_inputs(
@@ -124,10 +135,18 @@ def _collect_audio_packet_inputs(
     packet_id: str,
     loaded: Any,
     index: dict[str, _BehavioralInputs],
+    global_residuals: list[str],
 ) -> None:
     meta = _capture_metadata(loaded)
     meta_shortcode = _string_or_none(meta.get("platform_shortcode"))
     for record_id, record in _json_records_in_lane(data_root, raw_anchor=packet_id, lane=_ASR_LANE):
+        if record is None:
+            residual = f"ig_lake_asr_record_unreadable:{packet_id}:{record_id}"
+            if meta_shortcode is None:
+                _append_once(global_residuals, residual)
+            else:
+                _append_adapter_residual(index, meta_shortcode, residual)
+            continue
         record.setdefault("record_id", record_id)
         record.setdefault("transcript_anchor", packet_id)
         if meta_shortcode is not None:
@@ -138,18 +157,25 @@ def _collect_audio_packet_inputs(
         record["provenance"] = provenance
         shortcode = _string_or_none(record.get("shortcode")) or _string_or_none(record.get("video_id"))
         if shortcode is None:
+            _append_once(global_residuals, f"ig_lake_asr_record_shortcode_absent:{packet_id}:{record_id}")
             continue
         index.setdefault(shortcode, _BehavioralInputs()).standalone_audio_transcript_records.append(record)
 
 
-def _collect_grid_packet_inputs(loaded: Any, index: dict[str, _BehavioralInputs]) -> None:
+def _collect_grid_packet_inputs(
+    packet_id: str,
+    loaded: Any,
+    index: dict[str, _BehavioralInputs],
+    global_residuals: list[str],
+) -> None:
     try:
-        packet = SourceCapturePacket(**loaded.manifest)
+        packet = SourceCapturePacket.model_validate(loaded.manifest)
         projection = build_ig_reels_grid_projection(
             packet=packet,
             raw_file_bytes_by_file_id=loaded.bodies,
         )
-    except Exception:  # noqa: BLE001 - malformed grid packets cannot be target-attributed safely
+    except Exception:  # noqa: BLE001 - preserve target-visible grid projection failure below
+        _append_once(global_residuals, f"ig_lake_grid_projection_failed:{packet_id}")
         return
     for row in projection.rows:
         row_data = _model_dump(row)
@@ -199,13 +225,19 @@ def _collect_deep_capture_inputs(data_root: Any, index: dict[str, _BehavioralInp
             bucket.deep_capture_transcript_records.append(transcript_record)
 
 
-def _collect_product_extraction_results(data_root: Any, index: dict[str, _BehavioralInputs]) -> None:
+def _collect_product_extraction_results(
+    data_root: Any,
+    index: dict[str, _BehavioralInputs],
+    global_residuals: list[str],
+) -> None:
     for anchor, record_id, record_path in _iter_derived_lane_records(data_root, _PRODUCT_MENTIONS_LANE):
         body = _read_json_file(record_path)
         if not isinstance(body, dict):
+            _append_once(global_residuals, f"ig_lake_product_mentions_record_unreadable:{anchor}:{record_id}")
             continue
-        shortcode = _string_or_none(body.get("video_id"))
+        shortcode = _string_or_none(body.get("video_id")) or _string_or_none(body.get("shortcode"))
         if shortcode is None:
+            _append_once(global_residuals, f"ig_lake_product_mentions_record_video_id_absent:{anchor}:{record_id}")
             continue
         try:
             complete = data_root.is_record_set_complete(
@@ -258,6 +290,24 @@ def _project_from_inputs(
     return projection
 
 
+def _append_adapter_residual(index: dict[str, _BehavioralInputs], shortcode: str, residual: str) -> None:
+    _append_once(index.setdefault(shortcode, _BehavioralInputs()).adapter_residuals, residual)
+
+
+def _append_global_residuals_to_index(
+    index: dict[str, _BehavioralInputs],
+    target_shortcodes: Sequence[str],
+    residuals: Sequence[str],
+) -> None:
+    if not residuals:
+        return
+    shortcodes = tuple(target_shortcodes) or tuple(index)
+    for shortcode in shortcodes:
+        bucket = index.setdefault(shortcode, _BehavioralInputs())
+        for residual in residuals:
+            _append_once(bucket.adapter_residuals, residual)
+
+
 def _capture_metadata(loaded: Any) -> dict[str, Any]:
     files = _file_paths(loaded.manifest)
     body = _body_ending_with(loaded, files, "capture_metadata.json")
@@ -267,17 +317,16 @@ def _capture_metadata(loaded: Any) -> dict[str, Any]:
     return parsed if isinstance(parsed, dict) else {}
 
 
-def _json_records_in_lane(data_root: Any, *, raw_anchor: str, lane: str) -> list[tuple[str, dict[str, Any]]]:
+def _json_records_in_lane(data_root: Any, *, raw_anchor: str, lane: str) -> list[tuple[str, dict[str, Any] | None]]:
     lane_dir = data_root.lane_dir(subtree="derived", raw_anchor=raw_anchor, lane=lane)
     if not lane_dir.is_dir():
         return []
-    out: list[tuple[str, dict[str, Any]]] = []
+    out: list[tuple[str, dict[str, Any] | None]] = []
     for record_file in sorted(lane_dir.iterdir()):
         if not record_file.is_file():
             continue
         body = _read_json_file(record_file)
-        if isinstance(body, dict):
-            out.append((record_file.name, dict(body)))
+        out.append((record_file.name, dict(body) if isinstance(body, dict) else None))
     return out
 
 
