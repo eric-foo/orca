@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import pytest
 
 from data_lake.catalog import CATALOG_RELATIVE_ROOT, inspect_catalog, rebuild_catalog
-from data_lake.root import DataLakeRoot, raw_shard
+from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
 import runners.run_data_lake_catalog as catalog_runner
 from source_capture.models import known_fact
 from source_capture.writer import write_local_source_capture_packet
@@ -169,6 +170,91 @@ def test_rebuild_catalog_replaces_orphaned_generated_files_byte_identically(tmp_
     assert rebuild_catalog(root)["status"] == "rebuilt"
     assert not orphan.exists()
     assert _snapshot(catalog_root) == before
+
+
+def test_rebuild_catalog_rejects_symlinked_catalog_component(tmp_path: Path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_reddit_packet(root, tmp_path)
+
+    bronze_root = root.path / "indexes" / "derived_retrieval" / "bronze_catalog"
+    if bronze_root.exists():
+        shutil.rmtree(bronze_root)
+    outside = tmp_path / "outside-catalog"
+    outside.mkdir()
+    try:
+        bronze_root.symlink_to(outside, target_is_directory=True)
+    except (NotImplementedError, OSError) as exc:
+        pytest.skip(f"directory symlink unavailable on this platform: {exc}")
+
+    with pytest.raises(DataLakeRootError, match="symlinked component"):
+        rebuild_catalog(root)
+
+
+def test_inspect_catalog_reports_generated_file_read_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_reddit_packet(root, tmp_path)
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+
+    unreadable = _catalog_root(root) / "all_packets.jsonl"
+    original_read_bytes = Path.read_bytes
+
+    def fake_read_bytes(path: Path) -> bytes:
+        if path == unreadable:
+            raise OSError("simulated permission denied")
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", fake_read_bytes)
+
+    report = inspect_catalog(root)
+
+    assert report["status"] == "issues_found"
+    assert "all_packets.jsonl" in report["missing_files"]
+    assert any(
+        failure["path"].endswith("all_packets.jsonl")
+        and "simulated permission denied" in failure["error"]
+        for failure in report["catalog_read_failures"]
+    )
+
+
+def test_catalog_runner_reports_root_resolution_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    def fake_resolve(*, explicit=None, **_kwargs):
+        assert explicit == str(tmp_path / "missing")
+        raise DataLakeRootError("missing root")
+
+    monkeypatch.setattr(catalog_runner.DataLakeRoot, "resolve", staticmethod(fake_resolve))
+
+    assert catalog_runner.main(["--data-root", str(tmp_path / "missing")]) == 2
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "error"
+    assert "missing root" in report["error"]
+
+
+def test_catalog_runner_reports_corrupt_raw_verified_read_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    result = _write_reddit_packet(root, tmp_path)
+    packet_dir = Path(result.output_directory)
+    manifest = json.loads((packet_dir / "manifest.json").read_text(encoding="utf-8"))
+    preserved_path = packet_dir / manifest["preserved_files"][0]["relative_packet_path"]
+    body = preserved_path.read_bytes()
+    first_byte = b"0" if body[:1] != b"0" else b"1"
+    preserved_path.write_bytes(first_byte + body[1:])
+
+    def fake_resolve(*, explicit=None, **_kwargs):
+        assert explicit == str(root.path)
+        return root
+
+    monkeypatch.setattr(catalog_runner.DataLakeRoot, "resolve", staticmethod(fake_resolve))
+
+    assert catalog_runner.main(["--data-root", str(root.path), "--rebuild"]) == 2
+    report = json.loads(capsys.readouterr().out)
+    assert report["status"] == "error"
+    assert "sha256 mismatch" in report["error"]
 
 
 def test_catalog_runner_inspects_and_rebuilds(

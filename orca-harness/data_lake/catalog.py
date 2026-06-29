@@ -54,6 +54,7 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
     """Rebuild the generated Bronze catalog from verified committed raw packets."""
     entries = _build_entries(root)
     snapshot = _catalog_snapshot(entries)
+    root._reverify()
     catalog_root = _catalog_root(root)
     if catalog_root.exists():
         shutil.rmtree(catalog_root)
@@ -72,7 +73,7 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
     expected = _build_entries(root)
     expected_snapshot = _catalog_snapshot(expected)
     catalog_root = _catalog_root(root)
-    actual_snapshot = _read_snapshot(catalog_root)
+    actual_snapshot, read_failures = _read_snapshot(root, catalog_root)
     missing_files = sorted(set(expected_snapshot) - set(actual_snapshot))
     orphaned_files = sorted(set(actual_snapshot) - set(expected_snapshot))
     stale_files = sorted(
@@ -83,7 +84,6 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
 
     by_packet = catalog_root / "by_packet"
     existing: dict[str, dict[str, Any]] = {}
-    read_failures: list[dict[str, str]] = []
     if by_packet.is_dir():
         for path in sorted(by_packet.glob("*.json")):
             try:
@@ -391,14 +391,22 @@ def _write_snapshot(root: Path, snapshot: dict[str, bytes]) -> None:
         path.write_bytes(body)
 
 
-def _read_snapshot(root: Path) -> dict[str, bytes]:
-    if not root.is_dir():
-        return {}
-    return {
-        path.relative_to(root).as_posix(): path.read_bytes()
-        for path in sorted(root.rglob("*"))
-        if path.is_file()
-    }
+def _read_snapshot(
+    root: DataLakeRoot, catalog_root: Path
+) -> tuple[dict[str, bytes], list[dict[str, str]]]:
+    if not catalog_root.is_dir():
+        return {}, []
+    snapshot: dict[str, bytes] = {}
+    read_failures: list[dict[str, str]] = []
+    for path in sorted(catalog_root.rglob("*")):
+        if not path.is_file():
+            continue
+        relpath = path.relative_to(catalog_root).as_posix()
+        try:
+            snapshot[relpath] = path.read_bytes()
+        except OSError as exc:
+            read_failures.append({"path": _rel(root, path), "error": str(exc)})
+    return snapshot, read_failures
 
 
 def _json_bytes(payload: dict[str, Any]) -> bytes:
@@ -410,7 +418,7 @@ def _jsonl_bytes(rows: Iterable[dict[str, Any]]) -> bytes:
 
 
 def _catalog_root(root: DataLakeRoot) -> Path:
-    return root.path.joinpath(*CATALOG_RELATIVE_ROOT)
+    return root._within(*CATALOG_RELATIVE_ROOT)
 
 
 def _rel(root: DataLakeRoot, path: Path) -> str:
