@@ -2,22 +2,40 @@
 
 The verified read half lives on ``DataLakeRoot``. This adapter reads a committed
 Fragrantica raw packet by key, rebuilds the mechanical Fragrantica projection,
-builds the source-family Cleaning packet, and appends one lane-owned derived
-record at ``derived/<anchor_shard>/<packet_id>/cleaning_fragrantica/<record_id>.json``.
+builds the source-family Cleaning packet, and appends two kinds of derived
+record:
 
-Boundary: this persists Cleaning ledger output only. It does not write lake core
-fields, change raw, decide sentiment, infer demand, bind Evidence Units, or make
-Judgment claims.
+1. one raw-anchored **Cleaning audit pack** (``schema_version`` =
+   ``cleaning_audit_pack_v0``, ``record_family`` = ``processing_audit``) under
+   lane ``cleaning_fragrantica_audit`` carrying the full transform ledger; and
+2. zero or more **post-cleaned Silver** ``TextObservation`` records under lane
+   ``cleaning_fragrantica_silver`` (one per review-card handle) that carry only
+   the cleaned review text plus a one-way provenance pointer back to the audit
+   pack.
+
+Boundary: the full transform ledger is processing evidence, not a Silver fact
+record (Silver ``record_kind`` stays closed to entity/relationship/observation).
+The audit pack's ``record_family``/``audit_kind`` are local descriptive fields of
+``cleaning_audit_pack_v0`` only and carry no Data-Lake-wide dispatch authority
+unless a generic derived-record envelope is separately ratified. This adapter
+does not write lake core fields, change raw, decide sentiment, infer demand, bind
+Evidence Units, or make Judgment claims.
 """
 from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from cleaning.fragrantica import build_fragrantica_cleaning_packet
-from cleaning.models import CLEANING_CORE_VERSION, REQUIRED_NON_CLAIMS, CleaningPacket
+from cleaning.models import (
+    CLEANING_CORE_VERSION,
+    REQUIRED_NON_CLAIMS,
+    CleaningInputHandle,
+    CleaningPacket,
+)
 from harness_utils import generate_ulid
 from source_capture.fragrantica_projection import (
     FRAGRANTICA_PROJECTION_CERTIFICATION,
@@ -31,11 +49,40 @@ if TYPE_CHECKING:
     from data_lake.root import DataLakeRoot
 
 
-FRAGRANTICA_CLEANING_LANE = "cleaning_fragrantica"
-FRAGRANTICA_CLEANING_RECORD_SCHEMA_VERSION = "fragrantica_cleaning_packet_record_v0"
+FRAGRANTICA_CLEANING_AUDIT_LANE = "cleaning_fragrantica_audit"
+FRAGRANTICA_CLEANING_SILVER_LANE = "cleaning_fragrantica_silver"
+CLEANING_AUDIT_PACK_SCHEMA_VERSION = "cleaning_audit_pack_v0"
 SILVER_VAULT_RECORD_SCHEMA_VERSION = "silver_vault_record_v0"
+FRAGRANTICA_AUDIT_PACK_PRODUCER_SCHEMA_VERSION = "fragrantica_cleaning_audit_pack_v0"
+FRAGRANTICA_SILVER_PRODUCER_SCHEMA_VERSION = "fragrantica_cleaning_silver_textobservation_v0"
+FRAGRANTICA_CLEANING_METHOD_ID = "fragrantica_cleaning_method_v0"
+REVIEW_TEXT_NORMALIZATION_RULE = "fragrantica_review_text_whitespace_normalization"
+
+# Reviewer-driven anti-lock-in guard (FCR-04 closure): the audit pack's
+# discriminator fields are local to cleaning_audit_pack_v0 and confer no lake-wide
+# dispatch authority until a generic derived-record envelope is ratified.
+DISCRIMINATOR_LOCALITY_NON_CLAIM = (
+    "record_family_and_audit_kind_local_to_cleaning_audit_pack_v0_no_lake_wide_dispatch"
+)
+
 _CONTENT_HASH_BASIS = "canonical_json_excluding_content_hash"
-_PRODUCER_ID = "orca-harness.cleaning.fragrantica_lake.derive_fragrantica_cleaning_into_lake"
+_AUDIT_PRODUCER_ID = (
+    "orca-harness.cleaning.fragrantica_lake.derive_fragrantica_cleaning_into_lake#audit"
+)
+_SILVER_PRODUCER_ID = (
+    "orca-harness.cleaning.fragrantica_lake.derive_fragrantica_cleaning_into_lake#silver"
+)
+
+
+@dataclass(frozen=True)
+class FragranticaCleaningLakeResult:
+    """Outputs of one Fragrantica Cleaning derivation into the lake."""
+
+    cleaning_packet: CleaningPacket
+    audit_record: dict[str, Any]
+    audit_path: Path
+    silver_records: list[dict[str, Any]]
+    silver_paths: list[Path]
 
 
 def derive_fragrantica_cleaning_into_lake(
@@ -43,11 +90,13 @@ def derive_fragrantica_cleaning_into_lake(
     data_root: "DataLakeRoot",
     packet_id: str,
     record_id: str | None = None,
-) -> tuple[CleaningPacket, Path]:
-    """Build and append the Fragrantica Cleaning packet for a committed raw packet.
+) -> FragranticaCleaningLakeResult:
+    """Build and append the Fragrantica Cleaning audit pack + post-cleaned Silver.
 
-    Re-derive = a fresh sibling record. A caller-supplied ``record_id`` is still
-    create-only through ``DataLakeRoot.append_record``.
+    Re-derive = a fresh audit-pack sibling. A caller-supplied ``record_id`` names
+    the audit pack and is still create-only through ``DataLakeRoot.append_record``;
+    post-cleaned Silver records always use fresh ids. The audit pack is appended
+    first so its content hash can be threaded into each Silver provenance pointer.
     """
     loaded = data_root.load_raw_packet(packet_id)
     packet = SourceCapturePacket.model_validate(loaded.manifest)
@@ -57,49 +106,80 @@ def derive_fragrantica_cleaning_into_lake(
     )
     cleaning_packet = build_fragrantica_cleaning_packet(projection)
 
-    record = record_id if record_id is not None else generate_ulid()
-    record_name = f"{record}.json"
-    payload = fragrantica_cleaning_record_payload(
+    audit_seed = record_id if record_id is not None else generate_ulid()
+    audit_record_name = f"{audit_seed}.json"
+    audit_record = fragrantica_cleaning_audit_pack_payload(
         packet=packet,
         cleaning_packet=cleaning_packet,
-        record_id=record_name,
+        record_id=audit_record_name,
     )
-    path = data_root.append_record(
+    audit_path = data_root.append_record(
         subtree="derived",
         raw_anchor=packet_id,
-        lane=FRAGRANTICA_CLEANING_LANE,
-        record_id=record_name,
-        data=_json_bytes(payload),
+        lane=FRAGRANTICA_CLEANING_AUDIT_LANE,
+        record_id=audit_record_name,
+        data=_json_bytes(audit_record),
     )
-    return cleaning_packet, path
+
+    silver_records = fragrantica_post_cleaned_silver_records(
+        packet=packet,
+        cleaning_packet=cleaning_packet,
+        audit_lane=FRAGRANTICA_CLEANING_AUDIT_LANE,
+        audit_record_id=audit_record_name,
+        audit_content_hash=audit_record["content_hash"],
+    )
+    silver_paths: list[Path] = []
+    for silver_record in silver_records:
+        silver_paths.append(
+            data_root.append_record(
+                subtree="derived",
+                raw_anchor=packet_id,
+                lane=FRAGRANTICA_CLEANING_SILVER_LANE,
+                record_id=silver_record["record_id"],
+                data=_json_bytes(silver_record),
+            )
+        )
+
+    return FragranticaCleaningLakeResult(
+        cleaning_packet=cleaning_packet,
+        audit_record=audit_record,
+        audit_path=audit_path,
+        silver_records=silver_records,
+        silver_paths=silver_paths,
+    )
 
 
-def fragrantica_cleaning_record_payload(
+def fragrantica_cleaning_audit_pack_payload(
     *,
     packet: SourceCapturePacket,
     cleaning_packet: CleaningPacket,
     record_id: str,
 ) -> dict[str, Any]:
-    """Return the Silver-compatible record payload before lake append."""
+    """Return the Cleaning audit-pack record payload before lake append.
+
+    This is a derived processing-audit sibling, not a Silver fact record: it
+    carries no ``record_kind`` and is never a Silver Vault envelope.
+    """
     capture_time = _known_capture_time(packet)
     record: dict[str, Any] = {
+        "schema_version": CLEANING_AUDIT_PACK_SCHEMA_VERSION,
+        "record_family": "processing_audit",
+        "audit_kind": "cleaning_transform_audit",
         "record_id": record_id,
         "raw_anchor": packet.packet_id,
-        "lane_namespace": FRAGRANTICA_CLEANING_LANE,
-        "producer_id": _PRODUCER_ID,
-        "schema_version": SILVER_VAULT_RECORD_SCHEMA_VERSION,
-        "producer_schema_version": FRAGRANTICA_CLEANING_RECORD_SCHEMA_VERSION,
+        "lane_namespace": FRAGRANTICA_CLEANING_AUDIT_LANE,
+        "producer_id": _AUDIT_PRODUCER_ID,
+        "producer_schema_version": FRAGRANTICA_AUDIT_PACK_PRODUCER_SCHEMA_VERSION,
         "content_hash": "",
         "content_hash_basis": _CONTENT_HASH_BASIS,
-        "record_kind": "observation",
-        "payload_kind": "FragranticaCleaningPacket",
-        "producer_row_kind": "fragrantica_cleaning_packet",
         "source_family": packet.source_family,
         "source_surface": packet.source_surface,
-        "observed_at": capture_time,
         "captured_at": capture_time,
-        "raw_refs": _raw_refs(cleaning_packet),
-        "derived_refs": [],
+        "input_refs": {
+            "raw_refs": _raw_refs(cleaning_packet),
+            "projection_refs": _projection_refs(cleaning_packet),
+            "ecr_refs": _ecr_refs(cleaning_packet),
+        },
         "coverage": _coverage(cleaning_packet),
         "payload": {
             "cleaning_core_version": CLEANING_CORE_VERSION,
@@ -118,6 +198,8 @@ def fragrantica_cleaning_record_payload(
                 "not_evidence_unit_binding",
                 "not_judgment",
                 "not_sentiment_analysis",
+                "not_silver_fact",
+                DISCRIMINATOR_LOCALITY_NON_CLAIM,
             }
         ),
     }
@@ -125,10 +207,129 @@ def fragrantica_cleaning_record_payload(
     return record
 
 
+def fragrantica_post_cleaned_silver_records(
+    *,
+    packet: SourceCapturePacket,
+    cleaning_packet: CleaningPacket,
+    audit_lane: str,
+    audit_record_id: str,
+    audit_content_hash: str,
+) -> list[dict[str, Any]]:
+    """Return one post-cleaned Silver ``TextObservation`` per review-card handle.
+
+    The cleaned review text is the whitespace-normalized ``transformed_value`` of
+    the review-text normalization ledger entry. Each record links back to the
+    audit pack by lane namespace, record id, and content hash.
+    """
+    capture_time = _known_capture_time(packet)
+    handle_by_id = {handle.handle_id: handle for handle in cleaning_packet.handles}
+    records: list[dict[str, Any]] = []
+    for entry in cleaning_packet.transform_ledger:
+        if entry.transform.method_or_rule != REVIEW_TEXT_NORMALIZATION_RULE:
+            continue
+        cleaned_text = entry.transform.transformed_value
+        handle = handle_by_id.get(entry.input_handle_id)
+        if cleaned_text is None or handle is None:
+            continue
+        records.append(
+            _post_cleaned_silver_record(
+                packet=packet,
+                handle=handle,
+                cleaned_text=cleaned_text,
+                record_id=f"{generate_ulid()}.json",
+                capture_time=capture_time,
+                audit_lane=audit_lane,
+                audit_record_id=audit_record_id,
+                audit_content_hash=audit_content_hash,
+            )
+        )
+    return records
+
+
+def _post_cleaned_silver_record(
+    *,
+    packet: SourceCapturePacket,
+    handle: CleaningInputHandle,
+    cleaned_text: str,
+    record_id: str,
+    capture_time: str,
+    audit_lane: str,
+    audit_record_id: str,
+    audit_content_hash: str,
+) -> dict[str, Any]:
+    record: dict[str, Any] = {
+        "record_id": record_id,
+        "raw_anchor": packet.packet_id,
+        "lane_namespace": FRAGRANTICA_CLEANING_SILVER_LANE,
+        "producer_id": _SILVER_PRODUCER_ID,
+        "schema_version": SILVER_VAULT_RECORD_SCHEMA_VERSION,
+        "producer_schema_version": FRAGRANTICA_SILVER_PRODUCER_SCHEMA_VERSION,
+        "content_hash": "",
+        "content_hash_basis": _CONTENT_HASH_BASIS,
+        "record_kind": "observation",
+        "payload_kind": "TextObservation",
+        "producer_row_kind": "fragrantica_review_body_text",
+        "source_family": packet.source_family,
+        "source_surface": packet.source_surface,
+        "observed_at": capture_time,
+        "captured_at": capture_time,
+        "raw_refs": [_handle_raw_ref(handle)],
+        # Standard Silver-header lineage: this record is generated from a prior
+        # derived record (the audit pack), so the link lives here, not a sidecar.
+        "derived_refs": [
+            {
+                "edge_type": "derived_from_record",
+                "lane_namespace": audit_lane,
+                "record_id": audit_record_id,
+                "content_hash": audit_content_hash,
+                "content_hash_basis": _CONTENT_HASH_BASIS,
+            }
+        ],
+        "payload": {
+            "observation": {
+                "subject": _silver_subject(handle),
+                "text_artifact_type": "review_body",
+                "text_value": cleaned_text,
+                "text_hash": f"sha256:{hashlib.sha256(cleaned_text.encode('utf-8')).hexdigest()}",
+                "text_posture": {
+                    "kind": "observed",
+                    "reason_code": None,
+                    "reason_detail": None,
+                },
+                "coverage_window": {"start": None, "end": None},
+            }
+        },
+        "provenance": {
+            "cleaning_method_id": FRAGRANTICA_CLEANING_METHOD_ID,
+        },
+        "non_claims": sorted(
+            {
+                "not_archive_completeness",
+                "not_demand_signal",
+                "not_judgment",
+                "not_sentiment_analysis",
+            }
+        ),
+    }
+    record["content_hash"] = f"sha256:{_content_hash(record)}"
+    return record
+
+
+def _silver_subject(handle: CleaningInputHandle) -> dict[str, Any]:
+    """Minimal source-visible subject; omit fields that are not present."""
+    subject: dict[str, Any] = {
+        "review_handle_id": handle.handle_id,
+        "source_surface": handle.source_surface,
+    }
+    if handle.projection_ref is not None:
+        subject["review_row_id"] = handle.projection_ref.row_id
+    return subject
+
+
 def _known_capture_time(packet: SourceCapturePacket) -> str:
     if packet.timing.capture_time.status != VisibleFactStatus.KNOWN or not packet.timing.capture_time.value:
         raise ValueError(
-            "Fragrantica Cleaning observation records require a known capture_time "
+            "Fragrantica Cleaning lake records require a known capture_time "
             "for observed_at and captured_at."
         )
     return packet.timing.capture_time.value
@@ -159,27 +360,52 @@ def _coverage(cleaning_packet: CleaningPacket) -> dict[str, Any]:
     }
 
 
+def _handle_raw_ref(handle: CleaningInputHandle) -> dict[str, str | None]:
+    anchor = handle.raw_anchor
+    return {
+        "packet_id": anchor.packet_id,
+        "slice_id": anchor.slice_id,
+        "file_id": anchor.file_id,
+        "relative_packet_path": anchor.relative_packet_path,
+        "sha256": anchor.sha256,
+        "hash_basis": anchor.hash_basis,
+    }
+
+
 def _raw_refs(cleaning_packet: CleaningPacket) -> list[dict[str, str | None]]:
     refs: dict[tuple[str | None, ...], dict[str, str | None]] = {}
     for handle in cleaning_packet.handles:
-        anchor = handle.raw_anchor
-        key = (
-            anchor.packet_id,
-            anchor.slice_id,
-            anchor.file_id,
-            anchor.relative_packet_path,
-            anchor.sha256,
-            anchor.hash_basis,
-        )
-        refs[key] = {
-            "packet_id": anchor.packet_id,
-            "slice_id": anchor.slice_id,
-            "file_id": anchor.file_id,
-            "relative_packet_path": anchor.relative_packet_path,
-            "sha256": anchor.sha256,
-            "hash_basis": anchor.hash_basis,
-        }
+        ref = _handle_raw_ref(handle)
+        key = tuple(ref[field] for field in sorted(ref))
+        refs[key] = ref
     return [refs[key] for key in sorted(refs)]
+
+
+def _projection_refs(cleaning_packet: CleaningPacket) -> list[dict[str, Any]]:
+    return _dedupe_refs(
+        handle.projection_ref.model_dump(mode="json")
+        for handle in cleaning_packet.handles
+        if handle.projection_ref is not None
+    )
+
+
+def _ecr_refs(cleaning_packet: CleaningPacket) -> list[dict[str, Any]]:
+    return _dedupe_refs(
+        handle.ecr_ref.model_dump(mode="json")
+        for handle in cleaning_packet.handles
+        if handle.ecr_ref is not None
+    )
+
+
+def _dedupe_refs(dumps: Any) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for ref in dumps:
+        key = json.dumps(ref, sort_keys=True, separators=(",", ":"))
+        if key not in seen:
+            seen.add(key)
+            out.append(ref)
+    return out
 
 
 def _content_hash(record: dict[str, Any]) -> str:
@@ -206,8 +432,13 @@ def _json_bytes(value: Any) -> bytes:
 
 
 __all__ = [
-    "FRAGRANTICA_CLEANING_LANE",
-    "FRAGRANTICA_CLEANING_RECORD_SCHEMA_VERSION",
+    "CLEANING_AUDIT_PACK_SCHEMA_VERSION",
+    "DISCRIMINATOR_LOCALITY_NON_CLAIM",
+    "FRAGRANTICA_CLEANING_AUDIT_LANE",
+    "FRAGRANTICA_CLEANING_METHOD_ID",
+    "FRAGRANTICA_CLEANING_SILVER_LANE",
+    "FragranticaCleaningLakeResult",
     "derive_fragrantica_cleaning_into_lake",
-    "fragrantica_cleaning_record_payload",
+    "fragrantica_cleaning_audit_pack_payload",
+    "fragrantica_post_cleaned_silver_records",
 ]
