@@ -450,7 +450,7 @@ nickname: "crawling graph." The runner is
 | `orca/` | Declared top-level product-tree root. Product substance lives under `orca/product/`; runtime remains under `orca-harness/`. |
 | `orca/product/` | Spine-first product tree: product contracts, Core Spine artifacts, proof plans, source/evidence standards, offer, buyer-proof, demand-signal method/surface docs, satellites, case families, and shared product registries. Historical product-docs references resolve through `docs/migration/repo_structure_spine_first_v0/moved_paths_index.md`. |
 | `orca/product/spines/data_lake/` | Data Lake shared-foundation spine (promotion-bound 2026-06-18; contracts + mechanics landed by R2). Owns cross-layer storage contracts (raw-packet preservation, keyed retrievability, Attachment Record, passive Availability Index), the engine/backend selection boundary, and the medallion/gold-readiness contract consumed by projection/ECR/cleaning/judgment. Binding: `docs/decisions/orca_data_lake_spine_promotion_binding_v0.md`. |
-| `orca/product/spines/data_lake/authority/` | Data Lake contracts/invariants: core, storage and engine-selection boundary, Attachment-Record implementation, and medallion/gold-readiness contracts. |
+| `orca/product/spines/data_lake/authority/` | Data Lake contracts/invariants: core, storage and engine-selection boundary, Attachment-Record implementation, medallion/gold-readiness, and capture-propagation classification contracts. |
 | `orca/product/spines/data_lake/workflows/` | Data Lake operational/read-flow docs: the canonical mechanics map (supersedes the retired `shared/data_lake_mechanics/`). |
 | `orca/product/spines/foundation/` | Foundation spine: product contract, IPF/evidence standard, ontology (backbone + cards), demand-read taxonomy, vertical-exploration. |
 | `orca/product/spines/scanning/` | Scanning (discovery-side) spine: open `orca/product/spines/scanning/README.md` first. It routes to the MGT intelligent-walk model, default CSB broad-scout phase, recency/current-state frontier priority, proposed scan-core schema, admissibility/checkability surfaces, and source-family adapters. |
@@ -509,6 +509,8 @@ nickname: "crawling graph." The runner is
 | `docs/workflows/youtube_shorts_creator_index_decision_path_v0.md` | Source-backed workflow decision path for planned creator-ledger infrastructure: keeps the 200-row fragrance ledger as evidence, assigns recurring creator-observation contract ownership to Capture source-family architecture, limits Data Lake to keyed storage/attachment, and defers queryable niche/sub-niche creator views to projection. |
 | `docs/workflows/ig_behavioral_live_validation_receipt_v0.md` | Bounded live IG validation receipt after PR #441/#447: public logged-out grid packet projected through the IG behavioral lake adapter, with standalone-audio residuals and a follow-on no-write deep-capture route diagnostic. Not shared-core, production readiness, canonical F-lake validation, or full durable media validation. |
 | `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine repo submap. Open before enumerating capture owner docs. |
+| `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_capture_propagation_classification_contract_v0.md` | Accepted Data Lake / Capture propagation classification contract: classifies lake semantics, raw packet-runner seams, behavioral projection shape, source-family-local acquisition routes, and downstream residual/completeness semantics into same-class checks. |
+| `docs/decisions/data_lake_capture_propagation_classification_contract_proposal_v0.md` | Prepare-only proposal for narrow Data Lake / Capture propagation classification: generic lake/storage and packet-runner checks, platform behavioral parity checks, source-family-local acquisition routes, and downstream residual/Gold-boundary propagation. Proposal only; not accepted doctrine. |
 | `docs/workflows/ecr_spine_submap_v0.md` | ECR source-side spine repo submap (integrity postures SP-1/2/3/6 + deprecated/dormant Signal Content Record contract). Open before enumerating ECR/SCR owner docs. |
 | `docs/workflows/cleaning_contract_to_code_reconciliation_checklist_v0.md` | Contract-to-code checklist for the bounded Cleaning substrate in `orca-harness/cleaning/` against the Cleaning README/foundation/boundary/projection sources. Retrieval-only; not validation, readiness, or production Cleaning authorization. |
 | `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | Judgment Spine submap. Open before enumerating Judgment owners across `docs/research/judgment-spine/` and `orca/product/spines/judgment/`. |
@@ -928,6 +930,8 @@ direction_change_propagation:
     - "not Source Capture"
     - "not Data Capture"
 ```
+
+Older receipts, when cycled out, are archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.
 
 ## Workstream Status Pointers
 
