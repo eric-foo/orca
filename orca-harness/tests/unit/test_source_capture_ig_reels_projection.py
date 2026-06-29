@@ -4,14 +4,17 @@ import json
 
 import pytest
 
+from data_lake.root import DataLakeRoot, DataLakeRootError
 from source_capture.ig_reels_grid_projection import (
     IG_REELS_PROJECTION_CERTIFICATION,
     IG_REELS_PROJECTION_METHOD,
+    PROJECTION_IG_REELS_GRID_LANE,
     IgProjectionRawAnchor,
     IgProjectionRawRef,
     IgReelsGridProjectionRow,
     build_ig_reels_grid_projection,
     build_ig_reels_grid_projection_from_packet_directory,
+    project_ig_reels_grid_into_lake,
 )
 from source_capture.models import (
     CaptureModeCategory,
@@ -28,6 +31,7 @@ from source_capture.models import (
     not_attempted,
     unknown_with_reason,
 )
+from source_capture.writer import write_local_source_capture_packet
 
 CAPTURE_TIME = "2026-06-22T20:48:29Z"
 SELECTION_POLICY_VERSION = "ig_reels_grid_capture_selection_v0"
@@ -158,6 +162,53 @@ def test_projection_from_directory_certifies_view_only(tmp_path) -> None:
     assert projection.selection_policy_version == SELECTION_POLICY_VERSION
     assert projection.loss_ledger.preserved_metric_rows == len(projection.rows)
 
+
+
+
+def test_project_reels_grid_into_lake_appends_verified_projection(tmp_path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_reels_packet(root, tmp_path)
+
+    projection, derived_path = project_ig_reels_grid_into_lake(
+        data_root=root,
+        packet_id=packet_id,
+        record_id="rec1",
+    )
+
+    assert derived_path == root.path / "derived" / packet_id / PROJECTION_IG_REELS_GRID_LANE / "rec1.json"
+    assert derived_path.is_file()
+    assert projection.packet_id == packet_id
+
+    container = root.find_packet(packet_id)
+    assert container is not None
+    expected = build_ig_reels_grid_projection_from_packet_directory(packet_or_manifest_path=container)
+    expected_bytes = (
+        f"{json.dumps(expected.model_dump(mode='json'), indent=2, sort_keys=True)}\n"
+    ).encode("utf-8")
+    assert derived_path.read_bytes() == expected_bytes
+
+    assert root.load_raw_packet(packet_id).manifest["packet_id"] == packet_id
+
+
+def test_project_reels_grid_rederive_appends_sibling_not_overwrite(tmp_path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_reels_packet(root, tmp_path)
+
+    _, first = project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id)
+    _, second = project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id)
+
+    lane_dir = root.path / "derived" / packet_id / PROJECTION_IG_REELS_GRID_LANE
+    assert first != second
+    assert len(list(lane_dir.glob("*.json"))) == 2
+
+
+def test_project_reels_grid_explicit_record_id_is_create_only(tmp_path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_reels_packet(root, tmp_path)
+
+    project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id, record_id="rec1")
+    with pytest.raises(DataLakeRootError):
+        project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id, record_id="rec1")
 
 def test_projection_carries_present_but_null_json_surface() -> None:
     # web_profile_info joined the shortcode but exposed no video/play count for THIS row;
@@ -474,6 +525,33 @@ def _json_candidate(
         "pinned_on_timeline": None,
         "raw_node_keys_sample": ["shortcode", "video_view_count"],
     }
+
+
+
+
+def _commit_reels_packet(root: DataLakeRoot, tmp_path) -> str:
+    packet, _raw = _reels_packet()
+    capture_path = tmp_path / "ig_reels_grid_capture.json"
+    capture_path.write_bytes(_json_bytes(_capture_payload()))
+    result = write_local_source_capture_packet(
+        data_root=root,
+        input_files=[capture_path],
+        source_family="instagram_creator",
+        source_surface="ig_reels_grid_dom_passive_json",
+        source_locator=known_fact(FINAL_URL),
+        decision_question="creator monitoring",
+        capture_context="logged-out IG public /reels/ grid capture",
+        capture_mode=CaptureModeCategory.AUTOMATED_EXTRACTION,
+        operator_category="ig_reels_grid_cli_operator",
+        source_slices=packet.source_slices,
+        access_posture=known_fact("ig_logged_out_reels_grid_browser_capture"),
+        archive_history_posture=not_attempted("IG reels-grid runner does not query archive services"),
+        media_modality_posture=known_fact("DOM media-anchor text and passive JSON preserved"),
+        re_capture_relationship=not_applicable("no prior source capture packet"),
+        limitations=packet.limitations,
+        receipt_non_claims=["not projection"],
+    )
+    return result.packet.packet_id
 
 
 def _reels_packet(

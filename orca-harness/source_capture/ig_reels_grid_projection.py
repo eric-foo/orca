@@ -29,11 +29,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Literal, Mapping
 from urllib.parse import urlparse
 
 from pydantic import Field, field_validator, model_validator
 
+from harness_utils import generate_ulid
 from schemas.case_models import StrictModel
 from source_capture.ig_projection import (
     IgProjectionRawAnchor,
@@ -58,10 +59,16 @@ from source_capture.models import (
     VisibleFactStatus,
 )
 
+if TYPE_CHECKING:
+    from data_lake.root import DataLakeRoot
+
 
 IG_REELS_PROJECTION_METHOD = "ig_reels_grid_mechanical_projection"
 IG_REELS_PROJECTION_VERSION = "v0"
 IG_REELS_PROJECTION_CERTIFICATION = "view_only; not_cleaned; not_normalized; not_judgment_ready"
+
+# Append-only derived lane namespace for the IG reels-grid projection's Silver record.
+PROJECTION_IG_REELS_GRID_LANE = "projection_ig_reels_grid"
 
 _IG_SOURCE_FAMILY = "instagram_creator"
 _CAPTURE_FILE_BASENAME = "ig_reels_grid_capture.json"
@@ -341,6 +348,35 @@ def write_ig_reels_grid_projection(
     output_path.write_text(_projection_json_text(projection), encoding="utf-8")
     return projection
 
+
+def project_ig_reels_grid_into_lake(
+    *,
+    data_root: "DataLakeRoot",
+    packet_id: str,
+    record_id: str | None = None,
+) -> tuple[IgReelsGridProjectionPacket, Path]:
+    """Project a committed raw IG reels-grid packet into an append-only derived record.
+
+    The packet is read by key through ``DataLakeRoot.load_raw_packet``, so preserved
+    files are re-hashed against the manifest before projection. The derived record
+    is appended at ``derived/<packet_id>/projection_ig_reels_grid/<record-id>.json``.
+    This adds no capture, Cleaning, ECR, Judgment, or creator-profile rollup.
+    """
+    loaded = data_root.load_raw_packet(packet_id)
+    packet = SourceCapturePacket.model_validate(loaded.manifest)
+    projection = build_ig_reels_grid_projection(
+        packet=packet,
+        raw_file_bytes_by_file_id=loaded.bodies,
+    )
+    record = record_id if record_id is not None else generate_ulid()
+    derived_path = data_root.append_record(
+        subtree="derived",
+        raw_anchor=packet_id,
+        lane=PROJECTION_IG_REELS_GRID_LANE,
+        record_id=f"{record}.json",
+        data=_projection_json_text(projection).encode("utf-8"),
+    )
+    return projection, derived_path
 
 def _project_profile_observation(
     *,
@@ -745,7 +781,9 @@ __all__ = [
     "IgReelsGridProjectionPacket",
     "IgReelsGridProjectionRow",
     "IgReelsSurfaceCountCandidate",
+    "PROJECTION_IG_REELS_GRID_LANE",
     "build_ig_reels_grid_projection",
     "build_ig_reels_grid_projection_from_packet_directory",
+    "project_ig_reels_grid_into_lake",
     "write_ig_reels_grid_projection",
 ]
