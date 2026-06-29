@@ -1,3 +1,13 @@
+"""Validate the creator-profile-current structural contract.
+
+This module is the always-on structural and posture floor for the static creator
+profile current view. It validates shape, identity/metric boundary posture,
+rollup coupling, and non-claim guards. It does not rehash source inputs, rebuild
+metric magnitudes from sibling ledgers, query a live lake, or prove
+source-backed numeric truth; fixture rebuild and source-hash freshness checks
+remain separate test concerns until a source-rebuild validator is added.
+"""
+
 from __future__ import annotations
 
 import json

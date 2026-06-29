@@ -4,6 +4,7 @@ from copy import deepcopy
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 
 import pytest
 
@@ -74,6 +75,17 @@ def _metric_seed() -> dict:
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def _git_check_attr(path: Path, attr: str) -> str:
+    relpath = path.relative_to(ROOT).as_posix()
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "check-attr", attr, "--", relpath],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip().rsplit(": ", 1)[-1]
 
 
 def _bad_view_document() -> dict:
@@ -185,6 +197,17 @@ def test_creator_profile_current_source_hashes_are_current() -> None:
 
     assert inputs_by_pointer[account_pointer]["sha256"] == _sha256(ACCOUNT_LEDGER_PATH)
     assert inputs_by_pointer[metric_pointer]["sha256"] == _sha256(METRIC_SEED_PATH)
+
+
+def test_creator_profile_source_input_files_are_lf_repo_text() -> None:
+    source_pointers = {source["source_pointer"] for source in _view()["source_inputs"]}
+    source_pointers.update(source["source_pointer"] for source in _metric_seed()["source_inputs"])
+
+    for source_pointer in sorted(source_pointers):
+        source_path = ROOT / source_pointer.split("#", 1)[0]
+        assert source_path.is_file()
+        assert _git_check_attr(source_path, "text") == "set"
+        assert _git_check_attr(source_path, "eol") == "lf"
 
 
 def test_creator_profile_current_does_not_smuggle_forbidden_scope() -> None:
