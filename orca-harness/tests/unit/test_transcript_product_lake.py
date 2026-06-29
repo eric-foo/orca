@@ -24,6 +24,7 @@ from cleaning.transcript_product_lake import (
     mentions_record_id,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError
+from data_lake.silver_lineage import derived_record_ref
 from runners.run_transcript_product_extract import run_extraction
 from source_capture.transcript.asr_packet import write_asr_transcript
 from source_capture.transcript.youtube_captions import CaptionFetch
@@ -93,8 +94,28 @@ def _caption_fetch() -> CaptionFetch:
     )
 
 
+def _transcript_derived_ref(record_id: str = "asr_test__1234567890abcdef") -> dict[str, Any]:
+    return derived_record_ref(
+        raw_anchor=_ANCHOR,
+        lane="transcript_asr",
+        record_id=record_id,
+        sha256="abc123",
+        hash_basis="derived_record_marker_sha256",
+        relation="consumed",
+        record_set_completion_lane="transcript_asr__set",
+    )
+
+
 def _transcript() -> TranscriptInput:
-    return TranscriptInput("vid12345678", _ANCHOR, "asr", _cues())
+    return TranscriptInput(
+        "vid12345678",
+        _ANCHOR,
+        "asr",
+        _cues(),
+        source_surface="youtube_audio",
+        derived_refs=[_transcript_derived_ref()],
+        captured_at="2026-06-20T00:00:00Z",
+    )
 
 
 # --- json3 -> cues (timing preserved) ----------------------------------------
@@ -177,9 +198,30 @@ def test_driver_persists_to_silver_lane(tmp_path) -> None:
         subtree="derived", raw_anchor=_ANCHOR, record_id=rid, completion_lane=PRODUCT_MENTIONS_SET_LANE,
     )
     written = json.loads(paths[PRODUCT_MENTIONS_LANE].read_text(encoding="utf-8"))
+    assert "silver_lineage" not in written
+    assert written["schema_version"] == "silver_vault_record_v0"
+    assert written["lane_namespace"] == PRODUCT_MENTIONS_LANE
+    assert written["derived_refs"][0]["record_id"] == "asr_test__1234567890abcdef"
+    assert written["derived_refs"][0]["record_set_completion_lane"] == "transcript_asr__set"
+    assert written["raw_refs"] == []
+    assert written["content_hash"].startswith("sha256:")
     assert written["mention_count"] == 1
     assert written["mentions"][0]["start_ms"] == 3000  # CE5 timestamp from the cue
 
+
+
+def test_driver_rejects_missing_lineage(tmp_path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    transcript = TranscriptInput("vid12345678", _ANCHOR, "asr", _cues())
+    with pytest.raises(ValueError, match="source-backed|raw_refs|derived_refs"):
+        extract_products_into_lake(
+            data_root=data_root,
+            transcript=transcript,
+            transport=FakeTransport(_anthropic([_item()])),
+            provider=_PROVIDER,
+            model="test-model",
+            api_key="k",
+        )
 
 def test_driver_refuses_duplicate_write(tmp_path) -> None:
     data_root = DataLakeRoot.for_test(tmp_path / "lake")
@@ -227,6 +269,21 @@ def test_runner_extracts_asr_transcript_then_skips_on_rerun(tmp_path) -> None:
     assert len(first) == 1
     assert first[0]["status"] == "extracted"
     assert first[0]["video_id"] == "vid12345678"
+    record = json.loads(Path(first[0]["path"]).read_text(encoding="utf-8"))
+    source_record_path = next((data_root.path / "derived").glob("**/transcript_asr/*"))
+    source_ref = record["derived_refs"][0]
+    assert source_ref["lane"] == "transcript_asr"
+    assert source_ref["record_id"] == source_record_path.name
+    assert source_ref["hash_basis"] == "derived_record_marker_sha256"
+    assert source_ref["record_set_completion_lane"] == "transcript_asr__set"
+    assert source_ref["sha256"] == data_root.read_record_set_member_sha256(
+        subtree="derived",
+        raw_anchor=source_ref["raw_anchor"],
+        record_id=source_ref["record_id"],
+        completion_lane="transcript_asr__set",
+        member_lane="transcript_asr",
+    )
+    assert "silver_lineage" not in record
 
     # idempotent: a second pass finds the completed set and skips (does not re-extract).
     second = run_extraction(data_root=data_root, transport=transport, provider=_PROVIDER, model="m", api_key="k")
@@ -265,6 +322,11 @@ def test_runner_extracts_caption_transcript(tmp_path) -> None:
     record_path = next((data_root.path / "derived").glob(f"**/{PRODUCT_MENTIONS_LANE}/*"))
     record = json.loads(record_path.read_text(encoding="utf-8"))
     assert record["mention_count"] == 1
+    assert record["derived_refs"] == []
+    assert record["raw_refs"][0]["ref_type"] == "raw_packet"
+    assert record["raw_refs"][0]["packet_id"] == record["transcript_anchor"]
+    assert record["raw_refs"][0]["relative_packet_path"].endswith(".json3")
+    assert record["raw_refs"][0]["sha256"]
     mention = record["mentions"][0]
     assert mention["video_id"] == "vid12345678"
     assert mention["transcript_source"] == "caption"

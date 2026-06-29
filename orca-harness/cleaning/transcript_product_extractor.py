@@ -62,6 +62,13 @@ class TranscriptInput:
     transcript_anchor: str
     transcript_source: str  # "asr" | "caption"
     cues: list[dict]
+    source_namespace: str = "youtube"
+    source_object_kind: str = "transcript"
+    source_surface: str | None = None
+    raw_refs: list[dict[str, Any]] = field(default_factory=list)
+    derived_refs: list[dict[str, Any]] = field(default_factory=list)
+    observed_at: str | None = None
+    captured_at: str | None = None
 
     @property
     def joined_text(self) -> str:

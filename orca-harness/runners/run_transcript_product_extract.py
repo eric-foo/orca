@@ -19,7 +19,10 @@ Spec: youtube_transcript_product_extraction_spec_v0.md (daemon-readiness contrac
 
 from __future__ import annotations
 
+import hashlib
 import json
+
+from data_lake.silver_lineage import derived_record_ref, raw_packet_ref
 
 from cleaning.transcript_product_extractor import TranscriptInput
 from cleaning.transcript_product_lake import (
@@ -32,6 +35,7 @@ from cleaning.transcript_product_lake import (
 )
 
 _ASR_LANE = "transcript_asr"
+_ASR_SET_LANE = "transcript_asr__set"
 
 
 def _file_paths(manifest: dict) -> dict[str, str]:
@@ -40,6 +44,48 @@ def _file_paths(manifest: dict) -> dict[str, str]:
         for pf in manifest.get("preserved_files", [])
         if isinstance(pf, dict)
     }
+
+
+def _slice_id_for_file(manifest: dict, file_id: str) -> str | None:
+    for source_slice in manifest.get("source_slices", []):
+        if not isinstance(source_slice, dict):
+            continue
+        if file_id in source_slice.get("preserved_file_ids", []):
+            slice_id = source_slice.get("slice_id")
+            return slice_id if isinstance(slice_id, str) and slice_id else None
+    return None
+
+
+def _preserved_entry_ending_with(manifest: dict, suffix: str) -> dict | None:
+    for preserved in manifest.get("preserved_files", []):
+        if not isinstance(preserved, dict):
+            continue
+        path = preserved.get("relative_packet_path")
+        if isinstance(path, str) and path.endswith(suffix):
+            return preserved
+    return None
+
+
+def _raw_ref_ending_with(packet_id: str, manifest: dict, suffix: str) -> dict | None:
+    preserved = _preserved_entry_ending_with(manifest, suffix)
+    if preserved is None:
+        return None
+    file_id = preserved.get("file_id")
+    path = preserved.get("relative_packet_path")
+    sha256 = preserved.get("sha256")
+    hash_basis = preserved.get("hash_basis")
+    if not all(isinstance(value, str) and value for value in (file_id, path, sha256, hash_basis)):
+        return None
+    return raw_packet_ref(
+        packet_id=packet_id,
+        slice_id=_slice_id_for_file(manifest, file_id),
+        file_id=file_id,
+        relative_packet_path=path,
+        sha256=sha256,
+        hash_basis=hash_basis,
+        anchor_kind="file",
+        relation="consumed",
+    )
 
 
 def _body_ending_with(loaded, files: dict[str, str], suffix: str) -> bytes | None:
@@ -60,22 +106,51 @@ def _capture_metadata(loaded, files: dict[str, str]) -> dict:
         return {}
 
 
-def _asr_records(data_root, audio_packet_id: str) -> list[dict]:
-    """Read transcript_asr derived records by path (derived records carry no by-key hash)."""
+def _asr_records(data_root, audio_packet_id: str) -> list[tuple[dict, dict]]:
+    """Read transcript_asr records with exact derived-record lineage refs."""
     lane_dir = data_root.lane_dir(subtree="derived", raw_anchor=audio_packet_id, lane=_ASR_LANE)
     if not lane_dir.is_dir():
         return []
-    records: list[dict] = []
-    # transcript_asr record ids carry no extension (asr_packet.py), so read every file, not *.json.
+    records: list[tuple[dict, dict]] = []
     for record_file in sorted(lane_dir.iterdir()):
         if not record_file.is_file():
             continue
         try:
-            data = json.loads(record_file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+            record_bytes = record_file.read_bytes()
+            data = json.loads(record_bytes.decode("utf-8"))
+        except (OSError, ValueError, UnicodeDecodeError):
             continue
-        if isinstance(data, dict):
-            records.append(data)
+        if not isinstance(data, dict):
+            continue
+        marker_sha = data_root.read_record_set_member_sha256(
+            subtree="derived",
+            raw_anchor=audio_packet_id,
+            record_id=record_file.name,
+            completion_lane=_ASR_SET_LANE,
+            member_lane=_ASR_LANE,
+        )
+        if marker_sha is None:
+            sha256 = hashlib.sha256(record_bytes).hexdigest()
+            hash_basis = "derived_record_bytes"
+            completion_lane = None
+        else:
+            sha256 = marker_sha
+            hash_basis = "derived_record_marker_sha256"
+            completion_lane = _ASR_SET_LANE
+        records.append(
+            (
+                data,
+                derived_record_ref(
+                    raw_anchor=audio_packet_id,
+                    lane=_ASR_LANE,
+                    record_id=record_file.name,
+                    sha256=sha256,
+                    hash_basis=hash_basis,
+                    relation="consumed",
+                    record_set_completion_lane=completion_lane,
+                ),
+            )
+        )
     return records
 
 
@@ -105,20 +180,46 @@ def _transcripts_for_packet(data_root, packet_id: str) -> list[TranscriptInput]:
     meta_video_id = str(meta.get("platform_video_id") or "")
 
     transcripts: list[TranscriptInput] = []
+    captured_at = str(meta.get("capture_timestamp") or "") or None
+    observed_at = str(meta.get("publish_date_iso") or "") or None
     if surface == "youtube_captions":
         json3 = _body_ending_with(loaded, files, ".json3")
-        if json3 is not None:
+        raw_ref = _raw_ref_ending_with(packet_id, manifest, ".json3")
+        if json3 is not None and raw_ref is not None:
             cues = cues_from_json3(json3)
             if cues and meta_video_id:
-                transcripts.append(TranscriptInput(meta_video_id, packet_id, "caption", cues))
+                transcripts.append(
+                    TranscriptInput(
+                        meta_video_id,
+                        packet_id,
+                        "caption",
+                        cues,
+                        source_namespace="youtube",
+                        source_surface="youtube_captions",
+                        raw_refs=[raw_ref],
+                        observed_at=observed_at,
+                        captured_at=captured_at,
+                    )
+                )
     elif surface == "youtube_audio":
-        for record in _asr_records(data_root, packet_id):
+        for record, derived_ref in _asr_records(data_root, packet_id):
             if record.get("posture") != "transcribed":
                 continue
             cues = cues_from_asr_record(record)
             video_id = str(record.get("video_id") or meta_video_id)
             if cues and video_id:
-                transcripts.append(TranscriptInput(video_id, packet_id, "asr", cues))
+                transcripts.append(
+                    TranscriptInput(
+                        video_id,
+                        packet_id,
+                        "asr",
+                        cues,
+                        source_namespace="youtube",
+                        source_surface="youtube_audio",
+                        derived_refs=[derived_ref],
+                        captured_at=str(record.get("retrieval_time_utc") or captured_at or "") or None,
+                    )
+                )
     return transcripts
 
 

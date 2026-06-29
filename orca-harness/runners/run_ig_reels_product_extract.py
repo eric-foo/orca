@@ -24,6 +24,7 @@ ig_reels_transcript_product_extraction_spec_v0.md (IG delta; daemon-readiness in
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -31,6 +32,8 @@ from typing import Sequence
 
 if __package__ in {None, ""}:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from data_lake.silver_lineage import derived_record_ref
 
 from cleaning.transcript_product_extractor import TranscriptInput
 from cleaning.transcript_product_lake import (
@@ -42,6 +45,7 @@ from cleaning.transcript_product_lake import (
 )
 
 _ASR_LANE = "transcript_asr"
+_ASR_SET_LANE = "transcript_asr__set"
 _IG_SOURCE_FAMILY = "instagram_creator"
 _IG_AUDIO_SURFACE = "ig_reels_audio"
 DEFAULT_EXTRACTION_MODEL = "codex-extraction-v0"
@@ -88,21 +92,54 @@ def _record_path(data_root, *, raw_anchor: str, lane: str, record_id: str):
         )
     return data_root.path / "derived" / raw_anchor / lane / record_id
 
-def _asr_records(data_root, audio_packet_id: str) -> list[dict]:
-    """Read transcript_asr derived records by path (derived records carry no by-key hash)."""
+def _asr_records(data_root, audio_packet_id: str) -> list[tuple[dict, dict]]:
+    """Read transcript_asr records with exact derived-record lineage refs."""
     lane_dir = _lane_dir(data_root, raw_anchor=audio_packet_id, lane=_ASR_LANE)
     if not lane_dir.is_dir():
         return []
-    records: list[dict] = []
+    records: list[tuple[dict, dict]] = []
     for record_file in sorted(lane_dir.iterdir()):
         if not record_file.is_file():
             continue
         try:
-            data = json.loads(record_file.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+            record_bytes = record_file.read_bytes()
+            data = json.loads(record_bytes.decode("utf-8"))
+        except (OSError, ValueError, UnicodeDecodeError):
             continue
-        if isinstance(data, dict):
-            records.append(data)
+        if not isinstance(data, dict):
+            continue
+        marker_reader = getattr(data_root, "read_record_set_member_sha256", None)
+        marker_sha = None
+        if marker_reader is not None:
+            marker_sha = marker_reader(
+                subtree="derived",
+                raw_anchor=audio_packet_id,
+                record_id=record_file.name,
+                completion_lane=_ASR_SET_LANE,
+                member_lane=_ASR_LANE,
+            )
+        if marker_sha is None:
+            sha256 = hashlib.sha256(record_bytes).hexdigest()
+            hash_basis = "derived_record_bytes"
+            completion_lane = None
+        else:
+            sha256 = marker_sha
+            hash_basis = "derived_record_marker_sha256"
+            completion_lane = _ASR_SET_LANE
+        records.append(
+            (
+                data,
+                derived_record_ref(
+                    raw_anchor=audio_packet_id,
+                    lane=_ASR_LANE,
+                    record_id=record_file.name,
+                    sha256=sha256,
+                    hash_basis=hash_basis,
+                    relation="consumed",
+                    record_set_completion_lane=completion_lane,
+                ),
+            )
+        )
     return records
 
 
@@ -134,13 +171,25 @@ def _transcripts_for_packet(data_root, packet_id: str) -> list[TranscriptInput]:
     meta_shortcode = str(meta.get("platform_shortcode") or "")
 
     transcripts: list[TranscriptInput] = []
-    for record in _asr_records(data_root, packet_id):
+    captured_at = str(meta.get("capture_timestamp") or "") or None
+    for record, derived_ref in _asr_records(data_root, packet_id):
         if record.get("posture") != "transcribed":
             continue
         cues = cues_from_asr_record(record)
         shortcode = str(record.get("video_id") or meta_shortcode)
         if cues and shortcode:
-            transcripts.append(TranscriptInput(shortcode, packet_id, "asr", cues))
+            transcripts.append(
+                TranscriptInput(
+                    shortcode,
+                    packet_id,
+                    "asr",
+                    cues,
+                    source_namespace="instagram",
+                    source_surface=_IG_AUDIO_SURFACE,
+                    derived_refs=[derived_ref],
+                    captured_at=str(record.get("retrieval_time_utc") or captured_at or "") or None,
+                )
+            )
     return transcripts
 
 

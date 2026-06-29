@@ -19,6 +19,8 @@ import json
 import math
 import re
 
+from data_lake.silver_lineage import build_silver_vault_record, source_object_ref
+
 from cleaning.transcript_product_extractor import (
     EXTRACTOR_RUBRIC_VERSION,
     TranscriptInput,
@@ -113,7 +115,7 @@ def extract_products_into_lake(
         api_key=api_key,
         max_tokens=max_tokens,
     )
-    payload = {
+    domain_payload = {
         "video_id": transcript.video_id,
         "transcript_anchor": transcript.transcript_anchor,
         "transcript_source": transcript.transcript_source,
@@ -124,6 +126,28 @@ def extract_products_into_lake(
         "mentions": [m.model_dump(mode="json") for m in result.mentions],
         "rejected": result.rejected,
     }
+    payload = build_silver_vault_record(
+        payload=domain_payload,
+        record_id=rid,
+        raw_anchor=transcript.transcript_anchor,
+        lane_namespace=PRODUCT_MENTIONS_LANE,
+        producer_id="cleaning.transcript_product_lake",
+        producer_schema_version=f"transcript_product_mentions_{EXTRACTOR_RUBRIC_VERSION.replace('.', '_')}",
+        record_kind="observation",
+        payload_kind="TranscriptProductMentionSet",
+        producer_row_kind="transcript_product_mentions",
+        source_surface=transcript.source_surface or transcript.transcript_source,
+        source_object=source_object_ref(
+            namespace=transcript.source_namespace,
+            kind=transcript.source_object_kind,
+            native_id=transcript.video_id,
+        ),
+        observed_at=transcript.observed_at,
+        captured_at=transcript.captured_at,
+        raw_refs=transcript.raw_refs,
+        derived_refs=transcript.derived_refs,
+        require_full_source_backed=True,
+    )
     members = {
         # allow_nan=False: a non-finite float fails closed (the runner records `failed`) rather
         # than writing a literal NaN/Infinity token that is invalid RFC-8259 JSON.
