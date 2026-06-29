@@ -31,7 +31,6 @@ SOURCE_POSTURE_PROBLEMS = {
     "no_audio_handle",
     "download_failed",
 }
-NON_ELIGIBLE_RESIDUAL_REASONS = {"deep_capture_not_in_extraction_feed"}
 SOURCE_NON_ELIGIBLE_PROBLEMS = SOURCE_COMPLETION_PROBLEMS | SOURCE_POSTURE_PROBLEMS
 
 
@@ -79,6 +78,7 @@ def project_ig_reels_behavioral_item(
     canonical = _canonical_transcript_source(enriched_sources)
     correlation = _persistence_correlation(candidate, comments, enriched_sources)
 
+    behavioral_status = _behavioral_status(rollup["status"], residuals)
     return {
         "projection_method": IG_REELS_BEHAVIORAL_PROJECTION_METHOD,
         "projection_version": IG_REELS_BEHAVIORAL_PROJECTION_VERSION,
@@ -100,11 +100,17 @@ def project_ig_reels_behavioral_item(
         },
         "persistence_correlation": correlation,
         "behavioral_completeness": {
-            "status": rollup["status"],
-            "complete": rollup["status"] == "complete",
+            "status": behavioral_status,
+            "complete": behavioral_status == "complete",
             "residuals": residuals,
         },
     }
+
+
+def _behavioral_status(extraction_status: str, residuals: Sequence[str]) -> str:
+    if extraction_status == "complete" and residuals:
+        return "complete_with_residuals"
+    return extraction_status
 
 
 def _candidate_projection(
@@ -384,7 +390,8 @@ def _eligibility(
     if cue_count <= 0:
         return False, "zero_cues"
     if not extraction_feed_eligible:
-        return False, "deep_capture_not_in_extraction_feed"
+        # Retained for future source kinds; current IG transcript sources are feed-eligible.
+        return False, "source_not_in_extraction_feed"
     return True, None
 
 
@@ -441,11 +448,7 @@ def _extraction_rollup(
             _append_residual_once(residuals, f"ig_transcript_source_{source_status}:{source_key}")
         if posture in SOURCE_POSTURE_PROBLEMS:
             _append_residual_once(residuals, f"ig_transcript_source_{posture}:{source_key}")
-        if non_eligible_reason in NON_ELIGIBLE_RESIDUAL_REASONS:
-            _append_residual_once(
-                residuals,
-                f"ig_transcript_source_not_extraction_eligible:{source_key}",
-            )
+
         if (
             source.get("extraction_eligible") is False
             and non_eligible_reason in SOURCE_NON_ELIGIBLE_PROBLEMS
@@ -582,7 +585,6 @@ def _result_for_source(
     for key in (
         _source_key(source),
         _string_or_none(source.get("transcript_source_key")),
-        _string_or_none(source.get("source_key")),
     ):
         if key is not None and key in exact_results:
             return exact_results[key]
@@ -604,7 +606,7 @@ def _extraction_result_indexes(
     by_anchor: dict[str, list[Mapping[str, Any]]] = {}
     for item in extraction_results:
         result = _as_mapping(item)
-        for key_name in ("transcript_source_key", "source_key"):
+        for key_name in ("transcript_source_key",):
             key = _string_or_none(result.get(key_name))
             if key is not None:
                 exact[key] = result
@@ -633,7 +635,6 @@ def _source_has_problem(source: Mapping[str, Any]) -> bool:
     return (
         _string_or_none(source.get("source_status")) in SOURCE_COMPLETION_PROBLEMS
         or _string_or_none(source.get("posture")) in SOURCE_POSTURE_PROBLEMS
-        or _string_or_none(source.get("non_eligible_reason")) in NON_ELIGIBLE_RESIDUAL_REASONS
         or _string_or_none(source.get("non_eligible_reason")) in SOURCE_NON_ELIGIBLE_PROBLEMS
     )
 
