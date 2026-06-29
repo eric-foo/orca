@@ -450,15 +450,20 @@ def _raw_ref(seed_observation: Mapping[str, Any]) -> dict[str, Any]:
     raw_anchor dict). ``sha256``+``hash_basis`` use the captured watch-page HTML
     hash, which IS the hash-checkable source material per the Silver Vault
     raw_refs rule; the shorts-page HTML hash is preserved alongside."""
+    watch_hash = _required_source_hash(
+        seed_observation,
+        "source_watch_html_sha256_or_none",
+        what=f"metric observation {seed_observation.get('metric_observation_id')!r} raw_ref",
+    )
     return {
         "packet_id": seed_observation.get("source_packet_id_or_none"),
         "source_pointer": seed_observation.get("source_pointer"),
         "source_field": seed_observation.get("source_field"),
         "source_file": seed_observation.get("source_file"),
         "source_row_id": seed_observation.get("source_row_id_or_none"),
-        "sha256": seed_observation.get("source_watch_html_sha256_or_none"),
+        "sha256": watch_hash,
         "hash_basis": "source_captured_watch_html_sha256",
-        "watch_html_sha256": seed_observation.get("source_watch_html_sha256_or_none"),
+        "watch_html_sha256": watch_hash,
         "shorts_html_sha256": seed_observation.get("source_shorts_html_sha256_or_none"),
     }
 
@@ -487,6 +492,13 @@ def _require_source_packet_id(seed_observation: Mapping[str, Any]) -> str:
             "source packet id; cannot anchor a source-backed Silver record."
         )
     return packet_id
+
+
+def _required_source_hash(seed_observation: Mapping[str, Any], field: str, *, what: str) -> str:
+    value = seed_observation.get(field)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{what} requires a non-empty {field}")
+    return value
 
 
 def _rollup_raw_anchor(seed_rollup: Mapping[str, Any]) -> str:

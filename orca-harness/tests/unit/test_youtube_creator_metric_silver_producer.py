@@ -12,6 +12,7 @@ their account id, and fails closed on a blank subject native_id.
 """
 from __future__ import annotations
 
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -63,6 +64,9 @@ def test_producer_emits_conformant_metric_observation_records(tmp_path: Path) ->
     assert len(result.observation_records) == EXPECTED_OBSERVATIONS == len(seed["metric_observations"])
 
     seed_by_id = {o["metric_observation_id"]: o for o in seed["metric_observations"]}
+    emitted_seed_ids = [r["provenance"]["seed_metric_observation_id"] for r in result.observation_records]
+    assert set(emitted_seed_ids) == set(seed_by_id)
+    assert len(emitted_seed_ids) == len(set(emitted_seed_ids)) == EXPECTED_OBSERVATIONS
     for record in result.observation_records:
         assert record["schema_version"] == "silver_vault_record_v0"
         assert record["record_kind"] == "observation"
@@ -85,6 +89,7 @@ def test_producer_emits_conformant_metric_observation_records(tmp_path: Path) ->
         assert raw_ref["source_pointer"] == seed_obs["source_pointer"]
         assert raw_ref["source_field"] == seed_obs["source_field"]
         assert raw_ref["sha256"] == seed_obs["source_watch_html_sha256_or_none"]
+        assert raw_ref["sha256"]
         assert raw_ref["hash_basis"] == "source_captured_watch_html_sha256"
 
         observation = record["payload"]["observation"]
@@ -139,6 +144,13 @@ def test_rollup_records_lineage_and_no_drift(tmp_path: Path) -> None:
 
     seed_by_id = {r["metric_rollup_id"]: r for r in seed["metric_rollups"]}
     observations_by_record_id = {r["record_id"]: r for r in result.observation_records}
+    record_id_by_seed_obs_id = {
+        r["provenance"]["seed_metric_observation_id"]: r["record_id"]
+        for r in result.observation_records
+    }
+    emitted_rollup_ids = [r["provenance"]["seed_metric_rollup_id"] for r in result.rollup_records]
+    assert set(emitted_rollup_ids) == set(seed_by_id)
+    assert len(emitted_rollup_ids) == len(set(emitted_rollup_ids)) == EXPECTED_ROLLUPS
 
     for rollup in result.rollup_records:
         assert rollup["record_kind"] == "observation"
@@ -153,6 +165,10 @@ def test_rollup_records_lineage_and_no_drift(tmp_path: Path) -> None:
         payload = rollup["payload"]["observation"]
         # derived_refs point at the emitted observation records; hash matches.
         assert len(rollup["derived_refs"]) == len(seed_rollup["source_metric_observation_ids"])
+        assert Counter(edge["record_id"] for edge in rollup["derived_refs"]) == Counter(
+            record_id_by_seed_obs_id[source_id]
+            for source_id in seed_rollup["source_metric_observation_ids"]
+        )
         for edge in rollup["derived_refs"]:
             assert edge["edge_type"] == "derived_from_record"
             assert edge["lane_namespace"] == METRIC_OBSERVATION_LANE
@@ -222,4 +238,12 @@ def test_observation_missing_source_packet_fails_closed() -> None:
     seed_obs = dict(seed_document[YOUTUBE_SEED_WRAPPER_KEY]["metric_observations"][0])
     seed_obs["source_packet_id_or_none"] = None  # remove the source anchor
     with pytest.raises(ValueError, match="lacks a source packet id"):
+        build_metric_observation_record(seed_observation=seed_obs)
+
+
+def test_observation_missing_source_hash_fails_closed() -> None:
+    seed_document = _committed_seed_document()
+    seed_obs = dict(seed_document[YOUTUBE_SEED_WRAPPER_KEY]["metric_observations"][0])
+    seed_obs["source_watch_html_sha256_or_none"] = None
+    with pytest.raises(ValueError, match="source_watch_html_sha256_or_none"):
         build_metric_observation_record(seed_observation=seed_obs)

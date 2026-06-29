@@ -149,4 +149,3 @@ from view-only data.
 - not dashboard implementation
 - not live capture authorization
 - not a re-point of the creator_profile_current read model
-```
