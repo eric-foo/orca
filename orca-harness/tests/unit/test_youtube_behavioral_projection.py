@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -103,6 +104,21 @@ def _commit_watch_metadata(
     )
     assert code == 0
     return Path(output_dir).name
+
+
+def _rewrite_preserved_body(packet_dir: Path, suffix: str, body: bytes) -> None:
+    manifest_path = packet_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    for preserved in manifest["preserved_files"]:
+        relative_path = preserved.get("relative_packet_path")
+        if isinstance(relative_path, str) and relative_path.endswith(suffix):
+            target = packet_dir.joinpath(*relative_path.split("/"))
+            target.write_bytes(body)
+            preserved["size_bytes"] = len(body)
+            preserved["sha256"] = hashlib.sha256(body).hexdigest()
+            manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            return
+    raise AssertionError(f"preserved file ending with {suffix!r} not found")
 
 
 def _commit_caption(data_root: DataLakeRoot, *, video_id: str = _VIDEO_ID) -> str:
@@ -243,6 +259,28 @@ def test_projection_from_lake_uses_latest_watch_metadata_packet_for_video(tmp_pa
 
     assert projection["metadata_capture"]["capture_packet_id"] == latest_packet_id
     assert projection["metadata_capture"]["metadata"]["title"] == "Latest title"
+
+
+def test_projection_from_lake_residualizes_uninterpretable_watch_metadata_packet(tmp_path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    watch_packet_id = _commit_watch_metadata(data_root)
+    _commit_caption(data_root)
+    watch_packet_dir = data_root.find_packet(watch_packet_id)
+    assert watch_packet_dir is not None
+    _rewrite_preserved_body(watch_packet_dir, "youtube_watch_capture.json", b"{not-json")
+    sources = transcript_sources_for_video(data_root, _VIDEO_ID)
+
+    projection = project_youtube_behavioral_item_from_lake(
+        data_root=data_root,
+        platform_video_id=_VIDEO_ID,
+        extraction_results=_extracted_results_for_sources(sources),
+    )
+
+    residuals = projection["behavioral_completeness"]["residuals"]
+    assert projection["metadata_capture"] is None
+    assert f"youtube_metadata_packet_discovery_failed:{watch_packet_id}:invalid_capture_json" in residuals
+    assert "youtube_metadata_packet_absent" in residuals
+    assert projection["behavioral_completeness"]["complete"] is True
 
 
 def test_transcript_discovery_residualizes_corrupt_youtube_packet_without_aborting_healthy_video(tmp_path) -> None:
