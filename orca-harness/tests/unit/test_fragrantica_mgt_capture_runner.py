@@ -150,6 +150,7 @@ class _FakeDataRoot:
 
 
 def test_fragrantica_mgt_capture_data_root_mode_writes_local_summary(tmp_path: Path) -> None:
+    # The fleet lake-seam scanner owns direct packet writers; this test owns this transitive wrapper's lake branch.
     calls: list[dict[str, object]] = []
     data_root = _FakeDataRoot(tmp_path / "lake")
     lake_packets_root = tmp_path / "lake_packets"
