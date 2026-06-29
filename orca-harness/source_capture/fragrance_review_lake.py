@@ -20,15 +20,19 @@ typed AR entry (source_family / payload-kind / schema-version / replay-pins /
 posture + per-attachment discovery) stays data-lake-lane-owned, and it must be
 able to reference or supersede these preserved bodies WITHOUT inheriting the
 positional ``file_id`` or any staging-path semantics. Named residual: operator
-``widget_route`` / ``source_id`` are NOT round-tripped through the preserved
-bodies -- the projection re-derives ``source_site`` / ``source_id`` from the
-manifest ``product_url``; rich provenance belongs to that future AR entry.
+``widget_route`` / ``source_id`` AND per-response source attribution
+(``response_origin`` / ``response_kind`` / response URL / index) are NOT
+round-tripped through the preserved bodies -- the projection re-derives
+``source_site`` / ``source_id`` from the manifest ``product_url`` and leaves the
+projected rows unattributed (``capture_route="unattributed_widget_response"``);
+carrying that provenance is the future typed AR entry's job, not this pilot's.
 
 This module is import-clean for the no-runtime-imports source-capture contract
 (it never imports a network module; ``urllib.parse`` is permitted).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import date
 from pathlib import Path
@@ -116,9 +120,15 @@ def write_fragrance_review_capture_packet(
 
     staged_artifacts: list[tuple[str, bytes]] = []
     for index, response in enumerate(review_responses, start=1):
-        body_text = response.body_text or ""
+        body_bytes = (response.body_text or "").encode("utf-8")
+        # Admission gate: the bytes we preserve must match the companion's
+        # INDEPENDENT capture-time witness, so the lake anchors to the
+        # capture-time hash rather than silently re-hashing a possibly-stale or
+        # inconsistent receipt. Without this, the stored sha256 is merely a
+        # re-hash of whatever body_text we were handed.
+        _verify_capture_witness(response, body_bytes)
         filename = f"{index:02d}_widget_response_{response.response_kind}.json"
-        staged_artifacts.append((filename, body_text.encode("utf-8")))
+        staged_artifacts.append((filename, body_bytes))
     file_ids = staged_file_id_map(staged_artifacts)
 
     locator = known_fact(product_url)
@@ -206,8 +216,13 @@ def project_fragrance_review_into_lake(
     byte-identical re-derivation from the same committed bytes.
 
     Named residual (typed-AR-owned): operator ``widget_route`` / ``source_id``
-    are not preserved in the raw bodies, so ``source_site`` / ``source_id`` are
-    re-derived from the manifest ``product_url`` and ``widget_route`` is empty.
+    AND per-response source attribution (``response_origin`` / ``response_kind``
+    / response URL / index) are not preserved in the raw bodies, so
+    ``source_site`` / ``source_id`` are re-derived from the manifest
+    ``product_url``, ``widget_route`` is empty, and the projected rows are left
+    unattributed (``capture_route="unattributed_widget_response"``). Carrying
+    that provenance is the future typed Attachment Record entry's job, not this
+    pilot's.
     """
     loaded = data_root.load_raw_packet(packet_id)
     manifest = loaded.manifest
@@ -225,6 +240,9 @@ def project_fragrance_review_into_lake(
             )
         ordered_bodies.append(loaded.bodies[file_id].decode("utf-8"))
 
+    # widget_response_sources is intentionally omitted: per-response attribution
+    # (origin/kind/url/index) is not preserved in the raw bodies, so the rows
+    # stay unattributed -- the named residual above, owned by the typed AR entry.
     receipt = build_fragrance_review_coverage(
         widget_responses=ordered_bodies,
         source_id=source_id,
@@ -244,6 +262,38 @@ def project_fragrance_review_into_lake(
         data=data,
     )
     return receipt, derived_path
+
+
+def _verify_capture_witness(response: "FragranceWidgetResponseCapture", body_bytes: bytes) -> None:
+    """Fail closed unless the companion's capture-time witness matches the bytes
+    being preserved.
+
+    The companion records ``body_sha256`` / ``body_byte_count`` when it observes
+    the response. Preserving ``body_text`` without checking that witness would let
+    a stale or inconsistent receipt land in the lake while the manifest sha256
+    (a re-hash of the same ``body_text``) still ''agrees'' with itself -- a fake
+    success. Requiring the witness makes the capture-time hash an admission gate,
+    so the lake genuinely anchors to the bytes the companion attested at capture.
+    """
+    capture_sha256 = getattr(response, "body_sha256", None)
+    if not capture_sha256:
+        raise FragranceReviewLakeInputError(
+            "review widget response is missing the capture-time body_sha256 witness; "
+            "refusing to preserve bytes that cannot be anchored to capture (block-don't-fake)"
+        )
+    actual_sha256 = hashlib.sha256(body_bytes).hexdigest()
+    if actual_sha256 != capture_sha256:
+        raise FragranceReviewLakeInputError(
+            "review widget response body_text does not match its capture-time body_sha256 "
+            f"(capture {capture_sha256}, body {actual_sha256}); refusing to preserve a "
+            "mismatched/stale companion receipt (block-don't-fake)"
+        )
+    capture_byte_count = getattr(response, "body_byte_count", None)
+    if isinstance(capture_byte_count, int) and capture_byte_count != len(body_bytes):
+        raise FragranceReviewLakeInputError(
+            "review widget response body_byte_count does not match its body_text "
+            f"(capture {capture_byte_count}, body {len(body_bytes)}); block-don't-fake"
+        )
 
 
 def _manifest_source_locator_value(manifest: Mapping[str, Any]) -> str | None:

@@ -11,6 +11,7 @@ from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
 from source_capture.fragrance_rendered_widget_companion import FragranceWidgetResponseCapture
 from source_capture.fragrance_review_lake import (
     PROJECTION_FRAGRANCE_REVIEW_LANE,
+    FragranceReviewLakeInputError,
     project_fragrance_review_into_lake,
     write_fragrance_review_capture_packet,
 )
@@ -40,14 +41,38 @@ _WIDGET_BODY = json.dumps(
     sort_keys=True,
 )
 
-# Fields that only ever belong to the derived coverage projection -- never to a
-# preserved raw widget body or the raw manifest.
-_CONTAMINATION_TOKENS = (
-    "selected_for_reader",
-    "selection_reasons",
-    "coverage_method",
-    "candidate_review_key",
+# Coverage-projection-only keys that must NEVER appear as a key in a raw
+# preserved body or the raw manifest. Checked structurally (keys, not value
+# substrings), so a legitimate review body whose text happens to contain one of
+# these words cannot false-fail, and a differently-shaped leak is still caught.
+_COVERAGE_ONLY_KEYS = frozenset(
+    {
+        "coverage_method",
+        "coverage_version",
+        "coverage_summary",
+        "selected_for_reader",
+        "selection_reasons",
+        "skip_reasons",
+        "candidate_review_key",
+        "review_key_status",
+        "selected_row_ids",
+        "skipped_row_ids",
+        "aggregate_companion",
+        "review_body_verbatim",
+    }
 )
+
+
+def _all_keys(value: object) -> set[str]:
+    keys: set[str] = set()
+    if isinstance(value, dict):
+        for key, child in value.items():
+            keys.add(key)
+            keys |= _all_keys(child)
+    elif isinstance(value, list):
+        for item in value:
+            keys |= _all_keys(item)
+    return keys
 
 
 def _synthetic_widget_response() -> FragranceWidgetResponseCapture:
@@ -151,22 +176,63 @@ def test_contamination_guard_raw_bodies_carry_only_raw_widget_responses(tmp_path
 
     loaded = root.load_raw_packet(pid)
     ((_file_id, stored_bytes),) = loaded.bodies.items()
+    # the body is byte-identical to the raw widget response -- the complete proof
+    # that nothing (a coverage/selection field or anything else) was added to it.
+    assert stored_bytes == response.body_text.encode("utf-8")
     parsed = json.loads(stored_bytes)
     assert isinstance(parsed, dict) and "reviews" in parsed
-    assert stored_bytes == response.body_text.encode("utf-8")
 
-    body_text = stored_bytes.decode("utf-8")
-    manifest_text = json.dumps(loaded.manifest, sort_keys=True)
-    for token in _CONTAMINATION_TOKENS:
-        assert token not in body_text, f"raw body leaked projection field: {token}"
-        assert token not in manifest_text, f"raw manifest leaked projection field: {token}"
+    # structural manifest guard: no coverage-projection key appears anywhere in
+    # the raw manifest (keys, not value substrings).
+    leaked = _all_keys(loaded.manifest) & _COVERAGE_ONLY_KEYS
+    assert not leaked, f"raw manifest leaked projection key(s): {sorted(leaked)}"
 
     # the split proven the other way: the derived record DOES carry the
-    # coverage/selection fields.
+    # coverage/selection keys.
     receipt, derived_path = project_fragrance_review_into_lake(
         data_root=root, packet_id=pid, as_of_date=_AS_OF
     )
-    derived_text = derived_path.read_text(encoding="utf-8")
-    assert "coverage_method" in derived_text
-    assert "selected_for_reader" in derived_text
+    derived_keys = _all_keys(json.loads(derived_path.read_text(encoding="utf-8")))
+    assert "coverage_method" in derived_keys
+    assert "selected_for_reader" in derived_keys
     assert receipt.coverage_summary.total_rows >= 1
+
+
+def test_capture_witness_mismatch_is_rejected(tmp_path: Path) -> None:
+    # Admission gate: a companion receipt whose capture-time witness disagrees
+    # with its body_text is refused -- the lake anchors to the capture-time
+    # body_sha256/body_byte_count, not to a re-hash of whatever body_text it was
+    # handed. This is what makes assertion (a) non-tautological end to end.
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    good = _synthetic_widget_response()
+
+    tampered_hash = good.model_copy(update={"body_sha256": "0" * 64})
+    with pytest.raises(FragranceReviewLakeInputError):
+        write_fragrance_review_capture_packet(
+            data_root=root, widget_responses=[tampered_hash], product_url=_PRODUCT_URL
+        )
+
+    wrong_count = good.model_copy(update={"body_byte_count": good.body_byte_count + 1})
+    with pytest.raises(FragranceReviewLakeInputError):
+        write_fragrance_review_capture_packet(
+            data_root=root, widget_responses=[wrong_count], product_url=_PRODUCT_URL
+        )
+
+    missing_witness = good.model_copy(update={"body_sha256": None})
+    with pytest.raises(FragranceReviewLakeInputError):
+        write_fragrance_review_capture_packet(
+            data_root=root, widget_responses=[missing_witness], product_url=_PRODUCT_URL
+        )
+
+
+def test_projection_rows_are_unattributed_named_residual(tmp_path: Path) -> None:
+    # Named F6 residual made observable: per-response attribution is not
+    # preserved in the raw bodies, so the projected rows are unattributed.
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    result, _ = _capture(root)
+    pid = result.packet.packet_id
+
+    receipt, _ = project_fragrance_review_into_lake(data_root=root, packet_id=pid, as_of_date=_AS_OF)
+    assert receipt.rows
+    assert all(row.capture_route == "unattributed_widget_response" for row in receipt.rows)
+    assert all(row.source_response_origin is None for row in receipt.rows)
