@@ -3,17 +3,24 @@ from __future__ import annotations
 import json
 from datetime import date
 
+import pytest
+
+import source_capture.fragrance_rendered_widget_companion as companion_module
 from source_capture.adapters.browser_snapshot import BrowserPageObservationSuccess, BrowserPageResponse
 from source_capture.fragrance_rendered_widget_companion import (
     FRAGRANCE_RENDERED_WIDGET_COMPANION_CERTIFICATION,
+    FragranceRenderedWidgetCompanionInputError,
     build_fragrance_rendered_widget_companion_from_observation,
     capture_fragrance_rendered_widget_companion,
+    fetch_fragrance_widget_fallback_responses,
     is_fragrance_widget_response_url,
 )
 
 
 PRODUCT_URL = "https://example.test/products/fragrance"
 WIDGET_URL = "https://api.judge.me/reviews/reviews_for_widget?shop_domain=example.myshopify.com&platform=shopify&page=1"
+WIDGET_URL_PAGE_2 = "https://api.judge.me/reviews/reviews_for_widget?shop_domain=example.myshopify.com&platform=shopify&page=2"
+YOTPO_REVIEWS_URL = "https://api-cdn.yotpo.com/v3/storefront/store/key/product/123/reviews?page=1&perPage=10"
 
 
 def _words(prefix: str, count: int) -> str:
@@ -54,12 +61,12 @@ def _observation(*, response_body: str | None, total_count: int = 2) -> BrowserP
     )
 
 
-def _widget_response(body: str, *, url: str) -> BrowserPageResponse:
+def _widget_response(body: str, *, url: str, status: int = 200, ok: bool = True) -> BrowserPageResponse:
     return BrowserPageResponse(
         requested_url=url,
         final_url=url,
-        status=200,
-        ok=True,
+        status=status,
+        ok=ok,
         body_text=body,
         response_headers={"content-type": "application/json"},
         limitation_notes=[],
@@ -67,6 +74,15 @@ def _widget_response(body: str, *, url: str) -> BrowserPageResponse:
 
 
 def _widget_body(*, total_count: int, review_count: int) -> str:
+    reviews = _reviews(review_count)
+    return json.dumps({"total_count": total_count, "reviews": reviews})
+
+
+def _widget_body_without_total(*, review_count: int) -> str:
+    return json.dumps({"reviews": _reviews(review_count)})
+
+
+def _reviews(review_count: int) -> list[dict[str, object]]:
     reviews = []
     for index in range(review_count):
         reviews.append(
@@ -78,7 +94,7 @@ def _widget_body(*, total_count: int, review_count: int) -> str:
                 "verified_buyer": index == 0,
             }
         )
-    return json.dumps({"total_count": total_count, "reviews": reviews})
+    return reviews
 
 
 def test_combined_companion_builds_rendered_signals_and_widget_review_coverage() -> None:
@@ -124,6 +140,24 @@ def test_combined_companion_marks_fallback_when_widget_page_is_incomplete() -> N
     assert "widget_total_count_deduped_row_count_mismatch" in receipt.focused_review_coverage.residuals
 
 
+def test_combined_companion_marks_fallback_when_rows_have_no_widget_total() -> None:
+    receipt = build_fragrance_rendered_widget_companion_from_observation(
+        _observation(response_body=_widget_body_without_total(review_count=2), total_count=2),
+        source_id="fragrance_retail_example",
+        source_site="Example",
+        product_url=PRODUCT_URL,
+        as_of_date=date(2026, 6, 29),
+    )
+
+    assert receipt.focused_review_coverage is not None
+    assert receipt.focused_review_coverage.coverage_summary.total_rows == 2
+    assert receipt.focused_review_coverage.coverage_summary.widget_total_count is None
+    assert receipt.fallback_needed is True
+    assert "widget_total_count_absent_completeness_unverified" in receipt.residuals
+    assert "widget_total_count_absent_completeness_unverified" in receipt.focused_review_coverage.residuals
+    assert "bounded_direct_widget_fallback_needed_for_row_completion" in receipt.residuals
+
+
 def test_capture_uses_bounded_fallback_when_render_does_not_expose_widget_rows() -> None:
     def fake_observation_fetcher(**_: object) -> BrowserPageObservationSuccess:
         return _observation(response_body=None, total_count=2)
@@ -148,6 +182,192 @@ def test_capture_uses_bounded_fallback_when_render_does_not_expose_widget_rows()
     assert receipt.fallback_needed is False
     assert "passive_widget_not_observed_during_render" in receipt.residuals
     assert "bounded_fallback_widget_response_count:1" in receipt.route_health
+
+
+def test_companion_combines_passive_and_fallback_rows_without_flagging_complete_rows() -> None:
+    receipt = build_fragrance_rendered_widget_companion_from_observation(
+        _observation(response_body=_widget_body(total_count=3, review_count=1), total_count=3),
+        source_id="fragrance_retail_example",
+        source_site="Example",
+        product_url=PRODUCT_URL,
+        as_of_date=date(2026, 6, 29),
+        fallback_responses=[_widget_response(_widget_body(total_count=3, review_count=3), url=WIDGET_URL_PAGE_2)],
+    )
+
+    assert [response.response_origin for response in receipt.widget_responses] == [
+        "render_passive",
+        "bounded_fallback",
+    ]
+    assert receipt.focused_review_coverage is not None
+    assert receipt.focused_review_coverage.coverage_summary.total_rows == 3
+    assert receipt.focused_review_coverage.coverage_summary.widget_total_count == 3
+    assert receipt.fallback_needed is False
+
+
+def test_yotpo_review_body_is_preserved_but_not_parsed_until_shape_is_verified() -> None:
+    yotpo_body = json.dumps(
+        {
+            "reviews": [
+                {
+                    "id": "yotpo-1",
+                    "score": 5,
+                    "date": "2026-06-01",
+                    "content": _words("yotpo", 30),
+                }
+            ]
+        }
+    )
+    receipt = build_fragrance_rendered_widget_companion_from_observation(
+        _observation(response_body=None, total_count=1),
+        source_id="fragrance_retail_example",
+        source_site="Example",
+        product_url=PRODUCT_URL,
+        as_of_date=date(2026, 6, 29),
+        fallback_responses=[_widget_response(yotpo_body, url=YOTPO_REVIEWS_URL)],
+    )
+
+    assert receipt.widget_responses[0].response_kind == "yotpo_v3_reviews"
+    assert receipt.widget_responses[0].body_sha256 is not None
+    assert receipt.focused_review_coverage is None
+    assert receipt.fallback_needed is True
+    assert "yotpo_v3_reviews_preserved_not_parsed" in receipt.residuals
+    assert "parseable_widget_review_responses_absent" in receipt.residuals
+
+
+def test_malformed_fallback_body_is_visible_and_keeps_fallback_needed() -> None:
+    receipt = build_fragrance_rendered_widget_companion_from_observation(
+        _observation(response_body=None, total_count=2),
+        source_id="fragrance_retail_example",
+        source_site="Example",
+        product_url=PRODUCT_URL,
+        as_of_date=date(2026, 6, 29),
+        fallback_responses=[_widget_response("{", url=WIDGET_URL)],
+    )
+
+    assert receipt.focused_review_coverage is None
+    assert receipt.fallback_needed is True
+    assert any(residual.startswith("widget_review_coverage_parse_failed:") for residual in receipt.residuals)
+    assert "bounded_direct_widget_fallback_needed_for_row_completion" in receipt.residuals
+
+
+def test_invalid_fallback_url_fails_before_render() -> None:
+    observation_called = False
+
+    def fake_observation_fetcher(**_: object) -> BrowserPageObservationSuccess:
+        nonlocal observation_called
+        observation_called = True
+        return _observation(response_body=None, total_count=2)
+
+    with pytest.raises(FragranceRenderedWidgetCompanionInputError, match="not a supported fragrance widget endpoint"):
+        capture_fragrance_rendered_widget_companion(
+            url=PRODUCT_URL,
+            source_id="fragrance_retail_example",
+            source_site="Example",
+            observation_fetcher=fake_observation_fetcher,
+            fallback_widget_urls=["https://example.test/not-a-widget"],
+        )
+
+    assert observation_called is False
+
+
+def test_fallback_url_validation_rejects_embedded_credentials() -> None:
+    with pytest.raises(FragranceRenderedWidgetCompanionInputError, match="embedded credentials"):
+        fetch_fragrance_widget_fallback_responses(
+            urls=["https://user:pass@api.judge.me/reviews/reviews_for_widget?shop_domain=x"],
+            timeout_seconds=3,
+            max_response_bytes=100,
+        )
+
+
+class _FakeHeaders(dict[str, str]):
+    def get_content_charset(self) -> str | None:
+        return None
+
+
+class _FakeUrlopenResponse:
+    def __init__(self, *, body: bytes, headers: _FakeHeaders | None = None, url: str = WIDGET_URL, status: int = 200):
+        self._body = body
+        self.headers = headers or _FakeHeaders({"content-type": "application/json"})
+        self._url = url
+        self.status = status
+
+    def __enter__(self) -> "_FakeUrlopenResponse":
+        return self
+
+    def __exit__(self, *_: object) -> None:
+        return None
+
+    def getcode(self) -> int:
+        return self.status
+
+    def geturl(self) -> str:
+        return self._url
+
+    def read(self, size: int = -1) -> bytes:
+        if size < 0:
+            return self._body
+        return self._body[:size]
+
+
+def test_fallback_fetch_strips_cookie_headers(monkeypatch: pytest.MonkeyPatch) -> None:
+    headers = _FakeHeaders(
+        {
+            "content-type": "application/json",
+            "set-cookie": "secret=1",
+            "cookie": "secret=1",
+        }
+    )
+
+    def fake_urlopen(request: object, timeout: float) -> _FakeUrlopenResponse:
+        assert timeout == 7
+        return _FakeUrlopenResponse(body=_widget_body(total_count=1, review_count=1).encode("utf-8"), headers=headers)
+
+    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+
+    responses = fetch_fragrance_widget_fallback_responses(
+        urls=[WIDGET_URL],
+        timeout_seconds=7,
+        max_response_bytes=10_000,
+    )
+
+    assert responses[0].ok is True
+    assert responses[0].body_text
+    assert responses[0].response_headers == {"content-type": "application/json"}
+
+
+def test_fallback_fetch_records_network_exception(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_urlopen(request: object, timeout: float) -> None:
+        raise OSError("network unavailable")
+
+    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+
+    responses = fetch_fragrance_widget_fallback_responses(
+        urls=[WIDGET_URL],
+        timeout_seconds=3,
+        max_response_bytes=100,
+    )
+
+    assert responses[0].status == 0
+    assert responses[0].ok is False
+    assert responses[0].body_text == ""
+    assert responses[0].limitation_notes == ["bounded_fallback_fetch_failed:OSError:network unavailable"]
+
+
+def test_fallback_fetch_omits_over_cap_body(monkeypatch: pytest.MonkeyPatch) -> None:
+    def fake_urlopen(request: object, timeout: float) -> _FakeUrlopenResponse:
+        return _FakeUrlopenResponse(body=b"abcdef")
+
+    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+
+    responses = fetch_fragrance_widget_fallback_responses(
+        urls=[WIDGET_URL],
+        timeout_seconds=3,
+        max_response_bytes=5,
+    )
+
+    assert responses[0].status == 200
+    assert responses[0].body_text == ""
+    assert responses[0].limitation_notes == ["bounded_fallback_response_body_exceeded_cap:6>5"]
 
 
 def test_widget_response_url_filter_covers_judgeme_and_yotpo_v3() -> None:

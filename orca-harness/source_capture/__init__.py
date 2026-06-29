@@ -84,6 +84,7 @@ from source_capture.fragrance_rendered_widget_companion import (
     capture_fragrance_rendered_widget_companion,
     fetch_fragrance_widget_fallback_responses,
     is_fragrance_widget_response_url,
+    validate_fragrance_widget_fallback_urls,
     write_fragrance_rendered_widget_companion,
 )
 from source_capture.source_quality import (
@@ -160,6 +161,7 @@ __all__ = [
     "build_fragrance_rendered_widget_companion_from_observation",
     "capture_fragrance_rendered_widget_companion",
     "fetch_fragrance_widget_fallback_responses",
+    "validate_fragrance_widget_fallback_urls",
     "build_fragrance_review_coverage",
     "build_fragrance_review_coverage_from_files",
     "build_reddit_api_projection",

@@ -74,7 +74,8 @@ _DOM_EXTRACT_SCRIPT = """
 }
 """
 
-_REVIEW_RESPONSE_KINDS = frozenset({"judgeme_reviews_for_widget", "yotpo_v3_reviews"})
+_REVIEW_RESPONSE_KINDS = frozenset({"judgeme_reviews_for_widget"})
+_UNPARSED_REVIEW_RESPONSE_KINDS = frozenset({"yotpo_v3_reviews"})
 
 
 class FragranceRenderedWidgetCompanionInputError(ValueError):
@@ -174,6 +175,9 @@ def capture_fragrance_rendered_widget_companion(
     fallback_widget_urls: Sequence[str] = (),
     fallback_fetcher: Callable[..., Sequence[BrowserPageResponse]] | None = None,
 ) -> FragranceRenderedWidgetCompanionReceipt:
+    if fallback_widget_urls:
+        validate_fragrance_widget_fallback_urls(urls=fallback_widget_urls)
+
     observation = observation_fetcher(
         url=url,
         dom_extract_script=_DOM_EXTRACT_SCRIPT,
@@ -284,6 +288,16 @@ def build_fragrance_rendered_widget_companion_from_observation(
         for response in widget_responses
         if response.response_kind in _REVIEW_RESPONSE_KINDS and response.body_text
     ]
+    unparsed_review_response_kinds = sorted(
+        {
+            response.response_kind
+            for response in widget_responses
+            if response.response_kind in _UNPARSED_REVIEW_RESPONSE_KINDS and response.body_text
+        }
+    )
+    for kind in unparsed_review_response_kinds:
+        residuals.append(f"{kind}_preserved_not_parsed")
+
     focused_review_coverage: FragranceReviewCoverageReceipt | None = None
     pdp_html = _pdp_html_from_dom_observation(observation.dom_observation)
     if review_response_bodies:
@@ -303,10 +317,13 @@ def build_fragrance_rendered_widget_companion_from_observation(
             residuals.append(f"widget_review_coverage_parse_failed:{exc}")
         else:
             route_health.append("focused_review_coverage_built_from_widget_responses")
-            if focused_review_coverage.coverage_summary.total_rows == 0:
+            summary = focused_review_coverage.coverage_summary
+            if summary.total_rows == 0:
                 residuals.append("widget_responses_did_not_yield_review_rows")
+            elif summary.widget_total_count is None:
+                residuals.append("widget_total_count_absent_completeness_unverified")
     else:
-        residuals.append("widget_review_responses_absent")
+        residuals.append("parseable_widget_review_responses_absent")
 
     fallback_needed = _fallback_needed(focused_review_coverage)
     if fallback_needed:
@@ -332,6 +349,11 @@ def is_fragrance_widget_response_url(url: str) -> bool:
     return _widget_response_kind(url) is not None
 
 
+def validate_fragrance_widget_fallback_urls(*, urls: Sequence[str]) -> None:
+    for url in urls:
+        _validate_fallback_widget_url(url)
+
+
 def fetch_fragrance_widget_fallback_responses(
     *,
     urls: Sequence[str],
@@ -342,10 +364,10 @@ def fetch_fragrance_widget_fallback_responses(
         raise FragranceRenderedWidgetCompanionInputError("timeout_seconds must be greater than zero")
     if max_response_bytes <= 0:
         raise FragranceRenderedWidgetCompanionInputError("max_response_bytes must be greater than zero")
+    validate_fragrance_widget_fallback_urls(urls=urls)
 
     responses: list[BrowserPageResponse] = []
     for url in urls:
-        _validate_fallback_widget_url(url)
         responses.append(
             _fetch_fallback_widget_response(
                 url,
@@ -549,7 +571,9 @@ def _fallback_needed(coverage: FragranceReviewCoverageReceipt | None) -> bool:
     summary = coverage.coverage_summary
     if summary.total_rows == 0:
         return True
-    if summary.widget_total_count is not None and summary.total_rows < summary.widget_total_count:
+    if summary.widget_total_count is None:
+        return True
+    if summary.total_rows < summary.widget_total_count:
         return True
     return False
 
@@ -633,5 +657,6 @@ __all__ = [
     "capture_fragrance_rendered_widget_companion",
     "fetch_fragrance_widget_fallback_responses",
     "is_fragrance_widget_response_url",
+    "validate_fragrance_widget_fallback_urls",
     "write_fragrance_rendered_widget_companion",
 ]

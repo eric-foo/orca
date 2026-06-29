@@ -421,6 +421,8 @@ def build_fragrance_review_coverage(
         residuals.append("aggregate_companion_absent")
     if widget_total_count is not None:
         route_health.append("widget_total_count_present")
+    elif rows:
+        residuals.append("widget_total_count_absent_completeness_unverified")
     if widget_total_count is not None and widget_total_count != len(rows):
         residuals.append("widget_total_count_deduped_row_count_mismatch")
     if (
