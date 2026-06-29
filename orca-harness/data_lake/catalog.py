@@ -53,7 +53,8 @@ FacetExtractor = Callable[[dict[str, Any], dict[str, bytes]], Iterable[CatalogFa
 def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
     """Rebuild the generated Bronze catalog from verified committed raw packets."""
     entries = _build_entries(root)
-    snapshot = _catalog_snapshot(entries)
+    source_surfaces = _source_surface_summary(entries)
+    snapshot = _catalog_snapshot(entries, source_surfaces)
     root._reverify()
     catalog_root = _catalog_root(root)
     if catalog_root.exists():
@@ -63,6 +64,8 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "status": "rebuilt",
         "catalog_version": BRONZE_CATALOG_VERSION,
         "packet_count": len(entries),
+        "source_surface_count": len(source_surfaces),
+        "source_surfaces": source_surfaces,
         "file_count": len(snapshot),
         "catalog_root": _rel(root, catalog_root),
     }
@@ -71,7 +74,8 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
 def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
     """Compare generated catalog files to the raw-derived expected catalog."""
     expected = _build_entries(root)
-    expected_snapshot = _catalog_snapshot(expected)
+    source_surfaces = _source_surface_summary(expected)
+    expected_snapshot = _catalog_snapshot(expected, source_surfaces)
     catalog_root = _catalog_root(root)
     actual_snapshot, read_failures = _read_snapshot(root, catalog_root)
     missing_files = sorted(set(expected_snapshot) - set(actual_snapshot))
@@ -120,6 +124,8 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "catalog_version": BRONZE_CATALOG_VERSION,
         "expected_packet_count": len(expected),
         "indexed_packet_count": len(existing),
+        "source_surface_count": len(source_surfaces),
+        "source_surfaces": source_surfaces,
         "missing_packets": missing,
         "orphaned_packets": orphaned,
         "stale_packets": stale,
@@ -136,6 +142,7 @@ def _build_entries(root: DataLakeRoot) -> list[dict[str, Any]]:
     for packet_id in _iter_committed_packet_ids(root):
         loaded = root.load_raw_packet(packet_id)
         manifest = loaded.manifest
+        extractor_registered = _extractor_key(manifest) in _EXTRACTORS
         facets = [
             *_universal_facets(manifest),
             *_extractor_facets(manifest, loaded.bodies),
@@ -152,6 +159,7 @@ def _build_entries(root: DataLakeRoot) -> list[dict[str, Any]]:
                 "source_family": _string_or_none(manifest.get("source_family")),
                 "source_surface": _string_or_none(manifest.get("source_surface")),
                 "source_locator": _visible_fact_value(manifest.get("source_locator")),
+                "facet_extractor": "registered" if extractor_registered else "universal_only",
                 "session_identity": _string_or_none(manifest.get("session_identity")),
                 "capture_time": _visible_fact_value(
                     (manifest.get("timing") or {}).get("capture_time")
@@ -186,7 +194,9 @@ def _iter_committed_packet_ids(root: DataLakeRoot) -> list[str]:
     return packet_ids
 
 
-def _catalog_snapshot(entries: list[dict[str, Any]]) -> dict[str, bytes]:
+def _catalog_snapshot(
+    entries: list[dict[str, Any]], source_surfaces: list[dict[str, Any]]
+) -> dict[str, bytes]:
     snapshot: dict[str, bytes] = {}
     by_source_family: dict[str, list[dict[str, Any]]] = {}
     by_source_surface: dict[str, list[dict[str, Any]]] = {}
@@ -210,6 +220,13 @@ def _catalog_snapshot(entries: list[dict[str, Any]]) -> dict[str, bytes]:
             by_facet.setdefault(key, []).append(row | {"facet": facet})
 
     snapshot["all_packets.jsonl"] = _jsonl_bytes(_query_row(entry) for entry in entries)
+    snapshot["source_surfaces.json"] = _json_bytes(
+        {
+            "catalog_version": BRONZE_CATALOG_VERSION,
+            "source_surface_count": len(source_surfaces),
+            "source_surfaces": source_surfaces,
+        }
+    )
     snapshot.update(_bucket_jsonl_snapshot("by_source_family", by_source_family))
     snapshot.update(_bucket_jsonl_snapshot("by_source_surface", by_source_surface))
     snapshot.update(_bucket_jsonl_snapshot("by_session_identity", by_session))
@@ -233,6 +250,41 @@ def _catalog_snapshot(entries: list[dict[str, Any]]) -> dict[str, bytes]:
         }
     )
     return snapshot
+
+
+def _source_surface_summary(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    buckets: dict[tuple[str | None, str | None], dict[str, Any]] = {}
+    for entry in entries:
+        key = (entry.get("source_family"), entry.get("source_surface"))
+        bucket = buckets.setdefault(
+            key,
+            {
+                "source_family": key[0],
+                "source_surface": key[1],
+                "packet_count": 0,
+                "facet_extractor": "universal_only",
+                "facet_namespaces": set(),
+            },
+        )
+        bucket["packet_count"] += 1
+        if entry.get("facet_extractor") == "registered":
+            bucket["facet_extractor"] = "registered"
+        for facet in entry.get("facets", []):
+            namespace = facet.get("namespace") if isinstance(facet, dict) else None
+            if isinstance(namespace, str) and namespace:
+                bucket["facet_namespaces"].add(namespace)
+    return [
+        {
+            "source_family": bucket["source_family"],
+            "source_surface": bucket["source_surface"],
+            "packet_count": bucket["packet_count"],
+            "facet_extractor": bucket["facet_extractor"],
+            "facet_namespaces": sorted(bucket["facet_namespaces"]),
+        }
+        for _, bucket in sorted(
+            buckets.items(), key=lambda item: (item[0][0] or "", item[0][1] or "")
+        )
+    ]
 
 
 def _universal_facets(manifest: dict[str, Any]) -> list[CatalogFacet]:
@@ -269,10 +321,15 @@ def _universal_facets(manifest: dict[str, Any]) -> list[CatalogFacet]:
 
 
 def _extractor_facets(manifest: dict[str, Any], bodies: dict[str, bytes]) -> list[CatalogFacet]:
-    extractor = _EXTRACTORS.get(
-        (_string_or_none(manifest.get("source_family")), _string_or_none(manifest.get("source_surface")))
-    )
+    extractor = _EXTRACTORS.get(_extractor_key(manifest))
     return list(extractor(manifest, bodies)) if extractor is not None else []
+
+
+def _extractor_key(manifest: dict[str, Any]) -> tuple[str | None, str | None]:
+    return (
+        _string_or_none(manifest.get("source_family")),
+        _string_or_none(manifest.get("source_surface")),
+    )
 
 
 def _ig_reels_grid_facets(_manifest: dict[str, Any], bodies: dict[str, bytes]) -> list[CatalogFacet]:
