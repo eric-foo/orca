@@ -136,6 +136,7 @@ def run_fragrantica_mgt_capture(
     if exit_code != 0:
         return exit_code, f"{DIRECT_HTTP_SLOT} failed: {message}"
     direct_dir = Path(message)
+    _read_manifest(direct_dir)
 
     exit_code, message = cloakbrowser_runner(
         url=url,
@@ -180,6 +181,7 @@ def run_fragrantica_mgt_capture(
     if exit_code != 0:
         return exit_code, f"{INITIAL_VIEWPORT_SLOT} failed: {message}"
     initial_dir = Path(message)
+    _read_manifest(initial_dir)
 
     exit_code, message = cloakbrowser_runner(
         url=url,
@@ -224,6 +226,7 @@ def run_fragrantica_mgt_capture(
     if exit_code != 0:
         return exit_code, f"{DEEP_SCROLL_SLOT} failed: {message}"
     deep_dir = Path(message)
+    _read_manifest(deep_dir)
 
     summary = build_fragrantica_mgt_capture_summary(
         url=url,
@@ -267,6 +270,9 @@ def build_fragrantica_mgt_capture_summary(
             "source_family": manifest.get("source_family"),
             "source_surface": manifest.get("source_surface"),
             "packet_path": str(packet_dir),
+            "access_posture": manifest.get("access_posture"),
+            "archive_history_posture": manifest.get("archive_history_posture"),
+            "slice_postures": _slice_postures(manifest),
         }
 
     return {
@@ -297,6 +303,25 @@ def extract_fragrantica_product_id(url: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _slice_postures(manifest: Mapping[str, object]) -> list[dict[str, object]]:
+    source_slices = manifest.get("source_slices")
+    if not isinstance(source_slices, list):
+        return []
+
+    postures: list[dict[str, object]] = []
+    for source_slice in source_slices:
+        if not isinstance(source_slice, dict):
+            continue
+        postures.append(
+            {
+                "slice_id": source_slice.get("slice_id"),
+                "access_posture": source_slice.get("access_posture"),
+                "archive_history_posture": source_slice.get("archive_history_posture"),
+            }
+        )
+    return postures
+
+
 def preflight_fragrantica_mgt_capture(*, url: str, output_root: Path) -> str:
     _validate_fragrantica_url(url)
     _assert_output_root_available(output_root)
@@ -320,8 +345,12 @@ def _read_manifest(packet_dir: Path) -> dict[str, object]:
 def _validate_fragrantica_url(url: str) -> None:
     parsed = urlparse(url)
     hostname = (parsed.hostname or "").lower()
-    if parsed.scheme not in {"http", "https"} or not hostname.endswith("fragrantica.com"):
+    if parsed.scheme not in {"http", "https"} or not _is_fragrantica_hostname(hostname):
         raise ValueError("Fragrantica MGT capture requires an absolute fragrantica.com URL")
+
+
+def _is_fragrantica_hostname(hostname: str) -> bool:
+    return hostname == "fragrantica.com" or hostname.endswith(".fragrantica.com")
 
 
 def _validate_positive(name: str, value: int | float) -> None:
