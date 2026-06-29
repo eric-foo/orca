@@ -3,11 +3,9 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import urllib.error
-import urllib.request
 from datetime import date
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Mapping, Sequence
+from typing import Any, Callable, Literal, Mapping, Sequence
 from urllib.parse import urlencode, urlparse
 
 from pydantic import Field
@@ -18,6 +16,9 @@ from source_capture.adapters.browser_snapshot import (
     BrowserPageResponse,
     BrowserSnapshotFailure,
     fetch_browser_page_observation_capture,
+)
+from source_capture.adapters.fragrance_widget_fallback import (
+    fetch_fragrance_widget_fallback_responses as _fetch_fragrance_widget_fallback_responses,
 )
 from source_capture.fragrance_review_coverage import (
     FragranceReviewCoverageInputError,
@@ -466,17 +467,11 @@ def fetch_fragrance_widget_fallback_responses(
     if max_response_bytes <= 0:
         raise FragranceRenderedWidgetCompanionInputError("max_response_bytes must be greater than zero")
     validate_fragrance_widget_fallback_urls(urls=urls)
-
-    responses: list[BrowserPageResponse] = []
-    for url in urls:
-        responses.append(
-            _fetch_fallback_widget_response(
-                url,
-                timeout_seconds=timeout_seconds,
-                max_response_bytes=max_response_bytes,
-            )
-        )
-    return responses
+    return _fetch_fragrance_widget_fallback_responses(
+        urls=urls,
+        timeout_seconds=timeout_seconds,
+        max_response_bytes=max_response_bytes,
+    )
 
 def _rendered_companion_from_observation(observation: BrowserPageObservationSuccess) -> FragranceAboveFoldCompanion:
     dom = _dom_mapping(observation.dom_observation)
@@ -540,73 +535,6 @@ def _widget_response_captures(
         )
     return preserved
 
-def _fetch_fallback_widget_response(
-    url: str,
-    *,
-    timeout_seconds: float,
-    max_response_bytes: int,
-) -> BrowserPageResponse:
-    request = urllib.request.Request(
-        url,
-        headers={
-            "Accept": "application/json,text/html;q=0.9,*/*;q=0.8",
-            "User-Agent": "Mozilla/5.0 (compatible; OrcaSourceCapture/0.1)",
-        },
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
-            body_text, limitation_notes = _read_response_body_with_cap(
-                response,
-                max_response_bytes=max_response_bytes,
-            )
-            status = int(response.getcode())
-            return BrowserPageResponse(
-                requested_url=url,
-                final_url=str(response.geturl()),
-                status=status,
-                ok=200 <= status < 400,
-                body_text=body_text,
-                response_headers=_headers_without_cookies(response.headers.items()),
-                limitation_notes=limitation_notes,
-            )
-    except urllib.error.HTTPError as exc:
-        body_text, limitation_notes = _read_response_body_with_cap(
-            exc,
-            max_response_bytes=max_response_bytes,
-        )
-        return BrowserPageResponse(
-            requested_url=url,
-            final_url=str(exc.geturl()),
-            status=int(exc.code),
-            ok=False,
-            body_text=body_text,
-            response_headers=_headers_without_cookies(exc.headers.items() if exc.headers else ()),
-            limitation_notes=limitation_notes,
-        )
-    except Exception as exc:
-        return BrowserPageResponse(
-            requested_url=url,
-            final_url=url,
-            status=0,
-            ok=False,
-            body_text="",
-            response_headers={},
-            limitation_notes=[f"bounded_fallback_fetch_failed:{type(exc).__name__}:{exc}"],
-        )
-
-def _read_response_body_with_cap(response: Any, *, max_response_bytes: int) -> tuple[str, list[str]]:
-    raw = response.read(max_response_bytes + 1)
-    if len(raw) > max_response_bytes:
-        return "", [f"bounded_fallback_response_body_exceeded_cap:{len(raw)}>{max_response_bytes}"]
-    charset = response.headers.get_content_charset() if response.headers else None
-    return raw.decode(charset or "utf-8", errors="replace"), []
-
-def _headers_without_cookies(items: Iterable[tuple[str, str]]) -> dict[str, str]:
-    return {
-        str(key): str(value)
-        for key, value in items
-        if str(key).lower() not in {"set-cookie", "cookie"}
-    }
 
 def _validate_fallback_widget_url(url: str) -> None:
     parsed = urlparse(url)

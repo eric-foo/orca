@@ -6,7 +6,7 @@ from datetime import date
 
 import pytest
 
-import source_capture.fragrance_rendered_widget_companion as companion_module
+import source_capture.adapters.fragrance_widget_fallback as fallback_adapter
 from runners import run_fragrance_rendered_widget_companion as runner_module
 from source_capture.adapters.browser_snapshot import BrowserPageObservationSuccess, BrowserPageResponse
 from source_capture.fragrance_rendered_widget_companion import (
@@ -671,7 +671,7 @@ def test_fallback_fetch_strips_cookie_headers(monkeypatch: pytest.MonkeyPatch) -
         assert timeout == 7
         return _FakeUrlopenResponse(body=_widget_body(total_count=1, review_count=1).encode("utf-8"), headers=headers)
 
-    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(fallback_adapter.urllib.request, "urlopen", fake_urlopen)
 
     responses = fetch_fragrance_widget_fallback_responses(
         urls=[WIDGET_URL],
@@ -688,7 +688,7 @@ def test_fallback_fetch_records_network_exception(monkeypatch: pytest.MonkeyPatc
     def fake_urlopen(request: object, timeout: float) -> None:
         raise OSError("network unavailable")
 
-    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(fallback_adapter.urllib.request, "urlopen", fake_urlopen)
 
     responses = fetch_fragrance_widget_fallback_responses(
         urls=[WIDGET_URL],
@@ -706,7 +706,7 @@ def test_fallback_fetch_omits_over_cap_body(monkeypatch: pytest.MonkeyPatch) -> 
     def fake_urlopen(request: object, timeout: float) -> _FakeUrlopenResponse:
         return _FakeUrlopenResponse(body=b"abcdef")
 
-    monkeypatch.setattr(companion_module.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(fallback_adapter.urllib.request, "urlopen", fake_urlopen)
 
     responses = fetch_fragrance_widget_fallback_responses(
         urls=[WIDGET_URL],
