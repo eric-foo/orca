@@ -63,6 +63,15 @@ Architect reserves final authority over what is kept and may veto any change it
 judges to add no benefit or net-negative value, even when individually
 defensible.
 
+**Adjudication closeout.** The delegated return is not complete merely because
+it names a verdict, diff, findings, or residual risk. The return/courier prompt
+must instruct the commissioning Chief Architect to close the adjudication with
+`.agents/workflow-overlay/communication-style.md` -> **Review Adjudication Next
+Step**: batch admin/lifecycle follow-ups into one land step with no
+deep-thinking, and deep-think only the 1-3 material next moves that need
+judgment. This is a prompt-return obligation for the adjudicator, not permission
+for the delegate to decide what is kept or to widen review scope.
+
 **Access modes — `repo` (default) and `no_repo`.** The commission records `access: repo | no_repo` — an operator/commission access constraint, not a model choice. In **`repo`** mode the loop above runs as written: the de-correlated delegate patches the named target and returns a diff. In **`no_repo`** mode the delegate has no repo access and **does not patch**; it runs advisory-only and returns findings (not a diff), and the **CA applies** accepted changes within the bounded scope. `no_repo` preserves de-correlated *review* but **not** de-correlated *patch authorship*, so it is **strictly weaker than `repo` mode** and **requires a bounded post-patch re-review** before keep — closure-of-findings plus any new blocker/major in the touched delta. The no-repo review method is target-kind specific: `authored_artifact` uses the portable review method (registry id `portable-adversarial-artifact-review-method`), while `delegated_code_review_and_patch` uses a repo-blind code-review package/prompt that preserves `workflow-code-review` method requirements as far as no-repo access permits. Because the post-patch recheck is a narrow, near-mechanical verification against the findings' explicit closure conditions rather than open seam-discovery, it runs as a **same-family, different (lower / mechanical-tier) model** (a who-constraint, not a runtime-model recommendation), **not** a cross-family pass. **Cross-family de-correlation is reserved for discovery** (the original full adversarial review) and is **required to claim** the *survives-an-adversarial-review-with-no-new-seam* standard; a bounded same-family recheck does not by itself support that claim. The recheck is CA-adjudicated before anything is kept. The package ships the review target as a **verbatim file attachment** with an independently confirmable file hash (embedded-in-markdown copies are not byte-confirmable); and the package assembler/CA runs the target-kind method's **freshness gate** before bundling, recording the result in the commission. The default package shape is a **self-contained bundle**: the verbatim target attachment(s) plus a guardrail-complete `README` that carries the method, the authority excerpts, and the target's contract, delivered with a **thin-wrapper** chat prompt that points the reviewer at the in-bundle `README` — the wrapper still carries the cross-vendor who-constraint, which must not migrate silently into the bundle. When the reviewer cannot read in-bundle files, fall back to **inlining** the method block in the chat prompt; never ship a wrapper that points at a `README` a repo-blind reviewer cannot open. The de-correlation who-constraint, CA adjudication, `NEEDS_ARCHITECTURE_PASS`, and the strict-claim boundary are otherwise unchanged.
 
 **Citations.** The delegate's citations are neutral in tone — factual source
@@ -293,7 +302,11 @@ delegated_review_patch_overlay_interface:
     - Source-Gated Method Contract REFERENCE-LOAD / SOURCE-LOAD / SOURCE_CONTEXT_READY (.agents/workflow-overlay/prompt-orchestration.md)
     - source packs and read budgets (.agents/workflow-overlay/source-loading.md)
   output_destinations:
-    delegate_return: unified diff + neutral source citations + verdict + residual-risk note (paste-ready courier to the commissioning Chief Architect)
+    delegate_return: >
+      unified diff + neutral source citations + verdict + residual-risk note,
+      plus an adjudicator next-moves tail that points the commissioning Chief
+      Architect to communication-style.md -> Review Adjudication Next Step
+      (paste-ready courier; delegate does not decide what is kept)
     prompt_orchestrator_route_out: paste-ready-chat route-out prompt with operator_to_fill fields when target/purpose are inferable but commission fields are unbound
     durable_review_report: docs/review-outputs/ or docs/review-outputs/adversarial-artifact-reviews/ when a durable report is commissioned
     patch_application: the CA-named target in-repo — single authored file, or the named multi-file set in delegated_code_review_and_patch — under the commission (patch / integration execution authority per .agents/workflow-overlay/review-lanes.md)
@@ -318,6 +331,69 @@ lifecycle mechanics into Orca; jb is cited only as cross-project provenance.
 ## Direction Change Propagation
 
 ```yaml
+# review adjudication next-moves tail bound 2026-06-30 (CA decision).
+direction_change_propagation:
+  doctrine_changed: >
+    Delegated review-and-patch returns now explicitly carry the existing Review
+    Adjudication Next Step tail: the return/courier prompt instructs the
+    commissioning Chief Architect, after adjudicating the verdict/diff/findings,
+    to batch admin/lifecycle follow-ups into one no-deep-thinking land step and
+    deep-think only the 1-3 material next moves that need judgment. This hardens
+    the delegated-review seam without moving the admin/material shape out of
+    communication-style.md or changing prompt-orchestration.md's review prompt
+    default.
+  trigger: review_authority
+  related_triggers: [workflow_authority, output_authority]
+  controlling_sources_updated:
+    - .agents/workflow-overlay/delegated-review-patch.md
+  downstream_surfaces_checked:
+    - path: .agents/workflow-overlay/communication-style.md
+      note: >
+        Already owns the exact Review Adjudication Next Step shape; no copy or
+        fork added here beyond a pointer.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      note: >
+        Already requires every review prompt and review-return/courier prompt to
+        instruct the adjudicator to run the next-moves pass after the verdict.
+        No edit.
+    - path: .agents/workflow-overlay/review-lanes.md
+      note: >
+        Review-lane findings still own minimum_closure_condition and
+        next_authorized_action; this patch only binds the delegated return's
+        adjudication closeout tail. No edit.
+    - path: AGENTS.md
+      note: >
+        Already routes delegated-review-patch and prompt artifacts to the owning
+        overlay/prompt-orchestration sources; no root restatement added.
+    - path: docs/workflows/orca_repo_map_v0.md
+      note: >
+        Its delegated-review-patch index line remains accurate; no new section
+        or artifact path was added.
+  intentionally_not_updated:
+    - path: .agents/workflow-overlay/communication-style.md
+      reason: >
+        The admin/material next-step shape already exists there and remains the
+        single owner.
+    - path: .agents/workflow-overlay/prompt-orchestration.md
+      reason: >
+        The review prompt default already carries the review-return/courier
+        prompt obligation; duplicating the shape there would fork the owner.
+  stale_language_search: >
+    rg -ni "Review Adjudication Next Step|next-moves pass|admin/lifecycle|delegate_return|operator_closeout_source|review-return"
+    .agents docs/prompts/templates docs/workflows AGENTS.md
+  stale_language_search_result: >
+    Executed 2026-06-30. communication-style.md owns the shape; prompt-orchestration.md
+    already binds review prompts and review-return/courier prompts; delegated-review-patch.md
+    was the only live overlay seam whose delegate_return output still stopped at
+    diff/citations/verdict/residual-risk without naming the adjudicator next-moves
+    tail. No prompt template or repo-map contradiction found.
+  non_claims:
+    - not validation
+    - not readiness
+    - not a bound/mandatory/machine-routable review lane
+    - not runtime model routing
+    - not standing implementation/code-patch authorization
+
 # delegated_code_review_and_patch sibling mode bound 2026-06-28 (CA decision).
 direction_change_propagation:
   doctrine_changed: >
