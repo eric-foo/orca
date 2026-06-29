@@ -508,6 +508,7 @@ nickname: "crawling graph." The runner is
 | `docs/workflows/orca_repo_map_v0.md` | Compact navigation map for bounded source-pack selection and prompt setup. |
 | `docs/workflows/youtube_shorts_creator_index_decision_path_v0.md` | Source-backed workflow decision path for planned creator-ledger infrastructure: keeps the 200-row fragrance ledger as evidence, assigns recurring creator-observation contract ownership to Capture source-family architecture, limits Data Lake to keyed storage/attachment, and defers queryable niche/sub-niche creator views to projection. |
 | `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine repo submap. Open before enumerating capture owner docs. |
+| `docs/decisions/data_lake_capture_propagation_classification_contract_proposal_v0.md` | Prepare-only proposal for narrow Data Lake / Capture propagation classification: generic lake/storage and packet-runner checks, platform behavioral parity checks, source-family-local acquisition routes, and downstream residual/Gold-boundary propagation. Proposal only; not accepted doctrine. |
 | `docs/workflows/ecr_spine_submap_v0.md` | ECR source-side spine repo submap (integrity postures SP-1/2/3/6 + deprecated/dormant Signal Content Record contract). Open before enumerating ECR/SCR owner docs. |
 | `docs/workflows/cleaning_contract_to_code_reconciliation_checklist_v0.md` | Contract-to-code checklist for the bounded Cleaning substrate in `orca-harness/cleaning/` against the Cleaning README/foundation/boundary/projection sources. Retrieval-only; not validation, readiness, or production Cleaning authorization. |
 | `docs/research/judgment-spine/judgment_spine_consolidation_map_v0.md` | Judgment Spine submap. Open before enumerating Judgment owners across `docs/research/judgment-spine/` and `orca/product/spines/judgment/`. |
@@ -927,6 +928,8 @@ direction_change_propagation:
     - "not Source Capture"
     - "not Data Capture"
 ```
+
+Older receipts, when cycled out, are archived verbatim in `docs/decisions/dcp_receipts_archive_v0.md`.
 
 ## Workstream Status Pointers
 
