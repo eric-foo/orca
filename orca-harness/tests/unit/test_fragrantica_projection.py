@@ -43,6 +43,9 @@ def test_fragrantica_projection_preserves_current_window_reviews_and_residuals()
     assert projection.loss_ledger.full_archive_captured is False
     assert "full_review_archive_not_captured_login_prompt_present" in projection.residuals
     assert "search_review_rows_not_embedded_in_direct_http_body" in projection.residuals
+    assert "fragrance_accords_present_but_not_projected" in projection.residuals
+    assert "fragrance_notes_pyramid_present_but_not_projected" in projection.residuals
+    assert "fragrance_similarity_surface_present_but_not_projected" in projection.residuals
 
     product = _single_row(projection.rows, "fragrance_product_snapshot")
     assert product.source_object_site_id == "33519"
@@ -76,6 +79,13 @@ def test_fragrantica_projection_rejects_wrong_source_family() -> None:
     packet, raw = _packet(source_family="web_page")
 
     with pytest.raises(ValueError, match="source_family='fragrance_native_database'"):
+        build_fragrantica_projection(packet=packet, raw_file_bytes_by_file_id=raw)
+
+
+def test_fragrantica_projection_rejects_wrong_source_surface() -> None:
+    packet, raw = _packet(source_surface="retail_pdp_product_page")
+
+    with pytest.raises(ValueError, match="source_surface='fragrantica_product_page_direct_http'"):
         build_fragrantica_projection(packet=packet, raw_file_bytes_by_file_id=raw)
 
 
@@ -254,6 +264,13 @@ def _html() -> str:
         <title>Baccarat Rouge 540 Maison Francis Kurkdjian perfume - a fragrance for women and men 2015</title>
       </head>
       <body>
+        <section id="main-accords"><h2>Main accords</h2><span>amber</span></section>
+        <section id="pyramid">
+          <h3>Top Notes</h3><span>saffron</span>
+          <h3>Middle Notes</h3><span>jasmine</span>
+          <h3>Base Notes</h3><span>cedar</span>
+        </section>
+        <section id="reminds-me-of"><h2>This perfume reminds me of</h2><a>Similar scent</a></section>
         <div id="perfume-description-content" itemprop="description">
           <p><b>Baccarat Rouge 540</b> by <b>Maison Francis Kurkdjian</b> is a fragrance. Baccarat Rouge 540 was launched in 2015.</p>
         </div>

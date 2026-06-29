@@ -402,6 +402,7 @@ def _project_fragrantica_html(
         row.tab_id == "search-reviews" for row in review_rows
     ):
         residuals.append("search_review_rows_not_embedded_in_direct_http_body")
+    residuals.extend(_non_review_fragrance_scope_residuals(text))
 
     return _ProjectedFragranticaHtml(
         rows=rows,
@@ -471,6 +472,17 @@ def _product_residuals(product: Mapping[str, Any | None]) -> list[str]:
     for field in ("source_object_site_id", "source_object_name", "brand_or_house", "canonical_url"):
         if product.get(field) in {None, ""}:
             residuals.append(f"{field}_absent")
+    return residuals
+
+
+def _non_review_fragrance_scope_residuals(text: str) -> list[str]:
+    residuals = []
+    if re.search(r"\bmain\s+accords?\b", text, flags=re.IGNORECASE):
+        residuals.append("fragrance_accords_present_but_not_projected")
+    if re.search(r"\b(?:top|middle|base)\s+notes?\b", text, flags=re.IGNORECASE):
+        residuals.append("fragrance_notes_pyramid_present_but_not_projected")
+    if re.search(r"\breminds\s+me\s+of\b", text, flags=re.IGNORECASE):
+        residuals.append("fragrance_similarity_surface_present_but_not_projected")
     return residuals
 
 
