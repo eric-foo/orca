@@ -75,9 +75,14 @@ Recommended future controlling home:
 
 That home fits because the classification is about product architecture at the
 lake/capture boundary: raw packet preservation, lake seams, derived records,
-behavioral projection parity, and downstream residual semantics. The Orca overlay
-should only be edited if the owner wants to change agent workflow behavior, gate
-behavior, or source-loading mechanics. The current problem is narrower than that.
+behavioral projection parity, and downstream residual semantics. Like the Data
+Lake medallion contract (which maps Silver/Gold epistemic boundaries across the
+projection, ECR/SCR, Cleaning, and Judgment lanes without owning them), this
+contract classifies and routes propagation to each owning lane; it does not
+transfer behavioral-projection, acquisition-route, ECR, Cleaning, or Judgment
+ownership into Data Lake. The Orca overlay should only be edited if the owner
+wants to change agent workflow behavior, gate behavior, or source-loading
+mechanics. The current problem is narrower than that.
 
 ## Architecture Planning Triage
 
@@ -102,14 +107,40 @@ scope small, and prevents a narrow discovery from becoming a universal claim.
 It is not a Mini God Tier achievement claim. It asserts no validation, readiness,
 platform coverage, or implementation completeness.
 
-Accepted residuals in this proposal:
+Accepted residuals in this proposal (per
+`docs/decisions/orca_mini_god_tier_doctrine_v0.md`, each names what is foregone,
+why it is acceptable now, the remaining risk, and the upgrade trigger):
 
-- no universal output rule for non-packet runners;
-- no forced acquisition-route uniformity across YouTube, Instagram, TikTok, or
-  future source families;
-- no claim that behavioral parity is fully enforced for every platform;
-- no Gold/Judgment semantics outside Judgment-owned sources;
-- no patch to controlling source until the owner accepts the controlling home.
+- **No universal output/seam rule for non-packet runners.** Foregone: a single
+  lake-routing rule covering every runner. Acceptable now: only raw
+  `SourceCapturePacket` producers carry raw lake truth, and the seam coverage
+  test already scopes to them; offline projections, materializers, and
+  audit/report runners write no raw truth. Risk: a future non-packet runner that
+  should route into the lake is not caught by the packet-producer seam. Upgrade
+  trigger: a non-packet entrypoint needs lake routing, scoping its own seam
+  rather than widening this bucket.
+- **No forced acquisition-route uniformity across YouTube, Instagram, TikTok, or
+  future source families.** Foregone: a shared cross-platform acquisition
+  primitive now. Acceptable now: acquisition routes are platform-specific
+  (YouTube caption/watch/ASR vs Instagram grid/audio/deep-capture) and forcing
+  uniformity would copy non-transferable mechanics. Risk: a genuine
+  platform-independent primitive stays source-family-local longer than strictly
+  necessary. Upgrade trigger: two non-overlapping source families prove the same
+  primitive and the owner accepts promotion (see the source-family-local bucket).
+- **No enforced behavioral-parity guarantee for every platform.** Foregone: a
+  hard cross-platform projection-parity invariant. Acceptable now: parity is a
+  review obligation over shared projection shape, and only the YouTube and
+  Instagram behavioral projections exist today. Risk: a new platform's projection
+  could drift from the shared shape without a gate catching it. Upgrade trigger:
+  the owner authorizes an enforced cross-source projection-parity check (the
+  cross-source behavioral-record ontology path named in Architecture Planning
+  Triage).
+
+Preserved hard boundaries (correctness/process limits, not Pareto give-ups, so
+they carry no upgrade trigger): Gold/Judgment interpretation stays in
+Judgment-owned sources and never enters this lane; and this proposal patches no
+controlling source until the owner accepts the controlling home (the prepare-only
+process gate in Status).
 
 ## Before / After
 
@@ -211,9 +242,10 @@ Key checked observations:
 - Silver Vault records are append-only derived records keyed to raw anchors,
   with posture/value coupling, raw refs, derived refs, metric missingness, and no
   Gold/Judgment output.
-- Projection doctrine allows core promotion only for obvious invariants or rules
-  that survive at least two non-overlapping source families, and it forbids
-  projection from emitting interpretation.
+- Projection doctrine allows core promotion for obvious invariants, and for a
+  family-specific rule only once it survives at least two non-overlapping source
+  families or the owner explicitly accepts it as core; and it forbids projection
+  from emitting interpretation.
 - The packet-runner lake-seam test is scoped to runners that write
   `SourceCapturePacket` material and enforces data-root forwarding plus exclusive
   output modes.
