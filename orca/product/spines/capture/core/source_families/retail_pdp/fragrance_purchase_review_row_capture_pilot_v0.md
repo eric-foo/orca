@@ -62,16 +62,16 @@ lane explicitly binding that next step.
 
 ## Later Widget Probe
 
-This receipt remains the original 25-row packet-window pilot. A later bounded
-widget-expansion probe found better current row-completion routes for four
-Judge.me fixtures, but did not rewrite this raw JSONL corpus.
+This receipt remains the original 25-row packet-window pilot. Later bounded
+widget-expansion probes found better current row-completion routes for the
+Judge.me fixtures and for ZGO's Yotpo v3 storefront route, but did not rewrite this raw JSONL corpus.
 
 | Source ID | Original emitted rows | Widget fixture total observed later | Current interpretation |
 | --- | ---: | ---: | --- |
 | `fragrance_retail_ministry_of_scent` | 4 | 4 | Widget route confirms no pagination gain. |
 | `fragrance_retail_luckyscent` | 10 | 14 | Widget page 2 exposes 4 missing rows. |
 | `fragrance_retail_twisted_lily` | 5 | 6 | Widget page 2 exposes 1 missing row. |
-| `fragrance_retail_zgo` | 1 | 1 | Public Yotpo widget API returned zero rows; keep Direct HTTP static PDP section. |
+| `fragrance_retail_zgo` | 1 | 1 | Yotpo v3 storefront endpoint now confirms the same 1-row fixture with native id, date, verified flag, rating, aggregate, and media absence diagnostics. |
 | `fragrance_retail_indigo` | 5 | 13 | Direct Judge.me widget endpoint supersedes schema-only row completion. |
 
 For current pagination, rating-filter, media-filter, and widget-route posture,
@@ -113,6 +113,6 @@ substrates {"json_ld_judgeme_review_objects": 5, "judge_me_dom_static_html": 4, 
   ten rendered rows while the aggregate substrate reported fourteen reviews.
 - Indigo emitted schema-only rows from rendered JSON-LD / Judge.me review objects;
   visible text still did not expose visible review-row bodies.
-- ZGO emitted one static Yotpo-section row with date absent.
+- ZGO emitted one static Yotpo-section row with date absent in the original packet-window corpus; later Yotpo v3 probing recovered the native review id and created datetime for the same 1-row fixture.
 - No pain/pleasure labeling, sentiment, review-integrity score, dedupe,
   reviewer identity resolution, product normalization, or buyer-proof claim.

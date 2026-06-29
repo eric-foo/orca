@@ -12,6 +12,7 @@ open_next:
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_site_registry_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_contract_v0.md
   - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_row_capture_pilot_v0.md
+  - orca/product/spines/capture/core/source_families/retail_pdp/fragrance_purchase_review_widget_expansion_probe_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/source_capture_playbook_v0.md
   - orca/product/spines/capture/core/source_capture_toolbox/capture_recon_index_v0.md
   - orca-harness/docs/source_capture_agent_runbook.md
@@ -84,7 +85,7 @@ bypass, or challenge-solving run.
 | --- | --- | --- | --- | --- |
 | Luckyscent / Scent Bar | HTTP 200 PDP body preserved. Static HTML exposed aggregate JSON-LD review substrate (`ratingValue: 3.71`, `reviewCount: 14`) and review anchors, but no review-body rows. | CloakBrowser render plus progressive scroll exposed row-level review text and metadata: sampled DOM/text showed 10 review bodies, titles, dates, reviewer names, country labels, variant labels, `data-verified-buyer`, and store-invitation labels. | `GO_ROW_LEVEL_RENDERED` | CloakBrowser packet with `--settle-seconds 5 --scroll-step-px 500 --scroll-passes 4`. |
 | Twisted Lily | HTTP 200 PDP body preserved. Static HTML exposed Shopify/vendor review config and aggregate count substrate, but not usable row text. | CloakBrowser render plus progressive scroll exposed row-level review text and metadata: sampled visible text showed 6 reviews, rating summary, reviewer names, dates, verified labels, locations, and Shop App labels. | `GO_ROW_LEVEL_RENDERED` | CloakBrowser packet with `--settle-seconds 5 --scroll-step-px 500 --scroll-passes 4`. Variant URL normalization may append `?variant=...`; record actual final URL. |
-| ZGO Perfumery | Original sampled fixture: HTTP 200 PDP body preserved, but Yotpo/widget config had zero-count/no row bodies. Known-reviewed fixture: Direct HTTP packet preserved static HTML with a Yotpo review section containing one review body, reviewer label, rating, and aggregate count. The section did not expose a review date in the extracted text. | CloakBrowser was not needed for the known-reviewed fixture after Direct HTTP exposed the row body. Original rendered fixture remained row-empty. | `GO_ROW_LEVEL_DIRECT_HTTP_KNOWN_REVIEWED_FIXTURE` | Direct HTTP on `https://zgoperfumery.com/products/d-s-durga-concrete-lightning-eau-de-parfum`; do not reuse the original Orpheon zero-count fixture for row capture. |
+| ZGO Perfumery | Original sampled fixture: HTTP 200 PDP body preserved, but Yotpo/widget config had zero-count/no row bodies. Known-reviewed fixture: Direct HTTP packet preserved static HTML with one Yotpo review row. Later widget-generation diagnosis found the row-positive Yotpo v3 storefront route with native review id, created datetime, verified-buyer flag, aggregate rating, star distribution, and media absence diagnostics. | CloakBrowser was not needed for the known-reviewed fixture. Original rendered fixture remained row-empty; older Yotpo v1 widget endpoints also remained row-empty. | `GO_ROW_LEVEL_YOTPO_V3_KNOWN_REVIEWED_FIXTURE` | Preferred route is `GET https://api-cdn.yotpo.com/v3/storefront/store/LotcNgdZUJLtOh7iQPZPMJPRTLfGpWs2nlS5U8eh/product/10788875403567/reviews?page=1&perPage=10`; Direct HTTP static section is fallback. Do not reuse the original Orpheon zero-count fixture for row capture. |
 | Indigo Perfumery | Original sampled fixture: Direct HTTP failed before packet write with local certificate verification error. curl_cffi reached HTTP 200 during diagnosis but did not expose row bodies on the original fixture. | Known-reviewed fixture: CloakBrowser render+scroll preserved rendered DOM with five JSON-LD / Judge.me `Review` objects carrying `reviewBody`, rating, date, author, review title/name, and product binding. Visible text still showed only the `CUSTOMER REVIEW` section label and no visible row bodies. | `GO_ROW_LEVEL_RENDERED_SCHEMA_ONLY_KNOWN_REVIEWED_FIXTURE` | CloakBrowser packet with `--settle-seconds 5 --scroll-step-px 500 --scroll-passes 4` on `https://indigoperfumery.com/products/indigo-perfumery-sampler-set`; carry a visible-row residual. |
 | Ministry of Scent | HTTP 200 PDP body preserved. Static HTML exposed Judge.me review rows directly, including `jdgm-rev__body`, titles, verified-buyer labels, dates, product title, review source labels, and thumbs counts. | Not needed for the sampled fixture. | `GO_ROW_LEVEL_DIRECT_HTTP` | Direct HTTP packet is sufficient first rung. Escalate to CloakBrowser only if a later product uses lazy-loaded rows. |
 
@@ -110,15 +111,15 @@ Scratch packet evidence was written under
 
 | Retailer | Packet path | Fresh-read row evidence |
 | --- | --- | --- |
-| ZGO Perfumery | `zgo_known_reviewed/direct_http_packet` | Raw HTTP body existed at 439706 bytes; `#yotpo-reviews-section-data` extracted to 734 characters and contained one review body plus reviewer/rating/aggregate count. |
+| ZGO Perfumery | `zgo_known_reviewed/direct_http_packet`; later `zgo_completion_probe_20260629/v3_validation_probe` | Original raw HTTP body had the static Yotpo section. Later v3 validation confirmed 1 total row, native review id, created datetime, verified flag, 5.0 average, 5-star distribution, 99-word body, and zero review media. |
 | Indigo Perfumery | `indigo_known_review_candidate/cloakbrowser_packet` | Rendered DOM existed at 390136 bytes; visible text existed at 1092 bytes; DOM contained five `reviewBody` occurrences inside JSON-LD / Judge.me `Review` objects and zero visible review-row markers. |
 
 ## Recipe Notes
 
 1. Start with Direct HTTP when the page body is the target. For this lane, Direct
-   HTTP is enough for Ministry of Scent and the selected ZGO known-reviewed
-   fixture, and useful for detecting aggregate-only substrates on Luckyscent,
-   Twisted Lily, and the original ZGO fixture.
+   HTTP is enough for Ministry of Scent and remains a useful ZGO fallback, but
+   the preferred ZGO completion route is now the Yotpo v3 storefront endpoint.
+   Direct HTTP is still useful for detecting aggregate-only substrates on Luckyscent, Twisted Lily, and the original ZGO fixture.
 2. Escalate to CloakBrowser for rendered review widgets or rendered structured
    review rows. For Luckyscent, Twisted Lily, and the selected Indigo fixture,
    the working recipe is a rendered packet with `--settle-seconds 5
