@@ -9,10 +9,13 @@ use_when:
   - Checking why source-backed lineage is no longer the main blocker.
   - Preparing a bounded follow-up lane for IG behavioral parity without changing capture mechanics.
 open_next:
+  - docs/workflows/ig_behavioral_missing_input_capture_receipt_v0.md
   - docs/workflows/ig_vs_youtube_behavioral_gap_ledger_v0.md
   - docs/workflows/ig_canonical_f_deep_capture_product_extraction_receipt_v0.md
   - orca-harness/source_capture/ig_reels_behavioral_lake.py
   - orca-harness/source_capture/ig_reels_behavioral_projection.py
+superseded_by:
+  - docs/workflows/ig_behavioral_missing_input_capture_receipt_v0.md
 stale_if:
   - A later IG behavioral residual inventory supersedes the F-lake read below.
   - IG behavioral lake/projection code changes residual or completeness semantics.
@@ -21,6 +24,10 @@ authority_boundary: retrieval_only
 ```
 
 ## Short Answer
+
+Post-run update: the owner-authorized missing-input capture pass has now completed. For current
+residual counts and the next blocker, use
+docs/workflows/ig_behavioral_missing_input_capture_receipt_v0.md, not the fresh-read counts below.
 
 The next big step is **not more lineage work**. The read-side lineage gate is in place.
 
