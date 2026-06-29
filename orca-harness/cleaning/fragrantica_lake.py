@@ -3,7 +3,7 @@
 The verified read half lives on ``DataLakeRoot``. This adapter reads a committed
 Fragrantica raw packet by key, rebuilds the mechanical Fragrantica projection,
 builds the source-family Cleaning packet, and appends one lane-owned derived
-record at ``derived/<packet_id>/cleaning_fragrantica/<record_id>.json``.
+record at ``derived/<anchor_shard>/<packet_id>/cleaning_fragrantica/<record_id>.json``.
 
 Boundary: this persists Cleaning ledger output only. It does not write lake core
 fields, change raw, decide sentiment, infer demand, bind Evidence Units, or make
@@ -81,11 +81,7 @@ def fragrantica_cleaning_record_payload(
     record_id: str,
 ) -> dict[str, Any]:
     """Return the Silver-compatible record payload before lake append."""
-    capture_time = (
-        packet.timing.capture_time.value
-        if packet.timing.capture_time.status == VisibleFactStatus.KNOWN
-        else None
-    )
+    capture_time = _known_capture_time(packet)
     record: dict[str, Any] = {
         "record_id": record_id,
         "raw_anchor": packet.packet_id,
@@ -127,6 +123,15 @@ def fragrantica_cleaning_record_payload(
     }
     record["content_hash"] = f"sha256:{_content_hash(record)}"
     return record
+
+
+def _known_capture_time(packet: SourceCapturePacket) -> str:
+    if packet.timing.capture_time.status != VisibleFactStatus.KNOWN or not packet.timing.capture_time.value:
+        raise ValueError(
+            "Fragrantica Cleaning observation records require a known capture_time "
+            "for observed_at and captured_at."
+        )
+    return packet.timing.capture_time.value
 
 
 def _coverage(cleaning_packet: CleaningPacket) -> dict[str, Any]:

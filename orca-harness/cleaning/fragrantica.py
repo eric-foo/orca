@@ -29,6 +29,7 @@ FRAGRANTICA_CLEANING_HANDLE_PREFIX = "cleaning:fragrantica"
 
 _FRAGRANTICA_SOURCE_FAMILY = "fragrance_native_database"
 _FRAGRANTICA_SOURCE_SURFACE = "fragrantica_product_page_direct_http"
+_ECR_REF_STATUS_BY_CONVENTION = "by_convention_not_existence_checked"
 
 _VOTE_FIELD_NAMES = (
     "rating",
@@ -126,7 +127,7 @@ def _review_card_transform_entries(
     fields = row.source_visible_fields
     entries: list[CleaningTransformLedgerEntry] = []
 
-    review_text = _string_or_none(fields.get("review_text"))
+    review_text = _non_empty_string_or_none(fields.get("review_text"))
     if review_text is not None:
         entries.append(
             _normalization_entry(
@@ -138,7 +139,7 @@ def _review_card_transform_entries(
             )
         )
 
-    author_display_name = _string_or_none(fields.get("author_display_name"))
+    author_display_name = _non_empty_string_or_none(fields.get("author_display_name"))
     if author_display_name is not None:
         entries.append(
             _normalization_entry(
@@ -224,11 +225,10 @@ def _normalize_space(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
 
-def _string_or_none(value: Any) -> str | None:
+def _non_empty_string_or_none(value: Any) -> str | None:
     if not isinstance(value, str):
         return None
-    normalized = _normalize_space(value)
-    return normalized if normalized else None
+    return value if _normalize_space(value) else None
 
 
 def _length_bin(length: int) -> str:
@@ -246,6 +246,7 @@ def _ecr_ref(packet_id: str) -> CleaningEcrRef:
         packet_id=packet_id,
         ref_id=f"ecr:{packet_id}:{ECR_SOURCE_SIDE_REF_KIND}",
         posture_kind=ECR_SOURCE_SIDE_REF_KIND,
+        status=_ECR_REF_STATUS_BY_CONVENTION,
     )
 
 

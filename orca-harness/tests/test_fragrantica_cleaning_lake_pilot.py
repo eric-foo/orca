@@ -8,14 +8,18 @@ from typing import Any
 import pytest
 
 from cleaning import CleaningPacket
+from cleaning.fragrantica import build_fragrantica_cleaning_packet
 from cleaning.fragrantica_lake import (
     FRAGRANTICA_CLEANING_LANE,
     FRAGRANTICA_CLEANING_RECORD_SCHEMA_VERSION,
     derive_fragrantica_cleaning_into_lake,
+    fragrantica_cleaning_record_payload,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
+from source_capture.fragrantica_projection import build_fragrantica_projection
 from source_capture.models import (
     PacketTiming,
+    SourceCapturePacket,
     SourceCaptureSlice,
     known_fact,
     not_applicable,
@@ -56,12 +60,47 @@ def test_derives_fragrantica_cleaning_packet_into_derived_record(tmp_path: Path)
     assert record["captured_at"] == record["observed_at"]
     assert record["content_hash"] == f"sha256:{_content_hash(record)}"
     assert record["content_hash_basis"] == "canonical_json_excluding_content_hash"
+    assert record["raw_refs"]
+    assert {ref["packet_id"] for ref in record["raw_refs"]} == {packet_id}
+    assert {ref["file_id"] for ref in record["raw_refs"]} == {"file_01"}
+    assert all(ref["sha256"] and ref["hash_basis"] == "raw_stored_bytes" for ref in record["raw_refs"])
 
     assert record["payload"]["handle_count"] == len(cleaning_packet.handles)
     assert record["payload"]["transform_entry_count"] == len(cleaning_packet.transform_ledger)
     round_tripped = CleaningPacket.model_validate(record["payload"]["cleaning_packet"])
     assert len(round_tripped.handles) == len(cleaning_packet.handles)
     assert len(round_tripped.transform_ledger) == len(cleaning_packet.transform_ledger)
+    assert {
+        handle.ecr_ref.status
+        for handle in round_tripped.handles
+        if handle.ecr_ref is not None
+    } == {"by_convention_not_existence_checked"}
+
+
+def test_fragrantica_cleaning_record_rejects_unknown_capture_time(tmp_path: Path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_fragrantica_packet(root, tmp_path)
+    loaded = root.load_raw_packet(packet_id)
+    packet = SourceCapturePacket.model_validate(loaded.manifest)
+    packet = packet.model_copy(
+        update={
+            "timing": packet.timing.model_copy(
+                update={"capture_time": unknown_with_reason("fixture hides capture time")}
+            )
+        }
+    )
+    projection = build_fragrantica_projection(
+        packet=packet,
+        raw_file_bytes_by_file_id=loaded.bodies,
+    )
+    cleaning_packet = build_fragrantica_cleaning_packet(projection)
+
+    with pytest.raises(ValueError, match="known capture_time"):
+        fragrantica_cleaning_record_payload(
+            packet=packet,
+            cleaning_packet=cleaning_packet,
+            record_id="rec.json",
+        )
 
 
 def test_fragrantica_cleaning_record_preserves_current_window_residuals(tmp_path: Path) -> None:

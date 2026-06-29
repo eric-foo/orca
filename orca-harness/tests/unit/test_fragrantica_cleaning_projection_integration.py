@@ -68,6 +68,11 @@ def test_fragrantica_cleaning_packet_adds_review_card_transform_ledger() -> None
 
     assert len(cleaning_packet.handles) == len(projection.rows)
     assert all(handle.ecr_ref is not None for handle in cleaning_packet.handles)
+    assert {
+        handle.ecr_ref.status
+        for handle in cleaning_packet.handles
+        if handle.ecr_ref is not None
+    } == {"by_convention_not_existence_checked"}
     review_row = next(row for row in projection.rows if row.row_kind == "fragrance_review_card_current_window")
     expected_handle_id = f"{FRAGRANTICA_CLEANING_HANDLE_PREFIX}:{review_row.row_id}"
     review_entries = [
@@ -150,6 +155,68 @@ def test_fragrantica_cleaning_packet_leaves_non_review_rows_untransformed() -> N
     }
 
     assert transformed_row_ids == review_row_ids
+
+
+def test_fragrantica_cleaning_normalization_preserves_pre_transform_string_values() -> None:
+    projection = _projection_with_review_field_overrides(
+        review_text="  This   perfume\n died young.  ",
+        author_display_name="  Ri   mazy  ",
+    )
+
+    cleaning_packet = build_fragrantica_cleaning_packet(projection)
+    review_row = next(row for row in projection.rows if row.row_kind == "fragrance_review_card_current_window")
+    expected_handle_id = f"{FRAGRANTICA_CLEANING_HANDLE_PREFIX}:{review_row.row_id}"
+    review_entries = [
+        entry
+        for entry in cleaning_packet.transform_ledger
+        if entry.input_handle_id == expected_handle_id
+    ]
+
+    text_entry = _entry_by_method(
+        review_entries, "fragrantica_review_text_whitespace_normalization"
+    )
+    assert text_entry.transform.original_value == "  This   perfume\n died young.  "
+    assert text_entry.transform.transformed_value == "This perfume died young."
+
+    author_entry = _entry_by_method(
+        review_entries, "fragrantica_author_display_name_whitespace_normalization"
+    )
+    assert author_entry.transform.original_value == "  Ri   mazy  "
+    assert author_entry.transform.transformed_value == "Ri mazy"
+
+
+def test_fragrantica_cleaning_packet_can_omit_ecr_ref_when_not_present() -> None:
+    packet = _packet()
+    projection = build_fragrantica_projection(
+        packet=packet,
+        raw_file_bytes_by_file_id={
+            "file_01": _html().encode("utf-8"),
+            "file_02": b'{"status": 200}',
+        },
+    )
+
+    cleaning_packet = build_fragrantica_cleaning_packet(projection, attach_ecr_ref=False)
+
+    assert all(handle.ecr_ref is None for handle in cleaning_packet.handles)
+
+
+def _projection_with_review_field_overrides(**overrides):
+    packet = _packet()
+    projection = build_fragrantica_projection(
+        packet=packet,
+        raw_file_bytes_by_file_id={
+            "file_01": _html().encode("utf-8"),
+            "file_02": b'{"status": 200}',
+        },
+    )
+    rows = []
+    for row in projection.rows:
+        if row.row_kind == "fragrance_review_card_current_window":
+            fields = {**row.source_visible_fields, **overrides}
+            row = row.model_copy(update={"source_visible_fields": fields})
+        rows.append(row)
+    return projection.model_copy(update={"rows": rows})
+
 
 def _packet() -> SourceCapturePacket:
     timing = PacketTiming(
