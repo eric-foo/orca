@@ -86,6 +86,12 @@ def _facet_rows(root: DataLakeRoot) -> list[dict]:
     return rows
 
 
+def _source_surface_rows(root: DataLakeRoot) -> list[dict]:
+    return json.loads(
+        (_catalog_root(root) / "source_surfaces.json").read_text(encoding="utf-8")
+    )["source_surfaces"]
+
+
 def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
     reddit = _write_reddit_packet(root, tmp_path, series_id="b2b-series")
@@ -95,6 +101,7 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
 
     assert report["status"] == "rebuilt"
     assert report["packet_count"] == 2
+    assert report["source_surface_count"] == 2
     assert inspect_catalog(root)["status"] == "ok"
 
     ig_pid = ig.packet.packet_id
@@ -127,6 +134,61 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
         and row["facet"]["value"] == "hyram"
         for row in _facet_rows(root)
     )
+
+    report_surface_rows = {
+        (row["source_family"], row["source_surface"]): row
+        for row in report["source_surfaces"]
+    }
+    generated_surface_rows = {
+        (row["source_family"], row["source_surface"]): row
+        for row in _source_surface_rows(root)
+    }
+    assert generated_surface_rows == report_surface_rows
+    assert report_surface_rows[("reddit", "r/B2BMarketing")]["packet_count"] == 1
+    assert (
+        report_surface_rows[("reddit", "r/B2BMarketing")]["facet_extractor"]
+        == "universal_only"
+    )
+    ig_surface = report_surface_rows[("instagram_creator", "ig_reels_grid_dom_passive_json")]
+    assert ig_surface["packet_count"] == 1
+    assert ig_surface["facet_extractor"] == "registered"
+    assert {
+        "instagram_creator_handle",
+        "instagram_creator_numeric_id",
+        "instagram_shortcode",
+    } <= set(ig_surface["facet_namespaces"])
+
+
+def test_rebuild_catalog_marks_unknown_future_surface_universal_only(tmp_path: Path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    src = tmp_path / "future_lane_payload.json"
+    src.write_text(json.dumps({"creator": "future"}, sort_keys=True), encoding="utf-8")
+    write_local_source_capture_packet(
+        data_root=root,
+        input_files=[src],
+        source_family="future_creator_network",
+        source_surface="future_creator_feed_v1",
+        source_locator=known_fact("https://example.invalid/future/creator"),
+        decision_question="does a future lane appear in Bronze coverage?",
+        capture_context="catalog fixture",
+        session_identity="future-session",
+    )
+
+    report = rebuild_catalog(root)
+
+    rows = {
+        (row["source_family"], row["source_surface"]): row
+        for row in report["source_surfaces"]
+    }
+    future_row = rows[("future_creator_network", "future_creator_feed_v1")]
+    assert future_row["packet_count"] == 1
+    assert future_row["facet_extractor"] == "universal_only"
+    assert {
+        "source_family",
+        "source_surface",
+        "session_identity",
+        "source_locator_sha256",
+    } <= set(future_row["facet_namespaces"])
 
 
 def test_inspect_catalog_reports_missing_and_stale_generated_index(tmp_path: Path) -> None:
