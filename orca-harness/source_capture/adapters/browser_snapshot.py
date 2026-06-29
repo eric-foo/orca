@@ -112,6 +112,12 @@ class BrowserPageObservationSuccess:
     limitation_notes: list[str]
 
 
+@dataclass(frozen=True)
+class _LazyLoadScrollResult:
+    executed_passes: int
+    stop_reason: str | None = None
+
+
 BrowserContextResponsesResult: TypeAlias = BrowserContextResponsesSuccess | BrowserSnapshotFailure
 BrowserPageObservationResult: TypeAlias = BrowserPageObservationSuccess | BrowserSnapshotFailure
 
@@ -729,7 +735,7 @@ class _PlaywrightBrowserSnapshotEngine:
                             f"browser_page_observation visible_text extraction failed: {exc}"
                         )
                     dom_observation = page.evaluate(dom_extract_script, dom_extract_arg)
-                    lazy_load_scroll_passes_executed = _run_bounded_lazy_load_scrolls(
+                    lazy_load_scroll_result = _run_bounded_lazy_load_scrolls(
                         page,
                         scroll_passes=lazy_load_scroll_passes,
                         scroll_step_px=lazy_load_scroll_step_px,
@@ -760,7 +766,8 @@ class _PlaywrightBrowserSnapshotEngine:
                         "dom_observation_stage": "pre_lazy_load_scroll",
                         "lazy_load_scroll_passes": lazy_load_scroll_passes,
                         "lazy_load_scroll_step_px": lazy_load_scroll_step_px,
-                        "lazy_load_scroll_passes_executed": lazy_load_scroll_passes_executed,
+                        "lazy_load_scroll_passes_executed": lazy_load_scroll_result.executed_passes,
+                        "lazy_load_scroll_stop_reason": lazy_load_scroll_result.stop_reason,
                         "headless": headless,
                         "browser_channel": browser_channel,
                         "viewport_width": viewport_width,
@@ -987,28 +994,31 @@ def _run_bounded_lazy_load_scrolls(
     *,
     scroll_passes: int,
     scroll_step_px: int,
-) -> int:
+) -> _LazyLoadScrollResult:
     executed = 0
     if scroll_passes <= 0:
-        return executed
+        return _LazyLoadScrollResult(executed)
     bounded_passes = min(scroll_passes, _MAX_SCROLL_PASSES)
+    capped = scroll_passes > _MAX_SCROLL_PASSES
     if scroll_step_px > 0:
         position = 0
         for _ in range(bounded_passes):
             height = int(page.evaluate("() => document.body.scrollHeight") or 0)
             if position >= height:
-                break
+                return _LazyLoadScrollResult(executed, "page_end")
             position += scroll_step_px
             page.evaluate("(y) => window.scrollTo(0, y)", position)
             page.wait_for_timeout(_SCROLL_PASS_SETTLE_MS)
             executed += 1
-        return executed
+        stop_reason = "capped_pass_limit" if capped else "requested_passes_complete"
+        return _LazyLoadScrollResult(executed, stop_reason)
 
     for _ in range(bounded_passes):
         page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         page.wait_for_timeout(_SCROLL_PASS_SETTLE_MS)
         executed += 1
-    return executed
+    stop_reason = "capped_pass_limit" if capped else "requested_passes_complete"
+    return _LazyLoadScrollResult(executed, stop_reason)
 
 
 def _playwright_proxy_settings(proxy_profile: ProxyProfile) -> dict[str, str]:

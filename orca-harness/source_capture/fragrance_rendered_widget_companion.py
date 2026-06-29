@@ -276,6 +276,9 @@ def build_fragrance_rendered_widget_companion_from_observation(
         lazy_executed = _int_or_none(observation.metadata.get("lazy_load_scroll_passes_executed")) or 0
         route_health.append(f"lazy_load_scroll_passes_requested:{lazy_requested}")
         route_health.append(f"lazy_load_scroll_passes_executed:{lazy_executed}")
+        lazy_stop_reason = observation.metadata.get("lazy_load_scroll_stop_reason")
+        if isinstance(lazy_stop_reason, str) and lazy_stop_reason:
+            route_health.append(f"lazy_load_scroll_stop_reason:{lazy_stop_reason}")
 
     passive_responses = _widget_response_captures(observation.responses, response_origin="render_passive")
     fallback_response_captures = _widget_response_captures(

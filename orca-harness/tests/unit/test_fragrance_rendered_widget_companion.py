@@ -199,6 +199,7 @@ def test_capture_threads_lazy_load_scroll_controls_to_observation_fetcher() -> N
                 **observation.metadata,
                 "lazy_load_scroll_passes": 2,
                 "lazy_load_scroll_passes_executed": 1,
+                "lazy_load_scroll_stop_reason": "page_end",
             },
         )
 
@@ -216,7 +217,20 @@ def test_capture_threads_lazy_load_scroll_controls_to_observation_fetcher() -> N
     assert captured_kwargs["lazy_load_scroll_step_px"] == 650
     assert "lazy_load_scroll_passes_requested:2" in receipt.route_health
     assert "lazy_load_scroll_passes_executed:1" in receipt.route_health
+    assert "lazy_load_scroll_stop_reason:page_end" in receipt.route_health
     assert receipt.fallback_needed is False
+
+
+def test_companion_omits_lazy_load_route_health_when_not_requested() -> None:
+    receipt = build_fragrance_rendered_widget_companion_from_observation(
+        _observation(response_body=_widget_body(total_count=2, review_count=2), total_count=2),
+        source_id="fragrance_retail_example",
+        source_site="Example",
+        product_url=PRODUCT_URL,
+        as_of_date=date(2026, 6, 29),
+    )
+
+    assert not any(item.startswith("lazy_load_scroll_") for item in receipt.route_health)
 
 
 def test_runner_threads_lazy_load_scroll_controls(monkeypatch: pytest.MonkeyPatch, tmp_path: object) -> None:
