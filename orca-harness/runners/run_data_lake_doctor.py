@@ -66,14 +66,17 @@ def _expected_availability(root: DataLakeRoot, candidate: _RawCandidate) -> dict
     }
 
 
-def _raw_candidates(root: DataLakeRoot) -> tuple[list[_RawCandidate], list[str], list[str], list[str]]:
+def _raw_candidates(
+    root: DataLakeRoot,
+) -> tuple[list[_RawCandidate], list[str], list[str], list[str], list[str]]:
     valid: list[_RawCandidate] = []
     wrong_shard: list[str] = []
     legacy_flat: list[str] = []
     malformed: list[str] = []
+    missing_manifest: list[str] = []
     raw_dir = root.path / "raw"
     if not raw_dir.is_dir():
-        return valid, wrong_shard, legacy_flat, malformed
+        return valid, wrong_shard, legacy_flat, malformed, missing_manifest
 
     for first in sorted(raw_dir.iterdir()):
         if not first.is_dir():
@@ -86,15 +89,27 @@ def _raw_candidates(root: DataLakeRoot) -> tuple[list[_RawCandidate], list[str],
             else:
                 malformed.append(_rel(root, first))
             continue
+        if _PACKET_ID.fullmatch(first.name):
+            missing_manifest.append(_rel(root, first))
+            continue
 
         for container in sorted(first.iterdir()):
             if not container.is_dir():
                 continue
+            if not _PACKET_ID.fullmatch(container.name):
+                # Any non-packet-id directory under a shard dir is a
+                # non-conforming raw container; surface it instead of skipping
+                # (previously a manifest-less stray here vanished from the report).
+                malformed.append(_rel(root, container))
+                continue
             manifest = container / "manifest.json"
             if not manifest.is_file():
-                continue
-            if not _PACKET_ID.fullmatch(container.name):
-                malformed.append(_rel(root, container))
+                # A packet-id-named container with no manifest is a partial or
+                # corrupted committed packet (aborted allocate, half publish, or
+                # a deleted manifest). It must stay visible: skipping it silently
+                # lets a corrupt packet read as a clean lake, and rebuild_availability
+                # also skips it, so absence here would hide it entirely.
+                missing_manifest.append(_rel(root, container))
                 continue
             if first.name != raw_shard(container.name):
                 wrong_shard.append(_rel(root, container))
@@ -106,7 +121,7 @@ def _raw_candidates(root: DataLakeRoot) -> tuple[list[_RawCandidate], list[str],
                     manifest=manifest,
                 )
             )
-    return valid, wrong_shard, legacy_flat, malformed
+    return valid, wrong_shard, legacy_flat, malformed, missing_manifest
 
 
 def _availability_entries(root: DataLakeRoot) -> tuple[dict[str, dict[str, Any]], int, list[dict[str, str]]]:
@@ -172,7 +187,7 @@ def inspect_data_lake(
 ) -> dict[str, Any]:
     rebuild_count = root.rebuild_availability() if rebuild_availability else None
 
-    raw_candidates, wrong_shard, legacy_flat, malformed = _raw_candidates(root)
+    raw_candidates, wrong_shard, legacy_flat, malformed, missing_manifest = _raw_candidates(root)
     availability, availability_count, availability_failures = _availability_entries(root)
     valid_packet_ids = {candidate.packet_id for candidate in raw_candidates}
 
@@ -243,6 +258,7 @@ def inspect_data_lake(
         "wrong_shard_packets": wrong_shard,
         "legacy_flat_packets": legacy_flat,
         "malformed_raw_containers": malformed,
+        "missing_manifest_raw_containers": missing_manifest,
         "availability_read_failures": availability_failures,
         "read_failures": read_failures,
         "semantic_folder_violations": _semantic_folder_violations(root),
@@ -257,6 +273,7 @@ def inspect_data_lake(
         "wrong_shard_packets",
         "legacy_flat_packets",
         "malformed_raw_containers",
+        "missing_manifest_raw_containers",
         "availability_read_failures",
         "read_failures",
         "semantic_folder_violations",

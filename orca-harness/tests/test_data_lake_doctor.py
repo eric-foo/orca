@@ -5,6 +5,7 @@ import shutil
 from pathlib import Path
 
 from data_lake.root import DataLakeRoot, raw_shard
+from harness_utils import generate_ulid
 from runners import run_data_lake_doctor as doctor
 from source_capture.models import known_fact
 from source_capture.writer import write_local_source_capture_packet
@@ -108,3 +109,84 @@ def test_main_prints_json_packet_lookup(tmp_path: Path, monkeypatch, capsys) -> 
     assert payload["status"] == "ok"
     assert payload["packet"]["packet_id"] == pid
     assert payload["packet"]["source_family"] == "reddit"
+
+
+def test_inspect_data_lake_reports_read_failure_on_corrupt_body(tmp_path: Path) -> None:
+    # The most dangerous false-pass: a committed, indexed packet whose preserved
+    # body bytes are corrupt. The availability index still matches the untouched
+    # manifest, so only the load_raw_packet read-verification pass can catch it.
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    pid = _capture_packet(root, tmp_path)
+    container = root.find_packet(pid)
+    assert container is not None
+    manifest = json.loads((container / "manifest.json").read_text(encoding="utf-8"))
+    preserved = manifest["preserved_files"][0]
+    body_path = container.joinpath(*preserved["relative_packet_path"].split("/"))
+    body_path.write_bytes(body_path.read_bytes() + b"corruption")
+
+    report = doctor.inspect_data_lake(root)
+
+    assert report["status"] == "issues_found"
+    assert report["raw_packet_count"] == 1
+    assert report["verified_raw_packet_count"] == 0
+    assert [failure["packet_id"] for failure in report["read_failures"]] == [pid]
+    # Index looks clean; the corruption is surfaced only by the read pass.
+    assert report["missing_availability"] == []
+    assert report["stale_availability"] == []
+
+
+def test_inspect_data_lake_reports_missing_manifest_container(tmp_path: Path) -> None:
+    # A packet-id-named container with no manifest (aborted allocate / half
+    # publish / deleted manifest) must not read as a clean lake.
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _capture_packet(root, tmp_path)
+    orphan_pid = generate_ulid()
+    partial = root.path / "raw" / raw_shard(orphan_pid) / orphan_pid
+    partial.mkdir(parents=True)
+
+    report = doctor.inspect_data_lake(root)
+
+    assert report["status"] == "issues_found"
+    assert report["missing_manifest_raw_containers"] == [
+        f"raw/{raw_shard(orphan_pid)}/{orphan_pid}"
+    ]
+    # The partial container must not inflate the valid/verified packet counts.
+    assert report["raw_packet_count"] == 1
+    assert report["verified_raw_packet_count"] == 1
+
+
+def test_inspect_data_lake_reports_legacy_flat_missing_manifest(tmp_path: Path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _capture_packet(root, tmp_path)
+    legacy_pid = generate_ulid()
+    legacy_partial = root.path / "raw" / legacy_pid
+    legacy_partial.mkdir(parents=True)
+
+    report = doctor.inspect_data_lake(root)
+
+    assert report["status"] == "issues_found"
+    assert report["missing_manifest_raw_containers"] == [f"raw/{legacy_pid}"]
+    assert report["raw_packet_count"] == 1
+    assert report["verified_raw_packet_count"] == 1
+
+
+def test_main_packet_lookup_reports_missing_packet_error(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    # A --packet-id lookup for an absent packet must surface an error and a
+    # non-zero exit, never hide it behind a zero-exit "ok" report.
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _capture_packet(root, tmp_path)
+    absent_pid = generate_ulid()
+
+    monkeypatch.setattr(
+        doctor.DataLakeRoot, "resolve", staticmethod(lambda *, explicit=None: root)
+    )
+
+    exit_code = doctor.main(["--data-root", str(root.path), "--packet-id", absent_pid])
+
+    assert exit_code == 1
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["status"] == "issues_found"
+    assert payload["packet"]["packet_id"] == absent_pid
+    assert "error" in payload["packet"]
