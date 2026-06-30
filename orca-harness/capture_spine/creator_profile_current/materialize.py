@@ -200,7 +200,14 @@ def build_creator_profile_current_view_document(
 
 
 def dump_creator_profile_current_view(document: dict[str, Any]) -> str:
-    return json.dumps(document, indent=2, ensure_ascii=False) + "\n"
+    # Canonical key ordering (sort_keys=True) so the serialized view is stable
+    # regardless of the source rollups' internal key order. Lake cut-over §5
+    # prerequisite: rollups lifted from canonical Silver records carry sorted
+    # nested keys while the hand-authored seed's order is arbitrary, and
+    # _profile_rollup deep-copies those nested dicts into the view -- without this,
+    # re-pointing materialize from the seed onto the snapshot would reorder nested
+    # metric keys and spuriously change the committed view's bytes.
+    return json.dumps(document, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
 
 def _build_platform_account_profile(
