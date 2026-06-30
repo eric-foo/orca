@@ -153,6 +153,51 @@ def test_posture_list_record_passes_and_blurred_member_raises() -> None:
         validate_non_silver_record(LaneRole.ECR, blurred)
 
 
+# --- hardening from the de-correlated review of #506 (adjudicated) --------------
+
+
+def test_list_record_with_non_mapping_member_raises() -> None:
+    # F1: a non-mapping member of a list record is invalid, not silently skipped --
+    # skipping it would let a malformed member evade the #3 envelope check.
+    postures = [{"epistemic_kind": "timing", "status": "known"}, ["nested", "list"]]
+    with pytest.raises(NonSilverRecordError, match="only mappings"):
+        validate_non_silver_record(LaneRole.ECR, postures)
+
+
+def test_projection_certification_substring_lookalike_is_rejected(
+    real_records: dict[str, object],
+) -> None:
+    # F2: exact-token match, not substring -- a lookalike cert that does not actually
+    # assert the posture must not pass.
+    blurred = copy.deepcopy(real_records["projection"])
+    blurred["certification"] = "view_only; not_cleaned_up; not_judgment_readyish"
+    with pytest.raises(NonSilverRecordError, match="not_cleaned"):
+        validate_non_silver_record(LaneRole.PROJECTION, blurred)
+
+
+def test_audit_pack_with_deeply_nested_judgment_raises(
+    real_records: dict[str, object],
+) -> None:
+    # F4: a resolved Judgment nested below payload.* (here under cleaning_packet) must
+    # not slip past a shallow top-level/payload-only boundary check.
+    blurred = copy.deepcopy(real_records["audit"])
+    blurred["payload"]["cleaning_packet"]["judgment"] = {"decision": "buy"}
+    with pytest.raises(NonSilverRecordError, match="resolved Judgment record"):
+        validate_non_silver_record(LaneRole.CLEANING_AUDIT, blurred)
+
+
+def test_audit_pack_with_empty_transform_ledger_passes(
+    real_records: dict[str, object],
+) -> None:
+    # F3 adjudication (rejected): a packet with nothing to clean (e.g. no reviews)
+    # emits a legitimate audit whose transform_ledger is empty -- empty is not a blur,
+    # so the validator must NOT reject it. This pins the decision against a re-add of
+    # a non-empty requirement.
+    audit = copy.deepcopy(real_records["audit"])
+    audit["payload"]["cleaning_packet"]["transform_ledger"] = []
+    validate_non_silver_record(LaneRole.CLEANING_AUDIT, audit)
+
+
 # --- misuse + shape guards ------------------------------------------------------
 
 
