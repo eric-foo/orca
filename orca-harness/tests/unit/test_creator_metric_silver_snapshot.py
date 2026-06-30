@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 
+from capture_spine.creator_profile_current.instagram_metric_seed import (
+    build_instagram_reels_creator_metric_seed_from_files,
+)
 from capture_spine.creator_profile_current.silver_metric_producer import (
     derive_creator_metric_silver_records_from_projections,
 )
@@ -511,3 +514,60 @@ def test_runner_blocks_when_committed_snapshot_invalid(tmp_path: Path) -> None:
     with pytest.raises(SnapshotRunError) as excinfo:
         _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
     assert excinfo.value.reason == "manifest_chain_broken"
+
+
+# -- adapter-equivalence (no-drift) gate -------------------------------------
+# The load-bearing proof that re-pointing materialize from the seed onto the
+# lake-derived snapshot is a no-op on the numbers: given identical projections,
+# the two independent adapters must produce value-equal metric_rollups.
+
+def test_ig_lake_path_rollups_equal_seed_builder_no_drift(tmp_path: Path) -> None:
+    """Adapter-equivalence gate (CI, lake-free). Given identical IG projections,
+    the lake-fed path (producer -> lake -> reader -> snapshot) yields
+    metric_rollups VALUE-equal to the independent seed-builder path -- exactly
+    what makes re-pointing materialize a no-op on the registry's numbers. The
+    committed seed's source projections are not in the repo, so this proves the
+    two ADAPTERS agree on shared input; the "== committed seed" check is the
+    later real-lake inspection diff (a stale seed legitimately differs)."""
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    raw = tmp_path / "ig_raw.json"
+    raw.write_text(json.dumps({"grid": "x"}), encoding="utf-8")
+    packet_id = write_local_source_capture_packet(
+        data_root=data_root,
+        input_files=[raw],
+        source_family="instagram_creator",
+        source_surface="ig_reels_grid",
+        source_locator=known_fact(f"https://www.instagram.com/{IG_HANDLE}/"),
+        decision_question="equivalence",
+        capture_context="no-drift equivalence gate",
+    ).packet.packet_id
+    projection = tmp_path / "ig_projection.json"
+    projection.write_text(
+        json.dumps({"packet_id": packet_id, "rows": _ig_projection_rows(packet_id, IG_HANDLE, (100, 300))}),
+        encoding="utf-8",
+    )
+
+    # lake-fed adapter: producer -> lake -> snapshot
+    derive_creator_metric_silver_records_from_projections(
+        data_root=data_root,
+        projection_paths=[projection],
+        account_ledger=_ig_producer_ledger(IG_ACCOUNT, IG_HANDLE),
+        generated_at_utc=LATE,
+    )
+    snapshot = generate_creator_metric_rollup_snapshot(
+        data_root,
+        account_ledger=_ig_discovery_ledger(IG_ACCOUNT),
+        platform="instagram",
+        snapshot_generated_at=LATE,
+    )
+    snapshot_rollups = snapshot.snapshot[SNAPSHOT_WRAPPER_KEY]["metric_rollups"]
+
+    # independent seed-builder adapter: SAME projection + timestamp
+    seed = build_instagram_reels_creator_metric_seed_from_files(
+        projection_paths=[projection],
+        account_ledger=_ig_producer_ledger(IG_ACCOUNT, IG_HANDLE),
+        generated_at_utc=LATE,
+    )
+    seed_rollups = seed["instagram_reels_creator_metric_seed"]["metric_rollups"]
+
+    assert snapshot_rollups == seed_rollups
