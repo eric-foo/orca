@@ -181,7 +181,7 @@ ref rather than a private packet-member path guess. The Silver record does not
 copy the body as authority; it carries enough AR material to re-resolve and
 verify the body: `attachment_record_id`, schema version, physicalization,
 `packet_id`, packet/body ref, `body_sha256`, `hash_basis`, `source_family`,
-`source_surface`, `payload_kind`, `payload_schema_version`, and any
+`source_surface`, `payload_kind`, `payload_schema_version`, replay/version pins, and any
 producer-owned provenance required by that producer contract.
 
 If no Attachment Record row exists, a Silver producer may cite hash-checkable raw
