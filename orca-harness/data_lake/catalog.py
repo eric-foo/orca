@@ -307,6 +307,71 @@ def catalog_coverage_census(root: DataLakeRoot) -> dict[str, Any]:
     }
 
 
+def source_surface_catalog_rows(
+    root: DataLakeRoot,
+    *,
+    source_family: str,
+    source_surface: str,
+) -> dict[str, Any]:
+    """Read generated Bronze packet and AR query rows for one source surface.
+
+    The helper intentionally resolves the generated paths from the catalog's own
+    source-surface summary so downstream lanes do not reimplement private safe-name
+    rules or guess filesystem layout.
+    """
+    family = _string_or_none(source_family)
+    surface = _string_or_none(source_surface)
+    if family is None or surface is None:
+        raise DataLakeRootError("source_family and source_surface must be non-blank strings")
+    report = inspect_catalog(root)
+    if report["status"] != "ok":
+        raise DataLakeRootError(
+            "Bronze catalog is not current; run run_data_lake_catalog.py --rebuild "
+            "before source-surface downstream consumption"
+        )
+    surface_row = next(
+        (
+            row
+            for row in report["source_surfaces"]
+            if row.get("source_family") == family and row.get("source_surface") == surface
+        ),
+        None,
+    )
+    if surface_row is None:
+        return {
+            "source_family": family,
+            "source_surface": surface,
+            "catalog_query_paths": {},
+            "packet_rows": [],
+            "attachment_record_rows": [],
+        }
+    packet_rows = [
+        row
+        for row in _read_catalog_jsonl(root, surface_row.get("by_source_surface_path"))
+        if row.get("source_family") == family and row.get("source_surface") == surface
+    ]
+    attachment_record_query_rows = [
+        row
+        for row in _read_catalog_jsonl(root, surface_row.get("attachment_records_path"))
+        if row.get("source_family") == family and row.get("source_surface") == surface
+    ]
+    attachment_record_rows = [
+        _read_attachment_record_catalog_entry(root, row)
+        for row in attachment_record_query_rows
+    ]
+    return {
+        "source_family": family,
+        "source_surface": surface,
+        "catalog_query_paths": {
+            "by_source_surface": surface_row.get("by_source_surface_path"),
+            "attachment_records_by_source_surface": surface_row.get("attachment_records_path"),
+        },
+        "packet_rows": packet_rows,
+        "attachment_record_query_rows": attachment_record_query_rows,
+        "attachment_record_rows": attachment_record_rows,
+    }
+
+
 def _build_entries(root: DataLakeRoot) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
     for packet_id in _iter_committed_packet_ids(root):
@@ -439,6 +504,70 @@ def _indexed_attachment_record_count(body: bytes | None) -> int:
         if isinstance(payload, dict) and isinstance(payload.get("attachment_record_id"), str):
             count += 1
     return count
+
+
+def _read_catalog_jsonl(root: DataLakeRoot, relative_path: object) -> list[dict[str, Any]]:
+    if relative_path is None:
+        return []
+    path = _catalog_generated_path(root, relative_path)
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError as exc:
+        raise DataLakeRootError(f"cannot read Bronze catalog query file {path}: {exc}") from exc
+    rows: list[dict[str, Any]] = []
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except ValueError as exc:
+            raise DataLakeRootError(
+                f"invalid JSONL row in Bronze catalog query file {path} line {line_number}: {exc}"
+            ) from exc
+        if not isinstance(row, dict):
+            raise DataLakeRootError(
+                f"invalid Bronze catalog query row in {path} line {line_number}: expected object"
+            )
+        rows.append(row)
+    return rows
+
+
+def _read_attachment_record_catalog_entry(
+    root: DataLakeRoot, query_row: dict[str, Any]
+) -> dict[str, Any]:
+    record_id = _string_or_none(query_row.get("attachment_record_id"))
+    if record_id is None or "/" in record_id or "\\" in record_id:
+        raise DataLakeRootError("Bronze attachment query row has unsafe attachment_record_id")
+    return _read_catalog_json(
+        root,
+        f"attachment_records/by_attachment_record/{record_id}.json",
+    )
+
+
+def _read_catalog_json(root: DataLakeRoot, relative_path: object) -> dict[str, Any]:
+    path = _catalog_generated_path(root, relative_path)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise DataLakeRootError(f"cannot read Bronze catalog JSON file {path}: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise DataLakeRootError(f"invalid Bronze catalog JSON file {path}: expected object")
+    return payload
+
+
+def _catalog_generated_path(root: DataLakeRoot, relative_path: object) -> Path:
+    if not isinstance(relative_path, str) or not relative_path:
+        raise DataLakeRootError("Bronze catalog query path must be a non-blank string")
+    rel = PurePosixPath(relative_path)
+    if rel.is_absolute() or any(part in {"", ".", ".."} for part in rel.parts):
+        raise DataLakeRootError(f"unsafe Bronze catalog query path: {relative_path!r}")
+    catalog_root = _catalog_root(root)
+    path = catalog_root.joinpath(*rel.parts)
+    try:
+        path.resolve().relative_to(catalog_root.resolve())
+    except ValueError as exc:
+        raise DataLakeRootError(f"Bronze catalog query path escapes catalog root: {relative_path!r}") from exc
+    return path
 
 
 def _iter_committed_packet_ids(root: DataLakeRoot) -> list[str]:
@@ -1139,4 +1268,5 @@ __all__ = [
     "inspect_catalog",
     "load_attachment_record_body",
     "rebuild_catalog",
+    "source_surface_catalog_rows",
 ]

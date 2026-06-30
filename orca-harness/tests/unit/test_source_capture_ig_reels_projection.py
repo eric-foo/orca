@@ -4,7 +4,9 @@ import json
 
 import pytest
 
+from data_lake.catalog import rebuild_catalog
 from data_lake.root import DataLakeRoot, DataLakeRootError
+import runners.run_ig_reels_grid_projection as ig_reels_runner
 from source_capture.ig_reels_grid_projection import (
     IG_REELS_PROJECTION_CERTIFICATION,
     IG_REELS_PROJECTION_METHOD,
@@ -14,6 +16,7 @@ from source_capture.ig_reels_grid_projection import (
     IgReelsGridProjectionRow,
     build_ig_reels_grid_projection,
     build_ig_reels_grid_projection_from_packet_directory,
+    project_ig_reels_grid_from_bronze_catalog,
     project_ig_reels_grid_into_lake,
 )
 from source_capture.models import (
@@ -228,6 +231,77 @@ def test_project_reels_grid_explicit_record_id_is_create_only(tmp_path) -> None:
     project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id, record_id="rec1")
     with pytest.raises(DataLakeRootError):
         project_ig_reels_grid_into_lake(data_root=root, packet_id=packet_id, record_id="rec1")
+
+
+def test_project_reels_grid_from_bronze_catalog_uses_source_surface_and_ar_rows(
+    tmp_path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_reels_packet(root, tmp_path)
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+
+    projected = project_ig_reels_grid_from_bronze_catalog(
+        data_root=root,
+        record_id_prefix="bronzeproof",
+    )
+
+    assert len(projected) == 1
+    projection, derived_path = projected[0]
+    assert projection.packet_id == packet_id
+    assert derived_path == root.record_path(
+        subtree="derived",
+        raw_anchor=packet_id,
+        lane=PROJECTION_IG_REELS_GRID_LANE,
+        record_id="bronzeproof_0001.json",
+    )
+    assert derived_path.is_file()
+    assert _row(projection, "ig_reels_grid_01", "view_count").chosen_source_surface == (
+        "clips_user_json_metadata"
+    )
+
+
+def test_project_reels_grid_from_bronze_catalog_requires_current_catalog(tmp_path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _commit_reels_packet(root, tmp_path)
+
+    with pytest.raises(DataLakeRootError, match="Bronze catalog is not current"):
+        project_ig_reels_grid_from_bronze_catalog(data_root=root)
+
+
+def test_runner_projects_reels_grid_from_bronze_source_surface(
+    tmp_path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_reels_packet(root, tmp_path)
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+
+    def fake_resolve(*, explicit=None, **_kwargs):
+        assert explicit == str(root.path)
+        return root
+
+    monkeypatch.setattr(ig_reels_runner.DataLakeRoot, "resolve", staticmethod(fake_resolve))
+
+    assert ig_reels_runner.main(
+        [
+            "--data-root",
+            str(root.path),
+            "--bronze-source-surface",
+            "--record-id-prefix",
+            "runnerproof",
+        ]
+    ) == 0
+
+    paths = json.loads(capsys.readouterr().out)
+    assert paths == [
+        str(
+            root.record_path(
+                subtree="derived",
+                raw_anchor=packet_id,
+                lane=PROJECTION_IG_REELS_GRID_LANE,
+                record_id="runnerproof_0001.json",
+            )
+        )
+    ]
 
 
 def test_projection_carries_present_but_null_json_surface() -> None:

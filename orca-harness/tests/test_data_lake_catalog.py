@@ -15,6 +15,7 @@ from data_lake.catalog import (
     inspect_catalog,
     load_attachment_record_body,
     rebuild_catalog,
+    source_surface_catalog_rows,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
 import runners.run_data_lake_catalog as catalog_runner
@@ -687,6 +688,47 @@ def test_catalog_coverage_census_is_observed_only_and_read_only(tmp_path: Path) 
     assert ig_surface["catalog_query_paths"][
         "attachment_records_by_source_surface"
     ].startswith("attachment_records/by_source_surface/")
+
+
+def test_source_surface_catalog_rows_expose_packet_and_ar_query_rows(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_reddit_packet(root, tmp_path)
+    ig = _write_ig_reels_grid_packet(root, tmp_path)
+
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+
+    rows = source_surface_catalog_rows(
+        root,
+        source_family="instagram_creator",
+        source_surface="ig_reels_grid_dom_passive_json",
+    )
+
+    assert rows["catalog_query_paths"]["by_source_surface"].startswith("by_source_surface/")
+    assert rows["catalog_query_paths"]["attachment_records_by_source_surface"].startswith(
+        "attachment_records/by_source_surface/"
+    )
+    assert [row["packet_id"] for row in rows["packet_rows"]] == [ig.packet.packet_id]
+    assert [row["packet_id"] for row in rows["attachment_record_rows"]] == [
+        ig.packet.packet_id
+    ]
+    assert rows["attachment_record_rows"][0]["source_family"] == "instagram_creator"
+    assert load_attachment_record_body(root, rows["attachment_record_rows"][0])
+
+
+def test_source_surface_catalog_rows_require_current_generated_catalog(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_ig_reels_grid_packet(root, tmp_path)
+
+    with pytest.raises(DataLakeRootError, match="Bronze catalog is not current"):
+        source_surface_catalog_rows(
+            root,
+            source_family="instagram_creator",
+            source_surface="ig_reels_grid_dom_passive_json",
+        )
 
 
 def test_catalog_coverage_census_caps_issue_samples(tmp_path: Path) -> None:
