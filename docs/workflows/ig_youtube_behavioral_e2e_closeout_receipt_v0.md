@@ -7,7 +7,7 @@ scope: Evidence-first closeout for the Instagram/YouTube behavioral-sync lane af
 use_when:
   - Checking whether IG and YouTube can be claimed behaviorally complete.
   - Recovering the current canonical F-lake IG behavioral status counts and residuals.
-  - Distinguishing YouTube projection-contract proof from canonical F-lake YouTube e2e evidence.
+  - Recovering the bounded canonical F-lake YouTube e2e case-set evidence.
 open_next:
   - docs/workflows/ig_behavioral_sync_from_youtube_contract_handoff_v0.md
   - docs/workflows/ig_vs_youtube_behavioral_gap_ledger_v0.md
@@ -18,7 +18,7 @@ open_next:
 stale_if:
   - A later canonical F-lake IG or YouTube behavioral read supersedes the counts below.
   - IG or YouTube behavioral projection, lake adapter, Silver lineage, or product-extraction semantics change.
-  - The F-lake availability index is rebuilt or canonical YouTube packets are added to F:/orca-data-lake.
+  - The F-lake availability index is rebuilt or the bounded YouTube case set is expanded, removed, or superseded.
 authority_boundary: retrieval_only
 ```
 
@@ -31,15 +31,18 @@ Current evidence supports this narrower claim:
 - IG canonical `F:/orca-data-lake` behavioral projection is working and currently reads 19 items:
   12 `complete`, 2 `complete_with_residuals`, and 5 `no_extraction_eligible_sources`.
 - YouTube behavioral projection contract is present on merged main and focused projection tests pass.
-- Canonical YouTube F-lake e2e is **not observed**: the F-lake availability index has no
-  `source_family=youtube` packets, and a raw manifest scan found no YouTube raw packet manifests.
+- A follow-up bounded canonical YouTube F-lake e2e run is observed for two caption-route videos:
+  watch metadata/comments packets, caption transcript packets, source-backed Silver product-mention
+  records, and behavioral projections all read back complete with no residuals.
+- YouTube platform-wide e2e is **not** proven: the observed set is bounded to two caption-route
+  videos and does not cover ASR/no-caption fallback or broad creator-scale behavior.
 
 Therefore the correct closeout status is:
 
 ```text
 BEHAVIORAL_CONTRACT_SYNC_IMPLEMENTED
 CANONICAL_IG_E2E_OBSERVED_WITH_RESIDUALS
-CANONICAL_YT_F_LAKE_E2E_NOT_OBSERVED
+CANONICAL_YT_F_LAKE_BOUNDED_E2E_OBSERVED
 PLATFORM_WIDE_COMPLETENESS_NOT_CLAIMED
 ```
 
@@ -61,7 +64,8 @@ Worktree and revision:
 ```text
 workspace: C:\Users\vmon7\Desktop\projects\orca\worktrees\ig-youtube-behavioral-e2e-closeout
 branch: codex/ig-youtube-behavioral-e2e-closeout
-HEAD: a7dc8693da40e01596a3ddfd1340b198e6ccdf06
+original_receipt_source_read_HEAD: a7dc8693da40e01596a3ddfd1340b198e6ccdf06
+followup_youtube_e2e_branch_before_docs_update: c71c8d9e
 data_root: F:\orca-data-lake
 ```
 
@@ -150,7 +154,7 @@ Interpretation:
 - `complete_with_residuals` correctly keeps `complete=false`; the lane is not faking whole-item completeness.
 - No-speech items with captured comments remain incomplete because there is no extraction-eligible creator transcript source.
 
-## F-Lake Availability And YouTube Probe
+## Initial F-Lake Availability And YouTube Probe
 
 Read-only F-lake packet inventory:
 
@@ -187,12 +191,67 @@ IG_RAW_NOT_IN_AVAILABILITY
 
 Interpretation:
 
-- YouTube canonical F-lake e2e is blocked by absent canonical F-lake YouTube packets, not by a
-  projection-code failure observed in this pass.
+- At the initial read, YouTube canonical F-lake e2e was blocked by absent canonical F-lake YouTube packets, not by a
+  projection-code failure observed in that pass. The follow-up section below supersedes that initial YouTube absence finding for the bounded two-video case set.
 - The default IG projection read depends on the existing availability index for packet-backed grid
   inputs. Because rebuilding availability is a write, this receipt did not rebuild it. The observed
   IG matrix is therefore the current default-read state, not a claim that every raw IG packet in
   `F:/orca-data-lake/raw` is indexed.
+
+## Follow-Up Canonical YouTube F-Lake E2E Run
+
+After the initial receipt found no YouTube packets in `F:/orca-data-lake`, the owner authorized
+continuing with material steps 2 and 3. This follow-up created a bounded canonical YouTube case set
+and ran it through the behavioral projection path.
+
+Packet writes observed from the runner output:
+
+```text
+01KWBNR61N28QRN3Z40FQ68MMR  youtube_watch_metadata_comments  ljZ7_JHXNdw
+01KWBNRPGW6CQ021CWCSTNFJF0  youtube_captions                 ljZ7_JHXNdw
+01KWBNS5VA6QJJV5SZPXCEVEPE  youtube_watch_metadata_comments  VOGZUccarFc
+01KWBNSQ9VS2GBHYM2XZKF9CYV  youtube_captions                 VOGZUccarFc
+```
+
+Fresh lake read after capture:
+
+```text
+YOUTUBE_AVAILABLE_COUNT 4
+01KWBNR61N28QRN3Z40FQ68MMR youtube_watch_metadata_comments
+01KWBNRPGW6CQ021CWCSTNFJF0 youtube_captions
+01KWBNS5VA6QJJV5SZPXCEVEPE youtube_watch_metadata_comments
+01KWBNSQ9VS2GBHYM2XZKF9CYV youtube_captions
+```
+
+Silver product-mention records written through the validated product-mention write boundary:
+
+```text
+01KWBNRPGW6CQ021CWCSTNFJF0  ljZ7_JHXNdw  mentions_codex_operator_manual_v0__49f6b5ed7347c215.json  mention_count=2
+01KWBNSQ9VS2GBHYM2XZKF9CYV  VOGZUccarFc  mentions_codex_operator_manual_v0__6ae6f45ebdbc94db.json  mention_count=10
+```
+
+Extraction caveat: no `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `ORCA_PRODUCT_EXTRACT_PROVIDER`, or
+`ORCA_PRODUCT_EXTRACT_MODEL` was present in the environment. The silver records therefore use
+`extraction_backend=codex_operator_manual_current_thread`, not `provider_api`. The write still used
+`parse_mentions(...)`, which rejects items whose `source_pointer` is not a real transcript substring,
+and the records carry the existing Silver source-lineage fields from the consumed caption packet.
+
+Observed behavioral projection readback:
+
+| Video id | Metadata | Comments | Transcript source | Product extraction | Projection status | Complete | Residuals |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `ljZ7_JHXNdw` | present | sample captured:20 | caption:auto, 37 cues | extracted, 2 mentions | `complete` | true | none |
+| `VOGZUccarFc` | present | sample captured:20 | caption:auto, 29 cues | extracted, 10 mentions | `complete` | true | none |
+
+Interpretation:
+
+- Step 2 is done for a bounded two-video canonical YouTube F-lake case set.
+- Step 3 is done for that bounded caption-route set: watch packet -> caption packet -> labeled
+  operator product extraction -> behavioral projection.
+- This closes the earlier "no canonical YouTube F-lake packet" blocker for a bounded caption-route
+  e2e claim.
+- This does not prove YouTube platform-wide completeness, ASR/no-caption fallback, live provider-API
+  extraction, scheduler behavior, or production scale.
 
 ## YouTube Contract Evidence
 
@@ -205,8 +264,7 @@ $env:PYTHONDONTWRITEBYTECODE=1; python -m pytest -p no:cacheprovider --no-header
 44 passed in 2.18s
 ```
 
-This is contract/projection evidence. It is not canonical F-lake YouTube e2e evidence because no
-YouTube raw packet or availability entry was observed in `F:/orca-data-lake`.
+This focused test result remains contract/projection evidence. The follow-up section above is the bounded canonical F-lake YouTube e2e evidence.
 
 ## Closeout Decision
 
@@ -218,20 +276,23 @@ Use these claim levels:
 | IG canonical F-lake has complete items | observed | 12 items read as `complete=true` |
 | IG canonical F-lake is globally complete | not proven | 2 residual-complete items and 5 no-eligible-source items remain |
 | YT behavioral projection contract exists and focused tests pass | observed | current source read plus 44-test focused run |
-| YT canonical F-lake e2e is complete | not observed | no `source_family=youtube` packets in availability or raw manifests |
-| IG/YT behaviorally complete platform-wide | not proven | platform-wide evidence and YT canonical F-lake data absent |
+| YT canonical F-lake bounded caption-route e2e is complete | observed | two-video F-lake readback: watch packets, caption packets, source-backed product-mention records, and complete projections |
+| YT canonical F-lake platform-wide e2e is complete | not proven | observed set is bounded to two caption-route videos; ASR/no-caption and creator-scale behavior are not covered |
+| IG/YT behaviorally complete platform-wide | not proven | IG residuals remain and YouTube evidence is bounded |
 
 Recommended next lane, if the owner wants to continue:
 
-1. Decide whether to create or capture a bounded canonical YouTube F-lake case set.
-2. If yes, run a YT packet -> transcript -> extraction -> projection receipt against `F:/orca-data-lake`.
+1. Decide whether the two-video YouTube caption-route case set is sufficient for this lane's
+   behavioral-completeness closeout claim.
+2. If not, add one ASR/no-caption YouTube case and rerun projection readback.
 3. Separately decide whether IG status semantics should split extraction completeness from grid/ranking completeness for grid-missing but extraction-complete items.
-4. Do not start shared-core extraction until the canonical YT F-lake evidence gap is closed or explicitly accepted as out-of-scope.
+4. Do not start shared-core extraction until the bounded YouTube evidence is accepted as sufficient
+   or the missing ASR/no-caption case is added.
 
 ## Non-Claims
 
 - Not full IG behavioral completeness.
-- Not canonical YouTube F-lake e2e validation.
+- Not YouTube platform-wide F-lake e2e validation, ASR/no-caption fallback validation, or live provider-API extraction.
 - Not shared IG/YT core.
 - Not a scheduler, production, live-scale, proxy, login, private-account, durable media/video, ECR, Cleaning, Judgment, or gold-verdict claim.
 - Not a data-lake availability-index rebuild.
