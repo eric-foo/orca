@@ -347,4 +347,4 @@ Recommended next lane, if the owner wants to continue:
 - Not shared IG/YT core.
 - Not a scheduler, production, live-scale, proxy, login, private-account, durable media/video, ECR, Cleaning, Judgment, or gold-verdict claim.
 - Not a data-lake availability-index schema or semantics change.
-- Not a code patch or runtime behavior change.
+- Not a broad runtime behavior change beyond the bounded YouTube runner argv-normalization patch documented in the YouTube corpus receipt.

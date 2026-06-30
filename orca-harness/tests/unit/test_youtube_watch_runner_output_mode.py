@@ -63,3 +63,27 @@ def test_youtube_watch_runner_accepts_leading_dash_video_id(monkeypatch, tmp_pat
     monkeypatch.setattr(runner, "run_source_capture_youtube_watch_packet", fake_run)
 
     assert runner.main(["--video-id", _LEADING_DASH_VIDEO_ID, "--output", str(output)]) == 0
+
+
+def test_youtube_watch_runner_rejects_data_root_flag_as_missing_video_id(monkeypatch, tmp_path: Path) -> None:
+    resolved_root = object()
+    monkeypatch.setenv("ORCA_DATA_ROOT", str(tmp_path / "lake"))
+
+    class FakeDataLakeRoot:
+        @staticmethod
+        def resolve(*, explicit):
+            assert explicit is None
+            return resolved_root
+
+    def fail_run(**_kwargs):  # pragma: no cover - must not be reached
+        raise AssertionError("runner should not run when video id is missing")
+
+    from data_lake import root as root_module
+
+    monkeypatch.setattr(root_module, "DataLakeRoot", FakeDataLakeRoot)
+    monkeypatch.setattr(runner, "run_source_capture_youtube_watch_packet", fail_run)
+
+    with pytest.raises(SystemExit) as exc:
+        runner.main(["--video-id", "--data-root"])
+
+    assert exc.value.code == 2
