@@ -136,6 +136,47 @@ def test_targeted_projection_residualizes_rating_buckets_without_source_visible_
     )
 
 
+def test_targeted_projection_partitions_overlapping_review_views_without_loss(
+    tmp_path: Path,
+) -> None:
+    packet_dir = _write_targeted_packet(tmp_path, html=_TARGETED_HTML_OVERLAP_AND_MID_BUCKET)
+
+    projection = build_parfumo_projection_from_packet_directory(packet_or_manifest_path=packet_dir)
+
+    review_ids_by_slice: dict[str, list[str]] = {}
+    for row in projection.rows:
+        if row.row_kind != "fragrance_review_card_current_window":
+            continue
+        review_ids_by_slice.setdefault(row.raw_ref.slice_id, []).append(
+            row.source_visible_fields["review_id"]
+        )
+
+    assert projection.loss_ledger.preserved_review_cards == 3
+    assert review_ids_by_slice == {
+        "parfumo_targeted:review_latest_recent": ["dup-001"],
+        "parfumo_targeted:review_source_visible_high_rating": ["loss-001"],
+        "parfumo_targeted:review_source_visible_low_rating": ["low-001"],
+    }
+    review_ids = [item for values in review_ids_by_slice.values() for item in values]
+    assert len(review_ids) == len(set(review_ids))
+    assert "parfumo_high_rating_review_bucket_absent_or_unexposed" not in projection.residuals
+    assert "parfumo_low_rating_review_bucket_absent_or_unexposed" not in projection.residuals
+
+
+def test_targeted_projection_bucket_token_matching_is_segment_bounded(tmp_path: Path) -> None:
+    packet_dir = _write_targeted_packet(tmp_path, html=_TARGETED_HTML_SEGMENT_BOUNDARY)
+
+    projection = build_parfumo_projection_from_packet_directory(packet_or_manifest_path=packet_dir)
+
+    review_rows = [
+        row for row in projection.rows if row.row_kind == "fragrance_review_card_current_window"
+    ]
+    assert [(row.raw_ref.slice_id, row.source_visible_fields["review_id"]) for row in review_rows] == [
+        ("parfumo_targeted:review_latest_recent", "flower-001")
+    ]
+    assert "parfumo_low_rating_review_bucket_absent_or_unexposed" in projection.residuals
+
+
 def test_parfumo_projection_ignores_unrelated_ids_when_attributing_review_tab(tmp_path: Path) -> None:
     html = _HTML.replace(
         '    <article data-review-id="900001"',
@@ -323,6 +364,48 @@ _TARGETED_HTML = f"""
   </main>
 </body></html>
 """
+
+_TARGETED_HTML_OVERLAP_AND_MID_BUCKET = f"""
+<html><head>
+  <link rel="canonical" href="{_LOCATOR}"/>
+  <title>Baccarat Rouge 540 Eau de Parfum by Maison Francis Kurkdjian (Eau de Parfum) & Perfume Facts</title>
+</head><body>
+  <main data-perfume-id="67720" data-review-count="369" data-statement-count="1390">
+    <article data-review-id="dup-001" data-author="Rimazy" data-rating="9.0">
+      <time datetime="2026-06-25">06/25/26</time>
+      <p data-role="review-text">High rating but latest source view.</p>
+    </article>
+    <article data-review-id="loss-001" data-author="Sol" data-rating="7.5" data-tab="high_rating">
+      <time datetime="2026-06-23">06/23/26</time>
+      <p data-role="review-text">Source-visible high bucket but mid numeric rating.</p>
+    </article>
+    <article data-review-id="low-001" data-author="Noir" data-rating="3.0" data-tab="low_rating">
+      <time datetime="2026-06-20">06/20/26</time>
+      <p data-role="review-text">Low source-visible bucket.</p>
+    </article>
+    <article data-statement-id="st7001" data-author="Lyra" data-tab="statements">
+      <time datetime="2026-06-24">06/24/26</time>
+      <p data-role="statement-text">Airy amber trail.</p>
+    </article>
+  </main>
+</body></html>
+"""
+
+
+_TARGETED_HTML_SEGMENT_BOUNDARY = f"""
+<html><head>
+  <link rel="canonical" href="{_LOCATOR}"/>
+  <title>Baccarat Rouge 540 Eau de Parfum by Maison Francis Kurkdjian (Eau de Parfum) & Perfume Facts</title>
+</head><body>
+  <main data-perfume-id="67720" data-review-count="369" data-statement-count="1390">
+    <article data-review-id="flower-001" data-author="Iris" data-rating="7.5" data-tab="flower">
+      <time datetime="2026-06-25">06/25/26</time>
+      <p data-role="review-text">The word flower contains low as a substring.</p>
+    </article>
+  </main>
+</body></html>
+"""
+
 
 _TARGETED_HTML_WITHOUT_RATING_BUCKETS = f"""
 <html><head>

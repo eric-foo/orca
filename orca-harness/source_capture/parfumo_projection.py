@@ -36,8 +36,9 @@ _TARGETED_REVIEW_LATEST_RECENT_SLICE = "parfumo_targeted:review_latest_recent"
 _TARGETED_REVIEW_HIGH_RATING_SLICE = "parfumo_targeted:review_source_visible_high_rating"
 _TARGETED_REVIEW_LOW_RATING_SLICE = "parfumo_targeted:review_source_visible_low_rating"
 _TARGETED_STATEMENT_LATEST_RECENT_SLICE = "parfumo_targeted:statement_latest_recent"
-_PARFUMO_HIGH_RATING_MIN = 8.0
-_PARFUMO_LOW_RATING_MAX = 4.0
+_LATEST_REVIEW_TOKENS = ("latest", "recent", "new", "newest")
+_HIGH_RATING_BUCKET_TOKENS = ("high", "top", "positive")
+_LOW_RATING_BUCKET_TOKENS = ("low", "critical", "negative")
 _FORBIDDEN_SOURCE_VISIBLE_FIELD_NAMES = frozenset(
     {
         "action_ceiling",
@@ -480,7 +481,7 @@ def _filter_targeted_projection(
             row
             for row in projected.rows
             if row.row_kind == "fragrance_review_card_current_window"
-            and _is_latest_or_recent_review(row)
+            and _targeted_review_slice_id(row) == slice_id
         ]
         if not kept_rows:
             residuals.append("parfumo_latest_recent_review_bucket_absent_or_unexposed")
@@ -489,7 +490,7 @@ def _filter_targeted_projection(
             row
             for row in projected.rows
             if row.row_kind == "fragrance_review_card_current_window"
-            and _is_source_visible_high_rating_review(row)
+            and _targeted_review_slice_id(row) == slice_id
         ]
         if not kept_rows:
             residuals.append("parfumo_high_rating_review_bucket_absent_or_unexposed")
@@ -498,7 +499,7 @@ def _filter_targeted_projection(
             row
             for row in projected.rows
             if row.row_kind == "fragrance_review_card_current_window"
-            and _is_source_visible_low_rating_review(row)
+            and _targeted_review_slice_id(row) == slice_id
         ]
         if not kept_rows:
             residuals.append("parfumo_low_rating_review_bucket_absent_or_unexposed")
@@ -524,16 +525,14 @@ def _filter_targeted_projection(
     )
 
 
-def _is_latest_or_recent_review(row: ParfumoProjectionRow) -> bool:
-    fields = row.source_visible_fields
-    return _field_mentions_any(fields, "tab_id", "tab_label", tokens=("latest", "recent", "new")) or (
-        row.tab_id in {None, "reviews"} and not _field_mentions_any(
-            fields,
-            "tab_id",
-            "tab_label",
-            tokens=("high", "top", "positive", "low", "critical", "negative"),
-        )
-    )
+def _targeted_review_slice_id(row: ParfumoProjectionRow) -> str:
+    """Return the one targeted review slice this source-visible review belongs to."""
+    if _has_high_rating_bucket_cue(row):
+        return _TARGETED_REVIEW_HIGH_RATING_SLICE
+    if _has_low_rating_bucket_cue(row):
+        return _TARGETED_REVIEW_LOW_RATING_SLICE
+    return _TARGETED_REVIEW_LATEST_RECENT_SLICE
+
 
 
 def _is_latest_or_recent_statement(row: ParfumoProjectionRow) -> bool:
@@ -542,33 +541,28 @@ def _is_latest_or_recent_statement(row: ParfumoProjectionRow) -> bool:
         fields,
         "tab_id",
         "tab_label",
-        tokens=("latest", "recent", "new", "statement"),
+        tokens=(*_LATEST_REVIEW_TOKENS, "statement"),
     ) or row.tab_id in {None, "statements"}
 
 
-def _is_source_visible_high_rating_review(row: ParfumoProjectionRow) -> bool:
+
+def _has_high_rating_bucket_cue(row: ParfumoProjectionRow) -> bool:
     fields = row.source_visible_fields
-    rating = _numeric_field(fields.get("rating"))
-    if rating is not None:
-        return rating >= _PARFUMO_HIGH_RATING_MIN
     return _field_mentions_any(
         fields,
         "tab_id",
         "tab_label",
-        tokens=("high", "top", "positive"),
+        tokens=_HIGH_RATING_BUCKET_TOKENS,
     )
 
 
-def _is_source_visible_low_rating_review(row: ParfumoProjectionRow) -> bool:
+def _has_low_rating_bucket_cue(row: ParfumoProjectionRow) -> bool:
     fields = row.source_visible_fields
-    rating = _numeric_field(fields.get("rating"))
-    if rating is not None:
-        return rating <= _PARFUMO_LOW_RATING_MAX
     return _field_mentions_any(
         fields,
         "tab_id",
         "tab_label",
-        tokens=("low", "critical", "negative"),
+        tokens=_LOW_RATING_BUCKET_TOKENS,
     )
 
 
@@ -585,7 +579,8 @@ def _field_mentions_any(
     if not values:
         return False
     text = " ".join(values)
-    return any(token in text for token in tokens)
+    field_tokens = {token for token in re.split(r"[^a-z0-9]+", text) if token}
+    return any(token in field_tokens for token in tokens)
 
 
 def _numeric_field(value: Any | None) -> float | None:

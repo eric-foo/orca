@@ -153,6 +153,40 @@ def test_parfumo_targeted_rendered_packet_flows_to_projection_cleaning_and_metri
         assert observation["source_surface"] == TARGETED_RENDERED_SURFACE
 
 
+def test_parfumo_targeted_rendered_overlap_emits_one_metric_per_source_review(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = _commit_targeted_packet(root, tmp_path, html=_TARGETED_HTML_OVERLAP_AND_MID_BUCKET)
+
+    projection, _ = project_parfumo_into_lake(data_root=root, packet_id=packet_id)
+    result = derive_parfumo_cleaning_into_lake(data_root=root, packet_id=packet_id)
+
+    projected_review_ids = [
+        row.source_visible_fields["review_id"]
+        for row in projection.rows
+        if row.row_kind == "fragrance_review_card_current_window"
+    ]
+    assert sorted(projected_review_ids) == ["dup-001", "loss-001", "low-001"]
+    assert len(projected_review_ids) == len(set(projected_review_ids))
+
+    records = [json.loads(path.read_text(encoding="utf-8")) for path in result.silver_paths]
+    metric_observations = [
+        record["payload"]["observation"]
+        for record in records
+        if record["payload_kind"] == "MetricObservation"
+    ]
+
+    assert sorted(observation["metric_value"] for observation in metric_observations) == [
+        3.0,
+        7.5,
+        9.0,
+    ]
+    metric_row_ids = [observation["subject"]["projection_row_id"] for observation in metric_observations]
+    assert sum("dup-001" in row_id for row_id in metric_row_ids) == 1
+    assert sum("loss-001" in row_id for row_id in metric_row_ids) == 1
+
+
 def test_parfumo_projection_rederive_appends_sibling_and_explicit_id_is_create_only(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
     packet_id = _commit_packet(root, tmp_path)
@@ -185,14 +219,14 @@ def test_parfumo_cleaning_audit_rederive_appends_sibling_and_explicit_id_is_crea
         derive_parfumo_cleaning_into_lake(data_root=root, packet_id=packet_id, record_id="rec1")
 
 
-def _commit_targeted_packet(root: DataLakeRoot, tmp_path: Path) -> str:
+def _commit_targeted_packet(root: DataLakeRoot, tmp_path: Path, *, html: str | None = None) -> str:
     artifact_dir = tmp_path / "targeted_artifacts"
     artifact_dir.mkdir(parents=True)
     rendered_dom = artifact_dir / "rendered_dom.html"
     visible_text = artifact_dir / "visible_text.txt"
     route_receipt = artifact_dir / "route_receipt.json"
     screenshot = artifact_dir / "viewport.png"
-    rendered_dom.write_text(_TARGETED_HTML, encoding="utf-8")
+    rendered_dom.write_text(html if html is not None else _TARGETED_HTML, encoding="utf-8")
     visible_text.write_text(
         "Baccarat Rouge 540 Eau de Parfum\nReviews 369\nStatements 1390\n",
         encoding="utf-8",
@@ -288,6 +322,34 @@ _HTML = f"""
     <article data-statement-id="st7001" data-author="Lyra">
       <time datetime="2026-06-24">06/24/26</time>
       <p data-role="statement-text">{_STATEMENT_TEXT}</p>
+    </article>
+  </main>
+</body></html>
+"""
+
+
+_TARGETED_HTML_OVERLAP_AND_MID_BUCKET = f"""
+<html><head>
+  <link rel="canonical" href="{_LOCATOR}"/>
+  <title>Baccarat Rouge 540 Eau de Parfum by Maison Francis Kurkdjian (Eau de Parfum) & Perfume Facts</title>
+</head><body>
+  <main data-perfume-id="67720" data-review-count="369" data-statement-count="1390">
+    <script>const routes = {{reviews: "/action/perfume/get_reviews.php", statements: "/action/perfume/get_statements.php", p_id: 67720}};</script>
+    <article data-review-id="dup-001" data-author="Rimazy" data-rating="9.0">
+      <time datetime="2026-06-25">06/25/26</time>
+      <p data-role="review-text">High rating but latest source view.</p>
+    </article>
+    <article data-review-id="loss-001" data-author="Sol" data-rating="7.5" data-tab="high_rating">
+      <time datetime="2026-06-23">06/23/26</time>
+      <p data-role="review-text">Source-visible high bucket but mid numeric rating.</p>
+    </article>
+    <article data-review-id="low-001" data-author="Noir" data-rating="3.0" data-tab="low_rating">
+      <time datetime="2026-06-20">06/20/26</time>
+      <p data-role="review-text">Low source-visible bucket.</p>
+    </article>
+    <article data-statement-id="st7001" data-author="Lyra" data-tab="statements">
+      <time datetime="2026-06-24">06/24/26</time>
+      <p data-role="statement-text">Airy amber trail.</p>
     </article>
   </main>
 </body></html>
