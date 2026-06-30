@@ -22,6 +22,12 @@ BRONZE_CATALOG_VERSION = "bronze_catalog_v0"
 BRONZE_CATALOG_SCHEMA_VERSION = "bronze_catalog_v0_schema_2"
 BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION = "bronze_attachment_record_v0_schema_2"
 BRONZE_ATTACHMENT_RECORD_PHYSICALIZATION = "manifest_equivalent_entry_over_raw_packet_body_v0"
+BRONZE_BASELINE_STATUS = "bronze_mgt_baseline_recorded_v0"
+BRONZE_BASELINE_SEMANTICS = (
+    "mini_god_tier_90_95_typed_retrievability_baseline; not full God Tier, "
+    "not validation, readiness, Manifest v2, body-copy storage, source-family "
+    "payload validation, or downstream currentness"
+)
 CATALOG_RELATIVE_ROOT = ("indexes", "derived_retrieval", "bronze_catalog", "v0")
 _PACKET_ID_RE = re.compile(r"[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
 _CATALOG_AUTHORITY = "generated_from_raw_packet_manifests; raw remains authoritative"
@@ -189,6 +195,8 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "status": "rebuilt",
         "catalog_version": BRONZE_CATALOG_VERSION,
         "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+        "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+        "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
         "packet_count": len(entries),
         "attachment_record_count": len(attachment_records),
         "source_surface_count": len(source_surfaces),
@@ -254,6 +262,8 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "status": "issues_found" if issues else "ok",
         "catalog_version": BRONZE_CATALOG_VERSION,
         "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+        "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+        "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
         "expected_packet_count": len(expected),
         "indexed_packet_count": len(existing),
         "attachment_record_count": len(attachment_records),
@@ -286,6 +296,8 @@ def catalog_coverage_census(root: DataLakeRoot) -> dict[str, Any]:
         "authority": _CATALOG_AUTHORITY,
         "catalog_version": report["catalog_version"],
         "catalog_schema_version": report["catalog_schema_version"],
+        "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+        "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
         "coverage_basis": "verified_raw_packet_manifests_compared_to_generated_catalog",
         "semantics": _COVERAGE_CENSUS_SEMANTICS,
         "field_semantics": _COVERAGE_CENSUS_FIELD_SEMANTICS,
@@ -637,6 +649,8 @@ def _catalog_snapshot(
             "authority": _CATALOG_AUTHORITY,
             "catalog_version": BRONZE_CATALOG_VERSION,
             "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+            "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+            "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
             "completeness": _SOURCE_SURFACE_COMPLETENESS,
             "field_semantics": _SOURCE_SURFACE_FIELD_SEMANTICS,
             "stable_query_paths": {
@@ -671,6 +685,8 @@ def _catalog_snapshot(
             "authority": _CATALOG_AUTHORITY,
             "catalog_version": BRONZE_CATALOG_VERSION,
             "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+            "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+            "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
             "packet_count": len(entries),
             "attachment_record_count": len(attachment_records),
         }
@@ -1111,6 +1127,8 @@ def _attachment_record_snapshot(attachment_records: list[dict[str, Any]]) -> dic
             "authority": _CATALOG_AUTHORITY,
             "catalog_version": BRONZE_CATALOG_VERSION,
             "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+            "bronze_baseline_status": BRONZE_BASELINE_STATUS,
+            "bronze_baseline_semantics": BRONZE_BASELINE_SEMANTICS,
             "attachment_record_schema_version": BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
             "attachment_record_physicalization": BRONZE_ATTACHMENT_RECORD_PHYSICALIZATION,
             "attachment_record_count": len(attachment_records),
@@ -1318,6 +1336,8 @@ def _facet_sort_key(facet: dict[str, str]) -> tuple[str, str, str, str]:
 __all__ = [
     "BRONZE_ATTACHMENT_RECORD_PHYSICALIZATION",
     "BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION",
+    "BRONZE_BASELINE_SEMANTICS",
+    "BRONZE_BASELINE_STATUS",
     "BRONZE_CATALOG_SCHEMA_VERSION",
     "BRONZE_CATALOG_VERSION",
     "CATALOG_RELATIVE_ROOT",
