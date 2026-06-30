@@ -18,7 +18,7 @@ stale_if:
   - Any probed site changes access posture or page substrate.
   - A later packet-grade Capture run preserves raw source bodies and supersedes these screen-light observations.
   - Basenotes becomes reachable through a new anti-bot, proxy, archive, or entitled manual route.
-  - The Parfumo Chrome-extension/user-visible browser route stops reaching real product DOM, or direct HTTP/AJAX becomes reliably reachable again.
+  - The Parfumo Chrome-extension/user-visible browser route stops reaching real product DOM, direct HTTP/AJAX becomes reliably reachable again, or the targeted-sample objective changes.
 ```
 
 ## Scan Intake Receipt
@@ -382,8 +382,8 @@ not_complete_yet:
 route_repin_date: 2026-06-30
 operator_question: >
   Diagnose whether Parfumo can use a non-extension route, or whether the current
-  full-corpus capture route should use the Chrome extension/user-visible browser
-  session after the operator verified the page works in their browser.
+  targeted high-value capture route should use the Chrome extension/user-visible
+  browser session after the operator verified the page works in their browser.
 current_access_diagnosis:
   direct_http_and_first_party_ajax:
     status: blocked_in_current_environment
@@ -416,15 +416,28 @@ observed_chrome_extension_facts:
   first_party_review_endpoint_seen: /action/perfume/get_reviews.php
   first_party_statement_endpoint_seen: /action/perfume/get_statements.php
   scrubbed_receipt_path: orca-harness/_scratch/parfumo_chrome_extension_probe_20260630_2000/route_receipt.json
+target_scope_correction:
+  status: full_corpus_no_longer_active_target
+  target: targeted_current_window_plus_high_value_review_statement_sample
+  emphasis:
+    - recency_focused_latest_reviews_and_statements
+    - source_visible_high_low_rating_buckets_where_present
+    - preserve aggregate declared corpus counts as context while residualizing uncaptured corpus
+  rating_scale_note: >
+    Operator shorthand such as 4-star / 5-star / 1-star maps here to
+    source-visible rating buckets, not an assumed Parfumo star scale. Preserve
+    Parfumo's own review fields and labels as raw facts, then bucket in
+    projection only when the source-visible values support it.
 route_verdict: >
-  For the current Parfumo full-corpus lane, use the Chrome extension /
+  For the current Parfumo targeted-corpus lane, use the Chrome extension /
   user-visible browser route as the primary capture route. Preserve the initial
-  rendered DOM/visible text/screenshot and pursue full review/statement depth
-  through bounded same-tab first-party page/AJAX interactions from that visible
-  browser context. Direct HTTP/AJAX remains an opportunistic canary/fallback if
-  it becomes reachable again, not a success dependency. Anonymous or proxied
-  non-extension rendered capture is not ruled out forever, but it is currently
-  blocked and should not gate this lane.
+  rendered DOM/visible text/screenshot and pursue bounded same-tab first-party
+  page/AJAX interactions only for targeted high-value review/statement coverage.
+  Direct HTTP/AJAX remains an opportunistic canary/fallback if it becomes
+  reachable again, not a success dependency. Anonymous or proxied non-extension
+  rendered capture is not ruled out forever, but it is currently blocked and
+  should not gate this lane. Full 369-review / 1390-statement exhaustion is not
+  the active target unless separately re-authorized.
 safety_boundaries:
   - no cookie export or clearance-token transfer
   - no CAPTCHA solving service
@@ -532,7 +545,7 @@ next_route_condition: >
 | Pin ID | Source | Step 0 access classification | Signal substrate | Cheapest working route | Verdict | Re-probe trigger |
 | --- | --- | --- | --- | --- | --- | --- |
 | PIN-001 | Fragrantica | publicly-viewable public web content | large product-page HTML plus search HTML | `direct_http` with at least 2 MB cap for product pages | pinned_for_capture_probe | route returns block shell, body degrades, product markers disappear, or packet field extraction cannot preserve source-visible content |
-| PIN-002 | Parfumo | publicly-viewable public web content, but bot-mitigated for anonymous/proxied automation in the current environment | product-page DOM plus first-party review/statement AJAX hooks observed in the operator's visible Chrome browser | `chrome_extension_user_visible_rendered_session`; direct HTTP/AJAX is canary/fallback only | pinned_for_current_full_corpus_capture_route | Chrome extension route returns Cloudflare/block shell, product DOM markers disappear, AJAX hook shape changes, owner withdraws live-browser authorization, or direct HTTP/AJAX becomes reliably reachable again |
+| PIN-002 | Parfumo | publicly-viewable public web content, but bot-mitigated for anonymous/proxied automation in the current environment | product-page DOM plus first-party review/statement AJAX hooks observed in the operator's visible Chrome browser | `chrome_extension_user_visible_rendered_session`; direct HTTP/AJAX is canary/fallback only | pinned_for_current_targeted_capture_route | Chrome extension route returns Cloudflare/block shell, product DOM markers disappear, AJAX hook shape changes, owner withdraws live-browser authorization, target-sampling objective changes, or direct HTTP/AJAX becomes reliably reachable again |
 | PIN-003 | Basenotes | publicly-viewable but bot-mitigated in current environment | source content not reached; Cloudflare challenge seen across direct, anti-block, browser, search-snippet, and known exact-product routes | none pinned | no_working_pin_current_environment_reconfirmed_exact_product | new anti-bot/proxy route, manual visible-browser success, usable archive/snippet locator, verified non-interstitial exact product URL, or owner-supplied entitled bytes |
 
 ## Candidate Decision
@@ -547,8 +560,8 @@ candidate_decision:
     The probe found two preservation-worthy public product-page substrates and
     one high-value but currently blocked source. Parfumo's June 29 direct/AJAX
     route is now demoted to canary/fallback after current Cloudflare blocks; the
-    current Parfumo full-corpus route is the operator-visible Chrome extension
-    route. This supports packet-grade preservation requests for Fragrantica and
+    current Parfumo targeted high-value route is the operator-visible Chrome
+    extension route. This supports packet-grade preservation requests for Fragrantica and
     Parfumo only, not demand proof, not full database capture, and not a
     Basenotes capture route.
 ```
@@ -557,4 +570,4 @@ candidate_decision:
 
 `capture_preservation_only`.
 
-Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo's June 29 direct product-page plus first-party AJAX route is retained as historical evidence and a future canary/fallback, but the current full-corpus route is the Chrome extension / operator-visible browser route; this addendum did not run the full 369-review / 1390-statement corpus. Basenotes is explicitly not pinned in this environment; direct HTTP, anti-block HTTP, screening browser, search-page CloakBrowser, and known exact-product CloakBrowser all failed to reach source content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
+Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo's June 29 direct product-page plus first-party AJAX route is retained as historical evidence and a future canary/fallback, but the current targeted high-value route is the Chrome extension / operator-visible browser route; this addendum does not target or claim the full 369-review / 1390-statement corpus. Basenotes is explicitly not pinned in this environment; direct HTTP, anti-block HTTP, screening browser, search-page CloakBrowser, and known exact-product CloakBrowser all failed to reach source content. One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
