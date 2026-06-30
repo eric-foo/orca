@@ -16,6 +16,7 @@ from typing import Any, Callable, Iterable
 
 from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
 from harness_utils import hash_file
+from source_capture.models import HASH_BASIS_VALUES
 
 BRONZE_CATALOG_VERSION = "bronze_catalog_v0"
 BRONZE_CATALOG_SCHEMA_VERSION = "bronze_catalog_v0_schema_1"
@@ -23,6 +24,10 @@ BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION = "bronze_attachment_record_v0_schema_1"
 CATALOG_RELATIVE_ROOT = ("indexes", "derived_retrieval", "bronze_catalog", "v0")
 _PACKET_ID_RE = re.compile(r"[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
 _CATALOG_AUTHORITY = "generated_from_raw_packet_manifests; raw remains authoritative"
+_RAW_PACKET_BODY_REF_KIND = "raw_packet_relative_path"
+_RAW_STORED_BYTES_HASH_BASIS = "raw_stored_bytes"
+_SUPPORTED_ATTACHMENT_RECORD_HASH_BASIS = frozenset({_RAW_STORED_BYTES_HASH_BASIS})
+_SUPPORTED_ATTACHMENT_RECORD_BODY_REF_KINDS = frozenset({_RAW_PACKET_BODY_REF_KIND})
 _SOURCE_SURFACE_COMPLETENESS = (
     "observed_source_surface_coverage_only; not capture_support, silver_readiness, "
     "projection_coverage, source_family_completeness, or validation"
@@ -422,6 +427,7 @@ def _packet_attachment_records(
         )
         body_sha256 = _required_string(preserved.get("sha256"), "preserved_files.sha256")
         hash_basis = _required_string(preserved.get("hash_basis"), "preserved_files.hash_basis")
+        _require_supported_attachment_record_hash_basis(hash_basis, file_id=file_id)
         size_bytes = preserved.get("size_bytes")
         if type(size_bytes) is not int:
             raise DataLakeRootError(f"preserved file {file_id!r} missing integer size_bytes")
@@ -439,7 +445,7 @@ def _packet_attachment_records(
                 "attachment_record_schema_version": BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
                 "attachment_record_id": record_id,
                 "attachment_record_id_basis": (
-                    "sha256(packet_id|file_id|relative_packet_path|body_sha256)"
+                    "sha256(json_array[packet_id,file_id,relative_packet_path,body_sha256])"
                 ),
                 "authority": _CATALOG_AUTHORITY,
                 "catalog_version": BRONZE_CATALOG_VERSION,
@@ -455,13 +461,13 @@ def _packet_attachment_records(
                 "file_id": file_id,
                 "original_path": _string_or_none(preserved.get("original_path")),
                 "relative_packet_path": relative_packet_path,
-                "body_ref_kind": "raw_packet_relative_path",
+                "body_ref_kind": _RAW_PACKET_BODY_REF_KIND,
                 "body_sha256": body_sha256,
                 "hash_basis": hash_basis,
                 "size_bytes": size_bytes,
                 "payload_kind": _payload_kind(relative_packet_path, body),
                 "payload_kind_basis": "generic_body_classification",
-                "payload_schema_version": _string_or_none(manifest.get("manifest_version")),
+                "raw_packet_manifest_version": _string_or_none(manifest.get("manifest_version")),
                 "posture_summary": _posture_summary(manifest),
                 "stable_query_paths": {
                     "by_attachment_record": (
@@ -480,7 +486,11 @@ def _packet_attachment_records(
 def _attachment_record_id(
     *, packet_id: str, file_id: str, relative_packet_path: str, body_sha256: str
 ) -> str:
-    material = "|".join((packet_id, file_id, relative_packet_path, body_sha256))
+    material = json.dumps(
+        [packet_id, file_id, relative_packet_path, body_sha256],
+        ensure_ascii=True,
+        separators=(",", ":"),
+    )
     return f"ar_{hashlib.sha256(material.encode('utf-8')).hexdigest()[:32]}"
 
 
@@ -547,6 +557,31 @@ def _required_string(value: object, field: str) -> str:
     if not isinstance(value, str) or not value:
         raise DataLakeRootError(f"missing required string field for Attachment Record: {field}")
     return value
+
+
+def _require_supported_attachment_record_body_ref_kind(body_ref_kind: str) -> None:
+    if body_ref_kind not in _SUPPORTED_ATTACHMENT_RECORD_BODY_REF_KINDS:
+        allowed_list = ", ".join(sorted(_SUPPORTED_ATTACHMENT_RECORD_BODY_REF_KINDS))
+        raise DataLakeRootError(
+            f"unsupported attachment body_ref_kind {body_ref_kind!r}; expected one of "
+            f"{{{allowed_list}}}"
+        )
+
+
+def _require_supported_attachment_record_hash_basis(hash_basis: str, *, file_id: str) -> None:
+    if hash_basis not in HASH_BASIS_VALUES:
+        allowed_list = ", ".join(sorted(HASH_BASIS_VALUES))
+        raise DataLakeRootError(
+            f"unsupported preserved file hash_basis {hash_basis!r} for {file_id!r}; "
+            f"expected Source Capture hash_basis in {{{allowed_list}}}"
+        )
+    if hash_basis not in _SUPPORTED_ATTACHMENT_RECORD_HASH_BASIS:
+        allowed_list = ", ".join(sorted(_SUPPORTED_ATTACHMENT_RECORD_HASH_BASIS))
+        raise DataLakeRootError(
+            f"preserved file hash_basis {hash_basis!r} for {file_id!r} is valid upstream "
+            "but unsupported by generated Attachment Record raw body resolution; "
+            f"expected one of {{{allowed_list}}}"
+        )
 
 
 def _universal_facets(manifest: dict[str, Any]) -> list[CatalogFacet]:
@@ -770,15 +805,8 @@ def load_attachment_record_body(root: DataLakeRoot, attachment_record: dict[str,
     expected_body_ref_kind = _required_string(
         attachment_record.get("body_ref_kind"), "body_ref_kind"
     )
-    if expected_body_ref_kind != "raw_packet_relative_path":
-        raise DataLakeRootError(
-            "unsupported attachment body_ref_kind "
-            f"{expected_body_ref_kind!r}; expected 'raw_packet_relative_path'"
-        )
-    if expected_hash_basis != "raw_stored_bytes":
-        raise DataLakeRootError(
-            f"unsupported attachment hash_basis {expected_hash_basis!r}; expected 'raw_stored_bytes'"
-        )
+    _require_supported_attachment_record_body_ref_kind(expected_body_ref_kind)
+    _require_supported_attachment_record_hash_basis(expected_hash_basis, file_id=file_id)
     loaded = root.load_raw_packet(packet_id)
     preserved = _preserved_file_by_id(loaded.manifest, file_id)
     if preserved.get("relative_packet_path") != relative_packet_path:

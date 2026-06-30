@@ -10,6 +10,7 @@ from data_lake.catalog import (
     BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
     BRONZE_CATALOG_SCHEMA_VERSION,
     CATALOG_RELATIVE_ROOT,
+    _attachment_record_id,
     inspect_catalog,
     load_attachment_record_body,
     rebuild_catalog,
@@ -268,6 +269,67 @@ def test_rebuild_catalog_marks_unknown_future_surface_universal_only(tmp_path: P
     } <= set(future_row["facet_namespaces"])
 
 
+def test_source_surface_attachment_path_is_surface_bucket_not_family_bucket(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    for source_family in ("future_creator_network", "synthetic_creator_network"):
+        src = tmp_path / f"{source_family}.json"
+        src.write_text(json.dumps({"source_family": source_family}), encoding="utf-8")
+        write_local_source_capture_packet(
+            data_root=root,
+            input_files=[src],
+            source_family=source_family,
+            source_surface="shared_creator_feed_v1",
+            source_locator=known_fact(f"https://example.invalid/{source_family}"),
+            decision_question="does a shared surface stay filterable by family?",
+            capture_context="catalog fixture",
+            session_identity=f"{source_family}-session",
+        )
+
+    report = rebuild_catalog(root)
+
+    rows = {
+        (row["source_family"], row["source_surface"]): row
+        for row in report["source_surfaces"]
+    }
+    first = rows[("future_creator_network", "shared_creator_feed_v1")]
+    second = rows[("synthetic_creator_network", "shared_creator_feed_v1")]
+    assert first["attachment_record_count"] == 1
+    assert second["attachment_record_count"] == 1
+    assert first["attachment_records_path"] == second["attachment_records_path"]
+    bucket_rows = [
+        json.loads(line)
+        for line in (_catalog_root(root) / first["attachment_records_path"])
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+    assert {row["source_family"] for row in bucket_rows} == {
+        "future_creator_network",
+        "synthetic_creator_network",
+    }
+
+
+def test_attachment_record_ids_use_structured_material_not_delimiter_join() -> None:
+    packet_id = "01KWBMNTESWZVSVD3YASDAXK0A"
+    body_sha256 = "a" * 64
+
+    first = _attachment_record_id(
+        packet_id=packet_id,
+        file_id="a|b",
+        relative_packet_path="c",
+        body_sha256=body_sha256,
+    )
+    second = _attachment_record_id(
+        packet_id=packet_id,
+        file_id="a",
+        relative_packet_path="b|c",
+        body_sha256=body_sha256,
+    )
+
+    assert first != second
+
+
 def test_attachment_records_index_preserved_bodies_and_resolve_bytes(
     tmp_path: Path,
 ) -> None:
@@ -295,7 +357,7 @@ def test_attachment_records_index_preserved_bodies_and_resolve_bytes(
     assert reddit_record["hash_basis"] == "raw_stored_bytes"
     assert reddit_record["payload_kind"] == "json_body"
     assert reddit_record["payload_kind_basis"] == "generic_body_classification"
-    assert reddit_record["payload_schema_version"] == "source_capture_packet_manifest_v1"
+    assert reddit_record["raw_packet_manifest_version"] == "source_capture_packet_manifest_v1"
     assert reddit_record["source_slice_ids"] == ["slice_01"]
     assert reddit_record["posture_summary"]["access_posture"]["value"] == "local_file_only"
     assert load_attachment_record_body(root, reddit_record) == json.dumps(
@@ -315,6 +377,18 @@ def test_attachment_records_index_preserved_bodies_and_resolve_bytes(
     wrong_ref_kind["body_ref_kind"] = "sidecar_body"
     with pytest.raises(DataLakeRootError, match="body_ref_kind"):
         load_attachment_record_body(root, wrong_ref_kind)
+    wrong_hash_basis = dict(reddit_record)
+    wrong_hash_basis["hash_basis"] = "derived_record_bytes"
+    with pytest.raises(DataLakeRootError, match="hash_basis"):
+        load_attachment_record_body(root, wrong_hash_basis)
+    wrong_path = dict(reddit_record)
+    wrong_path["relative_packet_path"] = "raw/not_the_body.json"
+    with pytest.raises(DataLakeRootError, match="path mismatch"):
+        load_attachment_record_body(root, wrong_path)
+    wrong_sha = dict(reddit_record)
+    wrong_sha["body_sha256"] = "0" * 64
+    with pytest.raises(DataLakeRootError, match="sha256 mismatch"):
+        load_attachment_record_body(root, wrong_sha)
     assert any(
         path.name.startswith("json_body__")
         for path in (_attachment_record_root(root) / "by_payload_kind").glob("*.jsonl")
