@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import statistics
@@ -7,7 +8,10 @@ from pathlib import Path
 
 from capture_spine.creator_profile_current.instagram_metric_seed import (
     build_instagram_reels_creator_metric_seed_from_files,
+    discover_instagram_reels_projection_paths_from_lake,
 )
+from data_lake.root import DataLakeRoot, raw_shard
+from source_capture.ig_reels_grid_projection import PROJECTION_IG_REELS_GRID_LANE
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -206,16 +210,94 @@ def test_instagram_reels_creator_metric_seed_builder_dedupes_projection_by_obser
     assert rollup["metric_rollups"]["engagement_rate"]["value_or_none"] == 0.15
 
 
-def _projection(*, rows: list[dict]) -> dict:
+def test_instagram_reels_metric_seed_discovers_lake_projections_and_dedupes_exact_duplicates(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    packet_id = "01KWBMNTESWZVSVD3YASDAXK0A"
+    account_ledger = {
+        "platform_accounts": [
+            {
+                "platform_account_id": "acct_ig_fixture_001",
+                "platform": "instagram",
+                "public_handle": "fixturecreator",
+                "public_profile_url": "https://www.instagram.com/fixturecreator/",
+                "handle_source_pointer": "fixture#/rows/0",
+                "handle_observed_at": "2026-06-29T00:00:00Z",
+            }
+        ]
+    }
+    weak_body = json.dumps(
+        _projection(
+            packet_id=packet_id,
+            rows=[_profile_row("fixturecreator", 10, "2026-06-29T00:00:00Z", packet_id=packet_id)],
+        ),
+        sort_keys=True,
+    ).encode("utf-8")
+    strong_body = json.dumps(
+        _projection(
+            packet_id=packet_id,
+            rows=[
+                _profile_row("fixturecreator", 20, "2026-06-29T00:01:00Z", packet_id=packet_id),
+                _reel_row("fixturecreator", "ABC", "view_count", 100, "2026-06-29T00:01:00Z", packet_id=packet_id),
+                _reel_row("fixturecreator", "ABC", "like_count", 10, "2026-06-29T00:01:00Z", packet_id=packet_id),
+                _reel_row("fixturecreator", "ABC", "comment_count", 5, "2026-06-29T00:01:00Z", packet_id=packet_id),
+            ],
+        ),
+        sort_keys=True,
+    ).encode("utf-8")
+
+    sharded_weak = root.append_record(
+        subtree="derived",
+        raw_anchor=packet_id,
+        lane=PROJECTION_IG_REELS_GRID_LANE,
+        record_id="weak.json",
+        data=weak_body,
+    )
+    strong = root.append_record(
+        subtree="derived",
+        raw_anchor=packet_id,
+        lane=PROJECTION_IG_REELS_GRID_LANE,
+        record_id="strong.json",
+        data=strong_body,
+    )
+    legacy_weak = root.path / "derived" / packet_id / PROJECTION_IG_REELS_GRID_LANE / "legacy_weak.json"
+    legacy_weak.parent.mkdir(parents=True)
+    legacy_weak.write_bytes(weak_body)
+
+    paths = discover_instagram_reels_projection_paths_from_lake(root)
+
+    weak_digest = hashlib.sha256(weak_body).hexdigest()
+    assert len(paths) == 2
+    assert strong in paths
+    assert sum(1 for path in paths if hashlib.sha256(path.read_bytes()).hexdigest() == weak_digest) == 1
+    assert not ({sharded_weak, legacy_weak} <= set(paths))
+
+    document = build_instagram_reels_creator_metric_seed_from_files(
+        projection_paths=paths,
+        account_ledger=account_ledger,
+        generated_at_utc="2026-06-29T00:02:00Z",
+    )
+    seed = document["instagram_reels_creator_metric_seed"]
+
+    assert seed["counts"]["source_projection_files_supplied"] == 2
+    assert seed["counts"]["source_projection_files_selected"] == 1
+    assert seed["source_inputs"][0]["source_pointer"] == str(strong)
+    assert seed["metric_observations"][0]["source_packet_pointer_or_none"] == str(
+        root.path / "raw" / raw_shard(packet_id) / packet_id
+    )
+
+
+def _projection(*, rows: list[dict], packet_id: str = "packet_fixture") -> dict:
     return {
-        "packet_id": "packet_fixture",
+        "packet_id": packet_id,
         "rows": rows,
     }
 
 
-def _profile_row(username: str, value: int, capture_time: str) -> dict:
+def _profile_row(username: str, value: int, capture_time: str, *, packet_id: str = "packet_fixture") -> dict:
     return {
-        "row_id": f"packet_fixture:profile:follower_count:{value}",
+        "row_id": f"{packet_id}:profile:follower_count:{value}",
         "row_kind": "ig_creator_metric",
         "username": username,
         "content_kind": "profile",
@@ -227,7 +309,7 @@ def _profile_row(username: str, value: int, capture_time: str) -> dict:
         "reason": None,
         "capture_time": capture_time,
         "coverage_window": {"start": None, "end": capture_time},
-        "raw_ref": {"packet_id": "packet_fixture", "slice_id": "ig_reels_profile_00"},
+        "raw_ref": {"packet_id": packet_id, "slice_id": "ig_reels_profile_00"},
         "raw_anchor": {"file_id": "file_01", "relative_packet_path": "raw/01.json", "sha256": "a" * 64, "hash_basis": "raw_stored_bytes"},
         "chosen_source_surface": "web_profile_info_json_metadata",
         "source_surface_count_candidates": [],
@@ -235,9 +317,17 @@ def _profile_row(username: str, value: int, capture_time: str) -> dict:
     }
 
 
-def _reel_row(username: str, shortcode: str, metric: str, value: int, capture_time: str) -> dict:
+def _reel_row(
+    username: str,
+    shortcode: str,
+    metric: str,
+    value: int,
+    capture_time: str,
+    *,
+    packet_id: str = "packet_fixture",
+) -> dict:
     return {
-        "row_id": f"packet_fixture:{shortcode}:{metric}",
+        "row_id": f"{packet_id}:{shortcode}:{metric}",
         "row_kind": "ig_media_metric",
         "username": username,
         "content_kind": "reel",
@@ -249,7 +339,7 @@ def _reel_row(username: str, shortcode: str, metric: str, value: int, capture_ti
         "reason": None,
         "capture_time": capture_time,
         "coverage_window": {"start": None, "end": capture_time},
-        "raw_ref": {"packet_id": "packet_fixture", "slice_id": "ig_reels_grid_01"},
+        "raw_ref": {"packet_id": packet_id, "slice_id": "ig_reels_grid_01"},
         "raw_anchor": {"file_id": "file_01", "relative_packet_path": "raw/01.json", "sha256": "a" * 64, "hash_basis": "raw_stored_bytes"},
         "chosen_source_surface": "clips_user_json_metadata",
         "source_surface_count_candidates": [],
