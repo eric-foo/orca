@@ -9,6 +9,7 @@ import pytest
 from data_lake.catalog import (
     BRONZE_ATTACHMENT_RECORD_PHYSICALIZATION,
     BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
+    BRONZE_BASELINE_STATUS,
     BRONZE_CATALOG_SCHEMA_VERSION,
     CATALOG_RELATIVE_ROOT,
     _attachment_record_id,
@@ -112,6 +113,10 @@ def _source_surface_payload(root: DataLakeRoot) -> dict:
     )
 
 
+def _catalog_manifest(root: DataLakeRoot) -> dict:
+    return json.loads((_catalog_root(root) / "manifest.json").read_text(encoding="utf-8"))
+
+
 def _source_surface_rows(root: DataLakeRoot) -> list[dict]:
     return _source_surface_payload(root)["source_surfaces"]
 
@@ -144,6 +149,7 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
 
     assert report["status"] == "rebuilt"
     assert report["catalog_schema_version"] == BRONZE_CATALOG_SCHEMA_VERSION
+    assert report["bronze_baseline_status"] == BRONZE_BASELINE_STATUS
     assert report["packet_count"] == 2
     assert report["attachment_record_count"] == 2
     assert report["source_surface_count"] == 2
@@ -193,6 +199,7 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
         == "generated_from_raw_packet_manifests; raw remains authoritative"
     )
     assert surface_payload["catalog_schema_version"] == BRONZE_CATALOG_SCHEMA_VERSION
+    assert surface_payload["bronze_baseline_status"] == BRONZE_BASELINE_STATUS
     assert "not capture_support" in surface_payload["completeness"]
     assert "neither value claims" in surface_payload["field_semantics"]["facet_extractor"]
     assert "union" in surface_payload["field_semantics"]["facet_namespaces"]
@@ -427,6 +434,30 @@ def test_attachment_records_index_preserved_bodies_and_resolve_bytes(
         for path in (_attachment_record_root(root) / "by_body_sha256").glob("*.jsonl")
     )
     assert by_packet[ig.packet.packet_id]["source_family"] == "instagram_creator"
+
+
+def test_bronze_catalog_surfaces_mgt_baseline_not_full_gt(tmp_path: Path) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_reddit_packet(root, tmp_path)
+
+    rebuild = rebuild_catalog(root)
+    inspect = inspect_catalog(root)
+    catalog_manifest = _catalog_manifest(root)
+    source_surfaces = _source_surface_payload(root)
+    attachment_manifest = _attachment_record_manifest(root)
+    census = catalog_coverage_census(root)
+
+    for payload in (
+        rebuild,
+        inspect,
+        catalog_manifest,
+        source_surfaces,
+        attachment_manifest,
+        census,
+    ):
+        assert payload["bronze_baseline_status"] == BRONZE_BASELINE_STATUS
+        assert "not full God Tier" in payload["bronze_baseline_semantics"]
+
 
 def test_inspect_catalog_reports_missing_and_stale_generated_index(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
