@@ -150,10 +150,19 @@ Accepted residuals:
   lake-routing rule covering every runner. Acceptable now: only raw
   `SourceCapturePacket` producers carry raw lake truth, and the seam coverage
   test already scopes to them. Offline projections, materializers, and
-  audit/report runners write no raw truth. Remaining risk: a future non-packet
-  runner that should route into the lake is not caught by the packet-producer
+  audit/report runners write no raw truth. Remaining risk: current or future
+  non-packet lake writers, such as IG Reels deep-capture records, need their own
+  seam if the owner wants them enforced; they are not caught by the packet-producer
   seam. Upgrade trigger: a non-packet entrypoint needs lake routing, scoping its
   own seam rather than widening this bucket.
+- **Manual raw-packet orchestrator enumeration.** Foregone: static discovery of
+  every orchestrator through injected runner callables, aliases, or lane wrappers.
+  Acceptable now: current lake-wired raw-packet orchestrators are explicitly
+  listed in `BRONZE_PACKET_ORCHESTRATORS`, including Fragrantica MGT and the IG
+  Reels lane orchestrator, and the test enforces `data_root=` forwarding into
+  listed raw-packet subrunners. Remaining risk: a future orchestrator can be
+  missed until manually added. Upgrade trigger: another hidden orchestrator class
+  appears or the owner authorizes a stronger orchestrator discovery rule.
 - **No forced acquisition-route uniformity across YouTube, Instagram, TikTok, or
   future source families.** Foregone: a shared cross-platform acquisition
   primitive now. Acceptable now: acquisition routes are platform-specific
@@ -306,19 +315,21 @@ direction_change_propagation:
     Tightens the code-backed packet-runner lake-seam enforcement description to match the live
     contract test: Bronze writer coverage now includes behavior-discovered source-capture packet
     writer functions (including ASR-style writers whose names do not end in _packet), an explicit
-    current Bronze-writer runner surface, and explicit raw-packet orchestrator forwarding. The
-    non-propagation boundary is unchanged: this does not become a universal rule for every
-    lake-touching runner, derived-only Silver writer, audit/report runner, materializer, or
-    projection entrypoint.
-  trigger: code_backed_enforcement
+    current Bronze-writer runner surface, explicit raw-packet orchestrator forwarding including
+    the current IG Reels lane orchestrator, and an accepted residual for manual orchestrator
+    enumeration. The non-propagation boundary is unchanged: this does not become a universal rule
+    for every lake-touching runner, derived-only Silver writer, audit/report runner, materializer,
+    or projection entrypoint.
+  trigger: validation_philosophy
   related_triggers:
-    - data_lake_capture_boundary
-    - packet_runner_lake_seam
+    - architecture_doctrine
   controlling_sources_updated:
     - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_capture_propagation_classification_contract_v0.md
     - orca-harness/tests/contract/test_capture_runner_lake_seam_coverage.py
   downstream_surfaces_checked:
     - orca-harness/runners/run_fragrantica_mgt_capture.py
+    - orca-harness/runners/run_ig_reels_lane_orchestrator.py
+    - orca-harness/runners/run_source_capture_ig_reels_grid_packet.py
     - orca-harness/runners/run_source_capture_ig_reels_audio_packet.py
     - orca-harness/runners/run_source_capture_youtube_asr_packet.py
     - orca-harness/source_capture/transcript/asr_packet.py

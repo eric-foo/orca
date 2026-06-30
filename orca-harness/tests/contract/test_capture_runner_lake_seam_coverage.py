@@ -45,6 +45,7 @@ KNOWN_UNSYNCED: dict[str, str] = {}
 EXPECTED_BRONZE_WRITER_RUNNERS = frozenset(
     {
         "run_fragrantica_mgt_capture.py",
+        "run_ig_reels_lane_orchestrator.py",
         "run_source_capture_antiblock_http_packet.py",
         "run_source_capture_archive_packet.py",
         "run_source_capture_authenticated_browser_packet.py",
@@ -66,6 +67,7 @@ EXPECTED_BRONZE_WRITER_RUNNERS = frozenset(
 
 BRONZE_PACKET_ORCHESTRATORS: dict[str, tuple[str, ...]] = {
     "run_fragrantica_mgt_capture.py": ("http_runner", "cloakbrowser_runner"),
+    "run_ig_reels_lane_orchestrator.py": ("grid_runner",),
 }
 
 FORBIDDEN_RUNNER_RAW_PUBLICATION_CALLS = {
