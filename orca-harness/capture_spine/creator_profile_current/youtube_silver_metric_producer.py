@@ -505,12 +505,25 @@ def _required_source_hash(seed_observation: Mapping[str, Any], field: str, *, wh
 def _rollup_raw_anchor(seed_rollup: Mapping[str, Any]) -> str:
     """A per-account rollup aggregates observations spanning multiple distinct
     per-Short raw packets, so (unlike IG) there is no single source packet to
-    anchor it to. Anchor to the platform account id; fail closed if blank. The
-    lake writer additionally validates the segment is path-safe."""
-    account_id = seed_rollup.get("profile_subject_id")
+    anchor it to. Anchor to the rollup's declared single ``platform_account_ids``
+    entry, fail closed if absent, blank, or divergent from ``profile_subject_id``.
+    The lake writer additionally validates the segment is path-safe."""
+    account_ids = seed_rollup.get("platform_account_ids")
+    if not isinstance(account_ids, list) or len(account_ids) != 1:
+        raise ValueError(
+            f"rollup {seed_rollup.get('metric_rollup_id')!r} requires exactly one "
+            "platform_account_id raw anchor"
+        )
+    account_id = account_ids[0]
     if not isinstance(account_id, str) or not account_id.strip():
         raise ValueError(
             f"rollup {seed_rollup.get('metric_rollup_id')!r} lacks a platform_account_id raw anchor"
+        )
+    profile_subject_id = seed_rollup.get("profile_subject_id")
+    if profile_subject_id is not None and profile_subject_id != account_id:
+        raise ValueError(
+            f"rollup {seed_rollup.get('metric_rollup_id')!r} platform_account_id raw anchor "
+            f"{account_id!r} does not match profile_subject_id {profile_subject_id!r}"
         )
     return account_id
 

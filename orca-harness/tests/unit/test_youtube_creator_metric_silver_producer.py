@@ -122,6 +122,9 @@ def test_observation_no_drift_against_committed_seed(tmp_path: Path) -> None:
         assert observation["metric_value"] == seed_obs["metric_value_or_none"]
         assert observation["metric_name"] == seed_obs["metric_name"]
         assert observation["unit"] == seed_obs["metric_unit"]
+        # No-drift on posture too (decision-bearing: observed vs unavailable vs not_attempted).
+        assert observation["metric_posture"]["kind"] == seed_obs["metric_posture"]
+        assert observation["metric_posture"]["reason_detail"] == seed_obs["posture_reason_or_none"]
 
 
 def test_observation_records_written_and_reload_with_stable_hash(tmp_path: Path) -> None:
@@ -159,8 +162,8 @@ def test_rollup_records_lineage_and_no_drift(tmp_path: Path) -> None:
         assert rollup["content_hash"] == f"sha256:{_content_hash(rollup)}"
 
         seed_rollup = seed_by_id[rollup["provenance"]["seed_metric_rollup_id"]]
-        # Rollup anchors to its platform account id (not a single packet).
-        assert rollup["raw_anchor"] == seed_rollup["profile_subject_id"]
+        # Rollup anchors to its declared platform account id (not a single packet).
+        assert rollup["raw_anchor"] == seed_rollup["platform_account_ids"][0]
 
         payload = rollup["payload"]["observation"]
         # derived_refs point at the emitted observation records; hash matches.
@@ -189,8 +192,12 @@ def test_rollup_records_lineage_and_no_drift(tmp_path: Path) -> None:
         assert payload["sample_support"] == seed_rollup["sample_support"]
         assert payload["limitations"] == seed_rollup["limitations"]
         for name, seed_metric in seed_rollup["metric_rollups"].items():
-            assert payload["metric_rollups"][name]["metric_value"] == seed_metric["value_or_none"]
-            assert payload["metric_rollups"][name]["unit"] == seed_metric["metric_unit"]
+            rollup_metric = payload["metric_rollups"][name]
+            assert rollup_metric["metric_value"] == seed_metric["value_or_none"]
+            assert rollup_metric["unit"] == seed_metric["metric_unit"]
+            # No-drift on posture too.
+            assert rollup_metric["metric_posture"]["kind"] == seed_metric["posture"]
+            assert rollup_metric["metric_posture"]["reason_detail"] == seed_metric.get("posture_reason_or_none")
 
 
 def test_rollup_metric_posture_value_coupling(tmp_path: Path) -> None:
@@ -219,9 +226,10 @@ def test_observations_anchor_to_distinct_packets_rollups_to_accounts(tmp_path: P
     # Each observation anchors to its own distinct per-Short packet.
     obs_anchors = [r["raw_anchor"] for r in result.observation_records]
     assert len(set(obs_anchors)) == EXPECTED_OBSERVATIONS
-    # Rollups anchor to the 30 distinct account ids.
+    # Rollups anchor to the 30 distinct account ids (the declared single platform_account_ids entry).
     rollup_anchors = {r["raw_anchor"] for r in result.rollup_records}
-    assert rollup_anchors == {r["profile_subject_id"] for r in seed["metric_rollups"]}
+    assert all(len(r["platform_account_ids"]) == 1 for r in seed["metric_rollups"])
+    assert rollup_anchors == {r["platform_account_ids"][0] for r in seed["metric_rollups"]}
     assert len(rollup_anchors) == EXPECTED_ROLLUPS
 
 
@@ -247,3 +255,15 @@ def test_observation_missing_source_hash_fails_closed() -> None:
     seed_obs["source_watch_html_sha256_or_none"] = None
     with pytest.raises(ValueError, match="source_watch_html_sha256_or_none"):
         build_metric_observation_record(seed_observation=seed_obs)
+
+
+def test_rollup_platform_account_mismatch_fails_closed(tmp_path: Path) -> None:
+    # AR-2 hardening: the rollup raw_anchor is the declared single platform_account_ids
+    # entry and must equal profile_subject_id; a divergence fails closed.
+    seed_document = _committed_seed_document()
+    seed_document[YOUTUBE_SEED_WRAPPER_KEY]["metric_rollups"][0]["platform_account_ids"] = ["acct_mismatch"]
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    with pytest.raises(ValueError, match="does not match profile_subject_id"):
+        derive_youtube_creator_metric_silver_records_from_seed(
+            data_root=data_root, seed_document=seed_document
+        )
