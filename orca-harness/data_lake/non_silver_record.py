@@ -13,15 +13,18 @@ Scope: the record-CONTENT negatives the silver front-door listed as v0 residuals
 
 - #3 (every non-silver role): the record is not a Silver envelope -- no
   ``silver_vault_record_v0`` schema_version and no closed ``record_kind``. Checked
-  on a Mapping record, or per member of a list record (ECR / signal-content write
-  a JSON list of posture / SCR dicts).
-- #4 (PROJECTION): carries a certification asserting ``not_cleaned`` and
-  ``not_judgment_ready`` (a projection is a mechanical view, never a clean fact).
+  on a Mapping record, or every member of a list record (ECR / signal-content write
+  a JSON list of posture / SCR dicts); a mixed list with a non-mapping member is
+  invalid, not silently skipped.
+- #4 (PROJECTION): carries a certification whose exact tokens include ``not_cleaned``
+  and ``not_judgment_ready`` (a projection is a mechanical view, never a clean fact).
 - #4 (CLEANING_AUDIT): carries ``record_family == "processing_audit"`` and its
-  transform ledger (the processing evidence).
+  transform ledger (the processing evidence). The ledger may be empty -- a packet
+  with nothing to clean (e.g. no reviews) still produces a legitimate audit, so
+  emptiness is not a blur and is not rejected.
 - #10 (CLEANING_AUDIT): asserts the ``not_judgment`` boundary and embeds no
-  resolved Judgment record -- Cleaning references downstream layers, it never
-  resolves them.
+  resolved Judgment record ANYWHERE in the record -- Cleaning references downstream
+  layers, it never resolves them.
 
 Not in scope (named residuals): wiring this validator into producer write paths;
 a full reference-vs-resolved-ECR-posture check (the Judgment boundary is enforced;
@@ -52,9 +55,9 @@ NON_SILVER_ROLES = frozenset(
     }
 )
 
-# Top-level keys whose presence means a Cleaning record is smuggling a resolved
-# Judgment record (the out-of-scope boundary). Cleaning may reference downstream
-# layers; it must not embed a resolved one.
+# Key names whose presence (anywhere in a Cleaning record) means it is smuggling a
+# resolved Judgment record (the out-of-scope boundary). Cleaning may reference
+# downstream layers; it must not embed a resolved one.
 _JUDGMENT_FIELD_NAMES = ("judgment", "judgement", "evidence_unit", "evidence_units")
 _NOT_JUDGMENT_NON_CLAIM = "not_judgment"
 
@@ -95,15 +98,21 @@ def validate_non_silver_record(role: LaneRole, record: Any) -> None:
 
 def _record_members(record: Any):
     """Yield the dict members the #3 negative applies to: the record itself if it is
-    a Mapping, else each Mapping in a Sequence record (ECR / signal-content persist a
-    JSON list of posture / SCR dicts)."""
+    a Mapping, else every Mapping in a Sequence record (ECR / signal-content persist a
+    JSON list of posture / SCR dicts). A non-mapping list member is invalid (a record
+    list is homogeneous dicts) rather than silently skipped -- skipping it would let a
+    malformed member evade the #3 check."""
     if isinstance(record, Mapping):
         yield record
         return
     if isinstance(record, Sequence) and not isinstance(record, (str, bytes, bytearray)):
-        for member in record:
-            if isinstance(member, Mapping):
-                yield member
+        for index, member in enumerate(record):
+            if not isinstance(member, Mapping):
+                raise NonSilverRecordError(
+                    "A non-silver list record must contain only mappings; "
+                    f"member {index} is {type(member).__name__}."
+                )
+            yield member
         return
     raise NonSilverRecordError(
         "A non-silver derived record must be a mapping or a list of mappings; "
@@ -128,15 +137,22 @@ def _reject_silver_envelope(member: Mapping[str, Any], *, role: LaneRole) -> Non
 
 def _require_projection_certification(record: Mapping[str, Any]) -> None:
     cert = record.get("certification") or record.get("projection_certification")
-    if (
-        not isinstance(cert, str)
-        or "not_cleaned" not in cert
-        or "not_judgment_ready" not in cert
-    ):
+    tokens = _certification_tokens(cert) if isinstance(cert, str) else frozenset()
+    if not {"not_cleaned", "not_judgment_ready"}.issubset(tokens):
         raise NonSilverRecordError(
-            "A projection record must declare its posture: a certification asserting "
-            f"'not_cleaned' and 'not_judgment_ready' (got {cert!r})."
+            "A projection record must declare its posture: a certification whose exact "
+            f"tokens include 'not_cleaned' and 'not_judgment_ready' (got {cert!r})."
         )
+
+
+def _certification_tokens(cert: str) -> frozenset[str]:
+    """Split a certification string into exact tokens. Exact-token membership (not
+    substring) is deliberate: a substring test would accept a lookalike like
+    'not_cleaned_up' or 'not_judgment_readyish' that does not actually assert the
+    posture."""
+    return frozenset(
+        token for token in cert.replace(";", " ").replace(",", " ").split() if token
+    )
 
 
 def _require_processing_audit_posture(record: Mapping[str, Any]) -> None:
@@ -154,6 +170,9 @@ def _require_processing_audit_posture(record: Mapping[str, Any]) -> None:
 
 
 def _has_transform_ledger(record: Mapping[str, Any]) -> bool:
+    """The audit must carry a transform ledger. Presence, not non-emptiness: a packet
+    with nothing to clean (e.g. no reviews) still produces a legitimate audit whose
+    ledger is empty, so requiring non-empty would reject real audits."""
     payload = record.get("payload")
     if not isinstance(payload, Mapping):
         return False
@@ -171,19 +190,29 @@ def _reject_smuggled_judgment(record: Mapping[str, Any]) -> None:
             "A cleaning record must assert the Judgment boundary (non_claims must "
             f"include {_NOT_JUDGMENT_NON_CLAIM!r}); Cleaning is not Judgment."
         )
-    payload = record.get("payload")
-    payload = payload if isinstance(payload, Mapping) else {}
-    for field in _JUDGMENT_FIELD_NAMES:
-        if field in record:
-            raise NonSilverRecordError(
-                "A cleaning record must not embed a resolved Judgment record (found "
-                f"top-level {field!r}); reference Judgment, never resolve it."
-            )
-        if field in payload:
-            raise NonSilverRecordError(
-                "A cleaning record must not embed a resolved Judgment record (found "
-                f"payload.{field!r}); reference Judgment, never resolve it."
-            )
+    for path in _judgment_field_paths(record):
+        raise NonSilverRecordError(
+            "A cleaning record must not embed a resolved Judgment record (found "
+            f"{path}); reference Judgment, never resolve it."
+        )
+
+
+def _judgment_field_paths(value: object, path: str = "record"):
+    """Yield the dotted path of every key whose name is a resolved-Judgment field,
+    anywhere in the record. The walk is recursive on purpose: a resolved Judgment
+    nested under, e.g., ``payload.cleaning_packet`` must not slip past a shallow
+    top-level/payload-only check. Only mapping KEYS are matched, so a non_claims
+    string value like ``not_evidence_unit_binding`` is not a false positive."""
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            field = str(key)
+            child_path = f"{path}.{field}"
+            if field in _JUDGMENT_FIELD_NAMES:
+                yield child_path
+            yield from _judgment_field_paths(child, child_path)
+    elif isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        for index, child in enumerate(value):
+            yield from _judgment_field_paths(child, f"{path}[{index}]")
 
 
 __all__ = [
