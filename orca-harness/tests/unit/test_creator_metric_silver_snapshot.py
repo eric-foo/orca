@@ -11,6 +11,7 @@ record per account) drives the fail-closed cases. Temp lake only.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -35,6 +36,12 @@ from capture_spine.creator_profile_current.youtube_silver_metric_producer import
     derive_youtube_creator_metric_silver_records_from_seed_file,
 )
 from data_lake.root import DataLakeRoot
+from runners.run_creator_metric_rollup_snapshot import (
+    RECEIPT_WRAPPER_KEY,
+    SnapshotRunError,
+    main as run_snapshot_main,
+    run_snapshot,
+)
 from source_capture.models import known_fact
 from source_capture.writer import write_local_source_capture_packet
 
@@ -335,3 +342,111 @@ def test_manifest_selected_record_missing_fails_closed(tmp_path: Path) -> None:
         _ig_snapshot(data_root, LATER, prior_manifest=bogus_prior)
     assert excinfo.value.reason == "manifest_selected_record_missing"
     assert excinfo.value.account_id == IG_ACCOUNT
+
+
+# -- STEP-3 operator runner (run_creator_metric_rollup_snapshot) -------------
+# The runner wraps the pure generator with the file I/O the generator omits:
+# loading the prior committed manifest from DISK, the manifest-chain co-presence
+# block, the write-time freshness gate, and the freshness receipt. These cases
+# exercise paths the in-memory generator tests above do NOT cover.
+
+def _run_ig(data_root, *, generated_at, write, snap: Path, man: Path, rec: Path):
+    return run_snapshot(
+        data_root,
+        account_ledger=_ig_discovery_ledger(IG_ACCOUNT),
+        platform="instagram",
+        snapshot_generated_at=generated_at,
+        reconciled_at=generated_at,
+        snapshot_path=snap,
+        manifest_path=man,
+        receipt_path=rec,
+        write=write,
+    )
+
+
+def test_runner_genesis_write_emits_snapshot_manifest_receipt(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+
+    summary = _run_ig(data_root, generated_at=LATE, write=True, snap=snap, man=man, rec=rec)
+
+    assert summary["wrote"] is True and summary["selection_run_id"] == 1
+    assert snap.exists() and man.exists() and rec.exists()
+    written_snap = json.loads(snap.read_text(encoding="utf-8"))
+    assert validate_snapshot(written_snap) == []
+    assert validate_manifest(json.loads(man.read_text(encoding="utf-8"))) == []
+    receipt = json.loads(rec.read_text(encoding="utf-8"))[RECEIPT_WRAPPER_KEY]
+    prov = written_snap[SNAPSHOT_WRAPPER_KEY]["snapshot_provenance"]
+    # the receipt records the SAME content-set watermark the snapshot carries
+    assert receipt["lake_high_watermark"] == prov["lake_high_watermark"]
+    assert receipt["selection_run_id"] == 1
+    assert {e["profile_subject_id"]: e["content_hash"] for e in receipt["per_account"]} == {
+        e["profile_subject_id"]: e["content_hash"] for e in prov["per_account"]
+    }
+
+
+def test_runner_advance_chains_via_disk_round_trip(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE, views=(100, 300))
+    run1 = _run_ig(data_root, generated_at=LATE, write=True, snap=snap, man=man, rec=rec)
+
+    # a genuinely newer record appended; the second run loads the prior manifest
+    # from DISK (not an in-memory handoff) and advances the run-order chain.
+    _write_ig_rollup(data_root, tmp_path, slot="b", generated_at=LATER, views=(120, 320))
+    run2 = _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
+
+    assert run1["selection_run_id"] == 1 and run2["selection_run_id"] == 2
+    assert run2["lake_high_watermark"] != run1["lake_high_watermark"]
+    chained = json.loads(man.read_text(encoding="utf-8"))[MANIFEST_WRAPPER_KEY]
+    assert chained["parent_manifest_sha256"] == manifest_content_hash(run1["manifest"])
+
+
+def test_runner_dry_run_writes_nothing_but_still_gates(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+
+    summary = _run_ig(data_root, generated_at=LATE, write=False, snap=snap, man=man, rec=rec)
+
+    assert summary["wrote"] is False
+    assert summary["lake_high_watermark"].startswith("sha256:")  # the gate ran
+    assert not snap.exists() and not man.exists() and not rec.exists()
+
+
+def test_runner_blocks_when_snapshot_present_but_manifest_missing(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    snap.write_text("{}", encoding="utf-8")  # committed snapshot but NO companion manifest
+
+    with pytest.raises(SnapshotRunError) as excinfo:
+        _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
+    assert excinfo.value.reason == "manifest_chain_broken"
+    assert not man.exists()  # never reset the chain by writing a fresh run-id-1 manifest
+
+
+def test_runner_blocks_when_committed_manifest_invalid(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    snap.write_text("{}", encoding="utf-8")
+    man.write_text("{}", encoding="utf-8")  # present but fails the manifest validator
+
+    with pytest.raises(SnapshotRunError) as excinfo:
+        _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
+    assert excinfo.value.reason == "manifest_chain_broken"
+
+
+def test_runner_main_against_live_lake_when_available() -> None:
+    # main()/resolve is the only real-lake-bound path; operator-local, skip in CI.
+    if not os.environ.get("ORCA_DATA_ROOT"):
+        pytest.skip("ORCA_DATA_ROOT is not set; the snapshot runner is an operator-local live-lake check")
+    try:
+        code = run_snapshot_main(["--platform", "instagram"])  # dry-run
+    except SystemExit as exc:
+        code = exc.code
+    # success, or a clean fail-closed (e.g. the producer is unwired -> zero
+    # rollups -> missing_account_rollup) -- never an uncaught crash.
+    assert code in (0, 2)
