@@ -18,8 +18,8 @@ TIKTOK_PROFILE_LIST_SURFACES = ("/api/post/item_list/", "/api/repost/item_list/"
 
 COMPLETE_LANE_NOTE = (
     "Complete TikTok lane still requires the live browser/profile-grid runner, "
-    "creator batch cadence runner, projection bridge, and recon/playbook update. "
-    "This SCI runner enforces sanitized single-video admission only."
+    "projection bridge, cross-creator ceiling, and recon/playbook update. "
+    "This SCI layer enforces sanitized single-video and parsed-batch admission only."
 )
 
 _VIDEO_ID_RE = re.compile(r"\d{15,25}")

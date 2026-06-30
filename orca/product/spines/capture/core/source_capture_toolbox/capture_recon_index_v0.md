@@ -182,16 +182,20 @@ page scope lacks resource-timing access. Treat more Chrome-extension DOM probing
 as non-packet-grade; the next proof must use a supported response-body capture
 surface for the page-owned `/api/comment/list` request.
 
-**TikTok Funmi N30 comment/subtitle cadence update (2026-07-01).**
+**TikTok Funmi N30 comment/subtitle cadence + batch admission update (2026-07-01).**
 `docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md`
 supersedes the response-body-unmeasured part of the prior Funmi sessioned
 state for one creator/session: 30/30 videos completed with page-owned
 `/api/comment/list` parsed fields, 0 challenges, 0 failures, and no raw
 response body or endpoint persistence. Source-native WebVTT subtitles parsed
 for 26/26 videos where `subtitleInfos` existed; the other 4/30 lacked
-`subtitleInfos`. This does not prove cross-creator coverage, higher-volume
-account safety, full comment census, durable media/video preservation, or
-platform-wide subtitle availability.
+`subtitleInfos`. A durable sanitized parsed-batch SourceCapturePacket now exists
+at `F:\orca-data-lake\raw\97c\01KWCYZ9P72W4SJD7NDPRQT0DB` with source surface
+`tiktok_creator_batch_comment_subtitle_admission`, preserving 596 parsed comment
+rows, 1044 WebVTT cues, and deterministic typed extraction seeds. This does not
+prove cross-creator coverage, higher-volume account safety, full comment census,
+durable media/video preservation, final product extraction, or platform-wide
+subtitle availability.
 
 ## Coverage map
 
@@ -201,8 +205,8 @@ platform-wide subtitle availability.
   **TikTok is no longer absent, but remains partial.** First-slice TikTok recon and a sessioned
   capture spec/warm-probe plan now exist (see Social networks table), proving route existence for
   public page-owned metadata and top/relevant comment responses in a real cookied browser while
-  leaving sessioned detection ceiling, scale reliability, transcript/audio/ASR, durable media/video,
-  and packet/projection implementation unproven. **YouTube is now probed** (2026-06-21 — **GO**,
+  leaving sessioned detection ceiling, scale reliability, durable media/video, cross-creator subtitle coverage,
+  final product extraction, and projection implementation unproven. Parsed batch packet admission is now proven for Funmi N30. **YouTube is now probed** (2026-06-21 — **GO**,
   n=10 logged-out; long-form + Shorts unified, served-HTML embedded state + `youtubei` comments;
   see the Social networks table). **Instagram is now probed** (own-account
   wind-caller recon, reel view/play count, creator discovery, and a 2026-06-29 public deep-capture
@@ -223,6 +227,7 @@ platform-wide subtitle availability.
 
 Not an authorization, not a build spec, not validation/readiness/acceptance, not legal
 advice. Verdicts are as reported by each source doc. TikTok's first-slice route is no
-longer absent, but scale reliability, sessioned detection ceiling, transcript/audio/ASR,
-durable media/video, and implementation remain unproven. Worktree-resident findings are
-**claimed by their lanes** and unverified here until merged.
+longer absent, but scale reliability, sessioned detection ceiling, cross-creator
+subtitle/transcript coverage, durable media/video, final product extraction, and
+projection remain unproven. Parsed Funmi N30 batch packet admission is proven.
+Worktree-resident findings are

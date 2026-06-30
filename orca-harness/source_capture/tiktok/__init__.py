@@ -15,6 +15,12 @@ from source_capture.tiktok.admission import (
     parse_profile_list_items,
     parse_webvtt_cues,
 )
+from source_capture.tiktok.batch_packet import (
+    TIKTOK_BATCH_CAPTURE_JSON_NAME,
+    TIKTOK_BATCH_CAPTURE_SCHEMA_VERSION,
+    TIKTOK_BATCH_CAPTURE_SURFACE,
+    write_tiktok_batch_packet,
+)
 from source_capture.tiktok.video_packet import (
     TIKTOK_VIDEO_CAPTURE_SCHEMA_VERSION,
     TIKTOK_VIDEO_CAPTURE_SURFACE,
@@ -23,6 +29,9 @@ from source_capture.tiktok.video_packet import (
 
 __all__ = [
     "COMPLETE_LANE_NOTE",
+    "TIKTOK_BATCH_CAPTURE_JSON_NAME",
+    "TIKTOK_BATCH_CAPTURE_SCHEMA_VERSION",
+    "TIKTOK_BATCH_CAPTURE_SURFACE",
     "TIKTOK_COMMENT_LIST_ROUTE",
     "TIKTOK_PROFILE_LIST_SURFACES",
     "TIKTOK_VIDEO_CAPTURE_SCHEMA_VERSION",
@@ -39,5 +48,6 @@ __all__ = [
     "parse_comment_list_bytes",
     "parse_profile_list_items",
     "parse_webvtt_cues",
+    "write_tiktok_batch_packet",
     "write_tiktok_video_packet",
 ]

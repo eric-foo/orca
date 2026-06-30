@@ -189,6 +189,44 @@ Smallest complete sequence:
    spend more TikTok account/session budget. The next live rung should be a
    different creator or a small cross-creator batch, not more Funmi volume.
 
+## Durable Batch Admission Follow-Up (2026-07-01)
+
+The N=30 staging outputs were admitted into a canonical sanitized SourceCapturePacket
+without new live TikTok probing.
+
+Fresh-read verified packet:
+
+- Packet path: `F:\orca-data-lake\raw\97c\01KWCYZ9P72W4SJD7NDPRQT0DB`
+- Packet id: `01KWCYZ9P72W4SJD7NDPRQT0DB`
+- Source surface: `tiktok_creator_batch_comment_subtitle_admission`
+- Preserved file: `raw/01_tiktok_batch_capture.json`
+- Source input SHA-256 values:
+  - grid: `dffb126ac01525289338f7e780016d2245b539459575a7052df9e4fef873671a`
+  - N5: `a25b625d7738d510c146e02e2dcab403313f11450d8312a0ea88f151721cfba4`
+  - N25: `bebb5a2b9b63cd654ded43a7d95e3d9ccee924d5c5796333afba3081f6a7f67b`
+
+Fresh-read verified batch summary:
+
+- `video_count=30`, `attempted_count=30`, `completed_count=30`, `challenge_count=0`
+- `comment_response_success_count=30`, `captured_comment_count=596`, `comment_envelope_total_sum=4255`
+- `subtitle_info_video_count=26`, `subtitle_success_count=26`, `subtitle_cue_count=1044`, `transcript_text_available_count=26`
+- Grid stats sums admitted from parsed profile/list items: `playCount=32458300`, `diggCount=143695`, `commentCount=4252`, `shareCount=3975`, `collectCount=15331`
+- Source-text disclosure heuristic in the admitted typed seed: `source_text_disclosure_video_count=9`
+- Fresh read found no raw signed-marker strings among `msToken=`, `X-Bogus=`, or `tiktokcdn` in the preserved payload.
+
+Implementation route now exists:
+
+- `orca-harness/source_capture/tiktok/batch_packet.py`
+- `orca-harness/runners/run_source_capture_tiktok_batch_packet.py`
+- `orca-harness/tests/unit/test_tiktok_batch_admission.py`
+
+The admitted typed fields are a deterministic extraction seed only: source mentions,
+hashtags, disclosure-source-text signals, comment question/intent term counts, and
+transcript signal terms. They are not final product extraction, Cleaning, ECR, or
+Judgment.
+
+Updated next move: `TYPED_PRODUCT_EXTRACTION_FROM_TIKTOK_BATCH_PACKET_NEXT`.
+
 ## Residuals
 
 - This is one creator, one account/session, one short capture window, one
@@ -208,11 +246,10 @@ Smallest complete sequence:
 - Platform-rendered paid-partnership labels were not measured across the N=30
   batch. Hashtag/source-text disclosure signals are source text and should stay
   separate from platform ad-disclosure fields.
-- The current result files live in `F:\orca-data-lake\.staging`; they are not
-  yet canonical SourceCapturePacket records.
+- The original result files still live in `F:\orca-data-lake\.staging`; the canonical sanitized batch packet is now `F:\orca-data-lake\raw\97c\01KWCYZ9P72W4SJD7NDPRQT0DB`.
 
 ## Non-Claims
 
 Not TikTok validation, production readiness, account safety proof, legal advice,
-general creator coverage, cross-creator subtitle coverage, durable packet
-admission, Cleaning, ECR, Judgment, buyer-proof, or product-verdict proof.
+general creator coverage, cross-creator subtitle coverage, Cleaning, ECR,
+Judgment, buyer-proof, or product-verdict proof.
