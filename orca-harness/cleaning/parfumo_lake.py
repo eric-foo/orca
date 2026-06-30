@@ -32,6 +32,7 @@ PARFUMO_AUDIT_PACK_PRODUCER_SCHEMA_VERSION = "parfumo_cleaning_audit_pack_v0"
 PARFUMO_SILVER_PRODUCER_SCHEMA_VERSION = "parfumo_cleaning_silver_textobservation_v0"
 PARFUMO_CLEANING_METHOD_ID = "parfumo_cleaning_method_v0"
 TEXT_NORMALIZATION_RULE = "parfumo_text_whitespace_normalization"
+PARFUMO_RATING_METRIC_RESIDUAL = "parfumo_rating_metric_observations_deferred"
 
 DISCRIMINATOR_LOCALITY_NON_CLAIM = (
     "record_family_and_audit_kind_local_to_cleaning_audit_pack_v0_no_lake_wide_dispatch"
@@ -155,6 +156,7 @@ def parfumo_cleaning_audit_pack_payload(
                 "not_demand_signal",
                 "not_evidence_unit_binding",
                 "not_judgment",
+                "not_metric_observation_promotion",
                 "not_sentiment_analysis",
                 "not_silver_fact",
                 DISCRIMINATOR_LOCALITY_NON_CLAIM,
@@ -210,11 +212,11 @@ def _post_cleaned_silver_record(
     audit_record_id: str,
     audit_content_hash: str,
 ) -> dict[str, Any]:
-    text_artifact_type = (
-        "statement_body"
-        if handle.projection_ref and handle.projection_ref.row_kind == "fragrance_statement_current_window"
-        else "review_body"
+    is_statement = bool(
+        handle.projection_ref and handle.projection_ref.row_kind == "fragrance_statement_current_window"
     )
+    text_artifact_type = "review_body"
+    producer_row_kind = "parfumo_statement_body_text" if is_statement else "parfumo_review_body_text"
     record: dict[str, Any] = {
         "record_id": record_id,
         "raw_anchor": packet.packet_id,
@@ -226,7 +228,7 @@ def _post_cleaned_silver_record(
         "content_hash_basis": _CONTENT_HASH_BASIS,
         "record_kind": "observation",
         "payload_kind": "TextObservation",
-        "producer_row_kind": f"parfumo_{text_artifact_type}_text",
+        "producer_row_kind": producer_row_kind,
         "source_family": packet.source_family,
         "source_surface": packet.source_surface,
         "observed_at": capture_time,
@@ -263,6 +265,7 @@ def _post_cleaned_silver_record(
                 "not_corpus_completeness",
                 "not_demand_signal",
                 "not_judgment",
+                "not_metric_observation_promotion",
                 "not_sentiment_analysis",
             }
         ),
@@ -292,13 +295,13 @@ def _known_capture_time(packet: SourceCapturePacket) -> str:
 
 
 def _coverage(cleaning_packet: CleaningPacket) -> dict[str, Any]:
-    residuals = sorted(
-        {
-            residual
-            for handle in cleaning_packet.handles
-            for residual in handle.residuals
-        }
+    residual_set = {PARFUMO_RATING_METRIC_RESIDUAL}
+    residual_set.update(
+        residual
+        for handle in cleaning_packet.handles
+        for residual in handle.residuals
     )
+    residuals = sorted(residual_set)
     return {
         "basis": "parfumo_current_window_cleaning_packet",
         "current_window_only": True,

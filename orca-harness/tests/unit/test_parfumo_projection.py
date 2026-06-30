@@ -55,6 +55,22 @@ def test_builds_parfumo_projection_from_direct_http_packet(tmp_path: Path) -> No
     assert statement.source_visible_fields["statement_text"] == "Airy amber trail."
 
 
+def test_parfumo_projection_ignores_unrelated_ids_when_attributing_review_tab(tmp_path: Path) -> None:
+    html = _HTML.replace(
+        '    <article data-review-id="900001"',
+        '    <aside id="sidebar">not a review tab panel</aside>\n    <article data-review-id="900001"',
+    )
+    result = _write_packet(tmp_path, html=html)
+    projection = build_parfumo_projection(
+        packet=result.packet,
+        raw_file_bytes_by_file_id=_raw_file_bytes(result.output_directory),
+    )
+
+    review = next(row for row in projection.rows if row.row_kind == "fragrance_review_card_current_window")
+    assert review.tab_id == "reviews"
+    assert review.source_visible_fields["tab_id"] == "reviews"
+
+
 def test_parfumo_projection_rejects_wrong_surface(tmp_path: Path) -> None:
     result = _write_packet(tmp_path, source_surface="fragrantica_product_page_direct_http")
     with pytest.raises(ValueError, match="source_surface"):
@@ -93,9 +109,14 @@ def test_builds_parfumo_projection_from_packet_directory(tmp_path: Path) -> None
     assert projection.loss_ledger.preserved_statements == 1
 
 
-def _write_packet(tmp_path: Path, *, source_surface: str = "parfumo_product_page_direct_http"):
+def _write_packet(
+    tmp_path: Path,
+    *,
+    source_surface: str = "parfumo_product_page_direct_http",
+    html: str | None = None,
+):
     body_path = tmp_path / "http_response_body.bin"
-    body_path.write_text(_HTML, encoding="utf-8")
+    body_path.write_text(_HTML if html is None else html, encoding="utf-8")
     metadata_path = tmp_path / "http_response_metadata.json"
     metadata_path.write_text('{"status": 200}\n', encoding="utf-8")
     return write_local_source_capture_packet(

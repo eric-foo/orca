@@ -61,6 +61,7 @@ def test_parfumo_projection_and_cleaning_persist_distinct_lake_layers(tmp_path: 
     assert "not_silver_fact" in audit["non_claims"]
     assert DISCRIMINATOR_LOCALITY_NON_CLAIM in audit["non_claims"]
     assert "full_review_corpus_not_captured_ajax_pagination_present" in audit["coverage"]["residuals"]
+    assert "parfumo_rating_metric_observations_deferred" in audit["coverage"]["residuals"]
     assert "inspect_raw_before_review_corpus_completeness_claim" in audit["coverage"]["raw_pull_triggers"]
     assert "cleaning_packet" in audit["payload"]
 
@@ -68,14 +69,18 @@ def test_parfumo_projection_and_cleaning_persist_distinct_lake_layers(tmp_path: 
     assert len(round_tripped.transform_ledger) == len(result.cleaning_packet.transform_ledger)
 
     silver_records = [json.loads(path.read_text(encoding="utf-8")) for path in result.silver_paths]
-    text_by_type = {
-        record["payload"]["observation"]["text_artifact_type"]: record
+    text_by_row_kind = {
+        record["producer_row_kind"]: record
         for record in silver_records
         if record["payload_kind"] == "TextObservation"
     }
-    assert set(text_by_type) == {"review_body", "statement_body"}
-    assert text_by_type["review_body"]["payload"]["observation"]["text_value"] == _REVIEW_TEXT
-    assert text_by_type["statement_body"]["payload"]["observation"]["text_value"] == _STATEMENT_TEXT
+    assert set(text_by_row_kind) == {"parfumo_review_body_text", "parfumo_statement_body_text"}
+    assert all(
+        record["payload"]["observation"]["text_artifact_type"] == "review_body"
+        for record in text_by_row_kind.values()
+    )
+    assert text_by_row_kind["parfumo_review_body_text"]["payload"]["observation"]["text_value"] == _REVIEW_TEXT
+    assert text_by_row_kind["parfumo_statement_body_text"]["payload"]["observation"]["text_value"] == _STATEMENT_TEXT
     for record in silver_records:
         assert record["schema_version"] == "silver_vault_record_v0"
         assert record["record_kind"] == "observation"

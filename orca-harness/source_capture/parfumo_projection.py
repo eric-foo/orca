@@ -859,14 +859,14 @@ def _text_card_tab_id(
         return explicit
     if kind == "statement":
         return "statements"
-    panels = [
-        (match.start(), match.group(1))
-        for match in re.finditer(
-            r'<[^>]+(?:id|data-tab-panel)=["\']([^"\']+)["\'][^>]*>',
-            text,
-            flags=re.IGNORECASE,
-        )
-    ]
+    panels: list[tuple[int, str]] = []
+    for match in re.finditer(r"<[^>]+>", text, flags=re.IGNORECASE):
+        tag = match.group(0)
+        tab_id = _attr_value(tag, "data-tab-panel")
+        if tab_id is None and (_attr_value(tag, "role") or "").lower() == "tabpanel":
+            tab_id = _attr_value(tag, "id")
+        if tab_id:
+            panels.append((match.start(), tab_id))
     active = None
     for panel_start, tab_id in panels:
         if panel_start <= position:
