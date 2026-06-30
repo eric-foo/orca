@@ -38,6 +38,12 @@ if TYPE_CHECKING:
 
 SILVER_VAULT_RECORD_SCHEMA_VERSION = "silver_vault_record_v0"
 CLOSED_RECORD_KINDS = ("entity", "relationship", "observation")
+# The closed metric-posture vocabulary -- the source-capture posture kinds a Silver
+# MetricObservation may carry. Kept local here, exactly like CLOSED_RECORD_KINDS, so this
+# base data_lake layer enforces the contract's "posture values must map to the live
+# source-capture posture vocabulary" clause without importing the capture spine. Adding a
+# kind is a deliberate edit here (mirroring a capture-spine vocabulary change).
+METRIC_POSTURE_KINDS = ("observed", "unavailable_with_reason", "not_attempted")
 # Keys that mark Cleaning processing evidence (the transform ledger). A Silver fact
 # must never carry them -- that is the evidence-vs-fact half of the no-blur invariant.
 _LEDGER_KEYS = ("cleaning_packet", "transform_ledger")
@@ -106,9 +112,14 @@ def _reject_ledger(container: Mapping[str, Any], *, where: str) -> None:
 
 
 def _validate_metric_posture(observation: Mapping[str, Any]) -> None:
-    """MetricObservation posture coupling, on the Silver-persisted field names:
-    observed => value present + no reason; non-observed => value absent + a reason.
-    Mirrors the live MetricObservation discipline without importing the capture model."""
+    """MetricObservation posture coupling, per the Silver Vault contract's metric
+    posture table: observed => value present and BOTH reason fields null; non-observed
+    => value absent and A REASON present. The contract says "a reason is present" (not
+    "a reason_code"), and the controlled signal is the posture ``kind`` (which maps to
+    the source-capture posture vocabulary), so the reason may be carried in
+    ``reason_code`` or the free-text ``reason_detail``. The posture ``kind`` itself must be
+    one of the closed ``METRIC_POSTURE_KINDS`` (the source-capture posture vocabulary, kept
+    local), so a looser free-text posture value cannot enter through the front-door."""
     metric_name = observation.get("metric_name")
     if not isinstance(metric_name, str) or not metric_name.strip():
         raise SilverRecordError("MetricObservation requires a non-empty metric_name.")
@@ -116,23 +127,43 @@ def _validate_metric_posture(observation: Mapping[str, Any]) -> None:
     if not isinstance(posture, Mapping):
         raise SilverRecordError("MetricObservation requires a metric_posture object.")
     kind = posture.get("kind")
+    if kind not in METRIC_POSTURE_KINDS:
+        raise SilverRecordError(
+            f"MetricObservation metric_posture.kind must be one of {METRIC_POSTURE_KINDS}; "
+            f"got {kind!r}. Posture values must map to the source-capture posture vocabulary."
+        )
     value = observation.get("metric_value")
-    reason = posture.get("reason_code")
+    has_reason = _has_posture_reason(posture)
     if kind == "observed":
         if value is None:
             raise SilverRecordError("An observed metric requires a metric_value.")
-        if reason is not None:
-            raise SilverRecordError("An observed metric must not carry a posture reason_code.")
+        if has_reason:
+            raise SilverRecordError(
+                "An observed metric must not carry a posture reason "
+                "(reason_code and reason_detail must be null)."
+            )
     else:
         if value is not None:
             raise SilverRecordError(
                 f"A non-observed metric (kind={kind!r}) must not carry a metric_value "
                 "(absence must never be stored as an observed value)."
             )
-        if reason is None:
+        if not has_reason:
             raise SilverRecordError(
-                f"A non-observed metric (kind={kind!r}) requires a posture reason_code."
+                f"A non-observed metric (kind={kind!r}) requires a posture reason "
+                "(reason_code or reason_detail)."
             )
+
+
+def _has_posture_reason(posture: Mapping[str, Any]) -> bool:
+    """True if the posture carries a non-empty reason in either field. The Silver Vault
+    contract requires 'a reason is present' for a non-observed metric without mandating
+    which field carries it (the controlled signal is the posture ``kind``)."""
+    for field in ("reason_code", "reason_detail"):
+        value = posture.get(field)
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
 
 
 def _validate_text_observation(observation: Mapping[str, Any]) -> None:
@@ -166,6 +197,7 @@ def append_silver_record(
 
 __all__ = [
     "CLOSED_RECORD_KINDS",
+    "METRIC_POSTURE_KINDS",
     "SILVER_VAULT_RECORD_SCHEMA_VERSION",
     "SilverRecordError",
     "append_silver_record",

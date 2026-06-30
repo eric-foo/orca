@@ -112,10 +112,18 @@ replaces `seed["metric_rollups"]` as the rollup source:
   (the exact Silver `MetricRollupObservation` it was lifted from), plus a
   `snapshot_provenance` header (`snapshot_generated_at`, `lake_high_watermark`,
   `selection_run_id`, per-platform).
-- **No-drift bridge:** the first IG snapshot is asserted **byte-equal** to
-  today's `seed["metric_rollups"]`, so the regenerated view is **byte-identical**
-  to the committed view. This proves the *adapter* is no-drift; it does **not**
-  prove lake freshness (AR-03).
+- **No-drift bridge:** the first IG snapshot's rollups are asserted
+  **value-equal** to today's `seed["metric_rollups"]` — **not** raw-byte-equal.
+  Snapshot rollups are canonically keyed (lifted from canonical Silver records)
+  while the seed's key order is hand-authored, so a raw-byte compare false-fails
+  on key order alone (cross-vendor review finding). And because `materialize`
+  deep-copies rollup fields into the view (`_profile_rollup`) and dumps with
+  `sort_keys` off, a snapshot-fed view would otherwise reorder nested metric keys
+  vs the seed-fed view. **§5 therefore canonicalizes the view serialization**
+  (`sort_keys` on the view dump; re-emit the committed view once) so the
+  regenerated view stays byte-identical regardless of rollup source key order.
+  This proves the *adapter* is no-drift; it does **not** prove lake freshness
+  (AR-03).
 - The **seed stays committed** for metadata and as the no-drift oracle.
 
 ### How materialize consumes it (AR-05 — exact schema delta)
@@ -166,11 +174,14 @@ check alone cannot close it. The `live_lake_freshness_gate` is therefore bound a
    `content_hash`, `selection_run_id`, `reconciled_at`) committed *with* the
    snapshot. A snapshot update cannot land without a passing receipt — you cannot
    commit a known-stale snapshot.
-2. **Scheduled drift check (required):** a scheduled operator-box job runs the
-   `live_lake_freshness_gate` on a cadence and **fails loudly / opens or updates
-   a visible issue** when the lake's latest rollups advance past the committed
-   snapshot (`snapshot_behind_lake`). This catches "operator captured new data
-   but didn't refresh the registry" — the silent-drift case.
+2. **Scheduled drift check (v0: DEFERRED — see Open owner decisions #2):** the
+   design is a scheduled operator-box job that runs the `live_lake_freshness_gate`
+   on a cadence and **fails loudly / opens or updates a visible issue** when the
+   lake's latest rollups advance past the committed snapshot (`snapshot_behind_lake`),
+   catching "operator captured new data but didn't refresh the registry" — the
+   silent-drift case. At single-operator v0 this is replaced by running the gate
+   on demand (after any capture); the scheduler is the documented hardening for when
+   the drift-creator leaves the loop.
 
 Together these emit and check durable evidence, so **drift is never unnoticed.**
 The external lake makes a human *regen* step unavoidable; what this retires is
@@ -333,10 +344,20 @@ The cut-over reverts as a set, not "one input swap":
 
 1. **v0 scope:** Frozen Rollup Snapshot (recommended; the review concurred —
    certify-only under-delivers, full Creator Vault is premature). No change.
-2. **Freshness operating cost (AR-02):** the scheduled drift check implies a
-   modest operator-box scheduler + `gh issue` on drift. Owner-confirmed direction
-   is the non-optional mechanism above; the honest alternative (if no scheduler)
-   is to downgrade the claim to "lake-verifiable snapshot".
+2. **Freshness operating cost (AR-02) — RESOLVED → no scheduler at v0 (2026-07-01).**
+   Owner decision: at single-operator v0 the drift-creator (the operator appending
+   to the lake) is also the one who would regenerate, so an operator-box scheduler +
+   `gh issue` adds a lapsing moving part (its own accepted residual) and
+   false-confidence for little marginal value. The claim is therefore
+   **"lake-verifiable snapshot"**: freshness is proven **on demand** by
+   `run_live_lake_freshness_gate` (§6 Part A), run after any lake append / when the
+   last capture post-dates the snapshot. A bare last-capture-*date* check is only a
+   nudge — it can false-alarm on identical re-captures (which AR-04 collapses as
+   no-drift) and it trusts clocks (which the selection deliberately does not), so the
+   gate's content-hash compare is the precise confirm. **Revisit the scheduler** only
+   when capture becomes automated/scheduled, a second operator or lane appends to the
+   lake, or an external consumer needs a freshness SLA — then the drift-creator leaves
+   the loop and the scheduled `gh issue` mechanism earns its cost.
 3. **Cross-lane rollup-anchoring — RESOLVED → Option 1.** The two MERGED producers
    diverge on rollup `raw_anchor` (IG = packet, YT = account); v0 absorbs this with
    platform-aware discovery (above), no producer change. Chosen per a cross-vendor
@@ -354,11 +375,13 @@ The cut-over reverts as a set, not "one input swap":
    temp-lake tested incl. an account-anchored (YT-shaped) rollup.
 3. Operator runner `run_creator_metric_rollup_snapshot.py` (`DataLakeRoot.resolve`)
    + freshness-receipt emission + the write-time receipt gate.
-4. Operator generates the first IG snapshot; assert == today's seed rollups
-   (no-drift bridge).
+4. Operator generates the first IG snapshot; assert rollups **value-equal** to
+   today's seed rollups (no-drift bridge — not raw-byte-equal; see *Recommended v0*).
 5. Re-point `materialize` to the IG snapshot (keep the YT seed); rename the view
-   pointer field + update validator/spec/tests; regenerated view byte-identical
-   except the renamed pointer.
+   pointer field + update validator/spec/tests; **canonicalize the view dump
+   (`sort_keys`) and re-emit the committed view once** so snapshot-vs-seed rollup
+   key order does not change it; regenerated view then byte-identical except the
+   renamed pointer.
 6. Add the `live_lake_freshness_gate` + the scheduled drift check + its failure
    surface.
 7. Flip the CI tests' expected paths (seed → snapshot) and `--check`.
