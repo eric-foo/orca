@@ -27,6 +27,7 @@ from capture_spine.creator_profile_current.silver_metric_snapshot import (
     MANIFEST_WRAPPER_KEY,
     SNAPSHOT_WRAPPER_KEY,
     SnapshotGenerationError,
+    SnapshotRun,
     generate_creator_metric_rollup_snapshot,
     manifest_content_hash,
     validate_manifest,
@@ -450,3 +451,63 @@ def test_runner_main_against_live_lake_when_available() -> None:
     # success, or a clean fail-closed (e.g. the producer is unwired -> zero
     # rollups -> missing_account_rollup) -- never an uncaught crash.
     assert code in (0, 2)
+
+
+def _fake_snapshot_run(watermark: str) -> SnapshotRun:
+    # Minimal stand-in carrying only what the write-time gate inspects.
+    snapshot = {
+        SNAPSHOT_WRAPPER_KEY: {
+            "snapshot_provenance": {
+                "lake_high_watermark": watermark,
+                "per_account": [{"profile_subject_id": IG_ACCOUNT, "content_hash": watermark}],
+            }
+        }
+    }
+    return SnapshotRun(snapshot=snapshot, manifest={})
+
+
+def test_runner_freshness_gate_fires_when_lake_moves(tmp_path: Path, monkeypatch) -> None:
+    # Negative test for the write-time gate: the two generator reads return
+    # different watermarks (as a concurrent capture would), so the gate must fail
+    # closed and write nothing. Without this, deleting the gate's raise would go
+    # uncaught by the suite.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    runs = iter([_fake_snapshot_run("sha256:aaa"), _fake_snapshot_run("sha256:bbb")])
+    monkeypatch.setattr(
+        "runners.run_creator_metric_rollup_snapshot.generate_creator_metric_rollup_snapshot",
+        lambda *a, **k: next(runs),
+    )
+    with pytest.raises(SnapshotRunError) as excinfo:
+        _run_ig(data_root, generated_at=LATE, write=True, snap=snap, man=man, rec=rec)
+    assert excinfo.value.reason == "lake_moved_during_snapshot"
+    assert not snap.exists() and not man.exists() and not rec.exists()
+
+
+def test_runner_blocks_when_committed_manifest_type_corrupt(tmp_path: Path) -> None:
+    # A committed manifest that passes key-presence but has a type-wrong
+    # seen_content_hashes (a bare string) must fail closed, not silently advance
+    # the run-order chain by reading the string as a per-character set.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    _run_ig(data_root, generated_at=LATE, write=True, snap=snap, man=man, rec=rec)
+    doc = json.loads(man.read_text(encoding="utf-8"))
+    doc[MANIFEST_WRAPPER_KEY]["entries"][0]["seen_content_hashes"] = "sha256:not-a-list"
+    man.write_text(json.dumps(doc), encoding="utf-8")
+    with pytest.raises(SnapshotRunError) as excinfo:
+        _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
+    assert excinfo.value.reason == "manifest_chain_broken"
+
+
+def test_runner_blocks_when_committed_snapshot_invalid(tmp_path: Path) -> None:
+    # The co-presence block advertises "both present-and-valid": a corrupt prior
+    # snapshot (manifest still valid) must fail closed too.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    snap, man, rec = (tmp_path / "snapshot.json", tmp_path / "manifest.json", tmp_path / "receipt.json")
+    _run_ig(data_root, generated_at=LATE, write=True, snap=snap, man=man, rec=rec)
+    snap.write_text("{}", encoding="utf-8")  # present but schema-invalid
+    with pytest.raises(SnapshotRunError) as excinfo:
+        _run_ig(data_root, generated_at=LATER, write=True, snap=snap, man=man, rec=rec)
+    assert excinfo.value.reason == "manifest_chain_broken"

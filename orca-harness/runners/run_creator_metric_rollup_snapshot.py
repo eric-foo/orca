@@ -117,10 +117,12 @@ def _load_json(path: Path) -> Any:
 
 
 def _dump_json(obj: Any) -> str:
-    # Deterministic, order-preserving (the generator builds dicts in a fixed
-    # order). sort_keys is intentionally OFF so the snapshot's metric_rollups keep
-    # the producer's key order for the §4 no-drift byte bridge.
-    return json.dumps(obj, indent=2, ensure_ascii=False) + "\n"
+    # Canonical key ordering (sort_keys=True), consistent with how lake records
+    # are stored. The file is therefore canonically keyed -- the later no-drift
+    # bridge to the hand-authored seed must compare rollup VALUES (dict /
+    # canonical-bytes equal), NOT raw file bytes, because the seed's key order is
+    # independent of this dump.
+    return json.dumps(obj, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
 
 
 def _now_utc() -> str:
@@ -129,7 +131,10 @@ def _now_utc() -> str:
 
 def _load_prior_manifest(snapshot_path: Path, manifest_path: Path) -> Mapping[str, Any] | None:
     """Manifest-chain co-presence block (AR-02). Returns the prior manifest to
-    chain from, ``None`` at genesis, or BLOCKS on a locally broken chain."""
+    chain from, ``None`` at genesis, or BLOCKS on a locally broken chain. The
+    snapshot and manifest must be co-present AND both schema-valid: a committed
+    artifact that is unreadable (non-JSON) or schema-invalid fails closed rather
+    than letting a broken chain through."""
     snapshot_present = snapshot_path.exists()
     manifest_present = manifest_path.exists()
     if not snapshot_present and not manifest_present:
@@ -141,14 +146,28 @@ def _load_prior_manifest(snapshot_path: Path, manifest_path: Path) -> Mapping[st
             "a committed snapshot and its selection manifest must co-exist "
             "(refusing to reset selection_run_id to 1 against an existing snapshot)",
         )
-    manifest = _load_json(manifest_path)
-    errors = validate_manifest(manifest)
+    manifest = _load_committed(manifest_path)
+    errors = validate_manifest(manifest) + [
+        f"snapshot: {e}" for e in validate_snapshot(_load_committed(snapshot_path))
+    ]
     if errors:
         raise SnapshotRunError(
             "manifest_chain_broken",
-            f"committed selection manifest is invalid ({manifest_path.name}): {errors}",
+            f"committed snapshot/manifest is invalid: {errors}",
         )
     return manifest
+
+
+def _load_committed(path: Path) -> Any:
+    """Load a committed JSON artifact, failing closed (manifest_chain_broken) if
+    it is unreadable -- so a truncated/corrupt committed file cannot crash the
+    runner with an uncaught error."""
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        raise SnapshotRunError(
+            "manifest_chain_broken", f"committed artifact unreadable ({path.name}): {exc}"
+        ) from exc
 
 
 def _build_receipt(snapshot: Mapping[str, Any], platform: str, reconciled_at: str) -> dict[str, Any]:
