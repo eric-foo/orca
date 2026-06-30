@@ -118,19 +118,35 @@ def test_validate_rejects_non_observed_metric_without_reason() -> None:
         validate_silver_vault_record(record)
 
 
-def test_validate_accepts_non_observed_metric_with_reason_detail() -> None:
+@pytest.mark.parametrize("kind", ["unavailable_with_reason", "not_attempted"])
+def test_validate_accepts_non_observed_metric_with_reason_detail(kind: str) -> None:
     # The contract requires "a reason is present", not specifically reason_code; the
-    # controlled signal is the posture kind. A non-observed metric whose reason is in
-    # reason_detail (the creator_metric shape) is valid and must pass the front-door.
+    # controlled signal is the posture kind. Both valid non-observed kinds whose reason is
+    # in reason_detail (the creator_metric shape) must pass the front-door.
     record = _metric_record()
     observation = record["payload"]["observation"]
     observation["metric_posture"] = {
-        "kind": "unavailable_with_reason",
+        "kind": kind,
         "reason_code": None,
         "reason_detail": "metric not rendered in the captured surface",
     }
     observation["metric_value"] = None
     validate_silver_vault_record(record)
+
+
+def test_validate_rejects_unknown_metric_posture_kind() -> None:
+    # The posture kind must map to the closed source-capture vocabulary
+    # (METRIC_POSTURE_KINDS); a free-text kind must not enter through the front-door.
+    record = _metric_record()
+    observation = record["payload"]["observation"]
+    observation["metric_posture"] = {
+        "kind": "banana",
+        "reason_code": None,
+        "reason_detail": "synthetic reason",
+    }
+    observation["metric_value"] = None
+    with pytest.raises(SilverRecordError, match="metric_posture.kind must be one of"):
+        validate_silver_vault_record(record)
 
 
 def test_validate_rejects_observed_metric_with_reason_detail() -> None:
