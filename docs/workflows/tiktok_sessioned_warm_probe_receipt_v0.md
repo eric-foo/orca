@@ -3,6 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Live probe receipt
+authority_boundary: retrieval_only
 scope: >
   Narrow N=1 sessioned TikTok warm-probe receipt for the pinned first-slice
   fixture. Records visible browser/session behavior, embedded metadata parsing,

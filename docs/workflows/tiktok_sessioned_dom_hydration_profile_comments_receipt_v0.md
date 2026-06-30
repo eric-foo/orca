@@ -3,6 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Live probe receipt
+authority_boundary: retrieval_only
 scope: >
   Sessioned TikTok DOM/hydration harvest for the locked @tiktok source-family
   fixture. Records profile-grid depth, video-detail hydration, and visible

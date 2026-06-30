@@ -3,6 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Live probe receipt
+authority_boundary: retrieval_only
 scope: >
   Narrow sessioned TikTok creator/profile grid DOM receipt for the locked @tiktok
   source-family fixture. Records profile hydration fields, stable DOM selectors,

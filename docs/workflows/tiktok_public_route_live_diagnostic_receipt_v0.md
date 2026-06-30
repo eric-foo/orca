@@ -3,6 +3,7 @@
 ```yaml
 retrieval_header_version: 1
 artifact_role: Live diagnostic receipt
+authority_boundary: retrieval_only
 scope: >
   Narrow public-route diagnostic for the pinned TikTok first-slice fixture after
   the TikTok behavior-sync handoff. Records what the current public browser route
