@@ -383,7 +383,7 @@ def _collect_sensitive(value: object, path: str, findings: list[str]) -> None:
         findings.append(f"{path}: signed/session query material")
     elif _RAW_TIKTOK_URL_RE.match(value):
         findings.append(f"{path}: raw TikTok URL with query string")
-    elif _RAW_SUBTITLE_URL_RE.match(value) and "url_sha256" not in path.lower():
+    elif _RAW_SUBTITLE_URL_RE.match(value):
         findings.append(f"{path}: raw TikTok media/subtitle URL")
 
 

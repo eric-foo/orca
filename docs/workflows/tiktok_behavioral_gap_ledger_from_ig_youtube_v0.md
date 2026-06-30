@@ -282,4 +282,3 @@ binding.
 - Not a TikTok parser, runner, projection, persistence, extraction, ECR,
   Cleaning, Judgment, or shared-core implementation authorization.
 - Not legal advice.
-

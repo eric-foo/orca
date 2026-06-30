@@ -179,6 +179,10 @@ def test_sanitizer_rejects_raw_signed_or_session_material() -> None:
         assert_no_sensitive_tiktok_material({"comment": "https://www.tiktok.com/@foo/video/123?lang=en"})
     with pytest.raises(ValueError, match="unsafe TikTok material"):
         assert_no_sensitive_tiktok_material({"subtitle": "https://v16-webapp-prime.tiktokcdn-us.com/subtitle.vtt"})
+    with pytest.raises(ValueError, match="unsafe TikTok material"):
+        assert_no_sensitive_tiktok_material(
+            {"subtitle_url_sha256": "https://v9-default.byteoversea.com/tos-useast5-ve-0068c001-tx/subtitle.webvtt"}
+        )
 
 
 def test_write_tiktok_video_packet_preserves_sanitized_payload_only(tmp_path: Path) -> None:
@@ -341,4 +345,3 @@ def test_tiktok_video_cli_surfaces_failure_exit_code(tmp_path: Path, capsys) -> 
     captured = capsys.readouterr()
     assert excinfo.value.code == 5
     assert "without query" in captured.err
-

@@ -415,6 +415,17 @@ def _build_extraction_seed(desc: str, hashtags: Sequence[str], mentions: Sequenc
 
 def _summarize_batch(videos: Sequence[JsonObject], cadence_payloads: Sequence[JsonObject]) -> JsonObject:
     created = sorted(_first_str(video.get("create_time_utc")) for video in videos if video.get("create_time_utc"))
+    attempted_count = sum(_first_int(payload.get("attempted_count"), 0) or 0 for payload in cadence_payloads)
+    completed_count = sum(_first_int(payload.get("completed_count"), 0) or 0 for payload in cadence_payloads)
+    challenge_count = sum(_first_int(payload.get("challenge_count"), 0) or 0 for payload in cadence_payloads)
+    if completed_count != len(videos):
+        raise ValueError(
+            f"cadence completed_count={completed_count} does not match normalized video_count={len(videos)}"
+        )
+    if attempted_count < completed_count:
+        raise ValueError(
+            f"cadence attempted_count={attempted_count} is less than completed_count={completed_count}"
+        )
     stats_sums = {
         key: sum(_first_int(_as_dict(video.get("stats")).get(key), 0) or 0 for video in videos)
         for key in ("playCount", "diggCount", "commentCount", "shareCount", "collectCount")
@@ -430,9 +441,9 @@ def _summarize_batch(videos: Sequence[JsonObject], cadence_payloads: Sequence[Js
 
     return {
         "video_count": len(videos),
-        "attempted_count": sum(_first_int(payload.get("attempted_count"), 0) or 0 for payload in cadence_payloads),
-        "completed_count": sum(_first_int(payload.get("completed_count"), 0) or 0 for payload in cadence_payloads),
-        "challenge_count": sum(_first_int(payload.get("challenge_count"), 0) or 0 for payload in cadence_payloads),
+        "attempted_count": attempted_count,
+        "completed_count": completed_count,
+        "challenge_count": challenge_count,
         "comment_response_success_count": comment_success_count,
         "captured_comment_count": captured_comment_count,
         "comment_envelope_total_sum": envelope_total,

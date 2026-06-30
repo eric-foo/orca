@@ -33,9 +33,9 @@ stale_if:
 
 Outcome: `PARTIAL_REUSE`.
 
-Cleanly reverified:
+Cleanly reverified for the original analysis checkpoint:
 
-- Current worktree: `codex/ig-youtube-residual-burndown-pushable` at
+- Worktree checkpoint: `codex/ig-youtube-residual-burndown-pushable` at
   `2457f816307e59985aa3161cd5da3baa2401c006`; clean against origin at the time
   of this analysis.
 - The packet's load-bearing source hashes matched for `AGENTS.md`, overlay
@@ -43,6 +43,9 @@ Cleanly reverified:
   prior handoff, gap ledger, sessioned DOM receipt/payload, capture playbook,
   recon index, TikTok capture spec, first-slice recon, and warm-probe plan.
 - The F-lake staging result files below were fresh-read directly.
+- Later durable batch admission follow-up in this file was added at
+  `163eb76706e1029347936572c25207fb4de64a92`; use that follow-up section for
+  the current packetized admission state.
 
 Why partial rather than full reuse:
 

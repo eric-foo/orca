@@ -269,6 +269,22 @@ def test_tiktok_batch_rejects_forbidden_staging_contract(tmp_path: Path) -> None
         )
 
 
+def test_tiktok_batch_rejects_mismatched_completed_count(tmp_path: Path) -> None:
+    output = tmp_path / "packet"
+    cadence = json.loads(_cadence_payload().decode("utf-8"))
+    cadence["completed_count"] = 30
+
+    with pytest.raises(ValueError, match="completed_count=30 does not match normalized video_count=2"):
+        write_tiktok_batch_packet(
+            creator_handle="funmimonet",
+            creator_profile_url=PROFILE_URL,
+            grid_result_json=_grid_payload(),
+            cadence_result_jsons=[json.dumps(cadence).encode("utf-8")],
+            output_directory=output,
+            decision_question="admit TikTok creator batch",
+        )
+
+
 def test_tiktok_batch_runner_has_no_hidden_network_browser_or_proxy_imports() -> None:
     runner_path = Path(__file__).resolve().parents[2] / "runners" / "run_source_capture_tiktok_batch_packet.py"
     tree = ast.parse(runner_path.read_text(encoding="utf-8"))
