@@ -15,7 +15,7 @@ worktree_head_at_review: af8223f87ce5aa7d562663d8ab5281ea6cc6c47d
 expected_base: origin/main @ 65105faddeb73be50bf800c24f99e43c2df5c23e
 patched_in_this_pass: false
 escalation: NEEDS_ARCHITECTURE_PASS (coupled F1/F2/F3 — see Verdict)
-authority_boundary: decision input only; not approval, validation, readiness, or merge authorization
+authority_boundary: retrieval_only
 ```
 
 ## Actor / Model-Family Receipt
