@@ -24,8 +24,12 @@ authority_boundary: retrieval_only
 
 ## Short Answer
 
-The corpus is now large enough to measure the **YouTube caption-route source/caption layer**,
-but it is still not large enough to statistically claim **full behavioral completeness**.
+The corpus is now large enough to measure the **YouTube caption-route behavioral projection
+path** under the current operator/Codex extraction boundary.
+
+It is still not large enough to statistically claim **platform-wide YouTube behavioral
+completeness**, because ASR/no-caption fallback remains unmeasured and the product extraction
+batch was not provider-API extraction.
 
 Observed canonical `F:/orca-data-lake` state:
 
@@ -36,19 +40,20 @@ SURFACE_COMBOS
 youtube_captions+youtube_watch_metadata_comments 30
 youtube_watch_metadata_comments 2
 PROJECTION_STATUS_COUNTS
-complete 2
+complete 30
 no_extraction_eligible_sources 2
-not_attempted 28
-YOUTUBE_PRODUCT_RECORDS 2
+YOUTUBE_PRODUCT_RECORDS 30
+YOUTUBE_PRODUCT_MENTIONS_TOTAL 120
 ```
 
 Interpretation:
 
 - Caption-route source/caption coverage is measurable at `n=30`: every item in that cell has both
   `youtube_watch_metadata_comments` and `youtube_captions` packets.
-- Full behavioral completion is only `2/32` over the observed YouTube video set, because only two
-  videos have source-backed product-mention records. The other 28 caption-ready videos are
-  `not_attempted` at product extraction.
+- Caption-route behavioral projection completion is now measurable at `30/30` for that cell: every
+  caption-ready video has a completed source-lineage-bearing Silver product-mention record.
+- Whole observed YouTube-video completion is `30/32`; the remaining two videos are watch-only
+  current-source failures with no extraction-eligible transcript source.
 - ASR/no-caption fallback is not measurable: the attempted ASR seed wrote a watch packet, but audio
   download failed and the caption probe reported the video as removed/unavailable.
 - The seed is a fragrance YouTube Shorts seed, not a random platform sample; do not generalize to all
@@ -106,7 +111,7 @@ JcwT5rvhXIc, as7hye0qgYc
 
 ## Product Extraction Boundary
 
-No provider extraction was available during this pass:
+No provider extraction was available during either corpus pass:
 
 ```text
 OPENAI_API_KEY_SET False
@@ -115,78 +120,116 @@ ORCA_PRODUCT_EXTRACT_PROVIDER <unset>
 ORCA_PRODUCT_EXTRACT_MODEL <unset>
 ```
 
-The only YouTube product-mention records currently present for this corpus are the two earlier
-explicitly labeled operator records:
+The first two YouTube product records were the earlier explicitly labeled operator records. The
+follow-up batch then read the 28 remaining caption-ready transcripts and wrote them through the same
+validated silver write boundary:
 
-| Video id | Anchor | Record id | Status | Mentions | Backend |
-| --- | --- | --- | --- | ---: | --- |
-| `VOGZUccarFc` | `01KWBNSQ9VS2GBHYM2XZKF9CYV` | `mentions_codex_operator_manual_v0__6ae6f45ebdbc94db.json` | `extracted` | 10 | `codex_operator_manual_current_thread` |
-| `ljZ7_JHXNdw` | `01KWBNRPGW6CQ021CWCSTNFJF0` | `mentions_codex_operator_manual_v0__49f6b5ed7347c215.json` | `extracted` | 2 | `codex_operator_manual_current_thread` |
+```text
+DRY_PARSE
+mapping_videos 28
+transcripts_found 28
+requested_mentions 108
+accepted_mentions 108
+rejected_mentions 0
 
-This means the current `not_attempted` count is an extraction-run gap, not evidence that captions are
-missing or non-extractable.
+WRITE_MODEL codex_operator_youtube_measurement_batch_v0
+WRITE_BACKEND codex_operator_measurement_batch_current_thread
+WRITTEN_COUNT 28
+SKIPPED_COUNT 0
+WRITTEN_MENTION_TOTAL 108
+EMPTY_COMPLETE_WRITES 2
+```
+
+Fresh readback after the batch:
+
+```text
+YOUTUBE_PRODUCT_RECORDS_COMPLETE 30
+YOUTUBE_PRODUCT_MENTIONS_TOTAL 120
+YOUTUBE_PRODUCT_BACKENDS {"codex_operator_manual_current_thread": 2, "codex_operator_measurement_batch_current_thread": 28}
+YOUTUBE_PRODUCT_LINEAGE_SURFACES {"youtube_captions": 30}
+```
+
+Two batch records are complete zero-mention records because the caption text did not carry a safe
+named product:
+
+| Video id | Anchor | Record id | Reason |
+| --- | --- | --- | --- |
+| `5e4y5yNagRI` | `01KWBPTGHVHW2AV19QQ14FKV1J` | `mentions_codex_operator_youtube_measurement_batch_v0__c8c9b67507a04c48.json` | garbled/current-source caption with no safe named product |
+| `WcSRnnwSAJM` | `01KWBPTTPJKB6TN26NPN7WXX7A` | `mentions_codex_operator_youtube_measurement_batch_v0__0e8c77f4dddfc6f5.json` | product discussion captured as `this fragrance` with no product name |
+
+This closes the previous `not_attempted` extraction-run gap for the caption-route corpus. It does not
+turn the batch into live provider-API extraction.
 
 ## Projection Matrix
 
+Fresh projection readback after the operator/Codex batch:
+
+```text
+PROJECTION_STATUS_COUNTS
+complete 30
+no_extraction_eligible_sources 2
+```
+
 | Video id | Surfaces | Status | Sources | Eligible | Complete sources | Caption cues | Extraction statuses |
 | --- | --- | --- | ---: | ---: | ---: | ---: | --- |
-| `17mhHUkRLvg` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 101 | `not_attempted` |
-| `1K9ej-6aP6g` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 65 | `not_attempted` |
-| `5QDcTenklxg` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 85 | `not_attempted` |
-| `5e4y5yNagRI` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 13 | `not_attempted` |
-| `6k8ebJw50tU` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 27 | `not_attempted` |
-| `7S40eU8FDCY` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 43 | `not_attempted` |
-| `Fd-aChpt_Ss` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 31 | `not_attempted` |
-| `FqTrOZbh_DE` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 29 | `not_attempted` |
-| `JMmEIv_oG4o` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 47 | `not_attempted` |
+| `17mhHUkRLvg` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 101 | `extracted` |
+| `1K9ej-6aP6g` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 65 | `extracted` |
+| `5QDcTenklxg` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 85 | `extracted` |
+| `5e4y5yNagRI` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 13 | `extracted` |
+| `6k8ebJw50tU` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 27 | `extracted` |
+| `7S40eU8FDCY` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 43 | `extracted` |
+| `Fd-aChpt_Ss` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 31 | `extracted` |
+| `FqTrOZbh_DE` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 29 | `extracted` |
+| `JMmEIv_oG4o` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 47 | `extracted` |
 | `JcwT5rvhXIc` | `youtube_watch_metadata_comments` | `no_extraction_eligible_sources` | 0 | 0 | 0 | 0 | `` |
-| `Ln1LUflj8d0` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 89 | `not_attempted` |
-| `MN3AI-mrPWk` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 31 | `not_attempted` |
-| `Tb-_V-JVNfk` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 53 | `not_attempted` |
-| `Uj4bVTM6dm8` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 53 | `not_attempted` |
+| `Ln1LUflj8d0` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 89 | `extracted` |
+| `MN3AI-mrPWk` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 31 | `extracted` |
+| `Tb-_V-JVNfk` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 53 | `extracted` |
+| `Uj4bVTM6dm8` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 53 | `extracted` |
 | `VOGZUccarFc` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 29 | `extracted` |
-| `WEqUWKA4FUI` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 63 | `not_attempted` |
-| `WcSRnnwSAJM` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 49 | `not_attempted` |
-| `XDscn2sgW3w` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 45 | `not_attempted` |
-| `_Gp2AmN74E8` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 47 | `not_attempted` |
+| `WEqUWKA4FUI` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 63 | `extracted` |
+| `WcSRnnwSAJM` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 49 | `extracted` |
+| `XDscn2sgW3w` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 45 | `extracted` |
+| `_Gp2AmN74E8` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 47 | `extracted` |
 | `as7hye0qgYc` | `youtube_watch_metadata_comments` | `no_extraction_eligible_sources` | 0 | 0 | 0 | 0 | `` |
-| `bPJCH9iQUhI` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 55 | `not_attempted` |
-| `ekaQONEC2ys` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 93 | `not_attempted` |
-| `hfyoVdOAYt4` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 17 | `not_attempted` |
-| `jo03W7cBwBM` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 35 | `not_attempted` |
+| `bPJCH9iQUhI` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 55 | `extracted` |
+| `ekaQONEC2ys` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 93 | `extracted` |
+| `hfyoVdOAYt4` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 17 | `extracted` |
+| `jo03W7cBwBM` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 35 | `extracted` |
 | `ljZ7_JHXNdw` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 37 | `extracted` |
-| `rmDwkTrzNxo` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 105 | `not_attempted` |
-| `sy-rczzFrYg` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 47 | `not_attempted` |
-| `uaCSynFfPpc` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 75 | `not_attempted` |
-| `vl-QUTwtneY` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 61 | `not_attempted` |
-| `vtwo-iaOszA` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 55 | `not_attempted` |
-| `xK8bmugSpgQ` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 43 | `not_attempted` |
-| `xZ6vd9fyBbw` | `youtube_captions+youtube_watch_metadata_comments` | `not_attempted` | 1 | 1 | 0 | 113 | `not_attempted` |
+| `rmDwkTrzNxo` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 105 | `extracted` |
+| `sy-rczzFrYg` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 47 | `extracted` |
+| `uaCSynFfPpc` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 75 | `extracted` |
+| `vl-QUTwtneY` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 61 | `extracted` |
+| `vtwo-iaOszA` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 55 | `extracted` |
+| `xK8bmugSpgQ` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 43 | `extracted` |
+| `xZ6vd9fyBbw` | `youtube_captions+youtube_watch_metadata_comments` | `complete` | 1 | 1 | 1 | 113 | `extracted` |
 
 ## Claim Levels
 
 | Claim | Status | Basis |
 | --- | --- | --- |
 | YouTube caption-route source/caption corpus is statistically measurable | observed | 30 videos with both watch metadata/comments and caption transcript packets |
-| YouTube caption-route full behavioral completion is statistically measurable | not yet | only 2 of 30 caption-ready videos have product-mention records |
+| YouTube caption-route behavioral projection completion is statistically measurable | observed | 30 of 30 caption-ready videos project `complete` after source-lineage-bearing product extraction records |
+| YouTube operator/Codex product-extraction batch is parser-guarded | observed | 108 requested mentions accepted by `parse_mentions(...)`, 0 rejected, 28 record sets written |
+| YouTube live provider-API extraction is measured | not observed | no provider API key/config was present; records are explicitly labeled operator/Codex |
 | YouTube ASR/no-caption route is statistically measurable | not observed | attempted ASR seed is currently unavailable; no complete ASR transcript packet observed |
 | YouTube platform-wide behavioral completeness is statistically measurable | not proven | corpus is seed-biased and missing ASR/provider-extraction coverage |
-| IG/YT platform-wide behavioral completeness is proven | not proven | IG residuals remain and YouTube full-path corpus is incomplete |
+| IG/YT platform-wide behavioral completeness is proven | not proven | IG residuals remain and YouTube ASR/no-caption remains incomplete |
 
 ## Next Non-Admin Steps
 
-1. Run product extraction for the 28 `not_attempted` caption-ready YouTube transcripts, either with
-   a provider API configuration or an explicitly accepted operator/Codex extraction batch. Keep the
-   backend label honest.
-2. Replace the stale ASR seed with reachable ASR/no-caption candidates and capture at least 5, ideally
-   10, complete ASR transcript cases before claiming fallback-route measurement.
+1. Replace the stale ASR seed with reachable ASR/no-caption candidates and capture at least 5,
+   ideally 10, complete ASR transcript cases before claiming fallback-route measurement.
+2. Decide whether the current lane accepts operator/Codex parser-guarded extraction as sufficient
+   caption-route behavioral evidence, or requires a provider-API rerun when credentials exist.
 3. Fix or wrap batch invocation for leading-dash YouTube ids before retrying `-V7MN2IWMpA`.
-4. Rerun this receipt after extraction and ASR expansion; only then set a behavioral-completeness
+4. Rerun this receipt after ASR expansion; only then set a platform-level behavioral-completeness
    threshold such as per-route completion rate and residual ceilings.
 
 ## Non-Claims
 
-- Not full YouTube behavioral completeness.
+- Not platform-wide YouTube behavioral completeness.
 - Not ASR/no-caption fallback validation.
 - Not live provider-API extraction.
 - Not random or platform-wide YouTube measurement.
