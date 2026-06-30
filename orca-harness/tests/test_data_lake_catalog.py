@@ -7,9 +7,11 @@ from pathlib import Path
 import pytest
 
 from data_lake.catalog import (
+    BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
     BRONZE_CATALOG_SCHEMA_VERSION,
     CATALOG_RELATIVE_ROOT,
     inspect_catalog,
+    load_attachment_record_body,
     rebuild_catalog,
 )
 from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
@@ -110,6 +112,25 @@ def _source_surface_rows(root: DataLakeRoot) -> list[dict]:
     return _source_surface_payload(root)["source_surfaces"]
 
 
+def _attachment_record_root(root: DataLakeRoot) -> Path:
+    return _catalog_root(root) / "attachment_records"
+
+
+def _attachment_record_manifest(root: DataLakeRoot) -> dict:
+    return json.loads(
+        (_attachment_record_root(root) / "manifest.json").read_text(encoding="utf-8")
+    )
+
+
+def _attachment_record_rows(root: DataLakeRoot) -> list[dict]:
+    return [
+        json.loads(line)
+        for line in (_attachment_record_root(root) / "all_attachment_records.jsonl")
+        .read_text(encoding="utf-8")
+        .splitlines()
+    ]
+
+
 def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
     reddit = _write_reddit_packet(root, tmp_path, series_id="b2b-series")
@@ -120,6 +141,7 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
     assert report["status"] == "rebuilt"
     assert report["catalog_schema_version"] == BRONZE_CATALOG_SCHEMA_VERSION
     assert report["packet_count"] == 2
+    assert report["attachment_record_count"] == 2
     assert report["source_surface_count"] == 2
     assert inspect_catalog(root)["status"] == "ok"
 
@@ -129,6 +151,8 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
     )
     assert ig_entry["raw_path"] == f"raw/{raw_shard(ig_pid)}/{ig_pid}"
     assert ig_entry["catalog_schema_version"] == BRONZE_CATALOG_SCHEMA_VERSION
+    assert ig_entry["attachment_record_count"] == 1
+    assert len(ig_entry["attachment_record_ids"]) == 1
     assert ig_entry["source_family"] == "instagram_creator"
     facets_by_namespace = {facet["namespace"]: facet["value"] for facet in ig_entry["facets"]}
     expected_facets = {
@@ -169,6 +193,7 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
     assert "neither value claims" in surface_payload["field_semantics"]["facet_extractor"]
     assert "union" in surface_payload["field_semantics"]["facet_namespaces"]
     assert surface_payload["stable_query_paths"]["all_packets"] == "all_packets.jsonl"
+    assert surface_payload["stable_query_paths"]["attachment_records_root"] == "attachment_records/"
     generated_surface_rows = {
         (row["source_family"], row["source_surface"]): row
         for row in surface_payload["source_surfaces"]
@@ -177,8 +202,14 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
     reddit_surface_path = report_surface_rows[("reddit", "r/B2BMarketing")][
         "by_source_surface_path"
     ]
+    reddit_surface = report_surface_rows[("reddit", "r/B2BMarketing")]
     assert reddit_surface_path.startswith("by_source_surface/")
     assert (_catalog_root(root) / reddit_surface_path).is_file()
+    assert reddit_surface["attachment_record_count"] == 1
+    assert reddit_surface["attachment_records_path"].startswith(
+        "attachment_records/by_source_surface/"
+    )
+    assert (_catalog_root(root) / reddit_surface["attachment_records_path"]).is_file()
     assert report_surface_rows[("reddit", "r/B2BMarketing")]["packet_count"] == 1
     assert (
         report_surface_rows[("reddit", "r/B2BMarketing")]["facet_extractor"]
@@ -187,6 +218,10 @@ def test_rebuild_catalog_indexes_universal_and_ig_facets(tmp_path: Path) -> None
     ig_surface = report_surface_rows[("instagram_creator", "ig_reels_grid_dom_passive_json")]
     assert ig_surface["by_source_surface_path"].startswith("by_source_surface/")
     assert (_catalog_root(root) / ig_surface["by_source_surface_path"]).is_file()
+    assert ig_surface["attachment_record_count"] == 1
+    assert ig_surface["attachment_records_path"].startswith(
+        "attachment_records/by_source_surface/"
+    )
     assert ig_surface["packet_count"] == 1
     assert ig_surface["facet_extractor"] == "registered"
     assert {
@@ -219,6 +254,10 @@ def test_rebuild_catalog_marks_unknown_future_surface_universal_only(tmp_path: P
     }
     future_row = rows[("future_creator_network", "future_creator_feed_v1")]
     assert future_row["by_source_surface_path"].startswith("by_source_surface/")
+    assert future_row["attachment_records_path"].startswith(
+        "attachment_records/by_source_surface/"
+    )
+    assert future_row["attachment_record_count"] == 1
     assert future_row["packet_count"] == 1
     assert future_row["facet_extractor"] == "universal_only"
     assert {
@@ -228,6 +267,63 @@ def test_rebuild_catalog_marks_unknown_future_surface_universal_only(tmp_path: P
         "source_locator_sha256",
     } <= set(future_row["facet_namespaces"])
 
+
+def test_attachment_records_index_preserved_bodies_and_resolve_bytes(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    reddit = _write_reddit_packet(root, tmp_path, series_id="b2b-series")
+    ig = _write_ig_reels_grid_packet(root, tmp_path)
+
+    report = rebuild_catalog(root)
+
+    assert report["attachment_record_count"] == 2
+    manifest = _attachment_record_manifest(root)
+    assert manifest["authority"] == "generated_from_raw_packet_manifests; raw remains authoritative"
+    assert manifest["attachment_record_schema_version"] == BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION
+    assert "not final Attachment Record physicalization" in manifest["completeness"]
+    assert "not the positional file_id" in manifest["field_semantics"]["attachment_record_id"]
+    assert manifest["stable_query_paths"]["by_packet_root"] == "attachment_records/by_packet/"
+
+    rows = _attachment_record_rows(root)
+    assert len(rows) == 2
+    by_packet = {row["packet_id"]: row for row in rows}
+    reddit_record = by_packet[reddit.packet.packet_id]
+    assert reddit_record["attachment_record_id"].startswith("ar_")
+    assert reddit_record["attachment_record_id"] != reddit_record["file_id"]
+    assert reddit_record["body_ref_kind"] == "raw_packet_relative_path"
+    assert reddit_record["hash_basis"] == "raw_stored_bytes"
+    assert reddit_record["payload_kind"] == "json_body"
+    assert reddit_record["payload_kind_basis"] == "generic_body_classification"
+    assert reddit_record["payload_schema_version"] == "source_capture_packet_manifest_v1"
+    assert reddit_record["source_slice_ids"] == ["slice_01"]
+    assert reddit_record["posture_summary"]["access_posture"]["value"] == "local_file_only"
+    assert load_attachment_record_body(root, reddit_record) == json.dumps(
+        {"body": "thread body"}, sort_keys=True
+    ).encode("utf-8")
+
+    record_path = _catalog_root(root) / reddit_record["stable_query_paths"]["by_attachment_record"]
+    assert json.loads(record_path.read_text(encoding="utf-8")) == reddit_record
+    packet_path = _catalog_root(root) / reddit_record["stable_query_paths"]["by_packet"]
+    assert packet_path.is_file()
+    packet_rows = [
+        json.loads(line)
+        for line in packet_path.read_text(encoding="utf-8").splitlines()
+    ]
+    assert packet_rows[0]["attachment_record_id"] == reddit_record["attachment_record_id"]
+    wrong_ref_kind = dict(reddit_record)
+    wrong_ref_kind["body_ref_kind"] = "sidecar_body"
+    with pytest.raises(DataLakeRootError, match="body_ref_kind"):
+        load_attachment_record_body(root, wrong_ref_kind)
+    assert any(
+        path.name.startswith("json_body__")
+        for path in (_attachment_record_root(root) / "by_payload_kind").glob("*.jsonl")
+    )
+    assert any(
+        path.name.startswith(f"{reddit_record['body_sha256']}__")
+        for path in (_attachment_record_root(root) / "by_body_sha256").glob("*.jsonl")
+    )
+    assert by_packet[ig.packet.packet_id]["source_family"] == "instagram_creator"
 
 def test_inspect_catalog_reports_missing_and_stale_generated_index(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
@@ -322,11 +418,43 @@ def test_source_surface_summary_handles_empty_family_and_surface(tmp_path: Path)
     assert row["source_family"] is None
     assert row["source_surface"] is None
     assert row["by_source_surface_path"] is None
+    assert row["attachment_records_path"] is None
     assert row["packet_count"] == 1
+    assert row["attachment_record_count"] == 1
     assert row["facet_extractor"] == "universal_only"
     assert set(row["facet_namespaces"]) == {"session_identity", "source_locator_sha256"}
     assert inspect_catalog(root)["status"] == "ok"
 
+
+def test_inspect_catalog_reports_missing_and_stale_attachment_record_files(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    _write_reddit_packet(root, tmp_path)
+
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+    all_records = _attachment_record_root(root) / "all_attachment_records.jsonl"
+    all_records.unlink()
+
+    missing = inspect_catalog(root)
+    assert missing["status"] == "issues_found"
+    assert "attachment_records/all_attachment_records.jsonl" in missing["missing_files"]
+
+    assert rebuild_catalog(root)["status"] == "rebuilt"
+    record = _attachment_record_rows(root)[0]
+    record_path = _attachment_record_root(root) / "by_attachment_record" / (
+        f"{record['attachment_record_id']}.json"
+    )
+    payload = json.loads(record_path.read_text(encoding="utf-8"))
+    payload["payload_kind"] = "stale"
+    record_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    stale = inspect_catalog(root)
+    assert stale["status"] == "issues_found"
+    assert (
+        f"attachment_records/by_attachment_record/{record['attachment_record_id']}.json"
+        in stale["stale_files"]
+    )
 
 def test_rebuild_catalog_replaces_orphaned_generated_files_byte_identically(tmp_path: Path) -> None:
     root = DataLakeRoot.for_test(tmp_path / "orca-data")
@@ -394,6 +522,42 @@ def test_inspect_catalog_reports_generated_file_read_failure(
         for failure in report["catalog_read_failures"]
     )
 
+
+def test_attachment_records_cover_multi_file_packet_without_file_id_as_record_id(
+    tmp_path: Path,
+) -> None:
+    root = DataLakeRoot.for_test(tmp_path / "orca-data")
+    json_src = tmp_path / "multi_payload.json"
+    bin_src = tmp_path / "multi_payload.bin"
+    json_src.write_text(json.dumps({"kind": "json"}, sort_keys=True), encoding="utf-8")
+    bin_src.write_bytes(b"\xff\x00\xfe")
+    result = write_local_source_capture_packet(
+        data_root=root,
+        input_files=[json_src, bin_src],
+        source_family="future_creator_network",
+        source_surface="future_binary_feed_v1",
+        source_locator=known_fact("https://example.invalid/future/binary"),
+        decision_question="can generic AR entries cover multiple body files?",
+        capture_context="catalog fixture",
+        session_identity="multi-file-session",
+    )
+
+    report = rebuild_catalog(root)
+
+    assert report["attachment_record_count"] == 2
+    rows = [
+        row
+        for row in _attachment_record_rows(root)
+        if row["packet_id"] == result.packet.packet_id
+    ]
+    assert len(rows) == 2
+    assert {row["file_id"] for row in rows} == {"file_01", "file_02"}
+    assert {row["payload_kind"] for row in rows} == {"json_body", "binary_body"}
+    assert all(row["attachment_record_id"] not in {"file_01", "file_02"} for row in rows)
+    assert all(row["source_slice_ids"] == ["slice_01"] for row in rows)
+    assert sorted(load_attachment_record_body(root, row) for row in rows) == sorted(
+        [json.dumps({"kind": "json"}, sort_keys=True).encode("utf-8"), b"\xff\x00\xfe"]
+    )
 
 def test_catalog_runner_reports_root_resolution_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]

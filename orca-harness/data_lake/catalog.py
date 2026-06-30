@@ -11,14 +11,15 @@ import json
 import re
 import shutil
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterable
 
-from data_lake.root import DataLakeRoot, raw_shard
+from data_lake.root import DataLakeRoot, DataLakeRootError, raw_shard
 from harness_utils import hash_file
 
 BRONZE_CATALOG_VERSION = "bronze_catalog_v0"
 BRONZE_CATALOG_SCHEMA_VERSION = "bronze_catalog_v0_schema_1"
+BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION = "bronze_attachment_record_v0_schema_1"
 CATALOG_RELATIVE_ROOT = ("indexes", "derived_retrieval", "bronze_catalog", "v0")
 _PACKET_ID_RE = re.compile(r"[0123456789ABCDEFGHJKMNPQRSTVWXYZ]{26}")
 _CATALOG_AUTHORITY = "generated_from_raw_packet_manifests; raw remains authoritative"
@@ -27,6 +28,15 @@ _SOURCE_SURFACE_COMPLETENESS = (
     "projection_coverage, source_family_completeness, or validation"
 )
 _SOURCE_SURFACE_FIELD_SEMANTICS = {
+    "attachment_record_count": (
+        "count of generated Attachment Record entries for packets in this observed "
+        "source-surface bucket; not source-family completeness or payload validation"
+    ),
+    "attachment_records_path": (
+        "relative generated JSONL bucket for Attachment Record query rows sharing "
+        "this source_surface string when present; consumers must still filter rows "
+        "by source_family when needed"
+    ),
     "by_source_surface_path": (
         "relative generated JSONL bucket for this source_surface string when present; "
         "the bucket may include multiple source families and consumers must still "
@@ -42,6 +52,24 @@ _SOURCE_SURFACE_FIELD_SEMANTICS = {
         "sorted union of facet namespaces observed across packets in the "
         "source-surface bucket; namespace presence does not mean every packet has "
         "that namespace"
+    ),
+}
+_ATTACHMENT_RECORD_COMPLETENESS = (
+    "generated_preserved_file_entries_only; not final Attachment Record physicalization, "
+    "not Manifest v2, not source-family payload validation, and not downstream currentness"
+)
+_ATTACHMENT_RECORD_FIELD_SEMANTICS = {
+    "attachment_record_id": (
+        "stable generated key derived from packet_id, preserved file_id, "
+        "relative_packet_path, and body_sha256; it is not the positional file_id"
+    ),
+    "body_ref_kind": (
+        "raw_packet_relative_path means the body remains in the raw packet and is "
+        "resolved through DataLakeRoot.load_raw_packet rather than copied into a new store"
+    ),
+    "payload_kind": (
+        "generic byte-shape classification from path/content only; source-family semantic "
+        "kinds require a future registry and are not lake-core fields"
     ),
 }
 
@@ -77,8 +105,9 @@ FacetExtractor = Callable[[dict[str, Any], dict[str, bytes]], Iterable[CatalogFa
 def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
     """Rebuild the generated Bronze catalog from verified committed raw packets."""
     entries = _build_entries(root)
+    attachment_records = _attachment_records(entries)
     source_surfaces = _source_surface_summary(entries)
-    snapshot = _catalog_snapshot(entries, source_surfaces)
+    snapshot = _catalog_snapshot(entries, source_surfaces, attachment_records)
     root._reverify()
     catalog_root = _catalog_root(root)
     if catalog_root.exists():
@@ -89,6 +118,7 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "catalog_version": BRONZE_CATALOG_VERSION,
         "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
         "packet_count": len(entries),
+        "attachment_record_count": len(attachment_records),
         "source_surface_count": len(source_surfaces),
         "source_surfaces": source_surfaces,
         "file_count": len(snapshot),
@@ -99,8 +129,9 @@ def rebuild_catalog(root: DataLakeRoot) -> dict[str, Any]:
 def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
     """Compare generated catalog files to the raw-derived expected catalog."""
     expected = _build_entries(root)
+    attachment_records = _attachment_records(expected)
     source_surfaces = _source_surface_summary(expected)
-    expected_snapshot = _catalog_snapshot(expected, source_surfaces)
+    expected_snapshot = _catalog_snapshot(expected, source_surfaces, attachment_records)
     catalog_root = _catalog_root(root)
     actual_snapshot, read_failures = _read_snapshot(root, catalog_root)
     missing_files = sorted(set(expected_snapshot) - set(actual_snapshot))
@@ -127,7 +158,7 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
                     {"path": _rel(root, path), "error": "catalog entry is not a packet object"}
                 )
 
-    expected_by_packet = {entry["packet_id"]: entry for entry in expected}
+    expected_by_packet = {entry["packet_id"]: _packet_index_entry(entry) for entry in expected}
     missing = sorted(set(expected_by_packet) - set(existing))
     orphaned = sorted(set(existing) - set(expected_by_packet))
     stale = sorted(
@@ -150,6 +181,7 @@ def inspect_catalog(root: DataLakeRoot) -> dict[str, Any]:
         "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
         "expected_packet_count": len(expected),
         "indexed_packet_count": len(existing),
+        "attachment_record_count": len(attachment_records),
         "source_surface_count": len(source_surfaces),
         "source_surfaces": source_surfaces,
         "missing_packets": missing,
@@ -175,30 +207,35 @@ def _build_entries(root: DataLakeRoot) -> list[dict[str, Any]]:
         ]
         container = loaded.container
         manifest_path = container / "manifest.json"
-        entries.append(
-            {
-                "catalog_version": BRONZE_CATALOG_VERSION,
-                "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
-                "packet_id": packet_id,
-                "raw_path": _rel(root, container),
-                "manifest_relpath": _rel(root, manifest_path),
-                "manifest_sha256": hash_file(manifest_path),
-                "source_family": _string_or_none(manifest.get("source_family")),
-                "source_surface": _string_or_none(manifest.get("source_surface")),
-                "source_locator": _visible_fact_value(manifest.get("source_locator")),
-                "facet_extractor": "registered" if extractor_registered else "universal_only",
-                "session_identity": _string_or_none(manifest.get("session_identity")),
-                "capture_time": _visible_fact_value(
-                    (manifest.get("timing") or {}).get("capture_time")
-                    if isinstance(manifest.get("timing"), dict)
-                    else None
-                ),
-                "series_id": _string_or_none(manifest.get("series_id")),
-                "source_slice_count": _list_len(manifest.get("source_slices")),
-                "preserved_file_count": _list_len(manifest.get("preserved_files")),
-                "facets": sorted((facet.to_dict() for facet in facets), key=_facet_sort_key),
-            }
-        )
+        entry = {
+            "catalog_version": BRONZE_CATALOG_VERSION,
+            "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+            "packet_id": packet_id,
+            "raw_path": _rel(root, container),
+            "manifest_relpath": _rel(root, manifest_path),
+            "manifest_sha256": hash_file(manifest_path),
+            "source_family": _string_or_none(manifest.get("source_family")),
+            "source_surface": _string_or_none(manifest.get("source_surface")),
+            "source_locator": _visible_fact_value(manifest.get("source_locator")),
+            "facet_extractor": "registered" if extractor_registered else "universal_only",
+            "session_identity": _string_or_none(manifest.get("session_identity")),
+            "capture_time": _visible_fact_value(
+                (manifest.get("timing") or {}).get("capture_time")
+                if isinstance(manifest.get("timing"), dict)
+                else None
+            ),
+            "series_id": _string_or_none(manifest.get("series_id")),
+            "source_slice_count": _list_len(manifest.get("source_slices")),
+            "preserved_file_count": _list_len(manifest.get("preserved_files")),
+            "facets": sorted((facet.to_dict() for facet in facets), key=_facet_sort_key),
+        }
+        packet_attachment_records = _packet_attachment_records(entry, manifest, loaded.bodies)
+        entry["attachment_record_count"] = len(packet_attachment_records)
+        entry["attachment_record_ids"] = [
+            record["attachment_record_id"] for record in packet_attachment_records
+        ]
+        entry["_attachment_records"] = packet_attachment_records
+        entries.append(entry)
     return sorted(entries, key=lambda item: item["packet_id"])
 
 
@@ -222,7 +259,9 @@ def _iter_committed_packet_ids(root: DataLakeRoot) -> list[str]:
 
 
 def _catalog_snapshot(
-    entries: list[dict[str, Any]], source_surfaces: list[dict[str, Any]]
+    entries: list[dict[str, Any]],
+    source_surfaces: list[dict[str, Any]],
+    attachment_records: list[dict[str, Any]],
 ) -> dict[str, bytes]:
     snapshot: dict[str, bytes] = {}
     by_source_family: dict[str, list[dict[str, Any]]] = {}
@@ -233,7 +272,9 @@ def _catalog_snapshot(
     by_facet: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
 
     for entry in entries:
-        snapshot[f"by_packet/{entry['packet_id']}.json"] = _json_bytes(entry)
+        snapshot[f"by_packet/{entry['packet_id']}.json"] = _json_bytes(
+            _packet_index_entry(entry)
+        )
         row = _query_row(entry)
         _bucket(by_source_family, entry.get("source_family"), row)
         _bucket(by_source_surface, entry.get("source_surface"), row)
@@ -256,13 +297,16 @@ def _catalog_snapshot(
             "field_semantics": _SOURCE_SURFACE_FIELD_SEMANTICS,
             "stable_query_paths": {
                 "all_packets": "all_packets.jsonl",
+                "attachment_records_root": "attachment_records/",
                 "by_packet_root": "by_packet/",
                 "by_source_surface_path_field": "source_surfaces[].by_source_surface_path",
+                "attachment_records_path_field": "source_surfaces[].attachment_records_path",
             },
             "source_surface_count": len(source_surfaces),
             "source_surfaces": source_surfaces,
         }
     )
+    snapshot.update(_attachment_record_snapshot(attachment_records))
     snapshot.update(_bucket_jsonl_snapshot("by_source_family", by_source_family))
     snapshot.update(_bucket_jsonl_snapshot("by_source_surface", by_source_surface))
     snapshot.update(_bucket_jsonl_snapshot("by_session_identity", by_session))
@@ -284,6 +328,7 @@ def _catalog_snapshot(
             "catalog_version": BRONZE_CATALOG_VERSION,
             "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
             "packet_count": len(entries),
+            "attachment_record_count": len(attachment_records),
         }
     )
     return snapshot
@@ -300,11 +345,13 @@ def _source_surface_summary(entries: list[dict[str, Any]]) -> list[dict[str, Any
                 "source_surface": key[1],
                 "by_source_surface_path": _source_surface_bucket_path(key[1]),
                 "packet_count": 0,
+                "attachment_record_count": 0,
                 "facet_extractor": "universal_only",
                 "facet_namespaces": set(),
             },
         )
         bucket["packet_count"] += 1
+        bucket["attachment_record_count"] += entry.get("attachment_record_count", 0)
         if entry.get("facet_extractor") == "registered":
             bucket["facet_extractor"] = "registered"
         for facet in entry.get("facets", []):
@@ -316,7 +363,13 @@ def _source_surface_summary(entries: list[dict[str, Any]]) -> list[dict[str, Any
             "source_family": bucket["source_family"],
             "source_surface": bucket["source_surface"],
             "by_source_surface_path": bucket["by_source_surface_path"],
+            "attachment_records_path": _attachment_records_source_surface_path(
+                bucket["source_surface"]
+            )
+            if bucket["attachment_record_count"]
+            else None,
             "packet_count": bucket["packet_count"],
+            "attachment_record_count": bucket["attachment_record_count"],
             "facet_extractor": bucket["facet_extractor"],
             "facet_namespaces": sorted(bucket["facet_namespaces"]),
         }
@@ -330,6 +383,170 @@ def _source_surface_bucket_path(source_surface: object) -> str | None:
     if isinstance(source_surface, str) and source_surface:
         return f"by_source_surface/{_safe_name(source_surface)}.jsonl"
     return None
+
+
+def _attachment_records_source_surface_path(source_surface: object) -> str | None:
+    if isinstance(source_surface, str) and source_surface:
+        return f"attachment_records/by_source_surface/{_safe_name(source_surface)}.jsonl"
+    return None
+
+
+def _attachment_records(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    records = [
+        record
+        for entry in entries
+        for record in entry.get("_attachment_records", [])
+        if isinstance(record, dict)
+    ]
+    return sorted(records, key=lambda item: item["attachment_record_id"])
+
+
+def _packet_index_entry(entry: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in entry.items() if not key.startswith("_")}
+
+
+def _packet_attachment_records(
+    entry: dict[str, Any], manifest: dict[str, Any], bodies: dict[str, bytes]
+) -> list[dict[str, Any]]:
+    preserved_files = manifest.get("preserved_files")
+    if not isinstance(preserved_files, list):
+        return []
+    source_slices_by_file = _source_slice_ids_by_file(manifest.get("source_slices"))
+    records: list[dict[str, Any]] = []
+    for preserved in preserved_files:
+        if not isinstance(preserved, dict):
+            continue
+        file_id = _required_string(preserved.get("file_id"), "preserved_files.file_id")
+        relative_packet_path = _required_string(
+            preserved.get("relative_packet_path"), "preserved_files.relative_packet_path"
+        )
+        body_sha256 = _required_string(preserved.get("sha256"), "preserved_files.sha256")
+        hash_basis = _required_string(preserved.get("hash_basis"), "preserved_files.hash_basis")
+        size_bytes = preserved.get("size_bytes")
+        if type(size_bytes) is not int:
+            raise DataLakeRootError(f"preserved file {file_id!r} missing integer size_bytes")
+        body = bodies.get(file_id)
+        if body is None:
+            raise DataLakeRootError(f"preserved body {file_id!r} missing after verified load")
+        record_id = _attachment_record_id(
+            packet_id=entry["packet_id"],
+            file_id=file_id,
+            relative_packet_path=relative_packet_path,
+            body_sha256=body_sha256,
+        )
+        records.append(
+            {
+                "attachment_record_schema_version": BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
+                "attachment_record_id": record_id,
+                "attachment_record_id_basis": (
+                    "sha256(packet_id|file_id|relative_packet_path|body_sha256)"
+                ),
+                "authority": _CATALOG_AUTHORITY,
+                "catalog_version": BRONZE_CATALOG_VERSION,
+                "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+                "packet_id": entry["packet_id"],
+                "raw_path": entry["raw_path"],
+                "manifest_relpath": entry["manifest_relpath"],
+                "manifest_sha256": entry["manifest_sha256"],
+                "source_family": entry.get("source_family"),
+                "source_surface": entry.get("source_surface"),
+                "source_locator": entry.get("source_locator"),
+                "source_slice_ids": source_slices_by_file.get(file_id, []),
+                "file_id": file_id,
+                "original_path": _string_or_none(preserved.get("original_path")),
+                "relative_packet_path": relative_packet_path,
+                "body_ref_kind": "raw_packet_relative_path",
+                "body_sha256": body_sha256,
+                "hash_basis": hash_basis,
+                "size_bytes": size_bytes,
+                "payload_kind": _payload_kind(relative_packet_path, body),
+                "payload_kind_basis": "generic_body_classification",
+                "payload_schema_version": _string_or_none(manifest.get("manifest_version")),
+                "posture_summary": _posture_summary(manifest),
+                "stable_query_paths": {
+                    "by_attachment_record": (
+                        f"attachment_records/by_attachment_record/{record_id}.json"
+                    ),
+                    "by_packet": (
+                        "attachment_records/by_packet/"
+                        f"{_safe_name(entry['packet_id'])}.jsonl"
+                    ),
+                },
+            }
+        )
+    return sorted(records, key=lambda item: item["attachment_record_id"])
+
+
+def _attachment_record_id(
+    *, packet_id: str, file_id: str, relative_packet_path: str, body_sha256: str
+) -> str:
+    material = "|".join((packet_id, file_id, relative_packet_path, body_sha256))
+    return f"ar_{hashlib.sha256(material.encode('utf-8')).hexdigest()[:32]}"
+
+
+def _source_slice_ids_by_file(source_slices: object) -> dict[str, list[str]]:
+    by_file: dict[str, list[str]] = {}
+    if not isinstance(source_slices, list):
+        return by_file
+    for item in source_slices:
+        if not isinstance(item, dict):
+            continue
+        slice_id = _string_or_none(item.get("slice_id"))
+        preserved_file_ids = item.get("preserved_file_ids")
+        if slice_id is None or not isinstance(preserved_file_ids, list):
+            continue
+        for file_id in preserved_file_ids:
+            if isinstance(file_id, str) and file_id:
+                by_file.setdefault(file_id, []).append(slice_id)
+    return {file_id: sorted(set(slice_ids)) for file_id, slice_ids in by_file.items()}
+
+
+def _posture_summary(manifest: dict[str, Any]) -> dict[str, dict[str, str | None] | None]:
+    return {
+        "access_posture": _visible_fact_summary(manifest.get("access_posture")),
+        "archive_history_posture": _visible_fact_summary(manifest.get("archive_history_posture")),
+        "media_modality_posture": _visible_fact_summary(manifest.get("media_modality_posture")),
+        "re_capture_relationship": _visible_fact_summary(manifest.get("re_capture_relationship")),
+    }
+
+
+def _visible_fact_summary(value: object) -> dict[str, str | None] | None:
+    if not isinstance(value, dict):
+        return None
+    status = _string_or_none(value.get("status"))
+    if status is None:
+        return None
+    return {
+        "status": status,
+        "value": _string_or_none(value.get("value")),
+        "reason": _string_or_none(value.get("reason")),
+    }
+
+
+def _payload_kind(relative_packet_path: str, body: bytes) -> str:
+    suffix = PurePosixPath(relative_packet_path).suffix.lower()
+    if suffix == ".json":
+        try:
+            json.loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            return "text_body"
+        return "json_body"
+    if suffix in {".html", ".htm"}:
+        return "html_body"
+    try:
+        text = body.decode("utf-8")
+    except UnicodeDecodeError:
+        return "binary_body"
+    stripped = text.lstrip().lower()
+    if stripped.startswith("<!doctype html") or stripped.startswith("<html"):
+        return "html_body"
+    return "text_body"
+
+
+def _required_string(value: object, field: str) -> str:
+    if not isinstance(value, str) or not value:
+        raise DataLakeRootError(f"missing required string field for Attachment Record: {field}")
+    return value
 
 
 def _universal_facets(manifest: dict[str, Any]) -> list[CatalogFacet]:
@@ -467,8 +684,133 @@ def _query_row(entry: dict[str, Any]) -> dict[str, Any]:
         "source_surface": entry.get("source_surface"),
         "session_identity": entry.get("session_identity"),
         "capture_time": entry.get("capture_time"),
+        "attachment_record_count": entry.get("attachment_record_count", 0),
     }
 
+
+def _attachment_record_snapshot(attachment_records: list[dict[str, Any]]) -> dict[str, bytes]:
+    snapshot: dict[str, bytes] = {}
+    by_packet: dict[str, list[dict[str, Any]]] = {}
+    by_source_family: dict[str, list[dict[str, Any]]] = {}
+    by_source_surface: dict[str, list[dict[str, Any]]] = {}
+    by_payload_kind: dict[str, list[dict[str, Any]]] = {}
+    by_body_sha256: dict[str, list[dict[str, Any]]] = {}
+
+    for record in attachment_records:
+        record_id = record["attachment_record_id"]
+        snapshot[f"attachment_records/by_attachment_record/{record_id}.json"] = _json_bytes(record)
+        row = _attachment_query_row(record)
+        _bucket(by_packet, record.get("packet_id"), row)
+        _bucket(by_source_family, record.get("source_family"), row)
+        _bucket(by_source_surface, record.get("source_surface"), row)
+        _bucket(by_payload_kind, record.get("payload_kind"), row)
+        _bucket(by_body_sha256, record.get("body_sha256"), row)
+
+    snapshot["attachment_records/all_attachment_records.jsonl"] = _jsonl_bytes(attachment_records)
+    snapshot["attachment_records/manifest.json"] = _json_bytes(
+        {
+            "authority": _CATALOG_AUTHORITY,
+            "catalog_version": BRONZE_CATALOG_VERSION,
+            "catalog_schema_version": BRONZE_CATALOG_SCHEMA_VERSION,
+            "attachment_record_schema_version": BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION,
+            "attachment_record_count": len(attachment_records),
+            "completeness": _ATTACHMENT_RECORD_COMPLETENESS,
+            "field_semantics": _ATTACHMENT_RECORD_FIELD_SEMANTICS,
+            "stable_query_paths": {
+                "all_attachment_records": "attachment_records/all_attachment_records.jsonl",
+                "by_attachment_record_root": "attachment_records/by_attachment_record/",
+                "by_packet_root": "attachment_records/by_packet/",
+                "by_source_family_root": "attachment_records/by_source_family/",
+                "by_source_surface_root": "attachment_records/by_source_surface/",
+                "by_payload_kind_root": "attachment_records/by_payload_kind/",
+                "by_body_sha256_root": "attachment_records/by_body_sha256/",
+            },
+        }
+    )
+    snapshot.update(_bucket_jsonl_snapshot("attachment_records/by_packet", by_packet))
+    snapshot.update(
+        _bucket_jsonl_snapshot("attachment_records/by_source_family", by_source_family)
+    )
+    snapshot.update(
+        _bucket_jsonl_snapshot("attachment_records/by_source_surface", by_source_surface)
+    )
+    snapshot.update(
+        _bucket_jsonl_snapshot("attachment_records/by_payload_kind", by_payload_kind)
+    )
+    snapshot.update(
+        _bucket_jsonl_snapshot("attachment_records/by_body_sha256", by_body_sha256)
+    )
+    return snapshot
+
+
+def _attachment_query_row(record: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "attachment_record_id": record["attachment_record_id"],
+        "packet_id": record["packet_id"],
+        "source_family": record.get("source_family"),
+        "source_surface": record.get("source_surface"),
+        "file_id": record["file_id"],
+        "relative_packet_path": record["relative_packet_path"],
+        "body_sha256": record["body_sha256"],
+        "hash_basis": record["hash_basis"],
+        "payload_kind": record["payload_kind"],
+        "source_slice_ids": record.get("source_slice_ids", []),
+    }
+
+
+def load_attachment_record_body(root: DataLakeRoot, attachment_record: dict[str, Any]) -> bytes:
+    """Resolve and verify the raw body referenced by a generated Attachment Record."""
+    packet_id = _required_string(attachment_record.get("packet_id"), "packet_id")
+    file_id = _required_string(attachment_record.get("file_id"), "file_id")
+    relative_packet_path = _required_string(
+        attachment_record.get("relative_packet_path"), "relative_packet_path"
+    )
+    expected_sha256 = _required_string(attachment_record.get("body_sha256"), "body_sha256")
+    expected_hash_basis = _required_string(attachment_record.get("hash_basis"), "hash_basis")
+    expected_body_ref_kind = _required_string(
+        attachment_record.get("body_ref_kind"), "body_ref_kind"
+    )
+    if expected_body_ref_kind != "raw_packet_relative_path":
+        raise DataLakeRootError(
+            "unsupported attachment body_ref_kind "
+            f"{expected_body_ref_kind!r}; expected 'raw_packet_relative_path'"
+        )
+    if expected_hash_basis != "raw_stored_bytes":
+        raise DataLakeRootError(
+            f"unsupported attachment hash_basis {expected_hash_basis!r}; expected 'raw_stored_bytes'"
+        )
+    loaded = root.load_raw_packet(packet_id)
+    preserved = _preserved_file_by_id(loaded.manifest, file_id)
+    if preserved.get("relative_packet_path") != relative_packet_path:
+        raise DataLakeRootError(
+            f"Attachment Record path mismatch for {file_id!r}: "
+            f"{relative_packet_path!r} != {preserved.get('relative_packet_path')!r}"
+        )
+    if preserved.get("sha256") != expected_sha256:
+        raise DataLakeRootError(
+            f"Attachment Record sha256 mismatch for {file_id!r}: "
+            f"{expected_sha256!r} != {preserved.get('sha256')!r}"
+        )
+    body = loaded.bodies.get(file_id)
+    if body is None:
+        raise DataLakeRootError(f"preserved body {file_id!r} missing after verified load")
+    actual_sha256 = hashlib.sha256(body).hexdigest()
+    if actual_sha256 != expected_sha256:
+        raise DataLakeRootError(
+            f"Attachment Record body sha256 mismatch for {file_id!r}: "
+            f"{actual_sha256!r} != {expected_sha256!r}"
+        )
+    return body
+
+
+def _preserved_file_by_id(manifest: dict[str, Any], file_id: str) -> dict[str, Any]:
+    preserved_files = manifest.get("preserved_files")
+    if not isinstance(preserved_files, list):
+        raise DataLakeRootError("raw manifest preserved_files must be a list")
+    for preserved in preserved_files:
+        if isinstance(preserved, dict) and preserved.get("file_id") == file_id:
+            return preserved
+    raise DataLakeRootError(f"raw manifest does not contain preserved file_id {file_id!r}")
 
 def _bucket(target: dict[str, list[dict[str, Any]]], key: object, row: dict[str, Any]) -> None:
     if isinstance(key, str) and key:
@@ -563,10 +905,12 @@ def _facet_sort_key(facet: dict[str, str]) -> tuple[str, str, str, str]:
 
 
 __all__ = [
+    "BRONZE_ATTACHMENT_RECORD_SCHEMA_VERSION",
     "BRONZE_CATALOG_SCHEMA_VERSION",
     "BRONZE_CATALOG_VERSION",
     "CATALOG_RELATIVE_ROOT",
     "CatalogFacet",
     "inspect_catalog",
+    "load_attachment_record_body",
     "rebuild_catalog",
 ]
