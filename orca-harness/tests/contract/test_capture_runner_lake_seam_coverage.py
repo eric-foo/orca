@@ -44,8 +44,10 @@ KNOWN_UNSYNCED: dict[str, str] = {}
 # sub-runners and are tested separately below.
 EXPECTED_BRONZE_WRITER_RUNNERS = frozenset(
     {
+        "run_fragrance_review_lake_packet.py",
         "run_fragrantica_mgt_capture.py",
         "run_ig_reels_lane_orchestrator.py",
+        "run_parfumo_mgt_capture.py",
         "run_source_capture_antiblock_http_packet.py",
         "run_source_capture_archive_packet.py",
         "run_source_capture_authenticated_browser_packet.py",
@@ -184,6 +186,20 @@ def _is_packet_writer_name(name: str | None, packet_writer_names: set[str] | fro
         name in packet_writer_names or bool(_PACKET_WRITER_NAME_RE.fullmatch(name))
     )
 
+def _cli_flags(tree: ast.AST) -> set[str]:
+    flags: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or _call_name(node) != "add_argument":
+            continue
+        for arg in node.args:
+            if (
+                isinstance(arg, ast.Constant)
+                and isinstance(arg.value, str)
+                and arg.value.startswith("--")
+            ):
+                flags.add(arg.value)
+    return flags
+
 
 def _source_capture_imports(tree: ast.AST) -> tuple[set[str], set[str]]:
     packet_writer_names = _source_capture_packet_writer_names()
@@ -237,12 +253,13 @@ def _packet_producers() -> dict[str, _RunnerSeam]:
     for path in sorted(_RUNNERS_DIR.glob("run_*.py")):
         src = path.read_text(encoding="utf-8")
         tree = ast.parse(src, filename=str(path))
+        flags = _cli_flags(tree)
         writer_names, module_aliases = _source_capture_imports(tree)
         calls = _producer_calls(tree, writer_names, module_aliases)
         if calls:
             producers[path.name] = _RunnerSeam(
-                exposes_output_arg="--output" in src,
-                exposes_data_root_arg="--data-root" in src,
+                exposes_output_arg="--output" in flags,
+                exposes_data_root_arg="--data-root" in flags,
                 exposes_env_fallback="ORCA_DATA_ROOT" in src,
                 resolves_data_root="DataLakeRoot.resolve" in src,
                 rejects_output_and_data_root=_has_any_token(src, _EXPLICIT_PAIR_REJECT_TOKENS),
@@ -293,6 +310,22 @@ def test_detector_discovers_indirect_source_capture_packet_writers() -> None:
 
 def test_current_bronze_writer_runner_surface_is_explicit() -> None:
     assert _bronze_writer_runners() == EXPECTED_BRONZE_WRITER_RUNNERS
+
+
+def test_detector_distinguishes_packet_output_from_summary_output_root() -> None:
+    tree = ast.parse(
+        """
+def build_parser(parser):
+    parser.add_argument("--output-root")
+    parser.add_argument("--data-root")
+"""
+    )
+
+    flags = _cli_flags(tree)
+
+    assert "--output-root" in flags
+    assert "--output" not in flags
+
 
 def test_every_packet_runner_is_lake_wired_or_acknowledged() -> None:
     producers = _packet_producers()
