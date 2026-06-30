@@ -73,11 +73,11 @@ Capture runs under an **authenticated session** whose cookies authenticate it. R
 
 **Receipts (every capture):** source URL, retrieval timestamp, raw response bytes + sha256, captured-from posture (`entitled_session`), request count used, limitations, non-claims, and no-secret confirmation. (Secrets excluded per C7.)
 
-**Source text / transcript boundary:** TikTok description (`desc`), hashtags/mentions (`textExtra`), music metadata, and captured public comments are source text. Source-native captions, speech transcript, ASR, durable audio, and durable video bytes are **not proven by this spec** and remain out of scope unless a later source-family probe targets them.
+**Source text / transcript boundary:** TikTok description (`desc`), hashtags/mentions (`textExtra`), music metadata, and captured public comments are source text. A later Funmi/session N=30 cadence receipt measured source-native subtitle metadata plus WebVTT body admission when `video.subtitleInfos` exists (`26/30` metadata present; `26/26` WebVTT parse success when present). Treat this as `source_native_subtitle_webvtt` evidence for that creator/session, labeled with TikTok's source field such as `ASR` when present. It is not owner-generated ASR, not durable audio/video preservation, not cross-creator subtitle coverage, and not a platform-wide transcript guarantee.
 
 ## Explicitly out of scope
 
-30/60-minute comment windows; full-comment pagination / chronological census; personal account use; agent-entered credentials; private or access-controlled content; media/video/audio bytes; source-native captions; speech transcript; ASR; signature forging; reply-thread expansion beyond the first-page `reply_comment_total` count.
+30/60-minute comment windows; full-comment pagination / chronological census; personal account use; agent-entered credentials; private or access-controlled content; media/video/audio bytes; owner-generated ASR unless separately authorized; source-native subtitle claims when `subtitleInfos` is absent; cross-creator subtitle coverage unless separately measured; signature forging; reply-thread expansion beyond the first-page `reply_comment_total` count.
 
 ## Validation plan
 
@@ -94,6 +94,6 @@ Capture runs under an **authenticated session** whose cookies authenticate it. R
 
 - **Volume + provenance target** (how many creators/videos/comments, freshness, first-party-required?) is unset and **flips the scale design** (self-capture vs vendor-for-bulk + first-party-anchor).
 - **Proxy strategy** (residential vs mobile, pool size) is a cost-vs-detectability owner decision.
-- **Detection ceiling is UNMEASURED** — N=1 ran clean; no bulk evidence. Selector/signature/field drift is expected (maintenance).
+- **Detection ceiling is PARTIALLY MEASURED, not settled** - one Funmi/session cadence run completed N=30 with zero challenges and clean page-owned comment/subtitle capture. Cross-creator coverage, higher-volume survivability, longer-run account safety, and selector/signature/field drift remain unmeasured.
 - This is a spec only: no build authority, no validation/readiness, no deployment. **Authenticated (sessioned) public capture via a dedicated burnable account** under the owner Risk posture; carries **account-ban and ToS exposure the owner has explicitly accepted** for this lane. Commenter handles/uids are public comment metadata for aggregate integrity analysis, not individual dossiers. Not legal advice.
 ```

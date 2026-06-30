@@ -182,6 +182,17 @@ page scope lacks resource-timing access. Treat more Chrome-extension DOM probing
 as non-packet-grade; the next proof must use a supported response-body capture
 surface for the page-owned `/api/comment/list` request.
 
+**TikTok Funmi N30 comment/subtitle cadence update (2026-07-01).**
+`docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md`
+supersedes the response-body-unmeasured part of the prior Funmi sessioned
+state for one creator/session: 30/30 videos completed with page-owned
+`/api/comment/list` parsed fields, 0 challenges, 0 failures, and no raw
+response body or endpoint persistence. Source-native WebVTT subtitles parsed
+for 26/26 videos where `subtitleInfos` existed; the other 4/30 lacked
+`subtitleInfos`. This does not prove cross-creator coverage, higher-volume
+account safety, full comment census, durable media/video preservation, or
+platform-wide subtitle availability.
+
 ## Coverage map
 
 - **Well-covered:** forums/threads (Reddit ×4, WSO), pricing (M&I, Teal, OpenAI-lane), archive/history (Daimler, Unity), docs-PDF body (Daimler — the strongest anti-bot escalation case), browser runner (CloakBrowser), reviews (ClickUp + Sephora-pending).

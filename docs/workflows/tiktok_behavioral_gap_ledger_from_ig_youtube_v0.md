@@ -244,6 +244,35 @@ response body through `fetch_browser_page_observation_capture` plus the post-loa
 comments action. Only after that packet field proof should the lane run a
 5-video ceiling rung.
 
+## 2026-07-01 N30 Funmi Cadence Analysis Addendum
+
+The prior `PINNED_RESPONSE_CAPTURE_NEXT` state is superseded for the Funmi
+sessioned route by
+`docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md`.
+
+Current measured updates:
+
+- Page-owned comment-list body route: N=1 proof succeeded, N=5 pilot succeeded,
+  and the N=25 remaining rung succeeded. Combined Funmi/session rate: `30/30`
+  completed, `0/30` challenges, `0/30` failures.
+- Comment packet fields: the 30 videos preserved parsed public comment fields
+  with body hashes, envelope `cursor`/`has_more`/`total`, source order, and the
+  required per-comment `cid`, `text`, `create_time`, `digg_count`,
+  `reply_comment_total`, `user.uid`, `user.unique_id`, and `user.nickname`.
+- Source-native subtitle/WebVTT route: `26/30` videos had `subtitleInfos`, and
+  `26/26` with metadata produced parsable WebVTT bodies. The four misses are
+  `no_subtitleInfos_present`, not observed fetch failures.
+- Source-text/disclosure analysis: 7/30 videos carried source-visible ad or
+  partner signals in hashtags/transcript text; keep these separate from
+  platform-rendered paid-partnership labels unless platform fields are captured.
+
+Updated next move: `DURABLE_PACKETIZATION_AND_EXTRACTION_NEXT`. Do not spend the
+next step on more same-creator live capture. Admit the N=30 staging outputs into
+a durable sanitized batch artifact or packet family, then run typed extraction
+over parsed captions/comments/source text. A later live rung should be
+cross-creator or explicitly ceiling-oriented, with stop-on-challenge still
+binding.
+
 ## Non-Claims
 
 - Not TikTok validation, readiness, production scale, or reliable detection
