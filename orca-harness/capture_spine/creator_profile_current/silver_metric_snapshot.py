@@ -342,11 +342,29 @@ def validate_manifest(manifest: Mapping[str, Any]) -> list[str]:
     if not isinstance(entries, list):
         errors.append("manifest entries must be a list")
     else:
-        required = {"profile_subject_id", "selected_record_id", "selected_content_hash", "selection_run_id", "seen_content_hashes"}
         for index, entry in enumerate(entries):
-            missing = required - set(entry)
-            if missing:
-                errors.append(f"manifest entries[{index}] missing {sorted(missing)}")
+            errors.extend(f"manifest entries[{index}] {msg}" for msg in _manifest_entry_errors(entry))
+    return errors
+
+
+def _manifest_entry_errors(entry: Any) -> list[str]:
+    # Type-aware, not just key-presence: a committed manifest whose
+    # ``seen_content_hashes`` is e.g. a bare string passes a presence-only check
+    # but is then read as a per-character set (``frozenset("sha256:..")``),
+    # silently corrupting the run-order chain. Validate types so the consumer's
+    # co-presence "valid" guard actually holds.
+    if not isinstance(entry, dict):
+        return ["is not an object"]
+    errors: list[str] = []
+    for key in ("profile_subject_id", "selected_record_id", "selected_content_hash"):
+        if not isinstance(entry.get(key), str):
+            errors.append(f"{key} must be a string")
+    run_id = entry.get("selection_run_id")
+    if not isinstance(run_id, int) or isinstance(run_id, bool):
+        errors.append("selection_run_id must be an int")
+    seen = entry.get("seen_content_hashes")
+    if not isinstance(seen, list) or not all(isinstance(h, str) for h in seen):
+        errors.append("seen_content_hashes must be a list of strings")
     return errors
 
 
