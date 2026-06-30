@@ -7,6 +7,7 @@ import pytest
 from runners import run_source_capture_youtube_caption_packet as runner
 
 _VIDEO_ID = "vid12345678"
+_LEADING_DASH_VIDEO_ID = "-V7MN2IWMpA"
 
 
 def test_youtube_caption_runner_rejects_explicit_output_and_data_root_before_fetch(monkeypatch, tmp_path: Path) -> None:
@@ -48,3 +49,22 @@ def test_youtube_caption_runner_ignores_env_data_root_when_output_is_explicit(mo
     monkeypatch.setattr(runner, "write_caption_packet", fake_write)
 
     assert runner.main(["--video-id", _VIDEO_ID, "--output", str(output)]) == 0
+
+
+def test_youtube_caption_runner_accepts_leading_dash_video_id(monkeypatch, tmp_path: Path) -> None:
+    output = tmp_path / "packet"
+
+    def fake_fetch(video_id: str) -> object:
+        assert video_id == _LEADING_DASH_VIDEO_ID
+        return object()
+
+    def fake_write(cap, *, output_directory, data_root, decision_question):
+        assert output_directory == output
+        assert data_root is None
+        assert decision_question
+        return 0, str(output)
+
+    monkeypatch.setattr(runner, "fetch_youtube_caption_artifacts", fake_fetch)
+    monkeypatch.setattr(runner, "write_caption_packet", fake_write)
+
+    assert runner.main(["--video-id", _LEADING_DASH_VIDEO_ID, "--output", str(output)]) == 0

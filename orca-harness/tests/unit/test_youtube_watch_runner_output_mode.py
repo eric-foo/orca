@@ -7,6 +7,7 @@ import pytest
 from runners import run_source_capture_youtube_watch_packet as runner
 
 _VIDEO_ID = "vid12345678"
+_LEADING_DASH_VIDEO_ID = "-V7MN2IWMpA"
 
 
 def test_youtube_watch_runner_rejects_explicit_output_and_data_root_before_fetch(
@@ -49,3 +50,16 @@ def test_youtube_watch_runner_ignores_env_data_root_when_output_is_explicit(
     monkeypatch.setattr(runner, "run_source_capture_youtube_watch_packet", fake_run)
 
     assert runner.main(["--video-id", _VIDEO_ID, "--output", str(output)]) == 0
+
+
+def test_youtube_watch_runner_accepts_leading_dash_video_id(monkeypatch, tmp_path: Path) -> None:
+    output = tmp_path / "packet"
+
+    def fake_run(**kwargs):
+        assert kwargs["video_id"] == _LEADING_DASH_VIDEO_ID
+        assert kwargs["output_directory"] == output
+        return 0, str(output)
+
+    monkeypatch.setattr(runner, "run_source_capture_youtube_watch_packet", fake_run)
+
+    assert runner.main(["--video-id", _LEADING_DASH_VIDEO_ID, "--output", str(output)]) == 0
