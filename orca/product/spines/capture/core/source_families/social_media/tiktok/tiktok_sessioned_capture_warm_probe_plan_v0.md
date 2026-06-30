@@ -8,7 +8,7 @@ use_when:
   - Setting up or running authenticated TikTok capture after the owner pivot to sessioned.
   - Measuring the per-account detection ceiling before any scale run.
 authority_boundary: retrieval_only
-status: plan only — execution gated (human login + per-operation network approval). Survivability still UNMEASURED; this plan is how it gets measured.
+status: plan + partial N=1 sessioned receipt; full packet-response contract and per-account ceiling still UNMEASURED. Execution remains gated (human login + per-operation network approval).
 derived_from:
   - orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_capture_lane_spec_v0.md   # C1–C8' invariants
   - orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_first_slice_probe_recon_v0.md   # what's reachable + detection addendum
@@ -26,6 +26,16 @@ non_claims: one-account/one-session measurement; ban risk accepted; public conte
 Two outputs from one runbook:
 1. **Capture:** per-video creator-momentum metadata + top/relevant comments (with exact `create_time`/`cid`/`uid`), under an authenticated session, at the spec's paced per-page pattern.
 2. **Measurement:** the **per-account detection ceiling** — how many videos the paced pattern captures from one warmed account before TikTok issues a real challenge — which sets the scale math (`throughput ≈ accounts × per-account-ceiling × paced-rate`).
+
+## Latest partial execution receipt
+
+`docs/workflows/tiktok_sessioned_warm_probe_receipt_v0.md` records a 2026-06-30
+N=1 headed sessioned probe on the pinned first-slice fixture. The sessioned route
+loaded without visible login/challenge signals, parsed the embedded video-detail
+blob, and rendered visible comment DOM after a comments-control click. It did
+not capture `/api/comment/list` response bodies, so the exact comment packet
+contract (`cid`, `uid`, exact `create_time`, cursor, `has_more`) and the
+per-account ceiling remain unmeasured.
 
 ## Pre-conditions (all required before any capture)
 
