@@ -68,7 +68,21 @@ INSTAGRAM_METRIC_SEED_PATH = (
     / "instagram"
     / "instagram_reels_creator_metric_seed_v0.json"
 )
-METRIC_SEED_PATHS = (YOUTUBE_METRIC_SEED_PATH, INSTAGRAM_METRIC_SEED_PATH)
+# Lake cut-over §5: the view's IG rollups come from the committed lake snapshot;
+# the IG seed stays the no-drift value oracle (see _metric_seeds below).
+INSTAGRAM_SNAPSHOT_PATH = (
+    ROOT
+    / "orca"
+    / "product"
+    / "spines"
+    / "capture"
+    / "core"
+    / "source_families"
+    / "social_media"
+    / "instagram"
+    / "instagram_reels_creator_metric_rollup_snapshot_v0.json"
+)
+METRIC_SEED_PATHS = (YOUTUBE_METRIC_SEED_PATH, INSTAGRAM_SNAPSHOT_PATH)
 
 
 def _json(path: Path) -> dict:
@@ -120,9 +134,18 @@ def _assert_validation_code(document: dict, code: str) -> None:
 
 
 def _rollups_by_subject() -> dict[str, dict]:
+    # Reconstruct from the view's ACTUAL rollup sources: YT from the seed, IG from
+    # the committed lake snapshot (§5). The snapshot is value-equal to the IG seed
+    # (the no-drift bridge, proven by the equivalence gate) but carries fresher
+    # provenance (e.g. computed_at), so the view-vs-source check must compare
+    # against the snapshot, not the seed.
+    rollup_lists = [
+        _json(YOUTUBE_METRIC_SEED_PATH)["youtube_shorts_fragrance_creator_metric_seed"]["metric_rollups"],
+        _json(INSTAGRAM_SNAPSHOT_PATH)["creator_metric_rollup_snapshot"]["metric_rollups"],
+    ]
     rollups: dict[str, dict] = {}
-    for seed in _metric_seeds():
-        for rollup in seed["metric_rollups"]:
+    for rollup_list in rollup_lists:
+        for rollup in rollup_list:
             rollups[rollup["profile_subject_id"]] = rollup
     return rollups
 
@@ -231,7 +254,7 @@ def test_creator_profile_current_source_hashes_are_current() -> None:
     expected_paths = {
         "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json": ACCOUNT_LEDGER_PATH,
         "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json": YOUTUBE_METRIC_SEED_PATH,
-        "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json": INSTAGRAM_METRIC_SEED_PATH,
+        "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json": INSTAGRAM_SNAPSHOT_PATH,
     }
 
     assert set(inputs_by_pointer) == set(expected_paths)

@@ -173,7 +173,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/0",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/0",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_046",
             "yt_fragrance_short_view_obs_v0_072",
@@ -329,7 +329,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/1",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/1",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_031",
             "yt_fragrance_short_view_obs_v0_044",
@@ -483,7 +483,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/2",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/2",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_117",
             "yt_fragrance_short_view_obs_v0_137",
@@ -629,7 +629,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/3",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/3",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_196"
           ]
@@ -782,7 +782,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/4",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/4",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_011",
             "yt_fragrance_short_view_obs_v0_012",
@@ -940,7 +940,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/5",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/5",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_095",
             "yt_fragrance_short_view_obs_v0_109",
@@ -1095,7 +1095,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/6",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/6",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_032",
             "yt_fragrance_short_view_obs_v0_045",
@@ -1248,7 +1248,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/7",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/7",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_138",
             "yt_fragrance_short_view_obs_v0_153",
@@ -1402,7 +1402,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/8",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/8",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_013",
             "yt_fragrance_short_view_obs_v0_014",
@@ -1564,7 +1564,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/9",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/9",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_002",
             "yt_fragrance_short_view_obs_v0_003",
@@ -1728,7 +1728,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/10",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/10",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_001",
             "yt_fragrance_short_view_obs_v0_026",
@@ -1887,7 +1887,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/11",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/11",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_076",
             "yt_fragrance_short_view_obs_v0_096",
@@ -2044,7 +2044,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/12",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/12",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_047",
             "yt_fragrance_short_view_obs_v0_059",
@@ -2199,7 +2199,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/13",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/13",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_078",
             "yt_fragrance_short_view_obs_v0_112",
@@ -2351,7 +2351,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/14",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/14",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_077",
             "yt_fragrance_short_view_obs_v0_111",
@@ -2503,7 +2503,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/15",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/15",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_116",
             "yt_fragrance_short_view_obs_v0_136",
@@ -2651,7 +2651,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/16",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/16",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_033"
           ]
@@ -2806,7 +2806,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/17",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/17",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_020",
             "yt_fragrance_short_view_obs_v0_021",
@@ -2963,7 +2963,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/18",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/18",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_079",
             "yt_fragrance_short_view_obs_v0_097",
@@ -3114,7 +3114,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/19",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/19",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_075",
             "yt_fragrance_short_view_obs_v0_094",
@@ -3274,7 +3274,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/20",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/20",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_008",
             "yt_fragrance_short_view_obs_v0_009",
@@ -3433,7 +3433,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/21",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/21",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_118",
             "yt_fragrance_short_view_obs_v0_139",
@@ -3589,7 +3589,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/22",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/22",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_015",
             "yt_fragrance_short_view_obs_v0_016",
@@ -3748,7 +3748,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/23",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/23",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_023",
             "yt_fragrance_short_view_obs_v0_024",
@@ -3909,7 +3909,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/24",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/24",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_005",
             "yt_fragrance_short_view_obs_v0_006",
@@ -4071,7 +4071,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/25",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/25",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_048",
             "yt_fragrance_short_view_obs_v0_060",
@@ -4224,7 +4224,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/26",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/26",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_119",
             "yt_fragrance_short_view_obs_v0_175"
@@ -4372,7 +4372,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/27",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/27",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_098",
             "yt_fragrance_short_view_obs_v0_114",
@@ -4521,7 +4521,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/28",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/28",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_115",
             "yt_fragrance_short_view_obs_v0_135",
@@ -4672,7 +4672,7 @@
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/29",
           "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json#/youtube_shorts_fragrance_creator_metric_seed/metric_rollups/29",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json",
           "source_metric_observation_ids": [
             "yt_fragrance_short_view_obs_v0_017",
             "yt_fragrance_short_view_obs_v0_018",
@@ -4689,7 +4689,7 @@
         "current_metric_rollups": [
           {
             "calculation_recipe_version": "creator_metric_rollup_instagram_reels_grid_engagement_v0",
-            "computed_at": "2026-06-29T14:50:03Z",
+            "computed_at": "2026-06-30T14:15:50Z",
             "content_kind_inclusion_rule": "Instagram Reels from the selected /reels/ grid projection only; static posts and profile follower_count are excluded from rollup math",
             "freshness_state": "partial",
             "limitations": [
@@ -4702,7 +4702,7 @@
               "Profile follower_count is not included in rollup math."
             ],
             "metric_rollup_id": "ig_reels_account_engagement_rollup_v0_001",
-            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/0",
+            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/0",
             "metric_rollups": {
               "average_comment_count": {
                 "metric_unit": "count",
@@ -4800,7 +4800,7 @@
         "freshness": {
           "audience_computed_at_or_none": null,
           "identity_updated_at": "2026-06-29T13:47:06Z",
-          "metrics_computed_at_or_none": "2026-06-29T14:50:03Z",
+          "metrics_computed_at_or_none": "2026-06-30T14:15:50Z",
           "profile_view_computed_at": "2026-06-29T14:50:03Z"
         },
         "ideal_audience_profile": null,
@@ -4852,8 +4852,8 @@
         "review_state_or_none": null,
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/30",
-          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/0",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json",
+          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/0",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json",
           "source_metric_observation_ids": [
             "ig_reels_metric_obs_v0_002",
             "ig_reels_metric_obs_v0_003",
@@ -4900,7 +4900,7 @@
         "current_metric_rollups": [
           {
             "calculation_recipe_version": "creator_metric_rollup_instagram_reels_grid_engagement_v0",
-            "computed_at": "2026-06-29T14:50:03Z",
+            "computed_at": "2026-06-30T14:15:50Z",
             "content_kind_inclusion_rule": "Instagram Reels from the selected /reels/ grid projection only; static posts and profile follower_count are excluded from rollup math",
             "freshness_state": "partial",
             "limitations": [
@@ -4913,7 +4913,7 @@
               "Profile follower_count is not included in rollup math."
             ],
             "metric_rollup_id": "ig_reels_account_engagement_rollup_v0_002",
-            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/1",
+            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/1",
             "metric_rollups": {
               "average_comment_count": {
                 "metric_unit": "count",
@@ -5011,7 +5011,7 @@
         "freshness": {
           "audience_computed_at_or_none": null,
           "identity_updated_at": "2026-06-29T13:47:50Z",
-          "metrics_computed_at_or_none": "2026-06-29T14:50:03Z",
+          "metrics_computed_at_or_none": "2026-06-30T14:15:50Z",
           "profile_view_computed_at": "2026-06-29T14:50:03Z"
         },
         "ideal_audience_profile": null,
@@ -5063,8 +5063,8 @@
         "review_state_or_none": null,
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/31",
-          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/1",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json",
+          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/1",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json",
           "source_metric_observation_ids": [
             "ig_reels_metric_obs_v0_039",
             "ig_reels_metric_obs_v0_040",
@@ -5111,7 +5111,7 @@
         "current_metric_rollups": [
           {
             "calculation_recipe_version": "creator_metric_rollup_instagram_reels_grid_engagement_v0",
-            "computed_at": "2026-06-29T14:50:03Z",
+            "computed_at": "2026-06-30T14:15:50Z",
             "content_kind_inclusion_rule": "Instagram Reels from the selected /reels/ grid projection only; static posts and profile follower_count are excluded from rollup math",
             "freshness_state": "partial",
             "limitations": [
@@ -5124,7 +5124,7 @@
               "Profile follower_count is not included in rollup math."
             ],
             "metric_rollup_id": "ig_reels_account_engagement_rollup_v0_003",
-            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/2",
+            "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/2",
             "metric_rollups": {
               "average_comment_count": {
                 "metric_unit": "count",
@@ -5222,7 +5222,7 @@
         "freshness": {
           "audience_computed_at_or_none": null,
           "identity_updated_at": "2026-06-30T12:33:04Z",
-          "metrics_computed_at_or_none": "2026-06-29T14:50:03Z",
+          "metrics_computed_at_or_none": "2026-06-30T14:15:50Z",
           "profile_view_computed_at": "2026-06-29T14:50:03Z"
         },
         "ideal_audience_profile": null,
@@ -5274,8 +5274,8 @@
         "review_state_or_none": null,
         "source_drill_back": {
           "identity_ledger_pointer": "orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_public_handle_linkage_ledger_v0.json#/creator_public_handle_linkage_ledger/platform_accounts/32",
-          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json#/instagram_reels_creator_metric_seed/metric_rollups/2",
-          "metric_seed_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json",
+          "metric_rollup_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json#/creator_metric_rollup_snapshot/metric_rollups/2",
+          "metric_snapshot_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json",
           "source_metric_observation_ids": [
             "ig_reels_metric_obs_v0_076",
             "ig_reels_metric_obs_v0_077",
@@ -5331,9 +5331,9 @@
         "source_pointer": "orca/product/spines/capture/core/source_families/social_media/youtube/youtube_shorts_fragrance_creator_metric_seed_v0.json"
       },
       {
-        "role": "source-backed metric observations and selected-grid Instagram metric rollups",
-        "sha256": "c8d5e26f0fa5dacda5f561e475ff797d5ac7bc6f6cb7b89d924a23ae311c3e38",
-        "source_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_seed_v0.json"
+        "role": "lake-backed selected-grid Instagram metric rollups (live-lake snapshot)",
+        "sha256": "8143b0556f09f476d7ce200544d2ddace445d5435e6417921d1e5542162f9d7e",
+        "source_pointer": "orca/product/spines/capture/core/source_families/social_media/instagram/instagram_reels_creator_metric_rollup_snapshot_v0.json"
       }
     ],
     "source_policy_posture": "Static creator-profile-current export derived from the public-handle platform-account ledger and platform creator metric seeds. Profiles are account-scoped unless promoted public-handle linkage exists.",
