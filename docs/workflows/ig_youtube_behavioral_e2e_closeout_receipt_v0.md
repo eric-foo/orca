@@ -13,6 +13,7 @@ open_next:
   - docs/workflows/ig_vs_youtube_behavioral_gap_ledger_v0.md
   - docs/workflows/ig_behavioral_missing_input_capture_receipt_v0.md
   - docs/workflows/youtube_behavioral_contract_from_merged_main_v0.md
+  - docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md
   - orca-harness/source_capture/ig_reels_behavioral_lake.py
   - orca-harness/youtube_capture/behavioral_projection.py
 stale_if:
@@ -252,6 +253,8 @@ Interpretation:
   e2e claim.
 - This does not prove YouTube platform-wide completeness, ASR/no-caption fallback, live provider-API
   extraction, scheduler behavior, or production scale.
+- This two-video section is superseded for expanded-corpus measurement by
+  `docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md`.
 
 ## YouTube Contract Evidence
 
