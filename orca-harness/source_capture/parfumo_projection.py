@@ -23,7 +23,21 @@ PARFUMO_PROJECTION_CERTIFICATION = "view_only; not_cleaned; not_normalized; not_
 PROJECTION_PARFUMO_LANE = "projection_parfumo"
 
 _PARFUMO_SOURCE_FAMILY = "fragrance_native_database"
-_PARFUMO_SOURCE_SURFACE = "parfumo_product_page_direct_http"
+PARFUMO_DIRECT_HTTP_SOURCE_SURFACE = "parfumo_product_page_direct_http"
+PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE = (
+    "parfumo_product_page_chrome_extension_targeted_rendered_session"
+)
+_PARFUMO_SOURCE_SURFACES = (
+    PARFUMO_DIRECT_HTTP_SOURCE_SURFACE,
+    PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE,
+)
+_TARGETED_PRODUCT_CONTEXT_SLICE = "parfumo_targeted:product_context"
+_TARGETED_REVIEW_LATEST_RECENT_SLICE = "parfumo_targeted:review_latest_recent"
+_TARGETED_REVIEW_HIGH_RATING_SLICE = "parfumo_targeted:review_source_visible_high_rating"
+_TARGETED_REVIEW_LOW_RATING_SLICE = "parfumo_targeted:review_source_visible_low_rating"
+_TARGETED_STATEMENT_LATEST_RECENT_SLICE = "parfumo_targeted:statement_latest_recent"
+_PARFUMO_HIGH_RATING_MIN = 8.0
+_PARFUMO_LOW_RATING_MAX = 4.0
 _FORBIDDEN_SOURCE_VISIBLE_FIELD_NAMES = frozenset(
     {
         "action_ceiling",
@@ -178,10 +192,10 @@ def build_parfumo_projection(
             "Parfumo projection requires "
             f"source_family={_PARFUMO_SOURCE_FAMILY!r}; got {packet.source_family!r}"
         )
-    if packet.source_surface != _PARFUMO_SOURCE_SURFACE:
+    if packet.source_surface not in _PARFUMO_SOURCE_SURFACES:
         raise ValueError(
             "Parfumo projection requires "
-            f"source_surface={_PARFUMO_SOURCE_SURFACE!r}; got {packet.source_surface!r}"
+            f"source_surface in {_PARFUMO_SOURCE_SURFACES!r}; got {packet.source_surface!r}"
         )
 
     preserved_files = {item.file_id: item for item in packet.preserved_files}
@@ -202,13 +216,18 @@ def build_parfumo_projection(
         for file_id in source_slice.preserved_file_ids:
             preserved_file = preserved_files[file_id]
             body = raw_file_bytes_by_file_id[file_id]
-            if not _looks_like_parfumo_body(preserved_file, body):
+            if not _looks_like_parfumo_body(
+                preserved_file,
+                body,
+                source_surface=packet.source_surface,
+            ):
                 continue
             projected = _project_parfumo_html(
                 body,
                 source_slice=source_slice,
                 raw_ref=raw_ref,
                 raw_anchor=_raw_anchor(preserved_file),
+                source_surface=packet.source_surface,
             )
             rows.extend(projected.rows)
             bindings.extend(projected.bindings)
@@ -312,6 +331,7 @@ def _project_parfumo_html(
     source_slice: SourceCaptureSlice,
     raw_ref: ParfumoProjectionRawRef,
     raw_anchor: ParfumoProjectionRawAnchor,
+    source_surface: str,
 ) -> _ProjectedParfumoHtml:
     text = body.decode("utf-8", errors="replace")
     product = _product_context(text)
@@ -416,19 +436,164 @@ def _project_parfumo_html(
     if any(row.source_visible_fields.get("corpus_kind") == "statements" for row in archive_gate_rows):
         residuals.append("full_statement_corpus_not_captured_ajax_pagination_present")
 
-    residuals.extend(
-        [
-            "linked_media_assets_not_preserved_by_direct_http_packet",
-            "review_attached_photo_proof_not_present",
-        ]
-    )
+    if source_surface == PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE:
+        residuals.append("linked_media_assets_not_preserved_by_targeted_rendered_packet")
+    else:
+        residuals.append("linked_media_assets_not_preserved_by_direct_http_packet")
+    residuals.append("review_attached_photo_proof_not_present")
     residuals.extend(_non_text_fragrance_scope_residuals(text))
 
-    return _ProjectedParfumoHtml(
+    projected = _ProjectedParfumoHtml(
         rows=rows,
         bindings=bindings,
         residuals=_dedupe_preserve_order(residuals),
     )
+    if source_surface == PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE:
+        return _filter_targeted_projection(projected, source_slice=source_slice)
+    return projected
+
+
+def _filter_targeted_projection(
+    projected: _ProjectedParfumoHtml,
+    *,
+    source_slice: SourceCaptureSlice,
+) -> _ProjectedParfumoHtml:
+    slice_id = source_slice.slice_id
+    kept_rows: list[ParfumoProjectionRow]
+    residuals: list[str] = []
+
+    if slice_id == _TARGETED_PRODUCT_CONTEXT_SLICE:
+        kept_rows = [
+            row
+            for row in projected.rows
+            if row.row_kind
+            in {
+                "fragrance_product_snapshot",
+                "fragrance_aggregate_rating",
+                "fragrance_performance_component",
+                "fragrance_review_archive_gate",
+            }
+        ]
+        residuals.extend(projected.residuals)
+    elif slice_id == _TARGETED_REVIEW_LATEST_RECENT_SLICE:
+        kept_rows = [
+            row
+            for row in projected.rows
+            if row.row_kind == "fragrance_review_card_current_window"
+            and _is_latest_or_recent_review(row)
+        ]
+        if not kept_rows:
+            residuals.append("parfumo_latest_recent_review_bucket_absent_or_unexposed")
+    elif slice_id == _TARGETED_REVIEW_HIGH_RATING_SLICE:
+        kept_rows = [
+            row
+            for row in projected.rows
+            if row.row_kind == "fragrance_review_card_current_window"
+            and _is_source_visible_high_rating_review(row)
+        ]
+        if not kept_rows:
+            residuals.append("parfumo_high_rating_review_bucket_absent_or_unexposed")
+    elif slice_id == _TARGETED_REVIEW_LOW_RATING_SLICE:
+        kept_rows = [
+            row
+            for row in projected.rows
+            if row.row_kind == "fragrance_review_card_current_window"
+            and _is_source_visible_low_rating_review(row)
+        ]
+        if not kept_rows:
+            residuals.append("parfumo_low_rating_review_bucket_absent_or_unexposed")
+    elif slice_id == _TARGETED_STATEMENT_LATEST_RECENT_SLICE:
+        kept_rows = [
+            row
+            for row in projected.rows
+            if row.row_kind == "fragrance_statement_current_window"
+            and _is_latest_or_recent_statement(row)
+        ]
+        if not kept_rows:
+            residuals.append("parfumo_latest_recent_statement_bucket_absent_or_unexposed")
+    else:
+        kept_rows = []
+        residuals.append("parfumo_targeted_slice_id_unrecognized")
+
+    kept_row_ids = {row.row_id for row in kept_rows}
+    kept_bindings = [binding for binding in projected.bindings if binding.row_id in kept_row_ids]
+    return _ProjectedParfumoHtml(
+        rows=kept_rows,
+        bindings=kept_bindings,
+        residuals=_dedupe_preserve_order(residuals),
+    )
+
+
+def _is_latest_or_recent_review(row: ParfumoProjectionRow) -> bool:
+    fields = row.source_visible_fields
+    return _field_mentions_any(fields, "tab_id", "tab_label", tokens=("latest", "recent", "new")) or (
+        row.tab_id in {None, "reviews"} and not _field_mentions_any(
+            fields,
+            "tab_id",
+            "tab_label",
+            tokens=("high", "top", "positive", "low", "critical", "negative"),
+        )
+    )
+
+
+def _is_latest_or_recent_statement(row: ParfumoProjectionRow) -> bool:
+    fields = row.source_visible_fields
+    return _field_mentions_any(
+        fields,
+        "tab_id",
+        "tab_label",
+        tokens=("latest", "recent", "new", "statement"),
+    ) or row.tab_id in {None, "statements"}
+
+
+def _is_source_visible_high_rating_review(row: ParfumoProjectionRow) -> bool:
+    fields = row.source_visible_fields
+    rating = _numeric_field(fields.get("rating"))
+    if rating is not None:
+        return rating >= _PARFUMO_HIGH_RATING_MIN
+    return _field_mentions_any(
+        fields,
+        "tab_id",
+        "tab_label",
+        tokens=("high", "top", "positive"),
+    )
+
+
+def _is_source_visible_low_rating_review(row: ParfumoProjectionRow) -> bool:
+    fields = row.source_visible_fields
+    rating = _numeric_field(fields.get("rating"))
+    if rating is not None:
+        return rating <= _PARFUMO_LOW_RATING_MAX
+    return _field_mentions_any(
+        fields,
+        "tab_id",
+        "tab_label",
+        tokens=("low", "critical", "negative"),
+    )
+
+
+def _field_mentions_any(
+    fields: Mapping[str, Any | None],
+    *names: str,
+    tokens: tuple[str, ...],
+) -> bool:
+    values = []
+    for name in names:
+        value = fields.get(name)
+        if isinstance(value, str):
+            values.append(value.lower())
+    if not values:
+        return False
+    text = " ".join(values)
+    return any(token in text for token in tokens)
+
+
+def _numeric_field(value: Any | None) -> float | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    return None
 
 
 def _product_context(text: str) -> dict[str, Any | None]:
@@ -785,11 +950,25 @@ def _archive_gate_rows(
     return rows
 
 
-def _looks_like_parfumo_body(preserved_file: PreservedFile, body: bytes) -> bool:
+def _looks_like_parfumo_body(
+    preserved_file: PreservedFile,
+    body: bytes,
+    *,
+    source_surface: str,
+) -> bool:
     path = preserved_file.relative_packet_path.lower()
     if "http_response_metadata" in path:
         return False
     sample = body[:200_000].decode("utf-8", errors="ignore").lower()
+    if source_surface == PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE:
+        if path.endswith((".json", ".png", ".jpg", ".jpeg", ".webp")):
+            return False
+        return (
+            "<html" in sample
+            or "data-perfume-id" in sample
+            or "data-review-id" in sample
+            or "data-statement-id" in sample
+        )
     return (
         "parfumo.com/perfumes/" in sample
         or "/action/perfume/get_reviews.php" in sample
@@ -997,9 +1176,11 @@ def _projection_json_text(projection: ParfumoProjectionPacket) -> str:
 
 
 __all__ = [
+    "PARFUMO_DIRECT_HTTP_SOURCE_SURFACE",
     "PARFUMO_PROJECTION_CERTIFICATION",
     "PARFUMO_PROJECTION_METHOD",
     "PARFUMO_PROJECTION_VERSION",
+    "PARFUMO_TARGETED_RENDERED_SOURCE_SURFACE",
     "PROJECTION_PARFUMO_LANE",
     "ParfumoProjectionBinding",
     "ParfumoProjectionLossLedger",
