@@ -76,7 +76,7 @@ Per run record: account label (not credentials), session mode (`entitled_session
 
 ## Harness fit
 
-Reuse: `browser_snapshot.py::fetch_browser_context_responses` (comment/list intercept), `cadence.py` (C4), `auth_state.py` + `run_source_capture_browser_session_bootstrap.py` + `run_source_capture_authenticated_browser_packet.py` (sessioned context, human login), `packet_assembly`/`writer` (receipts), `block_shell`/`rendered_access` (challenge detection). New TikTok-specific: `tiktok_parse.py` (blob + comment-list parsers) and the sessioned capture runner that enforces the ≤3-request cap + stop-on-challenge. The change vs the failed headless runs is **non-headless + warmed authenticated session**, not new capture logic.
+Reuse: `browser_snapshot.py::fetch_browser_page_observation_capture` (page response observer plus post-load comment-panel action), `cadence.py` (C4), `auth_state.py` + `run_source_capture_browser_session_bootstrap.py` + `run_source_capture_authenticated_browser_packet.py` (sessioned context, human login), `packet_assembly`/`writer` (receipts), `block_shell`/`rendered_access` (challenge detection). New TikTok-specific: `tiktok_parse.py` (blob + comment-list parsers) and the sessioned capture runner that enforces the ≤3-request cap + stop-on-challenge. The change vs the failed headless runs is **non-headless + warmed authenticated session plus page-owned response observation**, not forged request logic.
 
 ## Non-claims
 
