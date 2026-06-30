@@ -249,7 +249,10 @@ def run_snapshot(
             (receipt_path, receipt),
         ):
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(_dump_json(obj), encoding="utf-8")
+            # newline="\n": keep committed artifacts LF on a Windows operator box
+            # (write_text would otherwise translate to CRLF and break the repo's
+            # LF text convention + the view's lf_repo_text gate at §5).
+            path.write_text(_dump_json(obj), encoding="utf-8", newline="\n")
 
     return {
         "platform": platform,
@@ -307,7 +310,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     data_root.rebuild_availability()  # IG discovery reads the availability index
-    account_ledger = _load_json(args.account_ledger)
+    # The generator wants the inner {platform_accounts} block; the committed
+    # ledger wraps it under its top-level key (matches the producer runner).
+    document = _load_json(args.account_ledger)
+    account_ledger = document.get("creator_public_handle_linkage_ledger", document)
 
     try:
         summary = run_snapshot(
