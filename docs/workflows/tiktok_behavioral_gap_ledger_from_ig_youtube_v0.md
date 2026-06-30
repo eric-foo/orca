@@ -209,6 +209,35 @@ owner_gated_warm_session_probe:
     - forged msToken/X-Bogus/X-Gnarly/signature routes
 ```
 
+## 2026-06-30 Live Probe Addendum
+
+After this ledger was authored, the owner explicitly authorized live sessioned
+TikTok DOM/hydration probing in the same lane. The current live receipt is
+`docs/workflows/tiktok_sessioned_dom_hydration_profile_comments_receipt_v0.md`,
+with full structured payload in
+`docs/workflows/tiktok_sessioned_dom_hydration_profile_comments_payload_v0.json`.
+
+Current measured updates:
+
+- Profile/listing grid: sessioned `@tiktok` route stayed clean through bounded
+  scroll, exposed `webapp.user-detail`, 95 `user-post-item` / `video-views`
+  nodes, and 94 unique video anchors.
+- Video detail: pinned fixture `7642770753292635422` stayed clean and exposed
+  `webapp.video-detail` with exact video `createTime`, raw stats, author, music,
+  and mention metadata.
+- Comments: the comments panel opened cleanly and exposed 20 visible top-level
+  comment DOM rows, but one bounded comment-panel scroll did not expand the DOM
+  sample.
+- Packet boundary: `/api/comment/list` response bodies were not captured through
+  the Chrome surface, so sessioned `cid`, `uid`, exact comment `create_time`,
+  cursor, and `has_more` remain unproven.
+
+Updated next move: `PINNED_RESPONSE_CAPTURE_NEXT`. More DOM probing is now lower
+value than a pinned harness run that observes the page-owned `/api/comment/list`
+response body through `fetch_browser_page_observation_capture` plus the post-load
+comments action. Only after that packet field proof should the lane run a
+5-video ceiling rung.
+
 ## Non-Claims
 
 - Not TikTok validation, readiness, production scale, or reliable detection

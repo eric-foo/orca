@@ -8,7 +8,7 @@ use_when:
   - Setting up or running authenticated TikTok capture after the owner pivot to sessioned.
   - Measuring the per-account detection ceiling before any scale run.
 authority_boundary: retrieval_only
-status: plan + partial N=1 sessioned receipt; full packet-response contract and per-account ceiling still UNMEASURED. Execution remains gated (human login + per-operation network approval).
+status: plan + expanded partial sessioned DOM/hydration receipts; full packet-response contract and per-account ceiling still UNMEASURED. Execution remains gated (human login + per-operation network approval).
 derived_from:
   - orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_capture_lane_spec_v0.md   # C1–C8' invariants
   - orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_first_slice_probe_recon_v0.md   # what's reachable + detection addendum
@@ -32,10 +32,17 @@ Two outputs from one runbook:
 `docs/workflows/tiktok_sessioned_warm_probe_receipt_v0.md` records a 2026-06-30
 N=1 headed sessioned probe on the pinned first-slice fixture. The sessioned route
 loaded without visible login/challenge signals, parsed the embedded video-detail
-blob, and rendered visible comment DOM after a comments-control click. It did
-not capture `/api/comment/list` response bodies, so the exact comment packet
-contract (`cid`, `uid`, exact `create_time`, cursor, `has_more`) and the
-per-account ceiling remain unmeasured.
+blob, and rendered visible comment DOM after a comments-control click.
+
+`docs/workflows/tiktok_sessioned_dom_hydration_profile_comments_receipt_v0.md`
+extends that DOM/hydration evidence in the same lane: one Chrome TikTok tab,
+public content only, no session-secret reads, 94 `@tiktok` profile-grid anchors
+after bounded scroll, exact video-detail hydration for the pinned fixture, and
+20 visible top-level comment DOM rows.
+
+Neither receipt captured `/api/comment/list` response bodies, so the exact
+comment packet contract (`cid`, `uid`, exact `create_time`, cursor, `has_more`)
+and the per-account ceiling remain unmeasured.
 
 ## Pre-conditions (all required before any capture)
 

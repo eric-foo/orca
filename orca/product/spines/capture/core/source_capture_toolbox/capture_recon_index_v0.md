@@ -164,6 +164,18 @@ needs deeper snowball. Production at-scale + the discovery-read posture remain o
 `ig_creator_discovery_suggested_accounts_recon_v0.md` is the finding;
 `ig_creator_discovery_spec_v0.md` is the capability spec.
 
+**TikTok sessioned DOM/hydration update (2026-06-30).** A later same-lane
+receipt, `docs/workflows/tiktok_sessioned_dom_hydration_profile_comments_receipt_v0.md`,
+extends the partial TikTok state: one sessioned Chrome TikTok tab, no duplicate
+TikTok tabs, public content only, no session-secret reads/writes, profile
+hydration + stable DOM selectors, 95 `user-post-item` / `video-views` nodes, 94
+unique profile-grid video anchors, pinned-video `webapp.video-detail` hydration,
+and 20 visible top-level comment DOM rows without visible login/slider/verify
+markers. It still does **not** capture `/api/comment/list` response bodies, so
+sessioned packet fields (`cid`, `uid`, exact comment `create_time`, cursor,
+`has_more`), exact grid-view normalization, per-account ceiling, transcript/ASR,
+and durable media remain unproven.
+
 ## Coverage map
 
 - **Well-covered:** forums/threads (Reddit ×4, WSO), pricing (M&I, Teal, OpenAI-lane), archive/history (Daimler, Unity), docs-PDF body (Daimler — the strongest anti-bot escalation case), browser runner (CloakBrowser), reviews (ClickUp + Sephora-pending).
