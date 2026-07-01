@@ -43,7 +43,11 @@ def build_tiktok_batch_coverage_from_payload(
 
     _validate_batch_payload(payload)
     videos = [_as_mapping(video) for video in _as_list(payload.get("videos"))]
-    rows = [_coverage_row(video) for video in videos if video]
+    rows = [
+        _coverage_row(video, raw_video_index=raw_video_index)
+        for raw_video_index, video in enumerate(videos)
+        if video
+    ]
     batch_summary = _batch_summary(payload.get("batch_summary"), rows)
     rollup = _coverage_rollup(rows, batch_summary)
     coverage: dict[str, Any] = {
@@ -144,7 +148,7 @@ def _validate_batch_payload(payload: Mapping[str, Any]) -> None:
     assert_no_sensitive_tiktok_material(payload)
 
 
-def _coverage_row(video: Mapping[str, Any]) -> dict[str, Any]:
+def _coverage_row(video: Mapping[str, Any], *, raw_video_index: int) -> dict[str, Any]:
     comments = _as_mapping(video.get("comments"))
     subtitles = _as_mapping(video.get("subtitles"))
     source_text = _as_mapping(video.get("source_text"))
@@ -153,6 +157,7 @@ def _coverage_row(video: Mapping[str, Any]) -> dict[str, Any]:
     desc = _first_str(source_text.get("desc")) or ""
     row: dict[str, Any] = {
         "row_kind": "tiktok_batch_video_coverage",
+        "raw_video_index": raw_video_index,
         "source_index": _first_int(video.get("source_index")),
         "video_id": _first_str(video.get("video_id")),
         "video_url": _first_str(video.get("video_url")),

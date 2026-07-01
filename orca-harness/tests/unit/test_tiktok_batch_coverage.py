@@ -45,6 +45,7 @@ def test_tiktok_batch_coverage_from_packet_directory_excludes_raw_text(tmp_path:
     assert coverage["loss_ledger"]["omitted_subtitle_cue_text_row_count"] == 2
 
     first = coverage["video_rows"][0]
+    assert first["raw_video_index"] == 0
     assert first["comments"]["captured_comment_count"] == 1
     assert first["comments"]["intent_term_counts"]["need"] == 1
     assert first["subtitles"]["subtitle_sources"] == ["ASR"]

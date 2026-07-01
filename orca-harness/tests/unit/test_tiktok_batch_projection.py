@@ -9,7 +9,10 @@ import pytest
 from cleaning.projection import cleaning_input_handles_from_projection_rows
 from data_lake.root import DataLakeRoot
 from runners.run_tiktok_batch_projection import main as tiktok_projection_main
-from source_capture.tiktok.batch_coverage import build_tiktok_batch_coverage_from_packet_directory
+from source_capture.tiktok.batch_coverage import (
+    build_tiktok_batch_coverage_from_packet_directory,
+    build_tiktok_batch_coverage_from_payload,
+)
 from source_capture.tiktok.batch_packet import (
     TIKTOK_BATCH_CAPTURE_JSON_NAME,
     TIKTOK_BATCH_CAPTURE_SURFACE,
@@ -53,6 +56,7 @@ def test_tiktok_batch_projection_from_packet_directory_anchors_rows_and_excludes
     assert first.raw_anchor.anchor_kind == "json_pointer"
     assert first.raw_anchor.json_pointer == "/videos/0"
     assert first.raw_anchor.relative_packet_path.endswith(TIKTOK_BATCH_CAPTURE_JSON_NAME)
+    assert first.raw_video_index == 0
     assert first.captured_comment_count == 1
     assert first.comment_envelope_total == 10
     assert first.comment_intent_term_counts["need"] == 1
@@ -71,6 +75,46 @@ def test_tiktok_batch_projection_from_packet_directory_anchors_rows_and_excludes
     assert "msToken" not in projection_text
     assert "X-Bogus" not in projection_text
     assert "tiktokcdn" not in projection_text
+
+
+
+def test_tiktok_batch_projection_uses_raw_video_index_when_coverage_rows_have_gap(
+    tmp_path: Path,
+) -> None:
+    packet_dir = _write_fixture_packet(tmp_path)
+    payload_path = next(packet_dir.rglob(f"*{TIKTOK_BATCH_CAPTURE_JSON_NAME}"))
+    payload = json.loads(payload_path.read_text(encoding="utf-8"))
+    payload["videos"].insert(1, {})
+
+    coverage = build_tiktok_batch_coverage_from_payload(
+        payload,
+        packet_id="packet_with_gap",
+        raw_ref={
+            "packet_id": "packet_with_gap",
+            "file_id": "file_01",
+            "relative_packet_path": "raw/01_tiktok_batch_capture.json",
+            "sha256": "a" * 64,
+            "hash_basis": "raw_stored_bytes",
+        },
+    )
+
+    assert [row["raw_video_index"] for row in coverage["video_rows"]] == [0, 2]
+    projection = build_tiktok_batch_projection_from_coverage(coverage)
+
+    assert [row.raw_anchor.json_pointer for row in projection.rows] == ["/videos/0", "/videos/2"]
+    assert [row.raw_ref.slice_id for row in projection.rows] == ["videos/0", "videos/2"]
+    assert projection.loss_ledger.structure_preserved is False
+    assert "raw_video_index_gap_or_reorder" in projection.residuals
+
+
+def test_tiktok_batch_projection_rejects_coverage_without_raw_video_index(
+    tmp_path: Path,
+) -> None:
+    coverage = build_tiktok_batch_coverage_from_packet_directory(_write_fixture_packet(tmp_path))
+    del coverage["video_rows"][0]["raw_video_index"]
+
+    with pytest.raises(ValueError, match="raw_video_index"):
+        build_tiktok_batch_projection_from_coverage(coverage)
 
 
 def test_tiktok_batch_projection_rejects_coverage_without_raw_ref(tmp_path: Path) -> None:

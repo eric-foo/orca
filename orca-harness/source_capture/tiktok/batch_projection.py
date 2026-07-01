@@ -63,6 +63,7 @@ class TikTokBatchProjectionRow(StrictModel):
     creator_handle: str | None = None
     video_id: str | None = None
     video_url: str | None = None
+    raw_video_index: int
     source_index: int | None = None
     status: str | None = None
     create_time_utc: str | None = None
@@ -156,21 +157,30 @@ def build_tiktok_batch_projection_from_coverage(
     packet_id = _required_str(coverage.get("packet_id"), "packet_id")
     raw_ref = _raw_ref_fields(coverage.get("raw_ref"), expected_packet_id=packet_id)
     rows_input = [_as_mapping(item) for item in _as_list(coverage.get("video_rows"))]
-    rows = [
-        _project_video_row(
-            row=row,
-            row_index=row_index,
-            packet_id=packet_id,
-            creator_handle=_first_str(coverage.get("creator_handle")),
-            raw_ref=raw_ref,
+    raw_video_indexes: list[int] = []
+    rows: list[TikTokBatchProjectionRow] = []
+    for row_index, row in enumerate(rows_input):
+        if not row:
+            continue
+        raw_video_index = _required_nonnegative_int(
+            row.get("raw_video_index"), f"video_rows[{row_index}].raw_video_index"
         )
-        for row_index, row in enumerate(rows_input)
-        if row
-    ]
-    rollup = _as_mapping(coverage.get("coverage_rollup"))
+        raw_video_indexes.append(raw_video_index)
+        rows.append(
+            _project_video_row(
+                row=row,
+                raw_video_index=raw_video_index,
+                packet_id=packet_id,
+                creator_handle=_first_str(coverage.get("creator_handle")),
+                raw_ref=raw_ref,
+            )
+        )
     coverage_loss = _as_mapping(coverage.get("loss_ledger"))
     row_residual_counts = Counter(residual for row in rows for residual in row.residuals)
+    structure_preserved = _raw_video_index_sequence_preserved(raw_video_indexes)
     residuals = sorted(row_residual_counts)
+    if not structure_preserved:
+        residuals.append("raw_video_index_gap_or_reorder")
     projection = TikTokBatchProjectionPacket(
         packet_id=packet_id,
         creator_handle=_first_str(coverage.get("creator_handle")),
@@ -179,7 +189,7 @@ def build_tiktok_batch_projection_from_coverage(
         rows=rows,
         loss_ledger=TikTokBatchProjectionLossLedger(
             preserved_video_rows=len(rows),
-            structure_preserved=_first_int(rollup.get("video_count"), len(rows)) == len(rows),
+            structure_preserved=structure_preserved,
             omitted_comment_text_row_count=_first_int(
                 coverage_loss.get("omitted_comment_text_row_count"), 0
             )
@@ -259,7 +269,7 @@ def _validate_coverage(coverage: Mapping[str, Any]) -> None:
 def _project_video_row(
     *,
     row: Mapping[str, Any],
-    row_index: int,
+    raw_video_index: int,
     packet_id: str,
     creator_handle: str | None,
     raw_ref: Mapping[str, str],
@@ -268,7 +278,7 @@ def _project_video_row(
     subtitles = _as_mapping(row.get("subtitles"))
     source_text = _as_mapping(row.get("source_text_signals"))
     profile_receipt = _as_mapping(row.get("profile_list_source_receipt"))
-    slice_id = f"videos/{row_index}"
+    slice_id = f"videos/{raw_video_index}"
     return TikTokBatchProjectionRow(
         row_id=f"{packet_id}:{slice_id}",
         raw_ref=TikTokBatchProjectionRawRef(packet_id=packet_id, slice_id=slice_id),
@@ -277,11 +287,12 @@ def _project_video_row(
             relative_packet_path=raw_ref["relative_packet_path"],
             sha256=raw_ref["sha256"],
             hash_basis=raw_ref["hash_basis"],
-            json_pointer=f"/videos/{row_index}",
+            json_pointer=f"/videos/{raw_video_index}",
         ),
         creator_handle=creator_handle,
         video_id=_first_str(row.get("video_id")),
         video_url=_first_str(row.get("video_url")),
+        raw_video_index=raw_video_index,
         source_index=_first_int(row.get("source_index")),
         status=_first_str(row.get("status")),
         create_time_utc=_first_str(row.get("create_time_utc")),
@@ -337,6 +348,18 @@ def _raw_ref_fields(value: Any, *, expected_packet_id: str) -> dict[str, str]:
         "sha256": _required_str(raw_ref.get("sha256"), "raw_ref.sha256"),
         "hash_basis": _required_str(raw_ref.get("hash_basis"), "raw_ref.hash_basis"),
     }
+
+
+
+def _raw_video_index_sequence_preserved(raw_video_indexes: list[int]) -> bool:
+    return raw_video_indexes == list(range(len(raw_video_indexes)))
+
+
+def _required_nonnegative_int(value: Any, label: str) -> int:
+    parsed = _first_int(value)
+    if parsed is None or parsed < 0:
+        raise ValueError(f"TikTok batch projection requires non-negative {label}")
+    return parsed
 
 
 def _as_mapping(value: Any) -> Mapping[str, Any]:
