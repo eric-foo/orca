@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import ast
 import re
+import subprocess
 from collections import Counter
 from dataclasses import dataclass
 from functools import cache
@@ -86,8 +87,13 @@ NON_RAW_LAKE_TOUCHPOINT_CALLS = {
     "append_record",
     "append_record_set",
     "append_silver_record",
+    "catalog_coverage_census",
+    "inspect_catalog",
+    "is_record_set_complete",
+    "lane_dir",
     "load_attachment_record_body",
     "rebuild_catalog",
+    "record_path",
     "source_surface_catalog_rows",
 }
 
@@ -98,6 +104,7 @@ EXPECTED_NON_RAW_LAKE_TOUCHPOINTS = Counter(
             "capture_spine/creator_profile_current/silver_metric_producer.py",
             "source_surface_catalog_rows",
         ): 1,
+        ("capture_spine/creator_profile_current/silver_metric_reader.py", "lane_dir"): 3,
         (
             "capture_spine/creator_profile_current/youtube_silver_metric_producer.py",
             "append_silver_record",
@@ -113,22 +120,39 @@ EXPECTED_NON_RAW_LAKE_TOUCHPOINTS = Counter(
         ("cleaning/parfumo_lake.py", "append_record"): 1,
         ("cleaning/parfumo_lake.py", "append_silver_record"): 1,
         ("cleaning/transcript_product_lake.py", "append_record_set"): 1,
+        ("data_lake/catalog.py", "inspect_catalog"): 2,
         ("data_lake/silver_record.py", "append_record"): 1,
         ("ecr/lake.py", "append_record_set"): 1,
+        ("runners/run_capture_ecr_cleaning_smoke.py", "lane_dir"): 1,
+        ("runners/run_cleaning_spine_periodic_audit.py", "record_path"): 1,
+        ("runners/run_data_lake_catalog.py", "catalog_coverage_census"): 1,
+        ("runners/run_data_lake_catalog.py", "inspect_catalog"): 1,
         ("runners/run_data_lake_catalog.py", "rebuild_catalog"): 1,
+        ("runners/run_ig_reels_lane_orchestrator.py", "is_record_set_complete"): 1,
+        ("runners/run_ig_reels_product_extract.py", "is_record_set_complete"): 3,
+        ("runners/run_source_capture_ig_reels_deep_capture.py", "is_record_set_complete"): 1,
+        ("runners/run_transcript_product_extract.py", "is_record_set_complete"): 1,
+        ("runners/run_transcript_product_extract.py", "lane_dir"): 1,
+        ("runners/run_transcript_product_extract.py", "record_path"): 1,
         ("signal_content/lake.py", "append_record"): 1,
         ("source_capture/basenotes_projection.py", "append_record"): 1,
         ("source_capture/fragrance_review_lake.py", "append_record"): 1,
         ("source_capture/fragrantica_projection.py", "append_record"): 1,
         ("source_capture/ig_projection.py", "append_record"): 1,
+        ("source_capture/ig_reels_behavioral_lake.py", "is_record_set_complete"): 2,
+        ("source_capture/ig_reels_behavioral_lake.py", "lane_dir"): 1,
+        ("source_capture/ig_reels_behavioral_lake.py", "record_path"): 1,
         ("source_capture/ig_reels_deep_capture_lake.py", "append_record_set"): 1,
         ("source_capture/ig_reels_grid_projection.py", "append_record"): 1,
         ("source_capture/ig_reels_grid_projection.py", "load_attachment_record_body"): 1,
+        ("source_capture/ig_reels_grid_projection.py", "record_path"): 1,
         ("source_capture/ig_reels_grid_projection.py", "source_surface_catalog_rows"): 1,
         ("source_capture/parfumo_projection.py", "append_record"): 1,
         ("source_capture/retail_pdp_projection.py", "append_record"): 1,
         ("source_capture/transcript/asr_packet.py", "append_record_set"): 1,
         ("source_capture/transcript/ig_reels_audio_packet.py", "append_record"): 1,
+        ("youtube_capture/behavioral_projection.py", "is_record_set_complete"): 1,
+        ("youtube_capture/behavioral_projection.py", "lane_dir"): 1,
     }
 )
 
@@ -327,13 +351,31 @@ def _bronze_writer_runners() -> frozenset[str]:
     return frozenset(_packet_producers()).union(BRONZE_PACKET_ORCHESTRATORS)
 
 
-def _non_raw_lake_touchpoints() -> Counter[tuple[str, str]]:
-    """Current non-raw lake write/read touchpoints that must be classified before GT forks."""
-    touchpoints: Counter[tuple[str, str]] = Counter()
-    for path in sorted(_HARNESS_ROOT.rglob("*.py")):
+@cache
+def _tracked_harness_python_files() -> tuple[Path, ...]:
+    result = subprocess.run(
+        ["git", "-C", str(_HARNESS_ROOT.parent), "ls-files", "--", "orca-harness"],
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    paths: list[Path] = []
+    for line in result.stdout.splitlines():
+        path = _HARNESS_ROOT.parent / line
+        if path.suffix != ".py":
+            continue
         relative_path = path.relative_to(_HARNESS_ROOT).as_posix()
         if relative_path.startswith("tests/"):
             continue
+        paths.append(path)
+    return tuple(sorted(paths))
+
+
+def _non_raw_lake_touchpoints() -> Counter[tuple[str, str]]:
+    """Current non-raw lake write/read touchpoints that must be classified before GT forks."""
+    touchpoints: Counter[tuple[str, str]] = Counter()
+    for path in _tracked_harness_python_files():
+        relative_path = path.relative_to(_HARNESS_ROOT).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if not isinstance(node, ast.Call):
@@ -394,6 +436,15 @@ def test_non_raw_lake_touchpoint_inventory_is_explicit() -> None:
         f"added={dict(sorted(added.items()))}\n"
         f"removed={dict(sorted(removed.items()))}"
     )
+
+def test_non_raw_lake_touchpoint_inventory_reads_tracked_source_only() -> None:
+    relative_paths = {
+        path.relative_to(_HARNESS_ROOT).as_posix() for path in _tracked_harness_python_files()
+    }
+
+    assert "data_lake/root.py" in relative_paths
+    assert not any(path.startswith("tests/") for path in relative_paths)
+    assert not any(path.startswith("_test_runs/") for path in relative_paths)
 
 def test_detector_distinguishes_packet_output_from_summary_output_root() -> None:
     tree = ast.parse(
