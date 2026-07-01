@@ -66,7 +66,6 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.exit(status=2, message=f"tiktok batch coverage failed: {exc}\n")
     except Exception as exc:  # noqa: BLE001 - surface packet/lake/read failures visibly
         parser.exit(status=3, message=f"tiktok batch coverage failed: {type(exc).__name__}: {exc}\n")
-    return 1
 
 
 if __name__ == "__main__":

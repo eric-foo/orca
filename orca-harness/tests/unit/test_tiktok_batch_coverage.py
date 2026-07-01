@@ -77,7 +77,13 @@ def test_tiktok_batch_coverage_cli_reads_data_lake_packet_id(tmp_path: Path, cap
     packet_id = Path(message).name
     output = tmp_path / "coverage.json"
 
-    monkeypatch.setattr(DataLakeRoot, "resolve", classmethod(lambda cls, explicit=None: root))
+    resolve_calls: list[object] = []
+
+    def fake_resolve(cls, explicit=None):
+        resolve_calls.append(explicit)
+        return root
+
+    monkeypatch.setattr(DataLakeRoot, "resolve", classmethod(fake_resolve))
 
 
     code = tiktok_coverage_main(
@@ -99,6 +105,7 @@ def test_tiktok_batch_coverage_cli_reads_data_lake_packet_id(tmp_path: Path, cap
     assert coverage["raw_ref"]["packet_id"] == packet_id
     assert coverage["coverage_rollup"]["video_count"] == 2
     assert coverage["video_rows"][1]["subtitles"]["posture"] == "no_subtitleInfos_present"
+    assert resolve_calls == [str(root.path)]
 
 
 def test_tiktok_batch_coverage_cli_prints_stdout_without_raw_text(tmp_path: Path, capsys) -> None:
@@ -129,16 +136,12 @@ def test_tiktok_batch_coverage_rejects_non_tiktok_payload() -> None:
         )
 
 
-def test_tiktok_batch_coverage_runner_has_no_hidden_network_browser_or_proxy_imports() -> None:
-    runner_path = Path(__file__).resolve().parents[2] / "runners" / "run_tiktok_batch_coverage.py"
-    tree = ast.parse(runner_path.read_text(encoding="utf-8"))
-    imported_modules: set[str] = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            imported_modules.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom) and node.module:
-            imported_modules.add(node.module)
-
+def test_tiktok_batch_coverage_has_no_hidden_network_browser_or_proxy_imports() -> None:
+    harness_root = Path(__file__).resolve().parents[2]
+    checked_paths = [
+        harness_root / "runners" / "run_tiktok_batch_coverage.py",
+        harness_root / "source_capture" / "tiktok" / "batch_coverage.py",
+    ]
     forbidden = {
         "aiohttp",
         "anthropic",
@@ -156,10 +159,21 @@ def test_tiktok_batch_coverage_runner_has_no_hidden_network_browser_or_proxy_imp
         "source_capture.proxy_profiles",
         "webbrowser",
     }
-    bad_imports = sorted(
-        module
-        for module in imported_modules
-        for forbidden_module in forbidden
-        if module == forbidden_module or module.startswith(f"{forbidden_module}.")
-    )
-    assert bad_imports == []
+    bad_imports_by_path: dict[str, list[str]] = {}
+    for path in checked_paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        imported_modules: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_modules.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_modules.add(node.module)
+        bad_imports = sorted(
+            module
+            for module in imported_modules
+            for forbidden_module in forbidden
+            if module == forbidden_module or module.startswith(f"{forbidden_module}.")
+        )
+        if bad_imports:
+            bad_imports_by_path[path.name] = bad_imports
+    assert bad_imports_by_path == {}
