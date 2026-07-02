@@ -1,6 +1,17 @@
 # Adversarial Code Review — Source Capture `packet_assembly` (STEP-02 http reference port)
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Adversarial code review prompt
+scope: Prompt for adversarial code review of Source Capture packet assembly STEP-02.
+use_when:
+  - Commissioning or auditing the Source Capture packet assembly STEP-02 review.
+  - Finding the prompt for packet assembly HTTP reference-port review.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Review prompt
 review_lane: adversarial code review (read-only; reviewer does not patch)
 output_mode: review-report

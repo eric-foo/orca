@@ -1,6 +1,17 @@
 # Cross-Family Adversarial Re-Review (Patch Recheck) — STEP-03 Credential Store
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Cross-family re-review prompt
+scope: Prompt for STEP-03 credential-store post-patch cross-family re-review.
+use_when:
+  - Running or auditing the STEP-03 credential-store re-review prompt.
+  - Finding the prompt that checks prior STEP-03 finding closure.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Cross-family adversarial patch-recheck prompt (bounded rerun)
 review_lane: independent adversarial re-check (DIFFERENT model family from the author, which is Claude; read-only; reviewer does NOT patch)
 prior_review: the first cross-family pass returned blocking-issues (4 findings). This recheck verifies the patches and scans only the touched scope.

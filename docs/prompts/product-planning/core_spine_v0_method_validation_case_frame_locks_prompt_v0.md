@@ -1,5 +1,16 @@
 # Core Spine v0 Method Validation Case-Frame Locks Prompt
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Product planning prompt
+scope: Prompt for Core Spine v0 method-validation case-frame locks.
+use_when:
+  - Running or auditing the case-frame locks prompt.
+  - Finding the prompt that frames method-validation case locks.
+authority_boundary: retrieval_only
+```
+
+
 - Status: DRAFT_PROMPT
 - Prompt family: Product planning
 - Output mode: file-write

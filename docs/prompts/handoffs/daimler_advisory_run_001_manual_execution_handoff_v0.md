@@ -1,5 +1,16 @@
 # Handoff Packet
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Handoff prompt
+scope: Handoff prompt for Daimler advisory run 001 manual execution.
+use_when:
+  - Executing or auditing the Daimler advisory run 001 handoff.
+  - Reconstructing advisory-run manual execution context.
+authority_boundary: retrieval_only
+```
+
+
 ## Load Contract
 
 - packet_version: v0

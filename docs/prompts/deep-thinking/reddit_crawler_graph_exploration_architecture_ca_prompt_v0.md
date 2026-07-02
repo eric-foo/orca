@@ -11,7 +11,7 @@ use_when:
     exploration.
   - Asking the receiving CA to derive constraints from source rather than from a
     pre-supplied constraint list.
-authority_boundary: prompt_only
+authority_boundary: retrieval_only
 output_mode: paste-ready-chat
 ```
 

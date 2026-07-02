@@ -1,5 +1,16 @@
 # Core Spine v0 Method Validation Replay Packet Prompt
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Product planning prompt
+scope: Prompt for Core Spine v0 method-validation replay packet preparation.
+use_when:
+  - Running or auditing the method-validation replay packet prompt.
+  - Finding the prompt that reconstructs accepted frame basis for replay.
+authority_boundary: retrieval_only
+```
+
+
 - Status: DRAFT_PROMPT
 - Prompt family: Product planning / method validation replay
 - Output mode: file-write

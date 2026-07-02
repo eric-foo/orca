@@ -1,6 +1,17 @@
 # Cross-Family Adversarial Code Review — STEP-03 Reddit Credential Store + Shared Credential Core
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Cross-family adversarial code review prompt
+scope: Prompt for STEP-03 credential-store cross-family adversarial code review.
+use_when:
+  - Commissioning or auditing the STEP-03 credential-store review.
+  - Finding the prompt for credential-store and shared credential core review.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Cross-family adversarial code-review prompt
 review_lane: independent adversarial check (DIFFERENT model family from the author, which is Claude; read-only; reviewer does NOT patch)
 decisive_criterion: security correctness + behavior-preservation of the refactor

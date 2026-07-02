@@ -5,7 +5,7 @@ scope: Delegated adversarial code review-and-patch prompt for the Reddit old-HTT
 use_when:
   - Reviewing the bounded cadence implementation added to the old Reddit Direct HTTP batch runner.
   - Checking that cadence receipts, tests, and operator docs preserve hard caps and visible failures.
-authority_boundary: prompt_only
+authority_boundary: retrieval_only
 ---
 
 # Reddit Batch Cadence Delegated Adversarial Code Review-And-Patch Prompt v0

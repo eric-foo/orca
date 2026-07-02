@@ -1,5 +1,16 @@
 # Core Spine v0 Method Validation Case-Hunting Prompt
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Deep-thinking prompt
+scope: Prompt for Core Spine v0 method-validation case hunting.
+use_when:
+  - Running or auditing the Core Spine method-validation case-hunting prompt.
+  - Finding the prompt that frames method-validation case discovery.
+authority_boundary: retrieval_only
+```
+
+
 - Status: DRAFT_PROMPT
 - Prompt family: Deep reasoning
 - Output mode: chat-only

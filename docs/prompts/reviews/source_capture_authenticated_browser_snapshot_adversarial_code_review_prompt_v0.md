@@ -6,7 +6,7 @@ artifact_role: Review prompt
 scope: Read-only adversarial code review prompt for Authenticated Browser Snapshot v0.
 use_when:
   - Reviewing the uncommitted Authenticated Browser Snapshot v0 implementation before commit.
-authority_boundary: prompt_only
+authority_boundary: retrieval_only
 output_mode: review-report
 required_output_path: docs/review-outputs/source_capture_authenticated_browser_snapshot_adversarial_code_review_v0.md
 ```

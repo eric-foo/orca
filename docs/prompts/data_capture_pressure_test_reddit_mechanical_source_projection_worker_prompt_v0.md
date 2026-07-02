@@ -1,5 +1,16 @@
 # Reddit Mechanical Source Projection Worker Prompt v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Data capture worker prompt
+scope: Prompt for Reddit mechanical source projection worker execution in a data-capture pressure test.
+use_when:
+  - Running or auditing the Reddit mechanical source projection worker prompt.
+  - Reconstructing data-capture pressure-test prompt routing.
+authority_boundary: retrieval_only
+```
+
+
 Use this prompt for operator-supplied Reddit `.json` thread captures in the ORCA Data Capture Spine pressure-test Slot 3 B1 lane.
 
 Recommended model: `gpt-5.4` with `reasoning_effort=medium`.

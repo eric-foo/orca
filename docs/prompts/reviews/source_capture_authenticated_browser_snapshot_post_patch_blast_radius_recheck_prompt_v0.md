@@ -7,7 +7,7 @@ scope: Bounded adversarial code-review recheck for the Authenticated Browser Sna
 use_when:
   - Verifying closure of M-01 and M-02 from the prior authenticated browser snapshot adversarial code review.
   - Deciding whether the patched Authenticated Browser Snapshot v0 implementation is safe to commit.
-authority_boundary: prompt_only
+authority_boundary: retrieval_only
 ```
 
 ## Objective
