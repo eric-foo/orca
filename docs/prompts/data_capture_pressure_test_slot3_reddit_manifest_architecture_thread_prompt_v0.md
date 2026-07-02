@@ -1,5 +1,16 @@
 # Slot 3 Reddit Manifest Architecture Thread Prompt v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Architecture prompt
+scope: Prompt for Slot 3 Reddit manifest architecture thread setup during data-capture pressure testing.
+use_when:
+  - Launching or auditing the Slot 3 Reddit manifest architecture prompt.
+  - Reconstructing data-capture pressure-test architecture prompt routing.
+authority_boundary: retrieval_only
+```
+
+
 Use this prompt to start a new Codex thread for framing the Reddit B1 manifest architecture and selection strategy.
 
 ```text

@@ -1,5 +1,16 @@
 # Delegated Adversarial Code Review-And-Patch Prompt: Reddit Batch Quality Summary
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Delegated adversarial code review prompt
+scope: Prompt for delegated adversarial code review and patch of Reddit batch quality summary.
+use_when:
+  - Commissioning or auditing the Reddit batch quality summary delegated review prompt.
+  - Reconstructing Reddit batch quality review-and-patch context.
+authority_boundary: retrieval_only
+```
+
+
 ## Commission
 
 You are the de-correlated controller for a bounded Orca delegated review-and-patch pass.

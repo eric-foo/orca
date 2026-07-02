@@ -1,6 +1,17 @@
 # Cross-Family Adversarial Check — JSG-01 ECR Receipt: Bind vs Fork
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Cross-family review prompt
+scope: Prompt for cross-family adversarial review of the JSG-01 ECR bind-versus-fork receipt.
+use_when:
+  - Commissioning or auditing the JSG-01 ECR bind-versus-fork review.
+  - Finding the prompt that reviews ECR receipt binding versus forking.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Cross-family review prompt
 review_lane: independent adversarial check (different model family; read-only; reviewer does not patch)
 decisive_criterion: long-term structural integrity

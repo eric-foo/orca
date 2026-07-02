@@ -1,6 +1,17 @@
 # Cross-Family Adversarial Re-Review (Patch Recheck) — STEP-04 Reddit API Adapter
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Cross-family re-review prompt
+scope: Prompt for STEP-04 Reddit API adapter post-patch cross-family re-review.
+use_when:
+  - Running or auditing the STEP-04 Reddit API adapter re-review prompt.
+  - Finding the prompt that checks prior STEP-04 patch closure.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Cross-family adversarial patch-recheck prompt (bounded rerun)
 review_lane: independent adversarial re-check (DIFFERENT model family from the author, which is Claude; read-only; reviewer does NOT patch)
 prior_review: the first cross-family pass returned findings; the adapter + tests were patched. This recheck verifies the patches and scans only the touched scope.

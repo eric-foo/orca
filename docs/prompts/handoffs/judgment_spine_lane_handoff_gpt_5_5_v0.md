@@ -1,5 +1,16 @@
 # Judgment Spine Lane — Handoff Prompt (GPT-5.5 reasoning lane)
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Handoff prompt
+scope: Handoff prompt for the Judgment Spine reasoning lane.
+use_when:
+  - Starting or auditing the Judgment Spine lane handoff.
+  - Reconstructing the Judgment Spine prompt context and boundaries.
+authority_boundary: retrieval_only
+```
+
+
 > Paste everything below the line into a fresh GPT-5.5 chat. It is fully self-contained;
 > the lane has no access to the Orca repo, so all state it needs is inlined.
 > Author: Orca judgment-lane orchestrator (Claude). Date: 2026-05-29. Status: v0 handoff.

@@ -1,5 +1,16 @@
 # Direct HTTP No-Proxy Isolation Delegated Adversarial Code Review-And-Patch Prompt v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Delegated adversarial code review prompt
+scope: Prompt for delegated adversarial code review and patch of direct HTTP no-proxy isolation.
+use_when:
+  - Commissioning or auditing the direct HTTP no-proxy delegated review prompt.
+  - Reconstructing source-capture transport isolation review context.
+authority_boundary: retrieval_only
+```
+
+
 ## Commission
 
 You are the de-correlated controller for a bounded adversarial code review-and-patch pass. The author/home model family is OpenAI/Codex. The controller must be a different vendor or family. This is a who-constraint, not a model recommendation.

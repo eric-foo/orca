@@ -1,6 +1,17 @@
 # Cross-Family Adversarial Code Review — STEP-04 Reddit API Adapter
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: Cross-family adversarial code review prompt
+scope: Prompt for STEP-04 Reddit API adapter cross-family adversarial code review.
+use_when:
+  - Commissioning or auditing the STEP-04 Reddit API adapter review.
+  - Finding the prompt for Reddit API adapter review context.
+authority_boundary: retrieval_only
+```
+
+
+```yaml
 artifact_role: Cross-family adversarial code-review prompt
 review_lane: independent adversarial check (DIFFERENT model family from the author, which is Claude; read-only; reviewer does NOT patch)
 decisive_criterion: secret-leakage safety first, then correctness + honest-limitation + contract fit

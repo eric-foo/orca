@@ -1,5 +1,16 @@
 # CloakBrowser Access-Block Packet Delegated Adversarial Code Review-And-Patch Prompt v0
 
+```yaml
+retrieval_header_version: 1
+artifact_role: Delegated adversarial code review prompt
+scope: Prompt for delegated adversarial code review and patch of the CloakBrowser access-block packet.
+use_when:
+  - Commissioning or auditing the CloakBrowser access-block delegated review prompt.
+  - Reconstructing the source-capture access-block review packet.
+authority_boundary: retrieval_only
+```
+
+
 ## Commission
 
 You are the de-correlated controller for a bounded adversarial code review-and-patch pass. The author/home model family is OpenAI/Codex. The controller must be a different vendor or family. This is a who-constraint, not a model recommendation.
