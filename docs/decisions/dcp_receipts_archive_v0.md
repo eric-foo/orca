@@ -2845,3 +2845,54 @@ direction_change_propagation:
     - O2a does not edit the EP-03 guard; O2b does not edit the helper; check_map_links is unchanged
     - mini-god-tier is a capability-target lens, not a validation or readiness claim
 ```
+
+```yaml
+direction_change_propagation:
+  doctrine_changed: >
+    Narrows the proven unattended auto-merge bot with deterministic risk routing:
+    `pr-risk-router.yml` labels PRs as auto-merge eligible, manual-review
+    required, or blocked; `auto-merge.yml` now requires both `agent-automerge`
+    and `risk/auto-merge-eligible` and skips manual/blocked PRs. Higher-risk PRs
+    get a deterministic merge packet, not automated approval. This narrows the
+    earlier label-only unattended path while preserving the non-claim that this
+    is not server-side branch protection.
+  trigger: workflow_authority
+  related_triggers:
+    - lifecycle_boundary
+  controlling_sources_updated:
+    - docs/decisions/dev_workflow_ci_branch_protection_doctrine_v0.md
+    - .github/workflows/auto-merge.yml
+    - .github/workflows/pr-risk-router.yml
+  downstream_surfaces_checked:
+    - AGENTS.md
+    - .agents/workflow-overlay/safety-rules.md
+    - .agents/workflow-overlay/validation-gates.md
+    - docs/workflows/orca_repo_map_v0.md
+  intentionally_not_updated:
+    - path: AGENTS.md
+      reason: >
+        The behavior kernel and explicit authorization boundaries are unchanged;
+        this is a merge-routing workflow doctrine update, not a new global agent
+        rule.
+    - path: .agents/workflow-overlay/safety-rules.md
+      reason: >
+        The no-unauthorized commit/push/PR/merge rule is unchanged. The workflows
+        define repository automation behavior after explicit PR flow, not blanket
+        agent authority.
+    - path: .agents/workflow-overlay/validation-gates.md
+      reason: >
+        The existing enforcement-placement and non-self-certification rules
+        already cover this shape: deterministic labels are routing/check signal,
+        not validation or approval evidence.
+    - path: docs/workflows/orca_repo_map_v0.md
+      reason: >
+        The current map already indexes `.github/` as GitHub Actions workflows
+        and local operational scripts; no new top-level route is introduced.
+  non_claims:
+    - not server-side branch protection
+    - not native GitHub auto-merge
+    - not validation
+    - not readiness
+    - not review approval
+    - not blanket agent merge authority
+```
