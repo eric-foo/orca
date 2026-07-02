@@ -123,9 +123,42 @@ def test_dispatch_fails_closed_on_unknown_manifest_version() -> None:
         )
 
 
-def test_legacy_manifest_without_version_string_dispatches(tmp_path: Path) -> None:
-    manifest = {"preserved_files": []}
+@pytest.mark.parametrize(
+    "malformed_manifest_version",
+    [
+        "",
+        12,
+        ["source_capture_packet_manifest_v1"],
+        {"version": "source_capture_packet_manifest_v1"},
+    ],
+)
+def test_dispatch_fails_closed_on_malformed_manifest_version(
+    malformed_manifest_version: object,
+) -> None:
+    manifest = {
+        "manifest_version": malformed_manifest_version,
+        "preserved_files": [],
+    }
 
+    with pytest.raises(DataLakeRootError, match="unsupported raw packet manifest_version"):
+        derive_attachment_record_entries(
+            packet_id="0" * 26,
+            raw_path="raw/000/" + "0" * 26,
+            manifest_relpath="raw/000/" + "0" * 26 + "/manifest.json",
+            manifest_sha256="0" * 64,
+            manifest=manifest,
+            bodies={},
+        )
+
+
+@pytest.mark.parametrize(
+    "manifest",
+    [
+        {"preserved_files": []},
+        {"manifest_version": None, "preserved_files": []},
+    ],
+)
+def test_legacy_manifest_without_version_string_dispatches(manifest: dict) -> None:
     entries = derive_attachment_record_entries(
         packet_id="0" * 26,
         raw_path="raw/000/" + "0" * 26,
@@ -136,6 +169,59 @@ def test_legacy_manifest_without_version_string_dispatches(tmp_path: Path) -> No
     )
 
     assert entries == []
+
+
+def test_moved_string_fields_preserve_catalog_trim_semantics() -> None:
+    body = b"{}"
+    manifest = {
+        "manifest_version": "source_capture_packet_manifest_v1",
+        "source_family": " reddit ",
+        "source_surface": " r/EntrySerializer ",
+        "source_locator": {
+            "status": "known",
+            "value": " https://example.invalid/item ",
+        },
+        "source_slices": [{"slice_id": " slice_01 ", "preserved_file_ids": ["file_01"]}],
+        "preserved_files": [
+            {
+                "file_id": "file_01",
+                "relative_packet_path": "raw/body.json",
+                "sha256": "0" * 64,
+                "hash_basis": "raw_stored_bytes",
+                "size_bytes": len(body),
+                "original_path": " body.json ",
+                "payload_schema_version": " schema-v1 ",
+            }
+        ],
+        "access_posture": {
+            "status": "known",
+            "value": " local_file_only ",
+            "reason": " fixture ",
+        },
+    }
+
+    entries = derive_attachment_record_entries(
+        packet_id="0" * 26,
+        raw_path="raw/000/" + "0" * 26,
+        manifest_relpath="raw/000/" + "0" * 26 + "/manifest.json",
+        manifest_sha256="0" * 64,
+        manifest=manifest,
+        bodies={"file_01": body},
+    )
+
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry["source_family"] == "reddit"
+    assert entry["source_surface"] == "r/EntrySerializer"
+    assert entry["source_locator"] == "https://example.invalid/item"
+    assert entry["source_slice_ids"] == ["slice_01"]
+    assert entry["original_path"] == "body.json"
+    assert entry["payload_schema_version"] == "schema-v1"
+    assert entry["posture_summary"]["access_posture"] == {
+        "status": "known",
+        "value": "local_file_only",
+        "reason": "fixture",
+    }
 
 
 def test_missing_required_preserved_field_is_refused(tmp_path: Path) -> None:

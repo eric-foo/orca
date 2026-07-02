@@ -49,16 +49,17 @@ SUPPORTED_ATTACHMENT_RECORD_BODY_REF_KINDS = frozenset({RAW_PACKET_BODY_REF_KIND
 SUPPORTED_ATTACHMENT_RECORD_HASH_BASIS = frozenset({"raw_stored_bytes"})
 
 # Central dispatch registry: raw manifest versions this derivation rule
-# version knows how to derive from. Legacy packets without a manifest_version
-# string dispatch through the same v1 rule (incumbent-compatible). Adding a
-# version here is a deliberate, reviewed act paired with a DERIVATION_RULE_VERSION
-# decision, never a consumer-side fork.
+# version knows how to derive from. Legacy packets with an absent/null
+# manifest_version dispatch through the same v1 rule (incumbent-compatible).
+# Adding a version here is a deliberate, reviewed act paired with a
+# DERIVATION_RULE_VERSION decision, never a consumer-side fork.
 SUPPORTED_RAW_PACKET_MANIFEST_VERSIONS = frozenset({"source_capture_packet_manifest_v1"})
 
 
 def string_or_none(value: object) -> str | None:
-    if isinstance(value, str) and value:
-        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        return stripped or None
     return None
 
 
@@ -121,14 +122,20 @@ def _require_supported_manifest_version(manifest: dict[str, Any]) -> str | None:
     """Centralized version dispatch (ADR Required Output 4). Fails closed on
     an unknown manifest version: sealed packets are never coerced through a
     rule that does not know their format."""
-    manifest_version = string_or_none(manifest.get("manifest_version"))
-    if manifest_version is not None and manifest_version not in SUPPORTED_RAW_PACKET_MANIFEST_VERSIONS:
+    if "manifest_version" not in manifest or manifest.get("manifest_version") is None:
+        return None
+    manifest_version = manifest["manifest_version"]
+    if (
+        not isinstance(manifest_version, str)
+        or not manifest_version
+        or manifest_version not in SUPPORTED_RAW_PACKET_MANIFEST_VERSIONS
+    ):
         allowed_list = ", ".join(sorted(SUPPORTED_RAW_PACKET_MANIFEST_VERSIONS))
         raise DataLakeRootError(
             f"unsupported raw packet manifest_version {manifest_version!r} for "
             f"Attachment Record entry derivation under {DERIVATION_RULE_VERSION}; "
-            f"supported: {{{allowed_list}}} (plus legacy packets without a version "
-            "string). Add a new derivation rule version deliberately in "
+            f"supported: {{{allowed_list}}} (plus legacy packets with absent/null "
+            "manifest_version). Add a new derivation rule version deliberately in "
             "data_lake.attachment_record_entry; do not fork per-version logic in a "
             "consumer, and never rewrite the sealed packet."
         )
