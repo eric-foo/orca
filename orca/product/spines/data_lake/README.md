@@ -19,6 +19,7 @@ use_when:
 authority_boundary: retrieval_only
 open_next:
   - orca/product/spines/data_lake/authority/core_spine_v0_data_lake_bronze_mgt_baseline_declaration_v0.md
+  - orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_lake_owner_explainer_v0.md
   - docs/decisions/orca_data_lake_spine_promotion_binding_v0.md
   - docs/decisions/orca_spine_first_target_structure_binding_v0.md
 stale_if:
@@ -27,6 +28,10 @@ stale_if:
   - The data_lake spine shape or its shared_foundation kind is amended.
   - A later accepted placement decision moves the repo-structure migration planning docs into the spine.
 ```
+
+For a plain-language owner-facing explanation of the Bronze lake (what it is,
+its rules, MGT versus full GT, and the two physicalization gates), read
+`workflows/core_spine_v0_data_lake_bronze_lake_owner_explainer_v0.md`.
 
 ## What this spine is
 
