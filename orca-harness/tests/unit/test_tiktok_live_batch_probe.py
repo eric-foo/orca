@@ -26,6 +26,9 @@ from source_capture.tiktok.blocker_triage import (
     TIKTOK_BLOCKER_CLASS_NO_BLOCKER,
 )
 from source_capture.tiktok.live_batch_probe import (
+    TIKTOK_CHALLENGE_AFTER_CLOSE_DIAGNOSTIC_REASON,
+    TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME,
+    TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_REASON,
     TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON,
     TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME,
     TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME,
@@ -366,6 +369,170 @@ def test_live_probe_caps_admitted_comment_list_responses(tmp_path: Path) -> None
     ] == ["7290", "7291"]
 
 
+
+def test_live_probe_challenge_close_diagnostic_flag_prepends_close_action(
+    tmp_path: Path,
+) -> None:
+    auth_root = _auth_state(tmp_path)
+    engine = _FakeObservationEngine(
+        outcomes=[
+            _success_observation(
+                video_id="7390000000000000001",
+                response=_comment_response(video_id="7390000000000000001"),
+            )
+        ]
+    )
+
+    paths = write_tiktok_live_batch_probe_outputs(
+        creator_handle="funmi",
+        creator_profile_url="https://www.tiktok.com/@funmi",
+        video_urls=["https://www.tiktok.com/@funmi/video/7390000000000000001"],
+        state_label="test-session",
+        session_mode=AuthenticatedSessionMode.FREE_ACCOUNT_CREATED,
+        auth_state_root=auth_root,
+        output_dir=tmp_path / "out",
+        cadence_min_gap_seconds=0,
+        cadence_max_gap_seconds=0,
+        random_seed=1,
+        allow_challenge_close_diagnostic=True,
+        engine=engine,
+        sleep_fn=lambda _seconds: None,
+    )
+
+    cadence = json.loads(paths.cadence_result_json_path.read_text(encoding="utf-8"))
+    pointer_actions = engine.calls[0]["post_load_pointer_actions"]
+    assert [action.action_name for action in pointer_actions] == [
+        TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME,
+        TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME,
+        TIKTOK_OPEN_MORE_LIKE_THIS_POINTER_ACTION_NAME,
+        TIKTOK_REOPEN_COMMENTS_POINTER_ACTION_NAME,
+    ]
+    close_action = pointer_actions[0]
+    assert close_action.page_text_markers == (
+        "drag the slider",
+        "verify to continue",
+        "captcha",
+        "security check",
+    )
+    assert close_action.exact_text_markers == ("x", "×")
+    assert close_action.prefer_top_right is True
+    assert cadence["capture_contract"]["challenge_close_diagnostic_allowed"] is True
+    assert cadence["capture_contract"]["challenge_close_counts_as_success"] is False
+    assert cadence["completed_count"] == 1
+    assert cadence["results"][0]["capture_receipt"]["comment_action"]["action_count"] == 3
+
+
+def test_live_probe_challenge_close_diagnostic_is_not_completion(
+    tmp_path: Path,
+) -> None:
+    auth_root = _auth_state(tmp_path)
+    pointer_sequence = [
+        _pointer_action_receipt(
+            action_name=TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME,
+            wait_ms=2000,
+            page_text_gate_matched=True,
+            selection_strategy="top_right",
+        ),
+        *_pointer_action_sequence_receipt(),
+    ]
+    engine = _FakeObservationEngine(
+        outcomes=[
+            _success_observation(
+                video_id="7390000000000000001",
+                response=_comment_response(video_id="7390000000000000001"),
+                pointer_sequence=pointer_sequence,
+            )
+        ]
+    )
+
+    paths = write_tiktok_live_batch_probe_outputs(
+        creator_handle="funmi",
+        creator_profile_url="https://www.tiktok.com/@funmi",
+        video_urls=["https://www.tiktok.com/@funmi/video/7390000000000000001"],
+        state_label="test-session",
+        session_mode=AuthenticatedSessionMode.FREE_ACCOUNT_CREATED,
+        auth_state_root=auth_root,
+        output_dir=tmp_path / "out",
+        cadence_min_gap_seconds=0,
+        cadence_max_gap_seconds=0,
+        random_seed=1,
+        allow_challenge_close_diagnostic=True,
+        engine=engine,
+        sleep_fn=lambda _seconds: None,
+    )
+
+    cadence = json.loads(paths.cadence_result_json_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(cadence, sort_keys=True)
+    assert cadence["attempted_count"] == 1
+    assert cadence["completed_count"] == 0
+    assert cadence["challenge_count"] == 1
+    assert cadence["results"] == []
+    assert "comment_responses" not in serialized
+    failure = cadence["failures"][0]
+    assert failure["reason"] == TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_REASON
+    triage = failure["blocker_triage"]
+    assert triage["blocker_class"] == "challenge_close_diagnostic"
+    assert triage["action"] == "stop"
+    assert triage["action_taken"] is True
+    assert triage["challenge_close_diagnostic"] == pointer_sequence[0]
+    assert triage["comment_action"]["action_count"] == 3
+    assert triage["matched_comment_response_count"] == 1
+    assert triage["admitted_comment_response_count"] == 1
+
+
+def test_live_probe_challenge_after_close_diagnostic_keeps_challenge_stop(
+    tmp_path: Path,
+) -> None:
+    auth_root = _auth_state(tmp_path)
+    pointer_sequence = [
+        _pointer_action_receipt(
+            action_name=TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME,
+            wait_ms=2000,
+            page_text_gate_matched=True,
+            selection_strategy="top_right",
+        ),
+        *_pointer_action_sequence_receipt(),
+    ]
+    engine = _FakeObservationEngine(
+        outcomes=[
+            _success_observation(
+                video_id="7390000000000000001",
+                response=_comment_response(video_id="7390000000000000001"),
+                pointer_sequence=pointer_sequence,
+                visible_text="Drag the slider.",
+            )
+        ]
+    )
+
+    paths = write_tiktok_live_batch_probe_outputs(
+        creator_handle="funmi",
+        creator_profile_url="https://www.tiktok.com/@funmi",
+        video_urls=["https://www.tiktok.com/@funmi/video/7390000000000000001"],
+        state_label="test-session",
+        session_mode=AuthenticatedSessionMode.FREE_ACCOUNT_CREATED,
+        auth_state_root=auth_root,
+        output_dir=tmp_path / "out",
+        cadence_min_gap_seconds=0,
+        cadence_max_gap_seconds=0,
+        random_seed=1,
+        allow_challenge_close_diagnostic=True,
+        engine=engine,
+        sleep_fn=lambda _seconds: None,
+    )
+
+    cadence = json.loads(paths.cadence_result_json_path.read_text(encoding="utf-8"))
+    assert cadence["attempted_count"] == 1
+    assert cadence["completed_count"] == 0
+    assert cadence["challenge_count"] == 1
+    failure = cadence["failures"][0]
+    assert failure["reason"] == TIKTOK_CHALLENGE_AFTER_CLOSE_DIAGNOSTIC_REASON
+    triage = failure["blocker_triage"]
+    assert triage["reason"] == "platform_challenge_observed"
+    assert triage["matched_marker"] == "drag the slider"
+    assert triage["challenge_close_diagnostic"] == pointer_sequence[0]
+
+
+
 def test_live_probe_stops_on_zero_comment_list_response(tmp_path: Path) -> None:
     auth_root = _auth_state(tmp_path)
     engine = _FakeObservationEngine(
@@ -656,13 +823,15 @@ def _success_observation(
     video_id: str,
     response: BrowserPageResponse | None = None,
     responses: list[BrowserPageResponse] | None = None,
+    pointer_sequence: list[dict[str, object]] | None = None,
+    visible_text: str = "video loaded",
 ) -> BrowserPageObservationSuccess:
-    pointer_sequence = _pointer_action_sequence_receipt()
+    pointer_sequence = pointer_sequence or _pointer_action_sequence_receipt()
     return BrowserPageObservationSuccess(
         requested_url=f"https://www.tiktok.com/@funmi/video/{video_id}",
         final_url=f"https://www.tiktok.com/@funmi/video/{video_id}",
         title="TikTok",
-        visible_text="video loaded",
+        visible_text=visible_text,
         dom_observation={"hydration_json_text": json.dumps(_hydration(video_id))},
         responses=responses if responses is not None else ([response] if response is not None else []),
         metadata={
@@ -695,8 +864,10 @@ def _pointer_action_receipt(
     *,
     action_name: str = TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME,
     wait_ms: int = 2500,
+    page_text_gate_matched: bool | None = None,
+    selection_strategy: str | None = None,
 ) -> dict[str, object]:
-    return {
+    receipt: dict[str, object | None] = {
         "action_name": action_name,
         "candidate_count": 5,
         "matched_count": 1,
@@ -705,7 +876,10 @@ def _pointer_action_receipt(
         "move_steps": 7,
         "wait_ms": wait_ms,
         "target_kind": "button",
+        "page_text_gate_matched": page_text_gate_matched,
+        "selection_strategy": selection_strategy,
     }
+    return {key: value for key, value in receipt.items() if value is not None}
 
 
 def _hydration(video_id: str) -> dict[str, object]:

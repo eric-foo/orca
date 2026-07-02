@@ -30,7 +30,7 @@ open_next:
   - orca-harness/source_capture/tiktok/admission.py
   - orca-harness/runners/run_source_capture_tiktok_live_batch_probe.py
   - orca-harness/runners/run_source_capture_tiktok_batch_packet.py
-branch_or_commit: f58eccc8fff5a81939c9677d8cad8a4ad70bcbb7
+branch_or_commit: codex/tiktok-live-microbatch-gate-repair
 input_hashes:
   AGENTS.md: c28077faf75c83b80800beda7508ae7a6d95a411
   .agents/workflow-overlay/README.md: 57cbc892dcd79d4d57686db465900ad042769174
@@ -42,16 +42,16 @@ input_hashes:
   docs/workflows/tiktok_behavioral_sync_fresh_lane_handoff_v0.md: 0fcda55434efb97791c495e112e7682f9cc1b42d
   docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md: 5a814dad39d79222ea78631e395ff382d4fc7396
   docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md: 8385e43615e76a2503e9f36468dbdcd7c92268a3
-  orca-harness/source_capture/adapters/browser_snapshot.py: 626200271254fbec54185226c9be220c19f80b9a
-  orca-harness/source_capture/tiktok/live_batch_probe.py: dc2989412d8e355453283abaff935a449ddd0af5
+  orca-harness/source_capture/adapters/browser_snapshot.py: 02ff4b9d5fdf0619c0028756af6e1a9f5bc94214
+  orca-harness/source_capture/tiktok/live_batch_probe.py: 53b993069125a5914e61693141b9cf4576164246
   orca-harness/source_capture/tiktok/blocker_triage.py: 19816ad967bc57c53aa750dfc9cf59902e5455cd
   orca-harness/source_capture/tiktok/batch_packet.py: b6758d7615a96804e48714283f1925577c7dc22c
   orca-harness/source_capture/tiktok/admission.py: 45a86b554772a58300b23be077a48b32f8dcd8de
-  orca-harness/runners/run_source_capture_tiktok_live_batch_probe.py: a541072ee177f46892b9f8d697376376383750e6
+  orca-harness/runners/run_source_capture_tiktok_live_batch_probe.py: 9551ced836e3c2699b68bc7356d05b8b8b569093
   orca-harness/runners/run_source_capture_tiktok_batch_packet.py: 856b76df0be96b47040486260b52a427444072d9
 stale_if:
   - PR #583 is reverted or the TikTok blocker-triage/live-probe stop behavior is superseded.
-  - `browser_snapshot.py`, `live_batch_probe.py`, `blocker_triage.py`, `batch_packet.py`, or `admission.py` changes materially.
+  - `browser_snapshot.py`, `live_batch_probe.py`, `blocker_triage.py`, `batch_packet.py`, `admission.py`, or the live runner CLI changes materially.
   - The TikTok behavioral-sync handoff, PR #559 handoff, or Funmi N30 receipt changes materially.
   - The TikTok capture lane spec or sessioned warm-probe plan changes materially.
   - The owner changes live-run account-risk posture, session posture, or no-CAPTCHA-solving policy.
@@ -101,21 +101,30 @@ The prior micro-batch packet version was corrupted for execution: it allowed
 continuation on sanitized staging plus admission alone. Treat the 2026-07-02
 five-creator zero-response run as a diagnostic receipt, not capture success.
 
+Current owner redirect for this lane: one diagnostic retry may add
+`--allow-challenge-close-diagnostic` after the owner observed a closeable slider
+X. This flag is diagnosis-only. If the close action clicks, the run must stop as
+`challenge_close_diagnostic_only` or
+`platform_challenge_observed_after_close_diagnostic`, with `completed_count=0`,
+`challenge_count=1`, no result row, no admission, no expansion, and no success
+claim from post-close observations.
+
 ## Open Decision / Fork
 
 The only live-run fork is whether to proceed past the first creator/video:
 
 - Continue to a 3-5 creator micro-batch only if the first video has
   `challenge_count=0`, no empty/stripped shell, no auth wall, no unresolved
-  blocker stop, `completed_count=1`, and at least one admitted page-owned
-  `/api/comment/list` response.
+  blocker stop, no clicked challenge-close diagnostic receipt, `completed_count=1`,
+  and at least one admitted page-owned `/api/comment/list` response.
 - Stop if comment-list response yield is zero. Record it as
   `comment_list_response_absent` / route-opening diagnosis, not as a completed
   capture row and not as TikTok route failure in general.
 - Stop if the first creator hits a real challenge class: slider/captcha/verify,
   login/auth wall, ban/40x on the authenticated session, empty/stripped shell,
-  missing video-detail hydration, or an unresolved actual dismiss/reload blocker
-  that the triage classifies as stop.
+  missing video-detail hydration, a clicked challenge-close diagnostic receipt,
+  or an unresolved actual dismiss/reload blocker that the triage classifies as
+  stop.
 - Retry once only for transport/infra noise clearly distinguished from TikTok,
   such as extension/proxy chrome-error style failures already called out by the
   TikTok recon/spec. Do not convert repeated infra failures into a TikTok ceiling.
@@ -126,8 +135,9 @@ The only live-run fork is whether to proceed past the first creator/video:
 
 - Do not solve CAPTCHA/slider/verification challenges.
 - Do not click an `X` or `Close` on a visible challenge and report success. The
-  public diagnostic already observed a slider challenge plus a visible `Close`;
-  the lane stopped there.
+  only allowed exception is an explicit owner-authorized diagnostic run using
+  `--allow-challenge-close-diagnostic`; if it clicks, the receipt is a blocker
+  diagnosis only and cannot admit, expand, or count as a completed capture row.
 - Do not use a personal TikTok account. This lane assumes a dedicated,
   burnable, warmed account with human-performed login.
 - Do not enter credentials, inspect cookies/tokens, preserve storage-state paths,
@@ -182,8 +192,15 @@ handoff depends on:
   pointer movement only; it is not product extraction and not a challenge-close
   or solve path. The runner now performs that named bounded pointer sequence
   and records each action in sanitized metadata.
-- The first corrected live retry on 2026-07-03 used that sequence on the Funmi
-  video and stopped with `attempted_count=1`, `completed_count=0`,
+- The owner-authorized diagnostic close action is named
+  `tiktok_challenge_modal_close_diagnostic_pointer_v0`. It is opt-in via
+  `--allow-challenge-close-diagnostic`, page-text gated on challenge/security
+  markers, targets `Close`/`Dismiss` or exact `X`/`×`, prefers the top-right
+  candidate, and uses the same bounded pointer movement substrate. It is a
+  blocker-diagnosis path only: a click forces stop semantics and cannot produce
+  a clean capture row.
+- The first corrected live retry on 2026-07-03 used the comment-surface sequence
+  on the Funmi video and stopped with `attempted_count=1`, `completed_count=0`,
   `challenge_count=1`, `reason=platform_challenge_observed`, and zero admitted
   comment-list responses. No admission, expansion, challenge solving,
   challenge-close click, or product extraction occurred.
@@ -247,7 +264,10 @@ handoff depends on:
    ```
 
    Do not add flags that are not present in `--help`. Keep default cadence unless
-   the owner explicitly directs a different small-N cadence.
+   the owner explicitly directs a different small-N cadence. For the current
+   owner-authorized diagnostic retry only, add
+   `--allow-challenge-close-diagnostic`; do not use that flag for a clean
+   micro-batch proof or any admission/expansion claim.
 
 
 5. Inspect the first-video outputs before admission or expansion:
@@ -256,10 +276,12 @@ handoff depends on:
    - `tiktok_live_cadence_result.json`
 
    Required to continue: `attempted_count=1`, `completed_count=1`,
-   `challenge_count=0`, no failures, capture contract clean, and
+   `challenge_count=0`, no failures, no clicked challenge-close diagnostic
+   receipt, capture contract clean, and
    `results[0].capture_receipt.admitted_comment_response_count >= 1`.
 
-   If `challenge_count` is nonzero or failures contain a challenge/auth stop, stop.
+   If `challenge_count` is nonzero, failures contain a challenge/auth stop, or a
+   challenge-close diagnostic action clicked, stop. Do not run admission.
 
    If `admitted_comment_response_count` is zero, stop and report
    `comment_list_response_absent` with the comment-action receipt. Do not admit
@@ -359,10 +381,13 @@ direct 3-5 creator execution packet until a
 one-video route-yield gate captures at least one admitted page-owned
 `/api/comment/list` response under the current runner and then admits cleanly.
 
-Current live state: the corrected 2026-07-03 one-video retry stopped on
-`platform_challenge_observed` with `challenge_count=1`; no admission or
-expansion is authorized from that receipt. A further live retry should start
-from owner/human account-posture review, not from blind repetition.
+Current live state: the 2026-07-03 owner-authorized diagnostic close-action
+retry stopped on `platform_challenge_observed`; the matched marker was
+`drag the slider`, with `attempted_count=1`, `completed_count=0`,
+`challenge_count=1`, and no result row. The diagnostic close action was
+page-text gated but found no
+matching close target (`target_found=false`, `clicked=false`, `matched_count=0`);
+no admission or expansion is authorized from that receipt.
 
 
 ## Changed / Inspected / Tested Files In This Handoff Lane
@@ -372,6 +397,7 @@ Changed:
 - `docs/workflows/tiktok_live_microbatch_owner_gated_handoff_v0.md`
 - `orca-harness/source_capture/adapters/browser_snapshot.py`
 - `orca-harness/source_capture/tiktok/live_batch_probe.py`
+- `orca-harness/runners/run_source_capture_tiktok_live_batch_probe.py`
 - `orca-harness/tests/unit/test_source_capture_browser_snapshot.py`
 - `orca-harness/tests/unit/test_tiktok_live_batch_probe.py`
 
@@ -382,11 +408,13 @@ Inspected:
 
 Validation completed:
 
-- `PYTHONPATH=orca-harness python -m pytest -q orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_tiktok_live_batch_probe.py orca-harness/tests/unit/test_tiktok_batch_admission.py`
-  -> `54 passed`
-- One owner-authorized live retry using auth-state label `tiktok-batch1-20260630`
-  and `session_mode=client_provided_session`; result stopped on
-  `platform_challenge_observed` before admission/expansion.
+- `PYTHONPATH=orca-harness python -m pytest -q orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_tiktok_blocker_triage.py orca-harness/tests/unit/test_tiktok_live_batch_probe.py orca-harness/tests/unit/test_tiktok_batch_admission.py`
+  -> exit 0 with all targeted tests passing.
+- One owner-authorized diagnostic live retry using auth-state label
+  `tiktok-batch1-20260630` and `session_mode=client_provided_session`; result
+  stopped on `platform_challenge_observed` with `matched_marker=drag the slider`,
+  diagnostic close `target_found=false`, `clicked=false`, no admission, and no
+  expansion.
 - Forbidden-marker scan over the latest retry scratch output returned no matches.
 - Temporary copied auth-state files were removed after the run.
 
@@ -435,5 +463,7 @@ comments); require at least one admitted page-owned
 challenge, unresolved blocker, or zero-comment-response route diagnosis. Do
 not solve CAPTCHA/slider challenges, do not click challenge-close controls to
 claim success, do not expand directly to 3-5 creators, and do not do product
-extraction.
+extraction. If the current owner explicitly authorizes
+`--allow-challenge-close-diagnostic`, treat any clicked close receipt as a stop
+receipt only, never as proof.
 ```

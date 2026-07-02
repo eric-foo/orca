@@ -735,7 +735,10 @@ def test_fetch_browser_page_observation_capture_threads_pointer_action_to_engine
         action_name=" open_comments ",
         candidate_selector=" button ",
         text_markers=(" Comments ",),
+        page_text_markers=(" Drag the slider ",),
+        exact_text_markers=(" X ",),
         random_seed=7,
+        prefer_top_right=True,
     )
 
     result = fetch_browser_page_observation_capture(
@@ -754,7 +757,10 @@ def test_fetch_browser_page_observation_capture_threads_pointer_action_to_engine
         action_name="open_comments",
         candidate_selector="button",
         text_markers=("comments",),
+        page_text_markers=("drag the slider",),
+        exact_text_markers=("x",),
         random_seed=7,
+        prefer_top_right=True,
     )
 
 
@@ -767,6 +773,8 @@ def test_fetch_browser_page_observation_capture_threads_pointer_actions_to_engin
             action_name=" open_comments ",
             candidate_selector=" button ",
             text_markers=(" Comments ",),
+            page_text_markers=(" Drag the slider ",),
+            exact_text_markers=(" X ",),
             random_seed=7,
         ),
         BrowserPagePointerAction(
@@ -795,6 +803,8 @@ def test_fetch_browser_page_observation_capture_threads_pointer_actions_to_engin
             action_name="open_comments",
             candidate_selector="button",
             text_markers=("comments",),
+            page_text_markers=("drag the slider",),
+            exact_text_markers=("x",),
             random_seed=7,
         ),
         BrowserPagePointerAction(
@@ -810,6 +820,10 @@ def test_pointer_action_target_script_matches_data_attributes() -> None:
     assert "data-testid" in script
     assert "data-test-id" in script
     assert "dataE2E === 'comment-icon'" in script
+    assert "page_text_markers" in script
+    assert "exact_text_markers" in script
+    assert "prefer_top_right" in script
+    assert "node.getAttribute('class')" in script
 
 
 def test_fetch_browser_page_observation_capture_rejects_negative_lazy_load_scroll_controls() -> None:
@@ -938,6 +952,8 @@ def test_playwright_page_observation_runs_pointer_action_before_dom_and_reads_re
             "matched_count": 1,
             "target_found": True,
             "target_kind": "button",
+            "page_text_gate_matched": True,
+            "selection_strategy": "top_right",
             "box": {"x": 10, "y": 20, "width": 100, "height": 50},
         },
     )
@@ -956,10 +972,13 @@ def test_playwright_page_observation_runs_pointer_action_before_dom_and_reads_re
             action_name="test_pointer_v0",
             candidate_selector="button",
             text_markers=("comments",),
+            page_text_markers=("drag the slider",),
+            exact_text_markers=("x",),
             wait_after_ms=2500,
             move_steps_min=7,
             move_steps_max=7,
             random_seed=11,
+            prefer_top_right=True,
         ),
     )
 
@@ -973,6 +992,8 @@ def test_playwright_page_observation_runs_pointer_action_before_dom_and_reads_re
     assert receipt["move_steps"] == 7
     assert receipt["wait_ms"] == 2500
     assert receipt["target_kind"] == "button"
+    assert receipt["page_text_gate_matched"] is True
+    assert receipt["selection_strategy"] == "top_right"
     assert "x" not in receipt
     assert "y" not in receipt
     assert result.metadata["post_load_action_executed"] is True

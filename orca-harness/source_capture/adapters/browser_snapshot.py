@@ -31,11 +31,14 @@ class BrowserPagePointerAction:
     action_name: str
     candidate_selector: str
     text_markers: tuple[str, ...]
+    page_text_markers: tuple[str, ...] = ()
+    exact_text_markers: tuple[str, ...] = ()
     wait_after_ms: int = 2500
     move_steps_min: int = 6
     move_steps_max: int = 12
     target_fraction_min: float = 0.35
     target_fraction_max: float = 0.65
+    prefer_top_right: bool = False
     random_seed: int = 0
 
 
@@ -1068,19 +1071,38 @@ def _response_request_metadata(response: object) -> tuple[str | None, str | None
 
 _POINTER_ACTION_TARGET_SCRIPT = r"""
 (args) => {
-  const markers = Array.isArray(args.text_markers)
-    ? args.text_markers.map((value) => String(value || '').toLowerCase()).filter(Boolean)
+  const normalizeMarkers = (values) => Array.isArray(values)
+    ? values.map((value) => String(value || '').trim().toLowerCase()).filter(Boolean)
     : [];
-  const candidates = Array.from(document.querySelectorAll(String(args.candidate_selector || '')));
+  const markers = normalizeMarkers(args.text_markers);
+  const exactMarkers = normalizeMarkers(args.exact_text_markers);
+  const pageTextMarkers = normalizeMarkers(args.page_text_markers);
+  const preferTopRight = Boolean(args.prefer_top_right);
   const result = {
-    candidate_count: candidates.length,
+    candidate_count: 0,
     matched_count: 0,
     target_found: false,
     target_kind: null,
     box: null,
+    page_text_gate_matched: pageTextMarkers.length === 0 ? null : false,
+    selection_strategy: preferTopRight ? 'top_right' : 'first_match',
   };
+  if (pageTextMarkers.length > 0) {
+    const pageText = [
+      document.title,
+      document.body ? document.body.innerText : '',
+      document.body ? document.body.textContent : '',
+    ].filter(Boolean).join(' ').toLowerCase();
+    if (!pageTextMarkers.some((marker) => pageText.includes(marker))) {
+      return result;
+    }
+    result.page_text_gate_matched = true;
+  }
+  const candidates = Array.from(document.querySelectorAll(String(args.candidate_selector || '')));
+  result.candidate_count = candidates.length;
   let fallback = null;
   let priority = null;
+  const matches = [];
   const candidateFromNode = (node) => {
     const rect = node.getBoundingClientRect();
     if (!rect || rect.width <= 0 || rect.height <= 0) {
@@ -1098,17 +1120,28 @@ _POINTER_ACTION_TARGET_SCRIPT = r"""
       },
     };
   };
-  for (const node of candidates) {
+  const textFieldsForNode = (node) => {
     const dataE2E = String(node.getAttribute('data-e2e') || '').toLowerCase();
-    const text = [
+    const fields = [
       node.getAttribute('aria-label'),
       node.getAttribute('title'),
       dataE2E,
       node.getAttribute('data-testid'),
       node.getAttribute('data-test-id'),
+      node.getAttribute('class'),
       node.textContent,
-    ].filter(Boolean).join(' ').toLowerCase();
-    if (!markers.some((marker) => text.includes(marker))) {
+    ].filter(Boolean).map((value) => String(value).trim().toLowerCase()).filter(Boolean);
+    return {dataE2E, fields, joined: fields.join(' ')};
+  };
+  const markerMatches = (fields, joined) => {
+    if (markers.some((marker) => joined.includes(marker))) {
+      return true;
+    }
+    return exactMarkers.some((marker) => fields.some((field) => field === marker));
+  };
+  for (const node of candidates) {
+    const {dataE2E, fields, joined} = textFieldsForNode(node);
+    if (!markerMatches(fields, joined)) {
       continue;
     }
     result.matched_count += 1;
@@ -1116,6 +1149,7 @@ _POINTER_ACTION_TARGET_SCRIPT = r"""
     if (candidate === null) {
       continue;
     }
+    matches.push(candidate);
     if (fallback === null) {
       fallback = candidate;
     }
@@ -1123,7 +1157,15 @@ _POINTER_ACTION_TARGET_SCRIPT = r"""
       priority = candidate;
     }
   }
-  const selected = priority || fallback;
+  let selected = priority || fallback;
+  if (preferTopRight && matches.length > 0) {
+    selected = matches.slice().sort((left, right) => {
+      if (left.box.y !== right.box.y) {
+        return left.box.y - right.box.y;
+      }
+      return right.box.x - left.box.x;
+    })[0];
+  }
   if (selected !== null) {
     result.target_found = true;
     result.target_kind = selected.target_kind;
@@ -1146,8 +1188,16 @@ def _normalize_pointer_action(
     if not candidate_selector:
         raise ValueError("post_load_pointer_action.candidate_selector must not be blank")
     text_markers = tuple(marker.strip().lower() for marker in action.text_markers if marker.strip())
-    if not text_markers:
-        raise ValueError("post_load_pointer_action.text_markers must contain at least one marker")
+    page_text_markers = tuple(
+        marker.strip().lower() for marker in action.page_text_markers if marker.strip()
+    )
+    exact_text_markers = tuple(
+        marker.strip().lower() for marker in action.exact_text_markers if marker.strip()
+    )
+    if not text_markers and not exact_text_markers:
+        raise ValueError(
+            "post_load_pointer_action text_markers or exact_text_markers must contain at least one marker"
+        )
     if action.wait_after_ms < 0:
         raise ValueError("post_load_pointer_action.wait_after_ms must be zero or greater")
     if action.move_steps_min <= 0 or action.move_steps_max <= 0:
@@ -1166,11 +1216,14 @@ def _normalize_pointer_action(
         action_name=action_name,
         candidate_selector=candidate_selector,
         text_markers=text_markers,
+        page_text_markers=page_text_markers,
+        exact_text_markers=exact_text_markers,
         wait_after_ms=action.wait_after_ms,
         move_steps_min=action.move_steps_min,
         move_steps_max=action.move_steps_max,
         target_fraction_min=action.target_fraction_min,
         target_fraction_max=action.target_fraction_max,
+        prefer_top_right=bool(action.prefer_top_right),
         random_seed=int(action.random_seed),
     )
 
@@ -1197,6 +1250,8 @@ def _run_pointer_action(page: object, action: BrowserPagePointerAction) -> dict[
         "move_steps": None,
         "wait_ms": 0,
         "target_kind": None,
+        "page_text_gate_matched": None,
+        "selection_strategy": None,
     }
     try:
         target = page.evaluate(
@@ -1204,6 +1259,9 @@ def _run_pointer_action(page: object, action: BrowserPagePointerAction) -> dict[
             {
                 "candidate_selector": action.candidate_selector,
                 "text_markers": list(action.text_markers),
+                "page_text_markers": list(action.page_text_markers),
+                "exact_text_markers": list(action.exact_text_markers),
+                "prefer_top_right": action.prefer_top_right,
             },
         )
     except Exception:
@@ -1219,6 +1277,12 @@ def _run_pointer_action(page: object, action: BrowserPagePointerAction) -> dict[
     target_kind = target.get("target_kind")
     if isinstance(target_kind, str) and target_kind:
         receipt["target_kind"] = target_kind
+    page_text_gate_matched = target.get("page_text_gate_matched")
+    if isinstance(page_text_gate_matched, bool):
+        receipt["page_text_gate_matched"] = page_text_gate_matched
+    selection_strategy = target.get("selection_strategy")
+    if isinstance(selection_strategy, str) and selection_strategy:
+        receipt["selection_strategy"] = selection_strategy
     box = target.get("box")
     if not receipt["target_found"] or not isinstance(box, dict):
         return receipt
