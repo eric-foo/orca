@@ -15,16 +15,19 @@ via exit code — so they are **harness-portable**: the *logic* runs anywhere; o
 | Script | When | Effect |
 |---|---|---|
 | `guard_protected_actions.py` | **pre-tool** (before a shell/write tool runs) | **HARD-blocks** (exit 2) irreversible / main-affecting actions: an agent's `gh pr merge` → main, push-to-main, force-push, `reset --hard`, `git clean`, and writes into protected external roots. **Allows** a benign lane-branch push. Fires in **all** permission modes. **Fails OPEN** on internal error. |
-| `.codex/hooks/orca_guard_codex_adapter.py` | Codex **PreToolUse** adapter | Runs `guard_protected_actions.py`, converts guard denials into Codex's native JSON `permissionDecision: deny` response, and maps Codex `apply_patch` patch targets through the existing EP-01 protected-path check. |
+| `.codex/hooks/orca_guard_codex_adapter.py` | Codex **PreToolUse** adapter | Runs `guard_protected_actions.py`, converts guard denials into Codex's native JSON `permissionDecision: deny` response, maps Codex `apply_patch` patch targets through the existing EP-01 protected-path check, blocks writes into registered non-current worktrees, and blocks raw shell durable-write primitives for repo source/docs files. |
 | `pre_push_guard.py` | local Git **pre-push** adapter policy | Blocks pushes targeting `main`, branch deletes, non-fast-forward updates, and unverifiable update safety when `.githooks/pre-push` is installed through `core.hooksPath`. Bypassable with `--no-verify`; misses GitHub API merges. |
 | `check_retrieval_header.py` | **post-tool** (after a write) | Advisory (exit 0): warns if an in-scope artifact is missing its retrieval header. Forward-only; never blocks. |
+| `check_dcp_receipt_hygiene.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on deterministic DCP receipt storage defects in changed durable docs: more than two inline receipts, missing archive pointer, or unauthorized standalone DCP receipt files. Shape only; never receipt truth, validation, readiness, or acceptance. |
+| `check_registry_list_sync.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on explicitly registered vocabulary-list drift. Current binding: Foundation Allowed Signal Uses must be contained by the engagement registry Signal Use Classification list. Shape only; never category correctness or auto-promotion. |
+| `check_engagement_stale_phrases.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on curated stale engagement/resonance doctrine phrases in live doctrine paths. Leakage detection only; default excludes historical prompts/reviews and DCP self-reference noise. |
+| `check_review_output_provenance.py` | manual / commit / CI candidate | Advisory by default; `--strict` fails on changed review outputs missing retrieval-header shape, `reviewed_by`, `authored_by`, or review-use boundary/non-approval wording. Shape only; never reviewer identity verification, de-correlation truth, approval, validation, or review quality. |
 | `check_repo_map_freshness.py` | **post-tool** (after a write) | Reports structural drift vs the repo map as advisory output; exits 2 when the repo map itself is dirty after edit so the next action is an explicit-path commit; has a `--strict` gate for commit/CI use. |
 | `check_search_surface_google_route.py` | **post-tool** (after a write) + CI | Advisory on live writes and strict in CI for the checkable Google search-surface route shell: Google Search URLs use `hl=en&gl=us&pws=0`, US-parameterized artifacts carry the physical-locality non-claim, and Google sorry/IP pages are not preserved in durable docs. |
 | `remind_sci.py` | **pre-tool** (before a `git commit`) | Advisory (exit 0): when the commit includes durable-artifact changes, re-injects the Smallest Complete Intervention rule (verbatim from AGENTS.md) as a nudge before scope is locked in. Never blocks; silent for code/scratch/config-only commits. |
 
-Each has a `--selftest`. Rule authority lives in the overlay
-(`.agents/workflow-overlay/safety-rules.md`, `validation-gates.md`) — the scripts
-reference it, they don't restate it.
+Each has a `--selftest`. Each script names its own rule authority in its module
+header and references that source instead of restating it.
 
 ## The contract (harness-agnostic)
 
@@ -58,6 +61,10 @@ Hooks load at session start — **restart the session** after editing settings.
 Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
+python .agents/hooks/check_dcp_receipt_hygiene.py --selftest
+python .agents/hooks/check_registry_list_sync.py --selftest
+python .agents/hooks/check_engagement_stale_phrases.py --selftest
+python .agents/hooks/check_review_output_provenance.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --strict --base main
@@ -90,6 +97,17 @@ It also parses Codex `apply_patch` headers (`*** Add/Update/Delete File:` and
 because Codex reports patch edits as `tool_name: "apply_patch"` rather than
 Claude-style `Write` / `Edit` events.
 
+The adapter additionally blocks Codex write tools when the target is inside a
+registered git worktree other than the one running the hook. If a lane needs
+that worktree, reroot Codex in the target worktree and rerun the lane-start
+writeability preflight; do not edit nested worktrees from the parent checkout.
+
+For `Bash` / `PowerShell`, the adapter blocks raw durable-write primitives when
+the command text names repo source/docs file types (`.md`, `.py`, `.yml`,
+`.yaml`, `.json`, `.toml`, `.ps1`). This is a prevention guard for the known
+failure class, not universal shell-write detection; use `apply_patch` from the
+active worktree for source edits.
+
 The repo-map checker also parses Codex `apply_patch` headers in PostToolUse
 mode. If the edited target is `docs/workflows/orca_repo_map_v0.md` and Git still
 shows that map dirty, it returns exit code 2 and tells the agent to commit that
@@ -102,6 +120,10 @@ that need review.
 Verify:
 ```powershell
 python .agents/hooks/guard_protected_actions.py --selftest
+python .agents/hooks/check_dcp_receipt_hygiene.py --selftest
+python .agents/hooks/check_registry_list_sync.py --selftest
+python .agents/hooks/check_engagement_stale_phrases.py --selftest
+python .agents/hooks/check_review_output_provenance.py --selftest
 python .agents/hooks/check_repo_map_freshness.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --selftest
 python .agents/hooks/check_search_surface_google_route.py --strict --base main
