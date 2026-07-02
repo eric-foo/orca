@@ -49,6 +49,7 @@ TIKTOK_VIDEO_DOM_EXTRACT_SCRIPT = r"""
 TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME = "tiktok_open_comments_pointer_v0"
 TIKTOK_OPEN_MORE_LIKE_THIS_POINTER_ACTION_NAME = "tiktok_open_more_like_this_pointer_v0"
 TIKTOK_REOPEN_COMMENTS_POINTER_ACTION_NAME = "tiktok_reopen_comments_pointer_v0"
+TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME = "tiktok_dismiss_benign_overlay_pointer_v0"
 TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME = (
     "tiktok_challenge_modal_close_diagnostic_pointer_v0"
 )
@@ -381,6 +382,9 @@ def run_tiktok_live_batch_probe(
                         "reason": TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON,
                         "action_mode": "diagnosis_only",
                         "action_taken": False,
+                        "benign_overlay_action": _as_dict(
+                            comment_receipt.get("benign_overlay_action")
+                        ),
                         "comment_action": _as_dict(comment_receipt.get("comment_action")),
                         "response_count": _first_int(comment_receipt.get("response_count"), 0),
                         "matched_comment_response_count": _first_int(
@@ -480,6 +484,7 @@ def _challenge_close_diagnostic_blocker_receipt(
             "action_mode": "diagnosis_only",
             "action_taken": True,
             "challenge_close_diagnostic": challenge_close_diagnostic,
+            "benign_overlay_action": _benign_overlay_action_summary(capture_result),
             "comment_action": _comment_action_summary(capture_result),
             "response_count": len(capture_result.responses),
             "matched_comment_response_count": sum(
@@ -498,13 +503,18 @@ def _tiktok_live_pointer_actions(
     random_seed: int | None,
     allow_challenge_close_diagnostic: bool,
 ) -> tuple[BrowserPagePointerAction, ...]:
+    benign_overlay_action = _tiktok_dismiss_benign_overlay_pointer_action(
+        video_id=video_id,
+        random_seed=random_seed,
+    )
     comment_actions = _tiktok_comment_route_pointer_actions(
         video_id=video_id,
         random_seed=random_seed,
     )
     if not allow_challenge_close_diagnostic:
-        return comment_actions
+        return (benign_overlay_action, *comment_actions)
     return (
+        benign_overlay_action,
         _tiktok_challenge_close_diagnostic_pointer_action(
             video_id=video_id,
             random_seed=random_seed,
@@ -534,6 +544,39 @@ def _tiktok_comment_route_pointer_actions(
             random_seed=random_seed,
             action_name=TIKTOK_REOPEN_COMMENTS_POINTER_ACTION_NAME,
             wait_after_ms=3500,
+        ),
+    )
+
+
+def _tiktok_dismiss_benign_overlay_pointer_action(
+    *,
+    video_id: str,
+    random_seed: int | None,
+) -> BrowserPagePointerAction:
+    return BrowserPagePointerAction(
+        action_name=TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME,
+        candidate_selector=(
+            'button,[role="button"],[aria-label],[title],[data-e2e],'
+            '[data-testid],[data-test-id]'
+        ),
+        text_markers=("got it", "not now", "continue in browser", "maybe later"),
+        page_text_markers=(
+            "scroll, use the",
+            "browse your feed",
+            "got it",
+            "continue in browser",
+            "open app",
+        ),
+        wait_after_ms=1500,
+        move_steps_min=6,
+        move_steps_max=12,
+        target_fraction_min=0.35,
+        target_fraction_max=0.65,
+        prefer_top_right=False,
+        random_seed=_stable_pointer_seed(
+            video_id=video_id,
+            random_seed=random_seed,
+            action_name=TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME,
         ),
     )
 
@@ -692,6 +735,7 @@ def _cadence_row_from_capture(
             "final_url_sha256": _sha256_text(capture_result.final_url),
             "response_count": len(capture_result.responses),
             "blocker_triage": _blocker_triage_receipt(blocker_triage),
+            "benign_overlay_action": _benign_overlay_action_summary(capture_result),
             "comment_action": _comment_action_summary(capture_result),
             "matched_comment_response_count": matched_comment_response_count,
             "admitted_comment_response_count": len(comment_list_responses),
@@ -722,7 +766,10 @@ def _comment_action_summary(capture_result: BrowserPageObservationSuccess) -> Js
         summary = _pointer_action_summary(_as_dict(action))
         if not summary:
             continue
-        if summary.get("action_name") == TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME:
+        if summary.get("action_name") in {
+            TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME,
+            TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME,
+        }:
             continue
         action_sequence.append(summary)
     if len(action_sequence) > 1:
@@ -751,6 +798,17 @@ def _comment_action_summary(capture_result: BrowserPageObservationSuccess) -> Js
             "clicked": _first_bool(legacy_action.get("clicked")),
         }
     )
+
+
+def _benign_overlay_action_summary(
+    capture_result: BrowserPageObservationSuccess,
+) -> JsonObject:
+    metadata = _as_dict(capture_result.metadata)
+    for action in _as_list(metadata.get("post_load_pointer_actions")):
+        summary = _pointer_action_summary(_as_dict(action))
+        if summary.get("action_name") == TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME:
+            return summary
+    return {}
 
 
 def _challenge_close_diagnostic_summary(
@@ -1209,6 +1267,7 @@ __all__ = [
     "TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME",
     "TIKTOK_CHALLENGE_CLOSE_DIAGNOSTIC_REASON",
     "TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON",
+    "TIKTOK_DISMISS_BENIGN_OVERLAY_POINTER_ACTION_NAME",
     "TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME",
     "TIKTOK_VIDEO_DOM_EXTRACT_SCRIPT",
     "TikTokLiveBatchProbeOutputPaths",

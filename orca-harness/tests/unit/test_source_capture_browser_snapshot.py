@@ -824,6 +824,7 @@ def test_pointer_action_target_script_matches_data_attributes() -> None:
     assert "exact_text_markers" in script
     assert "prefer_top_right" in script
     assert "node.getAttribute('class')" in script
+    assert "document.body.textContent" not in script
 
 
 def test_fetch_browser_page_observation_capture_rejects_negative_lazy_load_scroll_controls() -> None:

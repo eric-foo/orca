@@ -1091,7 +1091,6 @@ _POINTER_ACTION_TARGET_SCRIPT = r"""
     const pageText = [
       document.title,
       document.body ? document.body.innerText : '',
-      document.body ? document.body.textContent : '',
     ].filter(Boolean).join(' ').toLowerCase();
     if (!pageTextMarkers.some((marker) => pageText.includes(marker))) {
       return result;

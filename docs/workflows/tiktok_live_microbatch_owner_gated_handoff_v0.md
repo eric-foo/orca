@@ -42,8 +42,8 @@ input_hashes:
   docs/workflows/tiktok_behavioral_sync_fresh_lane_handoff_v0.md: 0fcda55434efb97791c495e112e7682f9cc1b42d
   docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md: 5a814dad39d79222ea78631e395ff382d4fc7396
   docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md: 8385e43615e76a2503e9f36468dbdcd7c92268a3
-  orca-harness/source_capture/adapters/browser_snapshot.py: 02ff4b9d5fdf0619c0028756af6e1a9f5bc94214
-  orca-harness/source_capture/tiktok/live_batch_probe.py: 53b993069125a5914e61693141b9cf4576164246
+  orca-harness/source_capture/adapters/browser_snapshot.py: 2fa6a16fd0d2b7bf58b7fbe7633c7712577af4ee
+  orca-harness/source_capture/tiktok/live_batch_probe.py: b169d1157d6fc14511a7ad8cfdfac0898f97af56
   orca-harness/source_capture/tiktok/blocker_triage.py: 19816ad967bc57c53aa750dfc9cf59902e5455cd
   orca-harness/source_capture/tiktok/batch_packet.py: b6758d7615a96804e48714283f1925577c7dc22c
   orca-harness/source_capture/tiktok/admission.py: 45a86b554772a58300b23be077a48b32f8dcd8de
@@ -192,6 +192,14 @@ handoff depends on:
   pointer movement only; it is not product extraction and not a challenge-close
   or solve path. The runner now performs that named bounded pointer sequence
   and records each action in sanitized metadata.
+- The runner now prepends `tiktok_dismiss_benign_overlay_pointer_v0` before
+  the comment-surface route. It is bounded-pointer dismissal for benign TikTok
+  onboarding/app prompts such as `Got it`, `Not now`, or `Continue in browser`;
+  it is not challenge-close behavior and is excluded from the comment-action
+  sequence count.
+- The pointer-action page-text gate now uses visible `innerText` rather than
+  hidden `textContent`, so hidden TikTok strings such as `captcha` cannot by
+  themselves satisfy a diagnostic pointer gate.
 - The owner-authorized diagnostic close action is named
   `tiktok_challenge_modal_close_diagnostic_pointer_v0`. It is opt-in via
   `--allow-challenge-close-diagnostic`, page-text gated on challenge/security
@@ -381,13 +389,16 @@ direct 3-5 creator execution packet until a
 one-video route-yield gate captures at least one admitted page-owned
 `/api/comment/list` response under the current runner and then admits cleanly.
 
-Current live state: the 2026-07-03 owner-authorized diagnostic close-action
-retry stopped on `platform_challenge_observed`; the matched marker was
+Current live state after the benign-overlay patch: two 2026-07-03 one-video
+Funmi retries stopped on `platform_challenge_observed`; the matched marker was
 `drag the slider`, with `attempted_count=1`, `completed_count=0`,
-`challenge_count=1`, and no result row. The diagnostic close action was
-page-text gated but found no
-matching close target (`target_found=false`, `clicked=false`, `matched_count=0`);
-no admission or expansion is authorized from that receipt.
+`challenge_count=1`, and no result row. Attempt 08 used the clean path with
+`challenge_close_diagnostic_allowed=false`; attempt 09 used the owner-authorized
+close diagnostic and still found no close target (`target_found=false`,
+`clicked=false`, `matched_count=0`, `candidate_count=0`). No admission or
+expansion is authorized from either receipt. These attempts did not live-prove
+the benign `Got it` dismissal because the run reached the real challenge stop
+class first.
 
 
 ## Changed / Inspected / Tested Files In This Handoff Lane
@@ -410,13 +421,18 @@ Validation completed:
 
 - `PYTHONPATH=orca-harness python -m pytest -q orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_tiktok_blocker_triage.py orca-harness/tests/unit/test_tiktok_live_batch_probe.py orca-harness/tests/unit/test_tiktok_batch_admission.py`
   -> exit 0 with all targeted tests passing.
-- One owner-authorized diagnostic live retry using auth-state label
+- One live retry without challenge-close diagnostic using auth-state label
   `tiktok-batch1-20260630` and `session_mode=client_provided_session`; result
   stopped on `platform_challenge_observed` with `matched_marker=drag the slider`,
-  diagnostic close `target_found=false`, `clicked=false`, no admission, and no
-  expansion.
-- Forbidden-marker scan over the latest retry scratch output returned no matches.
-- Temporary copied auth-state files were removed after the run.
+  `attempted_count=1`, `completed_count=0`, `challenge_count=1`, no admission,
+  and no expansion.
+- One owner-authorized diagnostic live retry with
+  `--allow-challenge-close-diagnostic`; result again stopped on
+  `platform_challenge_observed`, diagnostic close `target_found=false`,
+  `clicked=false`, `candidate_count=0`, no admission, and no expansion.
+- Forbidden-marker scans over both latest retry scratch outputs returned no
+  matches.
+- Temporary copied auth-state files were removed after each run.
 
 
 ## Dangerous To Reuse
@@ -456,7 +472,8 @@ First task after getting your bearings: verify owner/live-run preconditions and
 the current stop state. Do not run another live retry blindly: the latest
 corrected route opener stopped on `platform_challenge_observed`. If the owner
 explicitly reauthorizes after human account/session review, run only the
-one-video route-yield gate first, using
+one-video route-yield gate first. The current runner first attempts bounded
+benign-overlay dismissal, then uses
 `comment_surface_toggle_pointer_sequence_v0` (comments -> More like this ->
 comments); require at least one admitted page-owned
 `/api/comment/list` response before admission/expansion; stop on any real
