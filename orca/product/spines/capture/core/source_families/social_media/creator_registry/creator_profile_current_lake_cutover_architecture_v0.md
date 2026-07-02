@@ -174,11 +174,14 @@ check alone cannot close it. The `live_lake_freshness_gate` is therefore bound a
    `content_hash`, `selection_run_id`, `reconciled_at`) committed *with* the
    snapshot. A snapshot update cannot land without a passing receipt — you cannot
    commit a known-stale snapshot.
-2. **Scheduled drift check (required):** a scheduled operator-box job runs the
-   `live_lake_freshness_gate` on a cadence and **fails loudly / opens or updates
-   a visible issue** when the lake's latest rollups advance past the committed
-   snapshot (`snapshot_behind_lake`). This catches "operator captured new data
-   but didn't refresh the registry" — the silent-drift case.
+2. **Scheduled drift check (v0: DEFERRED — see Open owner decisions #2):** the
+   design is a scheduled operator-box job that runs the `live_lake_freshness_gate`
+   on a cadence and **fails loudly / opens or updates a visible issue** when the
+   lake's latest rollups advance past the committed snapshot (`snapshot_behind_lake`),
+   catching "operator captured new data but didn't refresh the registry" — the
+   silent-drift case. At single-operator v0 this is replaced by running the gate
+   on demand (after any capture); the scheduler is the documented hardening for when
+   the drift-creator leaves the loop.
 
 Together these emit and check durable evidence, so **drift is never unnoticed.**
 The external lake makes a human *regen* step unavoidable; what this retires is
@@ -322,6 +325,21 @@ thing that is genuinely automatic is rollup *consumption* (`materialize` stays
 platform-agnostic at the rollup layer); discovery is explicitly account-aware for
 YT (above), and everything else is staged work.
 
+**Seed-retirement rule (stage 4 — DONE).** With the committed YT rollup snapshot
+materialized into the view, the hand-authored YT seed is retired as the rollup
+*authority*: `materialize` (via `run_creator_profile_current_materialize`) now
+sources YT rollups from
+`youtube_shorts_fragrance_creator_metric_rollup_snapshot_v0.json`, not the seed,
+and the view's YT `source_inputs` / `metric_snapshot_pointer` cite the snapshot.
+The seed stays committed (not deleted — see *Non-Goals*) as the no-drift value
+oracle. The evidence that now stands in for the seed as rollup authority: (a) the
+stage-2 capture-fed no-drift gate
+`test_youtube_capture_fed_lake_path_rollups_equal_committed_seed_no_drift`, which
+proves the lake path reproduces every materialize-consumed seed rollup field
+value-equal; (b) the committed freshness receipt; and (c) the on-demand
+`run_live_lake_freshness_gate --platform youtube`, which together prove the
+snapshot tracks the live lake.
+
 ## Reversibility / rollback (AR-07)
 
 The cut-over reverts as a set, not "one input swap":
@@ -341,10 +359,20 @@ The cut-over reverts as a set, not "one input swap":
 
 1. **v0 scope:** Frozen Rollup Snapshot (recommended; the review concurred —
    certify-only under-delivers, full Creator Vault is premature). No change.
-2. **Freshness operating cost (AR-02):** the scheduled drift check implies a
-   modest operator-box scheduler + `gh issue` on drift. Owner-confirmed direction
-   is the non-optional mechanism above; the honest alternative (if no scheduler)
-   is to downgrade the claim to "lake-verifiable snapshot".
+2. **Freshness operating cost (AR-02) — RESOLVED → no scheduler at v0 (2026-07-01).**
+   Owner decision: at single-operator v0 the drift-creator (the operator appending
+   to the lake) is also the one who would regenerate, so an operator-box scheduler +
+   `gh issue` adds a lapsing moving part (its own accepted residual) and
+   false-confidence for little marginal value. The claim is therefore
+   **"lake-verifiable snapshot"**: freshness is proven **on demand** by
+   `run_live_lake_freshness_gate` (§6 Part A), run after any lake append / when the
+   last capture post-dates the snapshot. A bare last-capture-*date* check is only a
+   nudge — it can false-alarm on identical re-captures (which AR-04 collapses as
+   no-drift) and it trusts clocks (which the selection deliberately does not), so the
+   gate's content-hash compare is the precise confirm. **Revisit the scheduler** only
+   when capture becomes automated/scheduled, a second operator or lane appends to the
+   lake, or an external consumer needs a freshness SLA — then the drift-creator leaves
+   the loop and the scheduled `gh issue` mechanism earns its cost.
 3. **Cross-lane rollup-anchoring — RESOLVED → Option 1.** The two MERGED producers
    diverge on rollup `raw_anchor` (IG = packet, YT = account); v0 absorbs this with
    platform-aware discovery (above), no producer change. Chosen per a cross-vendor

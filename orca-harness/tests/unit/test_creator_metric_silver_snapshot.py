@@ -19,6 +19,11 @@ import pytest
 from capture_spine.creator_profile_current.instagram_metric_seed import (
     build_instagram_reels_creator_metric_seed_from_files,
 )
+from capture_spine.creator_profile_current.live_lake_freshness_gate import (
+    SNAPSHOT_BEHIND_LAKE,
+    check_live_lake_freshness,
+)
+from capture_spine.creator_profile_current.materialize import _PROFILE_ROLLUP_FIELDS
 from capture_spine.creator_profile_current.silver_metric_producer import (
     derive_creator_metric_silver_records_from_projections,
 )
@@ -45,6 +50,15 @@ from runners.run_creator_metric_rollup_snapshot import (
     SnapshotRunError,
     main as run_snapshot_main,
     run_snapshot,
+)
+from runners.run_live_lake_freshness_gate import main as run_freshness_gate_main
+from runners.run_youtube_creator_metric_rollup_producer import (
+    DEFAULT_ACCOUNT_LEDGER as _YT_ACCOUNT_LEDGER,
+    _committed_seed_body as _committed_youtube_seed_body,
+    _load_account_ledger as _load_youtube_account_ledger,
+    default_generated_at_utc as _committed_youtube_generated_at_utc,
+    default_source_files as _committed_youtube_source_files,
+    run_youtube_producer,
 )
 from source_capture.models import known_fact
 from source_capture.writer import write_local_source_capture_packet
@@ -571,3 +585,115 @@ def test_ig_lake_path_rollups_equal_seed_builder_no_drift(tmp_path: Path) -> Non
     seed_rollups = seed["instagram_reels_creator_metric_seed"]["metric_rollups"]
 
     assert snapshot_rollups == seed_rollups
+
+
+def test_youtube_capture_fed_lake_path_rollups_equal_committed_seed_no_drift(tmp_path: Path) -> None:
+    """Capture-fed no-drift gate (CI, lake-free). YouTube's review-input captures
+    ARE committed (unlike IG's projections, which are absent from the repo), so
+    this proves a strong, account-for-account claim against the REAL registry data:
+    the capture-fed lake path (the PR #539 builder -> producer -> lake ->
+    account-anchored snapshot) reproduces -- value-equal -- every rollup field
+    materialize consumes from the committed seed it supersedes. That equality is
+    exactly what makes re-pointing materialize from the YT seed onto the snapshot a
+    no-op on the registry (§8 / AR-06).
+
+    Contract subtlety the gate surfaces: materialize builds the view ONLY from
+    ``_PROFILE_ROLLUP_FIELDS`` (+ ``metric_rollup_id``) and sources identity from
+    the fenced account ledger, NOT from the rollup. The committed YT seed rollups
+    additionally carry identity metadata (``public_handle``,
+    ``platform_subject_key``, ``platform_subject_key_type``) that the canonical lake
+    shape and the view both ignore (IG seed rollups omit them entirely), so those
+    fields are deliberately outside the no-drift contract."""
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+
+    # capture-fed adapter: builder(committed captures) -> producer -> lake -> snapshot
+    result = run_youtube_producer(
+        data_root,
+        source_files=_committed_youtube_source_files(),
+        account_ledger=_load_youtube_account_ledger(_YT_ACCOUNT_LEDGER),
+        generated_at_utc=_committed_youtube_generated_at_utc(),
+    )
+    accounts = sorted({_account_of(r) for r in result.rollup_records})
+
+    run = generate_creator_metric_rollup_snapshot(
+        data_root,
+        account_ledger=_yt_discovery_ledger(*accounts),
+        platform="youtube",
+        snapshot_generated_at=LATE,
+    )
+    assert validate_snapshot(run.snapshot) == []
+
+    snapshot_by_account = {
+        rollup["profile_subject_id"]: rollup
+        for rollup in run.snapshot[SNAPSHOT_WRAPPER_KEY]["metric_rollups"]
+    }
+    seed_by_account = {
+        rollup["profile_subject_id"]: rollup
+        for rollup in _committed_youtube_seed_body()["metric_rollups"]
+    }
+    assert set(snapshot_by_account) == set(seed_by_account)
+    for account_id, seed_rollup in seed_by_account.items():
+        snapshot_rollup = snapshot_by_account[account_id]
+        # every field the view actually consumes is value-equal (the no-drift bridge)
+        for field in _PROFILE_ROLLUP_FIELDS:
+            assert snapshot_rollup[field] == seed_rollup[field], (account_id, field)
+        # the lake rollup introduces no field the committed seed lacks
+        assert set(snapshot_rollup) <= set(seed_rollup)
+
+
+# -- live-lake freshness gate (AR-02, §6) ------------------------------------
+
+def test_live_lake_freshness_gate_is_fresh_when_snapshot_matches_lake(tmp_path: Path) -> None:
+    # The committed snapshot was generated from this exact lake state, so the gate
+    # re-runs selection against the live lake and finds the same content-addressed
+    # watermark -> FRESH, no drift.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE)
+    run = _ig_snapshot(data_root, generated_at=LATE)
+
+    result = check_live_lake_freshness(
+        data_root,
+        account_ledger=_ig_discovery_ledger(IG_ACCOUNT),
+        platform="instagram",
+        committed_snapshot=run.snapshot,
+        committed_manifest=run.manifest,
+    )
+    assert result.is_fresh
+    assert result.reason is None
+    assert result.committed_watermark == result.live_watermark
+    assert result.drifted_accounts == ()
+
+
+def test_live_lake_freshness_gate_fires_when_lake_advances(tmp_path: Path) -> None:
+    # A newer rollup appended after the snapshot (a fresh capture the operator did
+    # not regen into the registry) is the silent-drift case: the gate must catch it
+    # as snapshot_behind_lake and name the drifted account.
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _write_ig_rollup(data_root, tmp_path, slot="a", generated_at=LATE, views=(100, 300))
+    run = _ig_snapshot(data_root, generated_at=LATE)
+
+    _write_ig_rollup(data_root, tmp_path, slot="b", generated_at=LATER, views=(999, 1500))
+
+    result = check_live_lake_freshness(
+        data_root,
+        account_ledger=_ig_discovery_ledger(IG_ACCOUNT),
+        platform="instagram",
+        committed_snapshot=run.snapshot,
+        committed_manifest=run.manifest,
+    )
+    assert not result.is_fresh
+    assert result.reason == SNAPSHOT_BEHIND_LAKE
+    assert result.committed_watermark != result.live_watermark
+    assert IG_ACCOUNT in result.drifted_accounts
+
+
+def test_live_lake_freshness_gate_main_against_live_lake_when_available() -> None:
+    # main()/resolve is the only real-lake-bound path; operator-local, skip in CI.
+    if not os.environ.get("ORCA_DATA_ROOT"):
+        pytest.skip("ORCA_DATA_ROOT is not set; the freshness gate is an operator-local live-lake check")
+    try:
+        code = run_freshness_gate_main(["--platform", "instagram"])
+    except SystemExit as exc:
+        code = exc.code
+    # FRESH (0), drift or a clean fail-closed (2) -- never an uncaught crash.
+    assert code in (0, 2)
