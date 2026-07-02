@@ -1,6 +1,25 @@
 # YouTube RSS Monitor Delegated Adversarial Code Review v0
 
 ```yaml
+retrieval_header_version: 1
+artifact_role: delegated_review_report
+scope: >
+  Delegated adversarial code review-and-patch return for the YT tier-1 RSS
+  daily-monitor lane (PR #613, reviewed head ffeeb131): three major findings
+  (channel-identity gate, fail-closed prior state, retrieval-time latest-prior
+  selection), all patched within the commissioned target set and adjudicated
+  by the commissioning CA (all accepted; adjudication recorded on the lane PR).
+use_when:
+  - Checking what the delegated review of the RSS monitor found, patched, and
+    left as accepted residuals.
+  - Auditing the lane's review-routing disposition evidence.
+stale_if:
+  - The RSS monitor runner's identity, prior-state, or latest-prior semantics
+    are materially changed by a later lane.
+authority_boundary: retrieval_only
+```
+
+```yaml
 reviewed_by: OpenAI GPT-5 Codex
 authored_by: Anthropic Claude (Claude Code lane)
 reviewed_head_sha: ffeeb13179a72e4aacafb69267d9e6fa7c2d261a
