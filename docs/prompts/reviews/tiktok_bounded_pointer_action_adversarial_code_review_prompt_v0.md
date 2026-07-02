@@ -48,7 +48,7 @@ preflight_defaults: `docs/prompts/templates/shared/orca_preflight_defaults_v0.md
 - expected_worktree: repo-backed checkout or worktree for branch `codex/tiktok-bounded-pointer-action`.
 - expected_branch: `codex/tiktok-bounded-pointer-action` unless the dispatcher supplies a PR checkout that resolves to the same branch head.
 - expected_head: derive from `git rev-parse HEAD` at dispatch; do not trust this prompt for the final head SHA.
-- expected_pr: dispatcher-supplied PR for `codex/tiktok-bounded-pointer-action`, if opened.
+- expected_pr: `https://github.com/eric-foo/orca/pull/575` (draft at prompt update).
 - dirty_state_allowance: prompt/report docs may be dirty or untracked. Target source/test files must be clean relative to the reviewed head.
 - target_files_or_dirs:
   - `orca-harness/source_capture/adapters/browser_snapshot.py`
