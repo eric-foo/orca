@@ -1,5 +1,26 @@
 # Handoff Packet — creator registry lane continuation (foundation-first)
 
+```yaml
+retrieval_header_version: 1
+artifact_role: cross_lane_handoff_packet
+scope: >
+  Cold cross-lane handoff to continue the creator registry lane foundation-first:
+  harden the registry into a scalable, live-fed, formula-validated data engine and
+  start sustained niche capture. A continuation artifact only — not validation,
+  readiness, acceptance, or buyer proof.
+use_when:
+  - A fresh lane/thread picks up the creator registry work with no prior context.
+  - Checking the ratified direction (foundation-first), open decisions, and drift guard.
+open_next:
+  - orca/product/spines/creator_signal/creator_signal_product_architecture_v0.md
+  - orca/product/spines/creator_signal/creator_signal_market_sizing_v0.md
+  - orca/product/spines/capture/core/source_families/social_media/creator_registry/creator_profile_current_view_spec_v0.md
+stale_if:
+  - The receiver completes the confirm-don't-trust load and continues (packet becomes historical).
+  - origin/main moves such that the source-ledger blob SHAs below no longer match (reread required).
+authority_boundary: retrieval_only
+```
+
 ## Load Contract
 
 - packet_version: 1
