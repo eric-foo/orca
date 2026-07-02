@@ -18,6 +18,7 @@ stale_if:
   - Any probed site changes access posture or page substrate.
   - A later packet-grade Capture run preserves raw source bodies and supersedes these screen-light observations.
   - Basenotes becomes reachable through a new anti-bot, proxy, archive, or entitled manual route.
+  - The Parfumo Chrome-extension/user-visible browser route stops reaching real product DOM, direct HTTP/AJAX becomes reliably reachable again, or the targeted-sample objective changes.
 ```
 
 ## Scan Intake Receipt
@@ -374,6 +375,77 @@ not_complete_yet:
   - No endpoint response bodies from the live pagination probes were admitted as packets.
   - No ECR, Cleaning, Judgment, monitoring, or commercial-readiness claim is created.
 ```
+
+### Parfumo Chrome Extension Route Re-Pin Addendum
+
+```yaml
+route_repin_date: 2026-06-30
+operator_question: >
+  Diagnose whether Parfumo can use a non-extension route, or whether the current
+  targeted high-value capture route should use the Chrome extension/user-visible
+  browser session after the operator verified the page works in their browser.
+current_access_diagnosis:
+  direct_http_and_first_party_ajax:
+    status: blocked_in_current_environment
+    notes: >
+      The June 29 direct/AJAX route remains a historical route fact, but current
+      probes with the correct Parfumo product id and hash returned Cloudflare
+      access-denial/block shells rather than source content.
+  anonymous_rendered_browser:
+    status: blocked_in_current_environment
+    notes: >
+      Anonymous rendered capture landed on a Cloudflare "Just a moment" /
+      security-verification page, not Parfumo source content.
+  proxied_rendered_browser:
+    status: blocked_in_current_environment
+    notes: >
+      The owner-authorized residential proxy profile also landed on the
+      Cloudflare verification page for Parfumo in this run.
+  chrome_extension_user_visible_browser:
+    status: working_current_route
+    notes: >
+      The Codex Chrome extension route using the operator's visible Chrome
+      browser loaded the real Parfumo product DOM. No browser cookies, storage
+      state, or Cloudflare clearance values were exported into the saved receipt.
+observed_chrome_extension_facts:
+  product_id: "67720"
+  declared_reviews: 369
+  declared_statements: 1390
+  rating_display: "7.7 / 10"
+  rating_count_observed: 5179
+  first_party_review_endpoint_seen: /action/perfume/get_reviews.php
+  first_party_statement_endpoint_seen: /action/perfume/get_statements.php
+  scrubbed_receipt_path: orca-harness/_scratch/parfumo_chrome_extension_probe_20260630_2000/route_receipt.json
+target_scope_correction:
+  status: full_corpus_no_longer_active_target
+  target: targeted_current_window_plus_high_value_review_statement_sample
+  emphasis:
+    - recency_focused_latest_reviews_and_statements
+    - source_visible_high_low_rating_buckets_where_present
+    - preserve aggregate declared corpus counts as context while residualizing uncaptured corpus
+  rating_scale_note: >
+    Operator shorthand such as 4-star / 5-star / 1-star maps here to
+    source-visible rating buckets, not an assumed Parfumo star scale. Preserve
+    Parfumo's own review fields and labels as raw facts, then bucket in
+    projection only when the source-visible values support it.
+route_verdict: >
+  For the current Parfumo targeted-corpus lane, use the Chrome extension /
+  user-visible browser route as the primary capture route. Preserve the initial
+  rendered DOM/visible text/screenshot and pursue bounded same-tab first-party
+  page/AJAX interactions only for targeted high-value review/statement coverage.
+  Direct HTTP/AJAX remains an opportunistic canary/fallback if it becomes
+  reachable again, not a success dependency. Anonymous or proxied non-extension
+  rendered capture is not ruled out forever, but it is currently blocked and
+  should not gate this lane. Full 369-review / 1390-statement exhaustion is not
+  the active target unless separately re-authorized.
+safety_boundaries:
+  - no cookie export or clearance-token transfer
+  - no CAPTCHA solving service
+  - no stealth/fingerprint-spoofing work
+  - no proxy rotation or retry storm
+  - no live capture without current owner network authorization
+```
+
 ### Basenotes Full CloakBrowser Packet
 
 ```yaml
@@ -518,7 +590,7 @@ not_claimed:
 | Pin ID | Source | Step 0 access classification | Signal substrate | Cheapest working route | Verdict | Re-probe trigger |
 | --- | --- | --- | --- | --- | --- | --- |
 | PIN-001 | Fragrantica | publicly-viewable public web content | large product-page HTML plus search HTML | `direct_http` with at least 2 MB cap for product pages | pinned_for_capture_probe | route returns block shell, body degrades, product markers disappear, or packet field extraction cannot preserve source-visible content |
-| PIN-002 | Parfumo | publicly-viewable public web content | product-page HTML; perfume-search locator route | `direct_http`; resolve exact product URL through `s_perfumes_x.php` when needed | pinned_for_capture_probe | route returns block shell, product URL changes, search locator changes, or packet field extraction cannot preserve source-visible content |
+| PIN-002 | Parfumo | publicly-viewable public web content, but bot-mitigated for anonymous/proxied automation in the current environment | product-page DOM plus first-party review/statement AJAX hooks observed in the operator's visible Chrome browser | `chrome_extension_user_visible_rendered_session`; direct HTTP/AJAX is canary/fallback only | pinned_for_current_targeted_capture_route | Chrome extension route returns Cloudflare/block shell, product DOM markers disappear, AJAX hook shape changes, owner withdraws live-browser authorization, target-sampling objective changes, or direct HTTP/AJAX becomes reliably reachable again |
 | PIN-003 | Basenotes | publicly-viewable; anonymous egress Cloudflare-challenged, reachable via residential proxy | product-page HTML with reviews embedded as schema.org JSON-LD (author/reviewBody/rating/date) + HTML containers; full corpus at `/reviews/` + sentiment sub-URLs | `cloakbrowser_snapshot` through residential proxy profile `reddit-res-01` (anonymous CloakBrowser is blocked) | pinned_for_capture_probe (2026-06-30: residential-proxy route verified, 3/3 + homepage; reviews JSON-LD confirmed in DOM) | proxy stops rendering content (Cloudflare tightens / proxy pool flagged), product URL changes, or extraction cannot preserve source-visible content |
 
 ## Candidate Decision
@@ -528,18 +600,20 @@ candidate_decision:
   closeout_state: capture_preservation_only
   independent_origins_seen:
     - Fragrantica product page substrate reachable by direct HTTP
-    - Parfumo product page substrate reachable by direct HTTP
+    - Parfumo product page substrate reachable by visible Chrome extension route
     - Basenotes product page substrate reachable via residential-proxy CloakBrowser (2026-06-30)
   reason: >
     The probe found three preservation-worthy public product-page substrates:
-    Fragrantica and Parfumo via anonymous routes, and Basenotes via the
-    residential-proxy CloakBrowser route (verified 2026-06-30). This supports
-    packet-grade preservation requests for all three; it is not demand proof,
-    not full database capture, and not full review-corpus extraction.
+    Fragrantica via direct HTTP, Parfumo via the operator-visible Chrome
+    extension route (the June 29 direct/AJAX route is demoted to canary/fallback
+    after current Cloudflare blocks), and Basenotes via the residential-proxy
+    CloakBrowser route (verified 2026-06-30). This supports packet-grade
+    preservation requests for all three; it is not demand proof, not full
+    database capture, and not full review-corpus extraction.
 ```
 
 ## Closeout
 
 `capture_preservation_only`.
 
-Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo is pinned as a direct product-page plus first-party AJAX pagination route for a future complete reviews/statements capture, but this addendum did not run the full 369-review / 1390-statement corpus. Basenotes is now pinned (2026-06-30) to the residential-proxy CloakBrowser route: anonymous routes (direct HTTP, anti-block HTTP, screening browser, anonymous CloakBrowser) are Cloudflare-challenged from this host's Singapore Singtel egress, but CloakBrowser through the residential proxy profile `reddit-res-01` (US Verizon exit) renders real product content reliably (3/3 product page + homepage); reviews are embedded in-page as schema.org JSON-LD (confirmed 2026-06-30 -- extraction is a structured-data parse, plus the `/reviews/` sub-URL + sentiment tabs for the full corpus). One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
+Fragrantica is pinned as a direct-HTTP product-page preservation route and current-window review substrate, but it is not complete review-corpus capture. Parfumo's June 29 direct product-page plus first-party AJAX route is retained as historical evidence and a future canary/fallback, but the current targeted high-value route is the Chrome extension / operator-visible browser route; this addendum does not target or claim the full 369-review / 1390-statement corpus. Basenotes is now pinned (2026-06-30) to the residential-proxy CloakBrowser route: anonymous routes (direct HTTP, anti-block HTTP, screening browser, anonymous CloakBrowser) are Cloudflare-challenged from this host's Singapore Singtel egress, but CloakBrowser through the residential proxy profile `reddit-res-01` (US Verizon exit) renders real product content reliably (3/3 product page + homepage); reviews are embedded in-page as schema.org JSON-LD (confirmed 2026-06-30 -- extraction is a structured-data parse, plus the `/reviews/` sub-URL + sentiment tabs for the full corpus). One Fragrantica packet landed in the configured ORCA data root during the completeness check; that is a generated packet fact only, not fixture admission, routine Data Lake handoff, ECR, Cleaning, Judgment, monitoring, commercial readiness, or full-database crawling.
