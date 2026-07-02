@@ -2071,6 +2071,10 @@ direction_change_propagation:
 
 ## From .agents/workflow-overlay/validation-gates.md
 
+The first archived receipt below concerns the US-parameterized Google
+search-surface route; as that route decision states, parameterized US
+capture is US-parameterized only, not physically US-local.
+
 ```yaml
 direction_change_propagation:
   doctrine_changed: >
