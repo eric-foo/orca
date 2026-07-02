@@ -29,14 +29,62 @@ authority_boundary: retrieval_only
 
 ## Status
 
-**`PROPOSAL` — pre-ratification.** Awaiting owner ratification as the working goal
-for the Creator Signal carve-out. Asserts no validation, readiness, buyer proof,
-or implementation authority. Synthesized from three de-correlated in-house
-architecture passes (value/WTP, lean-ship, durable-moat lenses), a cross-vendor
-(ChatGPT) god-tier pass, and home-model adjudication — see *Provenance*.
+**`RATIFIED` as the working goal for the Creator Signal carve-out** (owner-merged
+via PR #550, 2026-07-01), **and evolved by *Direction Update v0.1* below.** Still
+asserts no validation, readiness, buyer proof, or implementation authority — a
+direction, not a build claim. Synthesized from three de-correlated in-house
+architecture passes (value/WTP, lean-ship, durable-moat), a cross-vendor (ChatGPT)
+god-tier pass, and home-model adjudication — see *Provenance*.
 
-This record's own status stays honest on purpose: it is a proposal until the
-owner ratifies, and it does not label itself more settled than it is.
+## Direction Update v0.1 (2026-07-01) — post adversarial-review + sizing + competitor teardown
+
+Three inputs after the v0 proposal sharpen the direction. **Where this section and
+the original sections below conflict, this section wins.**
+
+**1. Sequencing is FOUNDATION-FIRST, not customer-product-first.** The near-term
+work is hardening the creator registry into a **scalable, live-fed, formula-validated
+data engine** (the substrate every downstream path needs — the "our runs" use). The
+customer-facing product (Vetting), the SaaS-vs-consulting model, and the
+brands-vs-agencies buyer are **deferred to later, evidence-gated stages** — they are
+*how-to-sell* questions, and the registry is buyer-agnostic. This supersedes the
+"Vetting v0 is the first build" thrust of the *Vetting v0* and *Staged path* sections
+below. (Reason: with today's thin data — 33 shallow, mostly view-only profiles — a
+customer product would probe a hollow thing; build the data asset first.)
+
+**2. The moat is a proprietary, longitudinal, vertical EVIDENCE GRAPH** — not "better
+influencer software" (commoditized). The defensible asset is `creator × brand ×
+product × content × time × proof × relevance`, complete + fresh + provenance-backed,
+for the niche. Incumbents can copy screens faster than *capture history* — so the
+single most urgent operational move is to **start sustained niche capture now** (the
+time-series can't be recreated later). Compete on the **flank** CreatorIQ/Tribe
+structurally ignore (indie/DTC + specialist agencies + non-marketer evidence buyers);
+**coexist / possibly be-acquired, not head-on displacement.** Competitor landscape +
+the EMV/MIV correction are in `creator_signal_market_sizing_v0.md`.
+
+**3. Adversarial-review corrections (accepted).**
+- **Do NOT freeze a durable customer "claim contract" now** (supersedes *High-lock-in
+  decision #1* below). The `F:\` sanitization forces a *thin, disposable*
+  customer-projection step (mandatory) — but the versioned external claim-object schema
+  is a product/interface bet to **defer until buyer evidence**, not lock pre-PMF.
+- **WTP language is hypothesis, not established demand;** a customer probe's *primary
+  output is WTP evidence*.
+- **Provenance is data-built, but the customer-facing "verify this number" UX is
+  un-designed** (lake `content_hash` lives inside snapshots, not per-shown claim).
+- Any eventual customer verdict must **reflect all gaps** (engagement absence,
+  freshness, sample, audience-fit), not just thin-sample downgrade; v0-class output is
+  honestly a **"reach + provenance + honesty screen," not full spend-vetting** until
+  data breadth improves.
+
+**4. Sizing (rough, not demand-validated):** fragrance alone ≈ small business
+(~$0.3–1.5M ARR SOM); **beauty/skincare expansion** makes it a credible Series-A-scale
+vertical SaaS (~$5M ARR base Yr3); reachable ICP SAM ≈ **$100M** (not the $2B headline).
+Fragrance is the **wedge**, beauty the **destination**. See the sizing memo.
+
+**5. Open owner decisions — resolved:** (1) foundation-first — ACCEPTED; (2) buyer
+(brands vs agencies) — **deferred; test both** (a GTM question, not a registry one);
+(3) placement — this doc sits in the `creator_signal` product spine. New fork to
+*test*, not resolve now: whether the primary buyer is a **non-marketer evidence buyer**
+(investor / retail / procurement / legal) rather than a marketer.
 
 ## Product framing (the carve-out)
 

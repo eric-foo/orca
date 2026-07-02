@@ -188,6 +188,18 @@ classification and must carry preflight manually.
 `python .agents/hooks/check_prompt_provenance.py --selftest` checks the decision
 logic.
 
+**Google search-surface route guard (advisory + CI).**
+`.agents/hooks/check_search_surface_google_route.py` checks the parameterized
+Google route shell for changed durable docs: Google Search capture URLs use
+`hl=en&gl=us&pws=0`, route-using artifacts carry the physical-locality
+non-claim, and blocked Google pages with visible exit-IP content are not
+preserved in durable docs. Wired in `.claude/settings.json`,
+`.codex/hooks.json`, and `.github/workflows/ci.yml`. Authority:
+`docs/decisions/search_surface_google_parameterized_us_capture_route_v0.md` plus
+the enforcement-placement principle in `.agents/workflow-overlay/validation-gates.md`.
+Shape only; US-parameterized is not physically US-local. It is not
+physical-locality proof, validation, readiness, demand proof, Judgment evidence, or Product Lead evidence.
+
 **SCI reminder (advisory).** A PreToolUse hook (matcher `Bash|PowerShell`
 in `.claude/settings.json`, gated to `git commit`) runs:
 
@@ -517,11 +529,13 @@ nickname: "crawling graph." The runner is
 | `orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_full_gt_upgrade_scoping_v0.md` | Data Lake spine scoping record that turns the PR #542 consumer-proof boundary into A-D full-GT success signals and review timing without selecting runtime physicalization choices or claiming Bronze full GT. |
 | `orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_full_gt_next_material_decisions_v0.md` | Superseded as the active continuation anchor by the physicalization decision brief; remains the historical planning-only next material decision packet after the Bronze full-GT A-D scoping record: Batch A raw-writer/non-raw-touchpoint source inventory plus Manifest/equivalent decision request, Batch B/C physicalization gates, and Batch D proof/CI threshold hardening before any third-proof work. |
 | `orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_full_gt_physicalization_decision_brief_v0.md` | Active post-PR-555 Bronze full-GT physicalization decision brief: Gate 1 decides or defers Attachment Record body layout/backend relationship; Gate 2 decides or defers retention/lawful-erasure/backend lock-in; no runtime implementation, backend selection, third proof, or Bronze full-GT claim. |
+| `orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_full_gt_gate_adr_batch_plan_v0.md` | Post-PR-557 batch plan for the Gate ADR work unit: parallel delegated review of the physicalization brief, Gate 1 ADR plus Gate 2 explicit-posture ADR authored together for one delegated review-patch pass, with implementation scoping and contract amendments deferred until both gates are ratified or explicitly deferred. |
+| `orca/product/spines/data_lake/workflows/core_spine_v0_data_lake_bronze_lake_owner_explainer_v0.md` | Owner-facing plain-language Bronze lake explainer: what the lake is, its invariants, Attachment Records, Silver relation, MGT versus full GT, and the two physicalization gates; orientation only, contracts win, live state via the active continuation anchor. |
 | `docs/workflows/youtube_shorts_creator_index_decision_path_v0.md` | Source-backed workflow decision path for planned creator-ledger infrastructure: keeps the 200-row fragrance ledger as evidence, assigns recurring creator-observation contract ownership to Capture source-family architecture, limits Data Lake to keyed storage/attachment, and defers queryable niche/sub-niche creator views to projection. |
 | `docs/workflows/ig_behavioral_live_validation_receipt_v0.md` | Bounded live IG validation receipt after PR #441/#447: public logged-out grid packet projected through the IG behavioral lake adapter, with standalone-audio residuals and a follow-on no-write deep-capture route diagnostic. Not shared-core, production readiness, canonical F-lake validation, or full durable media validation. |
 | `docs/workflows/ig_canonical_f_deep_capture_product_extraction_receipt_v0.md` | Bounded canonical F-lake IG receipt: public deep-capture writes, no-network product extraction writes, exact Silver lineage verification, and behavioral-completeness residual downgrade observed after PR #460 follow-up patches. Not shared-core, production readiness, logged-in/proxy access, durable media/video preservation, or Judgment/gold verdict. |
-| `docs/workflows/ig_youtube_behavioral_e2e_closeout_receipt_v0.md` | Evidence-first IG/YT behavioral closeout receipt: canonical F-lake IG projection matrix, expanded 30-video YouTube caption-route F-lake e2e evidence, remaining ASR/no-caption residual, and non-claims. For detailed YouTube corpus measurement, open `docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md`. |
-| `docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md` | Expanded canonical YouTube F-lake measurement corpus: 30 caption-route watch+caption videos, projection status counts, product-extraction boundary, ASR/no-caption gap, and next non-admin steps before statistical full-path completeness claims. |
+| `docs/workflows/ig_youtube_behavioral_e2e_closeout_receipt_v0.md` | Evidence-first IG/YT behavioral closeout receipt: canonical F-lake IG projection matrix, expanded 31-video YouTube caption-route F-lake e2e evidence, remaining ASR/no-caption residual, and non-claims. For detailed YouTube corpus measurement, open `docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md`. |
+| `docs/workflows/youtube_behavioral_measurement_corpus_receipt_v0.md` | Expanded canonical YouTube F-lake measurement corpus: 31 caption-route watch+caption videos, projection status counts, product-extraction boundary, ASR/no-caption gap, and next non-admin steps before statistical full-path completeness claims. |
 | `docs/workflows/data_capture_spine_consolidation_map_v0.md` | Data Capture Spine repo submap. Open before enumerating capture owner docs. |
 | `orca/product/spines/data_lake/authority/core_spine_v0_data_lake_capture_propagation_classification_contract_v0.md` | Accepted Data Lake / Capture propagation classification contract: classifies lake semantics, raw packet-runner seams, behavioral projection shape, source-family-local acquisition routes, and downstream residual/completeness semantics into same-class checks. |
 | `docs/decisions/data_lake_capture_propagation_classification_contract_proposal_v0.md` | Prepare-only proposal for narrow Data Lake / Capture propagation classification: generic lake/storage and packet-runner checks, platform behavioral parity checks, source-family-local acquisition routes, and downstream residual/Gold-boundary propagation. Proposal only; not accepted doctrine. |
@@ -732,6 +746,7 @@ Unity runtime-fee specimen:
 | `docs/prompts/handoffs/` | Handoff prompt drafts. |
 | `docs/prompts/reviews/` | Review prompts, including the delegated adversarial review-patch prompt for the Bronze full-GT A-D scoping artifact. |
 | `docs/prompts/reviews/core_spine_v0_data_lake_bronze_full_gt_upgrade_scoping_delegated_adversarial_review_patch_prompt_v0.md` | Filed prompt for independent delegated adversarial review-and-patch of the Bronze full-GT A-D scoping artifact; patch scope is limited to the scoping artifact and all findings remain CA-adjudicated decision input. |
+| `docs/prompts/reviews/core_spine_v0_data_lake_bronze_full_gt_physicalization_decision_brief_delegated_adversarial_review_patch_prompt_v0.md` | Filed prompt for cross-vendor delegated adversarial review-and-patch of the landed physicalization decision brief (PR #557) before Gate 1/Gate 2 ADR authoring relies on it; patch scope is the brief only and all findings remain CA-adjudicated decision input. |
 | `docs/prompts/reruns/` | Rerun prompts. |
 | `docs/prompts/patches/` | Patch prompts (accepted family). |
 | `docs/prompts/wrappers/` | Thin wrapper prompts. |
