@@ -634,6 +634,12 @@ def _tiktok_challenge_visual_close_diagnostic_pointer_action(
             "[data-testid],[data-test-id],[class]"
         ),
         text_markers=("__tiktok_visual_close_diagnostic_never_dom_match__",),
+        page_text_markers=(
+            "drag the slider",
+            "verify to continue",
+            "captcha",
+            "security check",
+        ),
         exact_text_markers=("__tiktok_visual_close_diagnostic_never_dom_match__",),
         wait_after_ms=2000,
         move_steps_min=6,

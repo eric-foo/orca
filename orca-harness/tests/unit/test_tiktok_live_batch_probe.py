@@ -435,7 +435,12 @@ def test_live_probe_challenge_close_diagnostic_flag_prepends_close_action(
     assert visual_close_action.action_name == (
         TIKTOK_CHALLENGE_VISUAL_CLOSE_DIAGNOSTIC_POINTER_ACTION_NAME
     )
-    assert visual_close_action.page_text_markers == ()
+    assert visual_close_action.page_text_markers == (
+        "drag the slider",
+        "verify to continue",
+        "captcha",
+        "security check",
+    )
     assert visual_close_action.visual_top_right_x_fallback is True
     assert cadence["capture_contract"]["challenge_close_diagnostic_allowed"] is True
     assert cadence["capture_contract"]["challenge_close_counts_as_success"] is False

@@ -55,7 +55,7 @@ The substrate is:
 | Benign TikTok onboarding/app prompt such as `Got it`, `Not now`, `Continue in browser` | `tiktok_dismiss_benign_overlay_pointer_v0` | Yes | Setup action only; excluded from comment-action count. |
 | Comment surface does not load comments until tab shuffle | `comment_surface_toggle_pointer_sequence_v0`: `tiktok_open_comments_pointer_v0` -> `tiktok_open_more_like_this_pointer_v0` -> `tiktok_reopen_comments_pointer_v0` | Yes | Clean only if at least one page-owned `/api/comment/list` response is admitted. Zero response is stop/diagnosis. |
 | DOM-exposed slider/captcha close control | `tiktok_challenge_modal_close_diagnostic_pointer_v0` | No, only with `--allow-challenge-close-diagnostic` | Diagnostic only. If clicked, force stop as challenge-close diagnosis. |
-| Screenshot-visible but DOM-invisible slider/captcha X | `tiktok_challenge_modal_visual_close_diagnostic_pointer_v0` | No, only with `--allow-challenge-close-diagnostic` | Diagnostic only. If clicked, force stop as challenge-close diagnosis. |
+| Screenshot-visible but DOM-invisible slider/captcha X | `tiktok_challenge_modal_visual_close_diagnostic_pointer_v0` | No, only with `--allow-challenge-close-diagnostic` and visible challenge text | Diagnostic only. If clicked, force stop as challenge-close diagnosis. |
 | Slider/captcha puzzle itself | None | Never | Do not drag, solve, or attempt puzzle interaction. |
 | Login/auth wall or account risk wall | None unless separately mapped as benign prompt | Never by default | Stop and report blocker. Do not enter credentials or manipulate account state. |
 | Unknown dismiss/reload blocker | None until mapped | No | Stop or patch a named substrate action with tests; do not generic-click around blockers. |
@@ -76,6 +76,8 @@ The substrate is:
 5. If the owner explicitly authorizes challenge-close diagnosis, run with
    `--allow-challenge-close-diagnostic`. A DOM close click or visual-X close click
    must stop the run and must not admit, expand, or claim capture success.
+   The visual-X diagnostic is challenge-text gated; it is not a generic
+   upper-right screenshot clicker.
 6. Scan outputs for forbidden markers before any admission claim. Auth-state files
    copied for a live run must be removed and verified absent after the run.
 

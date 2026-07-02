@@ -36,16 +36,16 @@ input_hashes:
   AGENTS.md: c28077faf75c83b80800beda7508ae7a6d95a411
   .agents/workflow-overlay/README.md: 57cbc892dcd79d4d57686db465900ad042769174
   .agents/workflow-overlay/source-loading.md: 29c8c3211299aff22837ef9981e5865f3c15c222
-  orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_capture_lane_spec_v0.md: 9bbec5e63e8d8845a3b6c24ff58acbc8bf039ba6
-  orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_sessioned_capture_warm_probe_plan_v0.md: 0814b9f9aaa8e925c03d2cb5ae81c876a33073aa
+  orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_capture_lane_spec_v0.md: f7f5819a3b7091458438b7b84b820445174196f3
+  orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_sessioned_capture_warm_probe_plan_v0.md: 977628f964461970a41c8aa243503acce16db048
   orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_first_slice_probe_recon_v0.md: 8ae31ac55067f2ec175f6baa6867939704cf7078
   docs/workflows/tiktok_public_route_live_diagnostic_receipt_v0.md: a0ca160b4a984a2d6e2f0d191a2deea8d6844a2b
   docs/workflows/tiktok_behavioral_sync_fresh_lane_handoff_v0.md: 0fcda55434efb97791c495e112e7682f9cc1b42d
   docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md: 5a814dad39d79222ea78631e395ff382d4fc7396
   docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md: 8385e43615e76a2503e9f36468dbdcd7c92268a3
-  docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md: 8a70101fa80236296fa4542e1dfccfcd7895e5c5
+  docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md: a6785da28a6fa3cca2c928b037172b40b7480258
   orca-harness/source_capture/adapters/browser_snapshot.py: c69014f5fb4eb21901c3770b6eb8a058ebd1b65c
-  orca-harness/source_capture/tiktok/live_batch_probe.py: e7acde53493c25616dce4443a8cf06b41a967054
+  orca-harness/source_capture/tiktok/live_batch_probe.py: 15fb5239c33da41ee4946d6b4e5d1c9b126a0c9e
   orca-harness/source_capture/tiktok/blocker_triage.py: 19816ad967bc57c53aa750dfc9cf59902e5455cd
   orca-harness/source_capture/tiktok/batch_packet.py: b6758d7615a96804e48714283f1925577c7dc22c
   orca-harness/source_capture/tiktok/admission.py: 45a86b554772a58300b23be077a48b32f8dcd8de
@@ -209,8 +209,9 @@ handoff depends on:
   candidate, and uses the same bounded pointer movement substrate.
 - The owner-authorized visual diagnostic close action is named
   `tiktok_challenge_modal_visual_close_diagnostic_pointer_v0`. It runs only under
-  `--allow-challenge-close-diagnostic`, after the comment-surface route, and uses
-  a viewport screenshot to scan the upper-right crop for a small high-contrast
+  `--allow-challenge-close-diagnostic`, after the comment-surface route, requires visible
+  challenge/security page text, and uses a viewport screenshot to scan the
+  upper-right crop for a small high-contrast
   X-shaped glyph. It records only sanitized proof fields such as crop box,
   screenshot hash, candidate count, confidence, and clicked state. It is a
   blocker-diagnosis path only: a click forces stop semantics and cannot produce
@@ -401,17 +402,23 @@ direct 3-5 creator execution packet until a
 one-video route-yield gate captures at least one admitted page-owned
 `/api/comment/list` response under the current runner and then admits cleanly.
 
-Current live state after the visual-X diagnostic patch: the latest
-2026-07-03 one-video Funmi retry stopped as
-`challenge_close_diagnostic_only`, with `attempted_count=1`,
-`completed_count=0`, `challenge_count=1`, no result row, no admission, and no
-expansion. The selected diagnostic receipt was
-`tiktok_challenge_modal_visual_close_diagnostic_pointer_v0` with
+Current live state after the visual-X diagnostic patch and two recurrence
+probes: the latest 2026-07-03 one-video Funmi retries stopped as
+`challenge_close_diagnostic_only`, each with `attempted_count=1`,
+`completed_count=0`, `challenge_count=1`, empty `results`, no batch-admission
+claim, and no expansion. In both recurrence probes, the selected diagnostic
+receipt was `tiktok_challenge_modal_visual_close_diagnostic_pointer_v0` with
 `target_found=true`, `clicked=true`, `target_kind=visual_x`,
-`visual_fallback_candidate_count=1`, `visual_fallback_confidence=0.721`, and
-crop `{x:576,y:0,width:704,height:251}`. This proves the visual X can be found
-and clicked; it does not prove clean capture because the forced stop semantics
-are intentional after a challenge-close diagnostic click.
+`page_text_gate_matched=true`, `visual_fallback_candidate_count=1`,
+`visual_fallback_confidence=0.721`, and crop
+`{x:576,y:0,width:704,height:251}`. The screenshot hashes differed
+(`9a466df6...` then `efdb3ebd...`), so this is recurring behavior rather than a
+single cached receipt. Any page-owned comment-list response observed after the
+challenge-close diagnostic click remains diagnostic only and cannot satisfy the
+clean route-yield/admission gate. This proves the visual X can be found and
+clicked repeatedly under the challenge-text gate; it does not prove clean
+capture because the forced stop semantics are intentional after a
+challenge-close diagnostic click.
 
 
 ## Changed / Inspected / Tested Files In This Handoff Lane
@@ -419,6 +426,9 @@ are intentional after a challenge-close diagnostic click.
 Changed:
 
 - `docs/workflows/tiktok_live_microbatch_owner_gated_handoff_v0.md`
+- `docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_capture_lane_spec_v0.md`
+- `orca/product/spines/capture/core/source_families/social_media/tiktok/tiktok_sessioned_capture_warm_probe_plan_v0.md`
 - `orca-harness/source_capture/adapters/browser_snapshot.py`
 - `orca-harness/source_capture/tiktok/live_batch_probe.py`
 - `orca-harness/runners/run_source_capture_tiktok_live_batch_probe.py`
@@ -434,13 +444,15 @@ Validation completed:
 
 - `PYTHONPATH=orca-harness python -m pytest -q orca-harness/tests/unit/test_source_capture_browser_snapshot.py orca-harness/tests/unit/test_tiktok_blocker_triage.py orca-harness/tests/unit/test_tiktok_live_batch_probe.py orca-harness/tests/unit/test_tiktok_batch_admission.py`
   -> exit 0 with 67 targeted tests passing.
-- One owner-authorized diagnostic live retry after the visual-X patch using
+- Three owner-authorized diagnostic live retries after the visual-X patch using
   auth-state label `tiktok-batch1-20260630` and
-  `session_mode=client_provided_session`; result stopped on
-  `challenge_close_diagnostic_only` with visual diagnostic `target_found=true`,
-  `clicked=true`, `target_kind=visual_x`, no result row, no admission, and no
-  expansion.
-- Forbidden-marker scan over the latest retry scratch output returned no matches.
+  `session_mode=client_provided_session`; the last two were explicit recurrence
+  probes and both stopped on `challenge_close_diagnostic_only` with visual
+  diagnostic `target_found=true`, `clicked=true`, `target_kind=visual_x`,
+  `page_text_gate_matched=true`, empty `results`, no batch-admission claim, and
+  no expansion.
+- Forbidden-marker scans over the recurrence scratch outputs returned no
+  matches.
 - Temporary copied auth-state files were removed after each run and verified
   absent.
 
