@@ -54,12 +54,19 @@ def _yt_row(channel_id: str | None, *, account: str, handle: str = "somehandle")
     }
 
 
-def _entry_xml(video_id: str, *, views: str | None = "100", stars: str | None = "5") -> str:
+def _entry_xml(
+    video_id: str,
+    *,
+    channel_id: str = ALPHA,
+    views: str | None = "100",
+    stars: str | None = "5",
+) -> str:
     statistics = f'<media:statistics views="{views}"/>' if views is not None else ""
     star = f'<media:starRating count="{stars}" average="5.00" min="1" max="5"/>' if stars is not None else ""
     return (
         "<entry>"
         f"<yt:videoId>{video_id}</yt:videoId>"
+        f"<yt:channelId>{channel_id}</yt:channelId>"
         f"<title>{video_id} title</title>"
         "<published>2026-07-02T09:00:05+00:00</published>"
         "<updated>2026-07-02T16:06:10+00:00</updated>"
@@ -68,12 +75,17 @@ def _entry_xml(video_id: str, *, views: str | None = "100", stars: str | None = 
     )
 
 
-def _feed_xml(*entries: str) -> bytes:
+def _feed_channel_id_as_served(channel_id: str) -> str:
+    return channel_id[2:] if channel_id.startswith("UC") else channel_id
+
+
+def _feed_xml(*entries: str, channel_id: str = ALPHA) -> bytes:
     return (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" '
         'xmlns:media="http://search.yahoo.com/mrss/" '
         'xmlns="http://www.w3.org/2005/Atom">'
+        f"<yt:channelId>{_feed_channel_id_as_served(channel_id)}</yt:channelId>"
         "<title>Fixture Channel</title>"
         f"{''.join(entries)}"
         "</feed>"
@@ -171,7 +183,11 @@ def _iter_dicts(node: Any):
 def test_first_run_baseline_and_committed_readback(tmp_path: Path) -> None:
     lake = DataLakeRoot.for_test(tmp_path / "lake")
     alpha_feed = _feed_xml(_entry_xml("vidAlpha0001", views="1718", stars="42"))
-    beta_feed = _feed_xml(_entry_xml("vidBeta00001"), _entry_xml("vidBeta00002"))
+    beta_feed = _feed_xml(
+        _entry_xml("vidBeta00001", channel_id=BETA),
+        _entry_xml("vidBeta00002", channel_id=BETA),
+        channel_id=BETA,
+    )
     fetch = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), alpha_feed), _url(BETA): (200, _url(BETA), beta_feed)})
     ledger = _ledger(_yt_row(ALPHA, account="acct_a"), _yt_row(BETA, account="acct_b"))
 
@@ -233,13 +249,96 @@ def test_second_run_marks_only_new_video_first_seen(tmp_path: Path) -> None:
     )
 
 
+def test_prior_state_readback_failure_is_visible_not_baseline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    lake = DataLakeRoot.for_test(tmp_path / "lake")
+    ledger = _ledger(_yt_row(ALPHA, account="acct_a"))
+    run1_feed = _feed_xml(_entry_xml("vidAlpha0001"))
+    fetch1 = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), run1_feed)})
+    exit1, _ = _run(lake, ledger, fetch1, tmp_path)
+    assert exit1 == 0
+    (run1_packet,) = _surface_packets(lake)
+
+    original_load_raw_packet = lake.load_raw_packet
+
+    def fail_prior_packet(packet_id: str):
+        if packet_id == run1_packet:
+            raise RuntimeError("corrupt prior entries artifact")
+        return original_load_raw_packet(packet_id)
+
+    monkeypatch.setattr(lake, "load_raw_packet", fail_prior_packet)
+    fetch2 = _FakeFetch(
+        {_url(ALPHA): (200, _url(ALPHA), _feed_xml(_entry_xml("vidAlphaNEW1")))}
+    )
+    exit2, summary = _run(lake, ledger, fetch2, tmp_path)
+
+    assert exit2 == 2
+    assert summary["status"] == "completed_with_failures"
+    assert summary["failed_channel_ids"] == [ALPHA]
+    (failed_row,) = summary["results"]
+    assert failed_row["attempted_at"] is None
+    assert "prior rss monitor state derivation failed" in failed_row["packet_ref_or_error"]
+    assert "corrupt prior entries artifact" in failed_row["packet_ref_or_error"]
+    assert fetch2.calls == []
+    assert _surface_packets(lake) == [run1_packet]
+
+
+def test_equal_prior_retrieval_times_fail_visible_not_packet_id_guess(tmp_path: Path) -> None:
+    lake = DataLakeRoot.for_test(tmp_path / "lake")
+    ledger = _ledger(_yt_row(ALPHA, account="acct_a"))
+    fixed_now = lambda: datetime(2026, 7, 3, 8, 0, 0, tzinfo=UTC)
+
+    fetch1 = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), _feed_xml(_entry_xml("vidA")))})
+    exit1, _ = _run(lake, ledger, fetch1, tmp_path, now_fn=fixed_now)
+    assert exit1 == 0
+
+    fetch2 = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), _feed_xml(_entry_xml("vidB")))})
+    exit2, _ = _run(lake, ledger, fetch2, tmp_path, now_fn=fixed_now)
+    assert exit2 == 0
+    assert len(_surface_packets(lake)) == 2
+
+    fetch3 = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), _feed_xml(_entry_xml("vidC")))})
+    exit3, summary = _run(lake, ledger, fetch3, tmp_path)
+
+    assert exit3 == 2
+    assert summary["status"] == "completed_with_failures"
+    (failed_row,) = summary["results"]
+    assert "ambiguous prior rss state" in failed_row["packet_ref_or_error"]
+    assert fetch3.calls == []
+    assert len(_surface_packets(lake)) == 2
+
+
+def test_feed_channel_identity_mismatch_is_visible_failure(tmp_path: Path) -> None:
+    lake = DataLakeRoot.for_test(tmp_path / "lake")
+    ledger = _ledger(_yt_row(ALPHA, account="acct_a"))
+    wrong_feed = _feed_xml(
+        _entry_xml("vidBeta00001", channel_id=BETA),
+        channel_id=BETA,
+    )
+    fetch = _FakeFetch({_url(ALPHA): (200, _url(ALPHA), wrong_feed)})
+
+    exit_code, summary = _run(lake, ledger, fetch, tmp_path)
+
+    assert exit_code == 2
+    assert summary["status"] == "completed_with_failures"
+    assert summary["failed_channel_ids"] == [ALPHA]
+    (failed_row,) = summary["results"]
+    assert "feed channel identity mismatch" in failed_row["packet_ref_or_error"]
+    assert _surface_packets(lake) == []
+
+
 def test_channel_failure_is_visible_and_exit_2(tmp_path: Path) -> None:
     lake = DataLakeRoot.for_test(tmp_path / "lake")
     ledger = _ledger(_yt_row(ALPHA, account="acct_a"), _yt_row(BETA, account="acct_b"))
     fetch = _FakeFetch(
         {
             _url(ALPHA): ConnectionError("network down"),
-            _url(BETA): (200, _url(BETA), _feed_xml(_entry_xml("vidBeta00001"))),
+            _url(BETA): (
+                200,
+                _url(BETA),
+                _feed_xml(_entry_xml("vidBeta00001", channel_id=BETA), channel_id=BETA),
+            ),
         }
     )
     exit_code, summary = _run(lake, ledger, fetch, tmp_path)

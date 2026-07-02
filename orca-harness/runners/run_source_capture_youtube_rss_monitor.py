@@ -192,12 +192,17 @@ def run_youtube_rss_monitor(
         _write_json(summary_path, summary)
         return YOUTUBE_RSS_MONITOR_EXIT_CODE_BREAK, str(summary_path)
 
-    prior_states = _latest_channel_states(
-        data_root,
-        channel_ids={
-            row["channel_id_or_none"] for row in channels if row["channel_id_or_none"]
-        },
-    )
+    prior_state_error: str | None = None
+    try:
+        prior_states = _latest_channel_states(
+            data_root,
+            channel_ids={
+                row["channel_id_or_none"] for row in channels if row["channel_id_or_none"]
+            },
+        )
+    except RuntimeError as exc:
+        prior_states = {}
+        prior_state_error = f"prior rss monitor state derivation failed: {exc}"
 
     rows: list[dict[str, Any]] = []
     failure_streak = 0
@@ -217,6 +222,17 @@ def run_youtube_rss_monitor(
                         "ledger row has no platform_public_account_id_or_none; "
                         "feed URL cannot be formed"
                     ),
+                    "attempted_at": None,
+                }
+            )
+            continue
+        if prior_state_error is not None:
+            rows.append(
+                {
+                    "platform_account_id": channel["platform_account_id"],
+                    "channel_id": channel_id,
+                    "status": "capture_failed",
+                    "packet_ref_or_error": prior_state_error,
                     "attempted_at": None,
                 }
             )
@@ -314,6 +330,7 @@ def _capture_channel(
     parsed = parse_youtube_channel_feed(raw.decode("utf-8", "replace"))
     if isinstance(parsed, YoutubeChannelFeedParseFailure):
         raise RuntimeError(f"feed parse failed ({parsed.failure_kind}): {parsed.message}")
+    _validate_parsed_channel_identity(parsed, requested_channel_id=channel_id)
 
     compared_prior_packet_id = prior_state["packet_id"] if prior_state else None
     known_before: set[str] = set(prior_state["known_video_ids"]) if prior_state else set()
@@ -518,6 +535,42 @@ def _capture_channel(
     return Path(str(result.output_directory)).name
 
 
+def _validate_parsed_channel_identity(
+    parsed: YoutubeChannelFeedParse, *, requested_channel_id: str
+) -> None:
+    """Fail closed when the served feed cannot be attributed to the roster channel."""
+    served_feed_id = parsed.feed_channel_id_as_served
+    if served_feed_id is not None and not _feed_channel_id_matches_request(
+        served_feed_id, requested_channel_id=requested_channel_id
+    ):
+        raise RuntimeError(
+            "feed channel identity mismatch: "
+            f"requested {requested_channel_id!r}, feed yt:channelId {served_feed_id!r}"
+        )
+
+    unexpected_entry_ids = sorted(
+        entry_id for entry_id in parsed.entry_channel_ids if entry_id != requested_channel_id
+    )
+    if unexpected_entry_ids:
+        raise RuntimeError(
+            "feed entry channel identity mismatch: "
+            f"requested {requested_channel_id!r}, entry yt:channelId values {unexpected_entry_ids!r}"
+        )
+    if served_feed_id is None and not parsed.entry_channel_ids:
+        raise RuntimeError(
+            "feed channel identity missing: no feed-level or entry-level yt:channelId"
+        )
+
+
+def _feed_channel_id_matches_request(served_feed_id: str, *, requested_channel_id: str) -> bool:
+    # Real feeds have been observed serving feed-level yt:channelId without the UC prefix.
+    if served_feed_id == requested_channel_id:
+        return True
+    if requested_channel_id.startswith("UC") and served_feed_id == requested_channel_id[2:]:
+        return True
+    return False
+
+
 def _entry_metric_observations(
     record: Mapping[str, Any], *, capture_time: str
 ) -> list[MetricObservation]:
@@ -573,54 +626,98 @@ def _entry_metric_observations(
 def _latest_channel_states(
     data_root: DataLakeRoot, *, channel_ids: set[str]
 ) -> dict[str, dict[str, Any]]:
-    """Newest-first scan of this surface's committed packets, stopping once
-    every wanted channel has its latest prior state. Packet ids are ULIDs, so
-    the availability listing's sort order is commit-time order. On a healthy
-    daily cadence this loads about one packet per channel."""
-    states: dict[str, dict[str, Any]] = {}
+    """Resolve each channel's latest prior RSS state from artifact capture time.
+
+    Availability order is a packet-id index, not channel-state authority. Load
+    all prior packets for this surface, choose by retrieval_time_utc, and fail on
+    equal-timestamp ambiguity rather than guessing first-seen state.
+    """
+    candidates: dict[str, list[dict[str, Any]]] = {}
     if not channel_ids:
-        return states
-    for packet_id in reversed(data_root.list_available(source_family=SOURCE_FAMILY)):
-        if channel_ids <= states.keys():
-            break
+        return {}
+    for packet_id in data_root.list_available(source_family=SOURCE_FAMILY):
         entry = data_root.read_availability(packet_id)
         if not entry or entry.get("source_surface") != SOURCE_SURFACE:
             continue
         payload = _entries_artifact_payload(data_root, packet_id)
-        if payload is None:
-            continue
         channel_id = payload.get("channel_id")
-        if not isinstance(channel_id, str) or channel_id not in channel_ids:
+        if not isinstance(channel_id, str):
+            raise RuntimeError(f"prior packet {packet_id} entries artifact lacks channel_id")
+        if channel_id not in channel_ids:
             continue
-        if channel_id in states:
-            continue
+        retrieval_time = payload.get("retrieval_time_utc")
+        if not isinstance(retrieval_time, str):
+            raise RuntimeError(
+                f"prior packet {packet_id} entries artifact lacks retrieval_time_utc"
+            )
+        try:
+            parsed_retrieval_time = _parse_utc(retrieval_time)
+        except ValueError as exc:
+            raise RuntimeError(
+                f"prior packet {packet_id} entries artifact has invalid retrieval_time_utc: "
+                f"{retrieval_time!r}"
+            ) from exc
         known = payload.get("known_video_ids_cumulative")
+        if not isinstance(known, list) or not all(isinstance(v, str) for v in known):
+            raise RuntimeError(
+                f"prior packet {packet_id} entries artifact has invalid known_video_ids_cumulative"
+            )
+        candidates.setdefault(channel_id, []).append(
+            {
+                "packet_id": packet_id,
+                "known_video_ids": known,
+                "retrieval_time": parsed_retrieval_time,
+            }
+        )
+
+    states: dict[str, dict[str, Any]] = {}
+    for channel_id, channel_candidates in candidates.items():
+        latest = max(channel_candidates, key=lambda item: item["retrieval_time"])
+        ties = [
+            item
+            for item in channel_candidates
+            if item["packet_id"] != latest["packet_id"]
+            and item["retrieval_time"] == latest["retrieval_time"]
+        ]
+        if ties:
+            packet_ids = sorted([latest["packet_id"], *(item["packet_id"] for item in ties)])
+            raise RuntimeError(
+                f"ambiguous prior rss state for channel {channel_id}: distinct packets tie "
+                f"on retrieval_time_utc: {packet_ids}"
+            )
         states[channel_id] = {
-            "packet_id": packet_id,
-            "known_video_ids": [v for v in known if isinstance(v, str)]
-            if isinstance(known, list)
-            else [],
+            "packet_id": latest["packet_id"],
+            "known_video_ids": latest["known_video_ids"],
         }
     return states
 
 
 def _entries_artifact_payload(
     data_root: DataLakeRoot, packet_id: str
-) -> dict[str, Any] | None:
+) -> dict[str, Any]:
     """Verified by-key read of a packet's entries artifact; a readback problem
-    is reported as no-state (the run then treats the channel as baseline-with-
-    provenance rather than silently inventing prior knowledge)."""
+    blocks the run from writing baseline or first-seen flags over unknown state."""
     try:
         loaded = data_root.load_raw_packet(packet_id)
-        for entry in loaded.manifest.get("preserved_files", []):
-            basename = str(entry.get("relative_packet_path", "")).rsplit("/", 1)[-1]
-            original = basename.split("_", 1)[1] if "_" in basename else basename
-            if original == ENTRIES_ARTIFACT_FILENAME:
+    except Exception as exc:  # noqa: BLE001 - failure is surfaced by the caller
+        raise RuntimeError(f"cannot read prior packet {packet_id}: {type(exc).__name__}: {exc}") from exc
+    for entry in loaded.manifest.get("preserved_files", []):
+        basename = str(entry.get("relative_packet_path", "")).rsplit("/", 1)[-1]
+        original = basename.split("_", 1)[1] if "_" in basename else basename
+        if original == ENTRIES_ARTIFACT_FILENAME:
+            try:
                 payload = json.loads(loaded.bodies[entry["file_id"]].decode("utf-8"))
-                return payload if isinstance(payload, dict) else None
-    except Exception:  # noqa: BLE001 - state derivation is best-effort; absence stays honest
-        return None
-    return None
+            except Exception as exc:  # noqa: BLE001 - failure is surfaced by the caller
+                raise RuntimeError(
+                    f"cannot decode prior packet {packet_id} {ENTRIES_ARTIFACT_FILENAME}: "
+                    f"{type(exc).__name__}: {exc}"
+                ) from exc
+            if not isinstance(payload, dict):
+                raise RuntimeError(
+                    f"prior packet {packet_id} {ENTRIES_ARTIFACT_FILENAME} is not a JSON object"
+                )
+            return payload
+    raise RuntimeError(f"prior packet {packet_id} does not preserve {ENTRIES_ARTIFACT_FILENAME}")
 
 
 # -- run mechanics (mirrors the watch-batch wrapper) ----------------------------
