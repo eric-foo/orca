@@ -49,6 +49,9 @@ TIKTOK_VIDEO_DOM_EXTRACT_SCRIPT = r"""
 TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME = "tiktok_open_comments_pointer_v0"
 TIKTOK_OPEN_MORE_LIKE_THIS_POINTER_ACTION_NAME = "tiktok_open_more_like_this_pointer_v0"
 TIKTOK_REOPEN_COMMENTS_POINTER_ACTION_NAME = "tiktok_reopen_comments_pointer_v0"
+TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME = (
+    "comment_surface_toggle_pointer_sequence_v0"
+)
 TIKTOK_COMMENT_LIST_RESPONSE_CAP = 2
 TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON = "comment_list_response_absent"
 
@@ -581,6 +584,7 @@ def _comment_action_summary(capture_result: BrowserPageObservationSuccess) -> Js
     action_sequence = [action for action in action_sequence if action]
     if len(action_sequence) > 1:
         return {
+            "sequence_name": TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME,
             "action_count": len(action_sequence),
             "action_sequence": action_sequence,
             "clicked_all_targets": all(
@@ -1040,6 +1044,7 @@ __all__ = [
     "TIKTOK_LIVE_BATCH_GRID_JSON_NAME",
     "TIKTOK_LIVE_BATCH_PROBE_SCHEMA_VERSION",
     "TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON",
+    "TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME",
     "TIKTOK_VIDEO_DOM_EXTRACT_SCRIPT",
     "TikTokLiveBatchProbeOutputPaths",
     "detect_tiktok_challenge",

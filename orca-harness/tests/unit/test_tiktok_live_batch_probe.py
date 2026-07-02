@@ -27,6 +27,7 @@ from source_capture.tiktok.blocker_triage import (
 )
 from source_capture.tiktok.live_batch_probe import (
     TIKTOK_COMMENT_ROUTE_NO_RESPONSE_REASON,
+    TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME,
     TIKTOK_OPEN_COMMENTS_POINTER_ACTION_NAME,
     TIKTOK_OPEN_MORE_LIKE_THIS_POINTER_ACTION_NAME,
     TIKTOK_REOPEN_COMMENTS_POINTER_ACTION_NAME,
@@ -172,6 +173,7 @@ def test_live_probe_writes_sanitized_staging_compatible_with_batch_admission(
         "action_taken": False,
     }
     assert cadence["results"][0]["capture_receipt"]["comment_action"] == {
+        "sequence_name": TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME,
         "action_count": 3,
         "action_sequence": _pointer_action_sequence_receipt(),
         "clicked_all_targets": True,
@@ -404,6 +406,7 @@ def test_live_probe_stops_on_zero_comment_list_response(tmp_path: Path) -> None:
         "action_mode": "diagnosis_only",
         "action_taken": False,
         "comment_action": {
+            "sequence_name": TIKTOK_COMMENT_SURFACE_TOGGLE_POINTER_SEQUENCE_NAME,
             "action_count": 3,
             "action_sequence": _pointer_action_sequence_receipt(),
             "clicked_all_targets": True,

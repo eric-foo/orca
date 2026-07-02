@@ -43,7 +43,7 @@ input_hashes:
   docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md: 5a814dad39d79222ea78631e395ff382d4fc7396
   docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md: 8385e43615e76a2503e9f36468dbdcd7c92268a3
   orca-harness/source_capture/adapters/browser_snapshot.py: 626200271254fbec54185226c9be220c19f80b9a
-  orca-harness/source_capture/tiktok/live_batch_probe.py: aac1a950af1ddfeee82c97b7d26844a1c43ed4a4
+  orca-harness/source_capture/tiktok/live_batch_probe.py: dc2989412d8e355453283abaff935a449ddd0af5
   orca-harness/source_capture/tiktok/blocker_triage.py: b0c7d320dc09ee4f65c59d1014deebf2b03d0d80
   orca-harness/source_capture/tiktok/batch_packet.py: b6758d7615a96804e48714283f1925577c7dc22c
   orca-harness/source_capture/tiktok/admission.py: 45a86b554772a58300b23be077a48b32f8dcd8de
@@ -176,10 +176,12 @@ handoff depends on:
   `comment_list_response_absent`. The pointer action found/clicked a matched
   role button (`candidate_count=48`, `matched_count=3`) but observed zero
   page-owned comment-list responses.
-- Owner correction on 2026-07-03: the known zero-comment route opener is to
-  open comments, click the `More like this` tab, then return to comments. The
-  runner now performs that bounded pointer sequence and records each action in
-  sanitized metadata.
+- Owner correction on 2026-07-03: the named route opener is
+  `comment_surface_toggle_pointer_sequence_v0`: open comments, click the
+  `More like this` tab, then return to comments. The sequence is bounded
+  pointer movement only; it is not product extraction and not a challenge-close
+  or solve path. The runner now performs that named bounded pointer sequence
+  and records each action in sanitized metadata.
 - The first corrected live retry on 2026-07-03 used that sequence on the Funmi
   video and stopped with `attempted_count=1`, `completed_count=0`,
   `challenge_count=1`, `reason=platform_challenge_observed`, and zero admitted
@@ -229,8 +231,8 @@ handoff depends on:
 
 4. If owner/human account-posture review reauthorizes another live retry, run
    exactly one known public video first, using current CLI help as source of
-   truth. The current runner performs the bounded comments -> `More like this`
-   -> comments route opener internally. Shape:
+   truth. The current runner performs `comment_surface_toggle_pointer_sequence_v0`
+   (comments -> `More like this` -> comments) internally. Shape:
 
    ```powershell
    $env:PYTHONPATH = "orca-harness"
@@ -350,8 +352,9 @@ Fresh-read sources used while writing this handoff:
 
 Corrected after the 2026-07-02 zero-response micro-batch diagnostic, the
 one-video Funmi zero-yield retries, and the 2026-07-03 owner correction that
-the route opener must toggle comments -> `More like this` -> comments. This
-handoff is not reusable as a direct 3-5 creator execution packet until a
+the route opener must use `comment_surface_toggle_pointer_sequence_v0`
+(comments -> `More like this` -> comments). This handoff is not reusable as a
+direct 3-5 creator execution packet until a
 one-video route-yield gate captures at least one admitted page-owned
 `/api/comment/list` response under the current runner and then admits cleanly.
 
@@ -424,8 +427,9 @@ First task after getting your bearings: verify owner/live-run preconditions and
 the current stop state. Do not run another live retry blindly: the latest
 corrected route opener stopped on `platform_challenge_observed`. If the owner
 explicitly reauthorizes after human account/session review, run only the
-one-video route-yield gate first, using the bounded comments -> More like this
--> comments sequence; require at least one admitted page-owned
+one-video route-yield gate first, using
+`comment_surface_toggle_pointer_sequence_v0` (comments -> More like this ->
+comments); require at least one admitted page-owned
 `/api/comment/list` response before admission/expansion; stop on any real
 challenge, unresolved blocker, or zero-comment-response route diagnosis. Do
 not solve CAPTCHA/slider challenges, do not click challenge-close controls to
