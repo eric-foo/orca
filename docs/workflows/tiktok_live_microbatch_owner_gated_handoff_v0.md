@@ -23,6 +23,7 @@ open_next:
   - docs/workflows/tiktok_behavioral_sync_fresh_lane_handoff_v0.md
   - docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md
   - docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md
+  - docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md
   - orca-harness/source_capture/adapters/browser_snapshot.py
   - orca-harness/source_capture/tiktok/live_batch_probe.py
   - orca-harness/source_capture/tiktok/blocker_triage.py
@@ -42,6 +43,7 @@ input_hashes:
   docs/workflows/tiktok_behavioral_sync_fresh_lane_handoff_v0.md: 0fcda55434efb97791c495e112e7682f9cc1b42d
   docs/workflows/tiktok_comment_response_capture_pr559_adjudication_handoff_v0.md: 5a814dad39d79222ea78631e395ff382d4fc7396
   docs/workflows/tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md: 8385e43615e76a2503e9f36468dbdcd7c92268a3
+  docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md: 8a70101fa80236296fa4542e1dfccfcd7895e5c5
   orca-harness/source_capture/adapters/browser_snapshot.py: c69014f5fb4eb21901c3770b6eb8a058ebd1b65c
   orca-harness/source_capture/tiktok/live_batch_probe.py: e7acde53493c25616dce4443a8cf06b41a967054
   orca-harness/source_capture/tiktok/blocker_triage.py: 19816ad967bc57c53aa750dfc9cf59902e5455cd
@@ -373,6 +375,10 @@ Fresh-read sources used while writing this handoff:
 - `tiktok_funmi_n30_comment_subtitle_cadence_analysis_v0.md`: measured
   Funmi/session N30 result with `30/30` comment responses, 596 parsed comments,
   and `26/26` WebVTT success when subtitle metadata existed.
+- `tiktok_ui_movement_blocker_substrate_playbook_v0.md`: cold-agent map from
+  blocker class to allowed bounded pointer-action substrate, including benign
+  overlays, comment-surface routing, DOM close diagnosis, visual-X diagnosis,
+  and no-solve/no-success stop semantics.
 - `browser_snapshot.py`: shared page-response observer, bounded pointer target script,
   and multi-action pointer-sequence metadata.
 - `live_batch_probe.py`: local staging writer, stop hooks, TikTok
@@ -473,9 +479,11 @@ not perform work excluded by the packet's Drift Guard unless explicitly redirect
 by the current user.
 
 First task after getting your bearings: verify owner/live-run preconditions and
-the current stop state. Do not run another live retry blindly: the latest
-corrected route opener stopped on `platform_challenge_observed`. If the owner
-explicitly reauthorizes after human account/session review, run only the
+the current stop state. Load
+`docs/workflows/tiktok_ui_movement_blocker_substrate_playbook_v0.md` before any
+browser action. Do not run another live retry blindly: the latest visual-X
+diagnostic stopped as `challenge_close_diagnostic_only`. If the owner explicitly
+reauthorizes after human account/session review, run only the
 one-video route-yield gate first. The current runner first attempts bounded
 benign-overlay dismissal, then uses
 `comment_surface_toggle_pointer_sequence_v0` (comments -> More like this ->
