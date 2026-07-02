@@ -52,7 +52,9 @@ SILVER_ENVELOPE_FRONT_DOOR_FUNC = "append_silver_record"
 
 LANE_ROLES: dict[str, LaneRole] = {
     # --- silver_envelope: silver_vault_record_v0; validating front-door required
+    "cleaning_basenotes_silver": LaneRole.SILVER_ENVELOPE,
     "cleaning_fragrantica_silver": LaneRole.SILVER_ENVELOPE,
+    "cleaning_parfumo_silver": LaneRole.SILVER_ENVELOPE,
     "creator_metric_silver": LaneRole.SILVER_ENVELOPE,
     "creator_metric_rollup_silver": LaneRole.SILVER_ENVELOPE,
     # --- silver_lineage: grammar B (lineage kit + freeform payload); declared,
@@ -63,9 +65,13 @@ LANE_ROLES: dict[str, LaneRole] = {
     "silver__capture__reel_transcript": LaneRole.SILVER_LINEAGE,
     "silver__capture__reel_deep_capture__set": LaneRole.SILVER_LINEAGE,
     # --- cleaning audit pack (processing evidence; no record_kind)
+    "cleaning_basenotes_audit": LaneRole.CLEANING_AUDIT,
     "cleaning_fragrantica_audit": LaneRole.CLEANING_AUDIT,
+    "cleaning_parfumo_audit": LaneRole.CLEANING_AUDIT,
     # --- mechanical projections (explicitly not_cleaned / not_judgment_ready)
+    "projection_basenotes": LaneRole.PROJECTION,
     "projection_fragrantica": LaneRole.PROJECTION,
+    "projection_parfumo": LaneRole.PROJECTION,
     "projection_ig": LaneRole.PROJECTION,
     "projection_ig_reels_grid": LaneRole.PROJECTION,
     "projection_retail_pdp": LaneRole.PROJECTION,
@@ -87,34 +93,20 @@ LANE_ROLES: dict[str, LaneRole] = {
 # silver_envelope lanes whose producer still writes through the raw lake writer
 # rather than the validating front-door. A NAMED, justified baseline read by the
 # guard -- each entry must state why, and is a migration target, not a permanent
-# exception. A new silver_envelope lane must NOT be added here; it must use the
-# front-door from the start.
-FRONT_DOOR_PENDING: dict[str, str] = {
-    "creator_metric_silver": (
-        "the IG and YouTube creator-metric producers (silver_metric_producer.py, "
-        "youtube_silver_metric_producer.py) write this lane raw; their non-observed "
-        "MetricObservation encodes the reason in reason_detail, which the envelope front-door "
-        "validator does not yet accept (it requires reason_code). Reconcile the posture-reason "
-        "contract before migrating both onto the front-door (Batch 3; coordinate PR #456)."
-    ),
-    "creator_metric_rollup_silver": (
-        "same two producers; migrate alongside creator_metric_silver once the posture-reason "
-        "contract is reconciled (Batch 3)."
-    ),
-}
+# exception. EMPTY as of Batch 3: the IG + YouTube creator-metric producers were
+# migrated onto the validating front-door (append_silver_record) once the metric
+# posture-reason contract was reconciled, so no silver_envelope lane is exempt. A new
+# silver_envelope lane must NOT be added here; it must use the front-door from the start.
+FRONT_DOOR_PENDING: dict[str, str] = {}
 
 
-# The exact, frozen set of lanes FRONT_DOOR_PENDING is allowed to contain. The
-# guard fails if FRONT_DOOR_PENDING drifts from this baseline, so a NEW
-# silver_envelope bypass cannot be silently grandfathered -- adding one requires
-# a deliberate, reviewed edit here. When a migration genuinely lands, remove the
-# lane from both FRONT_DOOR_PENDING and this baseline together.
-FRONT_DOOR_PENDING_BASELINE = frozenset(
-    {
-        "creator_metric_silver",
-        "creator_metric_rollup_silver",
-    }
-)
+# The exact, frozen set of lanes FRONT_DOOR_PENDING is allowed to contain. The guard
+# fails if FRONT_DOOR_PENDING drifts from this baseline, so a NEW silver_envelope bypass
+# cannot be silently grandfathered -- adding one requires a deliberate, reviewed edit
+# here. Empty since the Batch-3 creator-metric migration; when a NEW migration target
+# genuinely needs a temporary raw-write window, add the lane to both this baseline and
+# FRONT_DOOR_PENDING together, and remove it from both when the migration lands.
+FRONT_DOOR_PENDING_BASELINE: frozenset[str] = frozenset()
 
 
 def validate_registry() -> list[str]:

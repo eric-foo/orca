@@ -97,6 +97,8 @@ class BrowserPageResponse:
     body_text: str
     response_headers: dict[str, str]
     limitation_notes: list[str] = field(default_factory=list)
+    request_method: str | None = None
+    resource_type: str | None = None
 
 
 @dataclass(frozen=True)
@@ -179,6 +181,8 @@ class BrowserPageObservationEngine(Protocol):
         dom_extract_script: str,
         dom_extract_arg: object,
         response_url_predicate: Callable[[str], bool],
+        post_load_action_script: str | None = None,
+        post_load_action_arg: object = None,
         selector: str | None = None,
         selector_timeout_seconds: float = 5.0,
         max_response_bytes: int = DEFAULT_MAX_ARTIFACT_BYTES,
@@ -370,6 +374,8 @@ def fetch_browser_page_observation_capture(
     dom_extract_script: str,
     dom_extract_arg: object,
     response_url_predicate: Callable[[str], bool],
+    post_load_action_script: str | None = None,
+    post_load_action_arg: object = None,
     timeout_seconds: float = DEFAULT_TIMEOUT_SECONDS,
     wait_until: str = "load",
     viewport_width: int = DEFAULT_VIEWPORT_WIDTH,
@@ -402,6 +408,8 @@ def fetch_browser_page_observation_capture(
         raise ValueError("lazy_load_scroll_step_px must be zero or greater")
     if selector_timeout_seconds < 0:
         raise ValueError("selector_timeout_seconds must be zero or greater")
+    if post_load_action_script is not None and not post_load_action_script.strip():
+        raise ValueError("post_load_action_script must not be blank")
     if wait_until not in ALLOWED_WAIT_UNTIL:
         allowed = ", ".join(sorted(ALLOWED_WAIT_UNTIL))
         raise ValueError(f"wait_until must be one of: {allowed}")
@@ -417,6 +425,8 @@ def fetch_browser_page_observation_capture(
             dom_extract_script=dom_extract_script,
             dom_extract_arg=dom_extract_arg,
             response_url_predicate=response_url_predicate,
+            post_load_action_script=post_load_action_script,
+            post_load_action_arg=post_load_action_arg,
             selector=selector,
             selector_timeout_seconds=selector_timeout_seconds,
             max_response_bytes=max_response_bytes,
@@ -643,6 +653,8 @@ class _PlaywrightBrowserSnapshotEngine:
         dom_extract_script: str,
         dom_extract_arg: object,
         response_url_predicate: Callable[[str], bool],
+        post_load_action_script: str | None = None,
+        post_load_action_arg: object = None,
         selector: str | None = None,
         selector_timeout_seconds: float = 5.0,
         max_response_bytes: int = DEFAULT_MAX_ARTIFACT_BYTES,
@@ -727,6 +739,8 @@ class _PlaywrightBrowserSnapshotEngine:
                             warning_notes.append(
                                 f"browser_page_observation selector wait failed: {exc}"
                             )
+                    if post_load_action_script is not None:
+                        page.evaluate(post_load_action_script, post_load_action_arg)
                     try:
                         visible_text = page.locator("body").inner_text(timeout=timeout_ms)
                     except Exception as exc:
@@ -764,6 +778,7 @@ class _PlaywrightBrowserSnapshotEngine:
                         "wait_until": wait_until,
                         "settle_seconds": settle_seconds,
                         "dom_observation_stage": "pre_lazy_load_scroll",
+                        "post_load_action_executed": post_load_action_script is not None,
                         "lazy_load_scroll_passes": lazy_load_scroll_passes,
                         "lazy_load_scroll_step_px": lazy_load_scroll_step_px,
                         "lazy_load_scroll_passes_executed": lazy_load_scroll_result.executed_passes,
@@ -961,6 +976,7 @@ def _read_observed_page_responses(
             for key, value in response.headers.items()
             if str(key).lower() not in {"set-cookie", "cookie"}
         }
+        request_method, resource_type = _response_request_metadata(response)
         limitations: list[str] = []
         body_text = ""
         try:
@@ -984,9 +1000,27 @@ def _read_observed_page_responses(
                 body_text=body_text,
                 response_headers=headers,
                 limitation_notes=limitations,
+                request_method=request_method,
+                resource_type=resource_type,
             )
         )
     return preserved
+
+
+def _response_request_metadata(response: object) -> tuple[str | None, str | None]:
+    try:
+        request = getattr(response, "request")
+    except Exception:
+        return None, None
+    try:
+        method = str(getattr(request, "method", "") or "").upper() or None
+    except Exception:
+        method = None
+    try:
+        resource_type = str(getattr(request, "resource_type", "") or "").lower() or None
+    except Exception:
+        resource_type = None
+    return method, resource_type
 
 
 def _run_bounded_lazy_load_scrolls(
