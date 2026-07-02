@@ -18,8 +18,10 @@ authority_boundary: retrieval_only
 **Routine read shape** (owned by `.agents/workflow-overlay/source-loading.md`,
 Targeted Read Protocol): commissioning reads "When it applies", "The loop",
 "Access selection rule", "De-correlation", and the "Overlay Interface" block;
-return adjudication reads "Adjudication closeout"; a full-file read is for
-editing this convention or resolving a novel dispute about it.
+code-diff commissioning also reads "Code-diff target kind — the
+`delegated_code_review_and_patch` sibling mode"; return adjudication reads
+"Adjudication closeout"; a full-file read is for editing this convention or
+resolving a novel dispute about it.
 
 **Status — provisional convention.** This is an experimental operating
 convention replicated into Orca from jb's provisional convention (jb branch

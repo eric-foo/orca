@@ -158,6 +158,8 @@ or adjacent rather than controlling. A controlling file is not an exemption:
 the overlay's own high-traffic files carry the routine read shapes below, and
 the bounded read is the compliant act for routine work — full reads of these
 files are for their named full-read cases, not a safe default.
+This is not a strict-claim shortcut: reopen any unlisted section when it could
+materially change the current claim, route, blocker, or edit boundary.
 
 ### Routine Read Shapes (overlay high-traffic files)
 
@@ -168,9 +170,10 @@ files are for their named full-read cases, not a safe default.
   authoring.
 - `.agents/workflow-overlay/delegated-review-patch.md` — commissioning reads
   "When it applies", "The loop", "Access selection rule", "De-correlation",
-  and the "Overlay Interface" block; return adjudication reads "Adjudication
-  closeout". Full read: editing the convention or resolving a novel dispute
-  about it.
+  and the "Overlay Interface" block; code-diff commissioning also reads
+  "Code-diff target kind — the `delegated_code_review_and_patch` sibling
+  mode"; return adjudication reads "Adjudication closeout". Full read:
+  editing the convention or resolving a novel dispute about it.
 - `.agents/workflow-overlay/review-lanes.md` — routine review work reads
   "Current Lanes" plus the one section the task touches ("Review Doctrine"
   for formal lane bindings, "Template Retrieval Binding" when retrieving a
@@ -617,9 +620,10 @@ direction_change_propagation:
     Targeted Read Protocol now owns a Routine Read Shapes registry for the
     overlay's high-traffic files (prompt-orchestration, delegated-review-patch,
     review-lanes, validation-gates, and this file), with matching head notes
-    at each file's top. "Controlling" no longer exempts these files from
-    targeted reads: the bounded read is the compliant act for routine work,
-    with named full-read cases per file.
+    on the other high-traffic files and this file owning the registry directly.
+    "Controlling" no longer exempts these files from targeted reads: the
+    bounded read is the compliant act for routine work, with named full-read
+    cases per file and a strict-claim reopen clause.
   trigger: workflow_authority
   controlling_sources_updated:
     - .agents/workflow-overlay/source-loading.md
@@ -651,8 +655,8 @@ direction_change_propagation:
     rg -in "routine read shape|full-file read|read shapes"
     .agents/workflow-overlay/ AGENTS.md
   stale_language_search_result: >
-    Executed 2026-07-02 after edits. Hits are the five head notes, the new
-    registry section, this receipt family, and pre-existing consistent
+    Executed 2026-07-02 after edits. Hits are the four file-top head notes,
+    the new registry section, this receipt family, and pre-existing consistent
     capsule-budget/expansion lines ("at most four full-file reads", "prefer
     targeted section reads over full-file reads"). No surface still frames
     full reads of these files as the default-compliant act.
