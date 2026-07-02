@@ -416,16 +416,25 @@ def test_operator_exclusion_builds_survivor_only_rollup(tmp_path: Path) -> None:
     )[YOUTUBE_SHORTS_FRAGRANCE_CREATOR_METRIC_SEED_WRAPPER]
 
     assert seed["counts"]["operator_excluded_admitted_videos"] == 1
+    assert seed["counts"]["admitted_creator_videos"] == 2
+    assert seed["counts"]["metric_observations_total"] == 4
     assert seed["operator_exclusions"] == [
         {
             "video_id": "vidAlpha001",
             "reason": "video unavailable (playabilityStatus ERROR), reproduced twice 2026-07-02",
         }
     ]
+    assert all(
+        observation["content_id_or_none"] != "vidAlpha001"
+        for observation in seed["metric_observations"]
+    )
     alpha = next(r for r in seed["metric_rollups"] if r["profile_subject_id"] == "acct_yt_alpha")
     # Survivor-only math: only vidAlpha002 remains.
     assert alpha["metric_rollups"]["average_views"]["value_or_none"] == 200.0
     assert alpha["view_count_min"] == alpha["view_count_max"] == 200
+    assert alpha["observation_count"] == 1 == len(alpha["source_metric_observation_ids"])
+    assert alpha["sample_support"]["observation_count"] == 1
+    assert alpha["sample_support"]["sample_adequacy"] == "thin_n_1_to_3"
     joined = " ".join(alpha["limitations"])
     assert "explicit operator exclusion" in joined
     assert "vidAlpha001" in joined

@@ -177,6 +177,21 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     excluded_video_ids: dict[str, str] | None = None
     if args.excluded_videos:
+        seen: set[str] = set()
+        duplicate_videos: set[str] = set()
+        for video_id in args.excluded_videos:
+            if video_id in seen:
+                duplicate_videos.add(video_id)
+            seen.add(video_id)
+        if duplicate_videos:
+            parser.exit(
+                status=2,
+                message=(
+                    "--exclude-video was provided more than once for: "
+                    + ", ".join(sorted(duplicate_videos))
+                    + "\n"
+                ),
+            )
         if not args.exclusion_reason or not args.exclusion_reason.strip():
             parser.exit(
                 status=2,
