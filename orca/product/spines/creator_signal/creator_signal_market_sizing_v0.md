@@ -49,18 +49,45 @@ destination.** Plan around the beauty market, not fragrance.
 
 | Player | Sells | Rough pricing | Fragrance/beauty vertical depth? |
 |---|---|---|---|
+| CreatorIQ (+ Tribe Dynamics) | Enterprise creator-mktg OS; Tribe = beauty/fashion **earned-media** analytics | **~$30–60k/yr**, enterprise, sales-led | **Closest.** Tribe's metric is **EMV (Earned Media Value)**. Real beauty/fashion depth, but coverage is a *curated creator panel* refreshed ~semiannually (not niche-complete); freshness/provenance is marketing-grade, not auditor-grade |
+| Traackr | Beauty-heavy influencer-performance platform; Brand Vitality Score (VIT) | enterprise | **Closest *after* CreatorIQ for beauty** — watch on the beauty/skincare expansion |
+| Launchmetrics | **MIV (Media Impact Value)** — fashion/lifestyle/**beauty** media measurement | enterprise | The metric earlier mis-attributed to Tribe; it is *Launchmetrics'*. Luxury/PR/press-heavy |
+| Sprout Social / Tagger | Social-mgmt suite + influencer (Tagger, acq. ~$140M 2023) | mid-market/enterprise | No — horizontal |
+| Meltwater / Klear | Media-intelligence suite + influencer | enterprise | No — PR/comms-oriented |
 | HypeAuditor | Discovery + audience/fraud analytics (200M+) | $399–$1,799/mo | No — beauty is a filter |
 | Modash | Discovery (350M+) + tracking | $199–$499/mo, $14.7k/yr ent. | No |
-| CreatorIQ | Enterprise creator-mktg suite | **~$30k–$60k/yr**, enterprise-only | **Closest** — owns **Tribe Dynamics ("MIV" — Media Impact Value)**, beauty/fashion-heavy earned-media measurement |
 | Upfluence | Discovery + outreach + e-comm | ~$478–$2,000/mo | No |
 | GRIN | DTC creator-mgmt (CRM-style) | ~$999–$2,500/mo | No — DTC-general |
 | Aspire | Campaign workflow + marketplace | ~$2,000–$2,300/mo | No |
 
 **Key structural finding: no incumbent owns fragrance/beauty as a vertical *data
-product*.** The closest — and the one to design against — is **CreatorIQ's Tribe
-Dynamics MIV** (beauty/fashion earned-media, enterprise). Everyone else treats
-beauty as a search filter, not a domain. This both **validates the category is
-buyable** and **narrows the "white space."**
+product*.** The closest — and the one to design against — is **CreatorIQ / Tribe
+Dynamics** (Tribe's metric is **EMV — Earned Media Value**; **MIV — Media Impact
+Value — is *Launchmetrics'* separate metric**, do not conflate them). Everyone else
+treats beauty as a search filter, not a domain. This both **validates the category
+is buyable** and **narrows the "white space."**
+
+**Competitive posture (from the cross-vendor teardown, 2026-07-01):**
+- **They are strong, not fragile** — enterprise workflow + governance + a familiar
+  EMV benchmark. Do **not** attack head-on (workflow, payments, big-brand
+  reporting, Fortune-500 procurement deals).
+- **Their structural gaps are our openings:** coverage is a *curated, ~semiannually-
+  refreshed panel* — not niche-complete (misses fragrance micro-reviewers, decant/
+  collector communities that matter early); EMV is a proprietary engagement proxy
+  (assigns full value to *each* brand in a multi-brand post; Stories are
+  model-predicted; it is not revenue/incrementality); freshness/provenance is
+  *marketing-grade, not auditor-grade* (a new creator gets only a limited historical
+  scan).
+- **The moat is not "better software" — it is a proprietary, longitudinal, vertical
+  *evidence graph*** (creator × brand × product × content × time × proof). They can
+  copy screens faster than *capture history* — which only accrues if we start
+  capturing the niche **now**.
+- **The play is win-the-flank → coexist → possibly be-acquired, NOT displace.** Serve
+  indie/DTC brands, specialist agencies, and **non-marketer evidence buyers**
+  (investors / retail / procurement / legal). Tribe already has a financial-institutions
+  page, so that demand is real — but their packaging is high-level EMV, not
+  diligence-grade evidence, which is the opening. CreatorIQ acquired Tribe for exactly
+  this category authority, so an acquisition path is credible.
 
 ## The hinge (biggest uncertainty)
 
