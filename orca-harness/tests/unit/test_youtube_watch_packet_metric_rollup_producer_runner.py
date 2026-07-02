@@ -306,6 +306,43 @@ def test_live_recapture_loop_snapshot_freshness_view_and_revalidation(tmp_path: 
     assert report.failures_total == 0, [f.failures for f in report.findings if not f.ok]
 
 
+def test_operator_exclusions_flow_into_silver_rollup_limitations(tmp_path: Path) -> None:
+    data_root = DataLakeRoot.for_test(tmp_path / "lake")
+    _commit_capture_cycle(data_root, captured_at=CAPTURE_T1, base_views=100)
+    result = run_watch_packet_producer(
+        data_root,
+        creator_ledger=_creator_ledger(),
+        account_ledger=_account_ledger(),
+        generated_at_utc=RUN_T1,
+        excluded_video_ids={"vidAlpha001": "video unavailable at capture"},
+    )
+    assert len(result.rollup_records) == 2
+    alpha = next(
+        r
+        for r in result.rollup_records
+        if r["payload"]["observation"]["subject"]["ref"]["orca_platform_account_id"]
+        == "acct_yt_alpha"
+    )
+    joined = " ".join(alpha["payload"]["observation"]["limitations"])
+    assert "explicit operator exclusion" in joined and "vidAlpha001" in joined
+    # Survivor-only math: alpha's only remaining video is vidAlpha002 (views*2).
+    metrics = alpha["payload"]["observation"]["metric_rollups"]
+    assert metrics["average_views"]["metric_value"] == 200.0
+
+
+def test_runner_flags_couple_exclusion_and_reason() -> None:
+    import pytest
+
+    from runners.run_youtube_watch_packet_metric_rollup_producer import main
+
+    with pytest.raises(SystemExit) as excinfo:
+        main(["--exclude-video", "vidAlpha001"])  # no --exclusion-reason
+    assert excinfo.value.code == 2
+    with pytest.raises(SystemExit) as excinfo:
+        main(["--exclusion-reason", "dead"])  # no --exclude-video
+    assert excinfo.value.code == 2
+
+
 def test_live_rollup_records_drop_the_engagement_non_claim(tmp_path: Path) -> None:
     data_root = DataLakeRoot.for_test(tmp_path / "lake")
     _commit_capture_cycle(data_root, captured_at=CAPTURE_T1, base_views=100)
